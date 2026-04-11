@@ -1,6 +1,6 @@
 {
   "name": "mysetup",
-  "version": "1.0.0",
+  "version": "1.1.4",
   "description": "Profesyonel Envanter ve Kurulum Yönetim Sistemi",
   "author": "Karma <shbkarma@gmail.com>",
   "main": "main.js",
@@ -17,16 +17,19 @@
   },
   "build": {
     "appId": "com.mysetup.app",
-    "productName": "MySetup Inventory",
+    "productName": "MySetup",
+    "artifactName": "MySetup.exe",
     "copyright": "Copyright © 2026 Karma",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
     },
     "publish": [
       {
         "provider": "github",
-        "owner": "GITHUB_KULLANICI_ADIN",
-        "repo": "my_setup"
+        "owner": "karmaqq",
+        "repo": "MySetup",
+        "releaseType": "release"
       }
     ],
     "win": {
@@ -36,11 +39,11 @@
       "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "MySetup"
+      "runAfterFinish": true
     }
   }
 }
