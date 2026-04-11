@@ -34,9 +34,10 @@ autoUpdater.on("update-available", (info) => {
 });
 
 autoUpdater.on("update-downloaded", () => {
-  autoUpdater.quitAndInstall(false, true);
+  // İlk parametre: isSilent (true yaparsak hiç ekran gelmez)
+  // İkinci parametre: isForceRunAfter (true yaparsak otomatik açılır)
+  autoUpdater.quitAndInstall(true, true);
 });
-
 autoUpdater.on("error", (err) => {
   mainWindow.webContents.send("update_error", err.message);
 });

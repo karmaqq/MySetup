@@ -1,6 +1,6 @@
 {
   "name": "mysetup",
-  "version": "1.1.8",
+  "version": "1.2.2",
   "description": "Profesyonel Envanter ve Kurulum Yönetim Sistemi",
   "author": "Karma <shbkarma@gmail.com>",
   "main": "main.js",
@@ -41,13 +41,15 @@
     },
     "nsis": {
       "oneClick": false,
-      "perMachine": false,
       "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
       "createDesktopShortcut": true,
       "runAfterFinish": true,
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
-      "shortcutName": "MySetup"
+      "shortcutName": "MySetup",
+      "allowElevation": true,
+      "deleteAppDataOnUninstall": false
     }
   }
 }
