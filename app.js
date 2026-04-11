@@ -1,4 +1,29 @@
-﻿/* ─── FORMATLAMA ─────────────────────────────────────────────────────────────── */
+﻿// app.js dosyasının en başı
+let ipcRenderer = null;
+
+try {
+  const electron = require("electron");
+  ipcRenderer = electron.ipcRenderer;
+} catch (e) {
+  console.log("Tarayıcı modu: Electron fonksiyonları pasif.");
+}
+
+// Postayı yakalayacak olan alan (HTML'deki ID)
+const versionDisplay = document.getElementById("versionDisplay");
+
+const updateBtn = document.getElementById("updateBtn");
+
+// Eğer Electron içindeysek dinlemeye başla
+if (ipcRenderer) {
+  // 'app_version' postası geldiğinde içindeki rakamı ekrana yaz
+  ipcRenderer.on("app_version", (event, version) => {
+    if (versionDisplay) {
+      versionDisplay.innerText = `v${version}`;
+    }
+  });
+}
+
+/* ─── FORMATLAMA ─────────────────────────────────────────────────────────────── */
 const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
@@ -897,27 +922,38 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-const { ipcRenderer } = require("electron");
+/* ─── GÜNCELLEME SİSTEMİ ─────────────────────────────────────────────────── */
+if (ipcRenderer) {
+  ipcRenderer.on("app_version", (event, version) => {
+    if (versionDisplay) versionDisplay.innerText = `v${version}`;
+  });
 
-ipcRenderer.on("update_available", () => {
-  ipcRenderer.removeAllListeners("update_available");
-  document.getElementById("message").innerText =
-    "Yeni bir güncelleme indiriliyor...";
-  document.getElementById("notification").style.display = "block";
-});
+  // Sadece güncelleme bulunduğunda tetiklenir
+  ipcRenderer.on("update_available", (event, version) => {
+    if (!updateBtn) return;
 
-ipcRenderer.on("update_downloaded", () => {
-  ipcRenderer.removeAllListeners("update_downloaded");
-  document.getElementById("message").innerText =
-    "Güncelleme hazır. Uygulama yeniden başlatılsın mı?";
-  document.getElementById("restart-button").style.display = "inline-block";
-  document.getElementById("notification").style.display = "block";
-});
+    updateBtn.style.display = "flex";
+    updateBtn.style.pointerEvents = "auto";
+    updateBtn.innerHTML = `Güncelleme Mevcut`; // Versiyon numarasını sildik, daha sade.
 
-function closeNotification() {
-  document.getElementById("notification").style.display = "none";
-}
+    // BUTONA TIKLANDIĞINDA
+    updateBtn.onclick = () => {
+      // 1. Onay isteme, butonu kilitle ve yazıyı değiştir
+      updateBtn.innerHTML = "Güncelleme Yükleniyor...";
+      updateBtn.style.pointerEvents = "none";
+      updateBtn.style.color = "var(--text-dim)";
 
-function restartApp() {
-  ipcRenderer.send("restart_app");
+      // 2. Arka planda indirmeyi başlat (Bittiğinde main.js programı kapatacak)
+      ipcRenderer.send("start_download");
+    };
+  });
+
+  // Hata durumunda sadece butonu eski haline getir
+  ipcRenderer.on("update_error", () => {
+    if (updateBtn && updateBtn.style.display === "flex") {
+      updateBtn.innerHTML = "Güncelleme Başarısız";
+      updateBtn.style.pointerEvents = "auto";
+      updateBtn.style.color = "var(--red)";
+    }
+  });
 }
