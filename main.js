@@ -4,7 +4,6 @@ const path = require("path");
 
 let mainWindow;
 
-// 1. Güncellemeyi otomatik indirme, biz butona basınca insin
 autoUpdater.autoDownload = false;
 
 function createWindow() {
@@ -20,7 +19,8 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadFile(path.join(__dirname, "..", "index.html"));
+  // Dosya ana klasöre geldiği için artık '..' kullanmıyoruz.
+  mainWindow.loadFile(path.join(__dirname, "index.html"));
   mainWindow.setMenu(null);
 
   mainWindow.webContents.on("did-finish-load", () => {
@@ -29,12 +29,22 @@ function createWindow() {
   });
 }
 
-// 2. Güncelleme bittiğinde HİÇBİR ŞEY SORMADAN kapat ve kur
-autoUpdater.on("update-downloaded", () => {
-  autoUpdater.quitAndInstall(false, true); // (sessiz, zorla başlat)
+autoUpdater.on("update-available", (info) => {
+  mainWindow.webContents.send("update_available", info.version);
 });
 
-// 3. Yarım saatte bir sessiz kontrol
+autoUpdater.on("update-downloaded", () => {
+  autoUpdater.quitAndInstall(false, true);
+});
+
+autoUpdater.on("error", (err) => {
+  mainWindow.webContents.send("update_error", err.message);
+});
+
+ipcMain.on("start_download", () => {
+  autoUpdater.downloadUpdate();
+});
+
 setInterval(
   () => {
     autoUpdater.checkForUpdates();
@@ -42,14 +52,8 @@ setInterval(
   1000 * 60 * 30,
 );
 
-ipcMain.on("start_download", () => {
-  autoUpdater.downloadUpdate();
-});
-
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
-
-mainWindow.webContents.openDevTools();

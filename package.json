@@ -1,9 +1,9 @@
 {
   "name": "mysetup",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Profesyonel Envanter ve Kurulum Yönetim Sistemi",
   "author": "Karma <shbkarma@gmail.com>",
-  "main": "js/main.js",
+  "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder"
@@ -36,14 +36,17 @@
       "target": [
         "nsis"
       ],
+      "icon": "assets/icon.ico",
       "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
-      "oneClick": true,
-      "perMachine": true,
-      "allowToChangeInstallationDirectory": false,
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "runAfterFinish": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
       "shortcutName": "MySetup"
     }
   }
