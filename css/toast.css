@@ -1,0 +1,121 @@
+/* ─── Toast Container ────────────────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* ─── Toast Base ─────────────────────────────────────────────────────────────── */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-size: 13.5px;
+  color: var(--text-bright);
+  pointer-events: all;
+  opacity: 0;
+  transform: translateX(24px);
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+  max-width: 320px;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ─── Toast Icon ─────────────────────────────────────────────────────────────── */
+.toast-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.toast-success .toast-icon {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid rgba(61, 214, 140, 0.3);
+}
+
+.toast-error .toast-icon {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid rgba(245, 96, 96, 0.3);
+}
+
+.toast-warn .toast-icon {
+  background: var(--yellow-dim);
+  color: var(--yellow);
+  border: 1px solid rgba(245, 200, 66, 0.3);
+}
+
+.toast-info .toast-icon {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid rgba(74, 158, 255, 0.3);
+}
+
+/* ─── Confirm Dialog ─────────────────────────────────────────────────────────── */
+.toast-confirm {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 220px;
+}
+
+.toast-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.toast-yes,
+.toast-no {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.toast-yes {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: rgba(245, 96, 96, 0.3);
+}
+
+.toast-yes:hover {
+  background: var(--red);
+  color: #fff;
+}
+
+.toast-no {
+  background: var(--surface3);
+  color: var(--text);
+}
+
+.toast-no:hover {
+  border-color: var(--text-dim);
+}
