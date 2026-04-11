@@ -1,0 +1,253 @@
+﻿<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MySetup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  </head>
+  <body>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="modal-overlay" id="editModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <span class="modal-title">Kaydı Düzenle</span>
+          <button class="modal-close" id="modalClose" title="Kapat (Esc)">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="field-group">
+            <label>Tarih</label>
+            <div class="date-input-wrapper">
+              <input
+                type="text"
+                id="editDate"
+                class="modal-input date-input"
+                placeholder="GG.AA.YYYY"
+              />
+              <input
+                type="date"
+                class="hidden-picker"
+                id="editDatePicker"
+                tabindex="-1"
+              />
+              <span class="calendar-icon" id="editCalIcon">📅</span>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Bileşen <span class="required">*</span></label>
+            <input
+              type="text"
+              id="editComponent"
+              class="modal-input"
+              placeholder="Bileşen adı"
+            />
+          </div>
+          <div class="field-group">
+            <label>Marka</label>
+            <input
+              type="text"
+              id="editBrand"
+              class="modal-input"
+              placeholder="Marka"
+            />
+          </div>
+          <div class="field-group">
+            <label>Ürün Linki (URL)</label>
+            <input
+              type="url"
+              id="editUrl"
+              class="modal-input"
+              placeholder="https://..."
+            />
+          </div>
+          <div class="field-group field-full">
+            <label>Özellikler</label>
+            <textarea
+              id="editSpecs"
+              class="modal-input"
+              placeholder="Teknik özellikler"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="field-group">
+            <label>Fiyat (₺)</label>
+            <input
+              type="text"
+              id="editPrice"
+              class="modal-input"
+              placeholder="0.00"
+            />
+          </div>
+          <div class="field-group">
+            <label>Satıcı</label>
+            <input
+              type="text"
+              id="editVendor"
+              class="modal-input"
+              placeholder="Satıcı adı"
+            />
+          </div>
+          <div class="field-group field-full">
+            <label>Durum</label>
+            <select id="editStatus" class="modal-input modal-select">
+              <option value="sağlıklı">✓ Sağlıklı</option>
+              <option value="bozuk">✗ Bozuk</option>
+              <option value="yedek">◉ Yedek</option>
+              <option value="atıldı">⊘ Atıldı</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-modal-cancel" id="modalCancel">İptal</button>
+          <button class="btn-modal-save" id="modalSave">Kaydet</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-wrapper">
+      <header class="top-bar">
+        <div class="brand-area">
+          <h1>MY<span class="accent-text">SETUP</span></h1>
+          <div class="status-panel" id="statusPanel">
+            <span class="status-dot" id="statusDot"></span>
+            <span class="status-text" id="statusText">Bağlanıyor...</span>
+          </div>
+        </div>
+
+        <div class="stats-row" id="statsRow">
+          <div class="stat-card">
+            <div class="stat-icon">₺</div>
+            <div>
+              <div class="stat-value" id="statTotal">0,00 ₺</div>
+              <div class="stat-label">Toplam Harcama</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">#</div>
+            <div>
+              <div class="stat-value" id="statCount">0</div>
+              <div class="stat-label">Toplam Ürün</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✓</div>
+            <div>
+              <div class="stat-value" id="statHealthy">0</div>
+              <div class="stat-label">Aktif Ürün</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">★</div>
+            <div>
+              <div class="stat-value stat-value-sm" id="statExpensive">—</div>
+              <div class="stat-label">En Pahalı</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="toolbar">
+        <div class="search-wrapper">
+          <span class="search-icon">⌕</span>
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="Ara... (bileşen, marka, özellik, satıcı)"
+          />
+          <button
+            class="clear-search"
+            id="clearSearch"
+            style="display: none"
+            title="Temizle"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-status="all">Tümü</button>
+          <button class="filter-btn" data-status="saglikli">Sağlıklı</button>
+          <button class="filter-btn" data-status="bozuk">Bozuk</button>
+          <button class="filter-btn" data-status="yedek">Yedek</button>
+          <button class="filter-btn" data-status="atildi">Atıldı</button>
+        </div>
+        <div class="action-group">
+          <input
+            type="file"
+            id="importCsvInput"
+            accept=".csv"
+            style="display: none"
+          />
+          <button id="importBtn" class="export-btn btn-import">
+            📥 İçe Aktar
+          </button>
+          <button id="exportBtn" class="export-btn btn-export">
+            📤 Dışa Aktar
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="mainTable">
+          <thead>
+            <tr>
+              <th class="sortable" data-col="date">
+                Tarih <span class="sort-icon">↕</span>
+              </th>
+              <th class="sortable" data-col="component">
+                Bileşen <span class="sort-icon">↕</span>
+              </th>
+              <th class="sortable" data-col="brand">
+                Marka <span class="sort-icon">↕</span>
+              </th>
+              <th>Özellikler</th>
+              <th class="sortable" data-col="price">
+                Fiyat <span class="sort-icon">↕</span>
+              </th>
+              <th class="sortable" data-col="vendor">
+                Satıcı <span class="sort-icon">↕</span>
+              </th>
+              <th>Durum</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+          <tfoot class="control-panel-footer">
+            <tr>
+              <td colspan="2" class="footer-left">
+                <button id="addItemBtn" class="btn btn-add">+ Ürün Ekle</button>
+              </td>
+              <td colspan="3" class="footer-center">
+                <span class="result-count" id="resultCount"></span>
+              </td>
+              <td colspan="2" class="footer-right">
+                <div class="total-badge">
+                  <span class="total-label">Toplam</span>
+                  <span class="total-value" id="totalCostDisplay">0,00 ₺</span>
+                </div>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="shortcuts-hint">
+        <span>Esc – iptal</span>
+        <span>Ctrl+F – ara</span>
+        <span>Ctrl+Enter – kaydet</span>
+        <span>Çift tıkla – düzenle</span>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
