@@ -1,6 +1,6 @@
 {
   "name": "mysetup",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Profesyonel Envanter ve Kurulum Yönetim Sistemi",
   "author": "Karma <shbkarma@gmail.com>",
   "main": "js/main.js",
@@ -33,9 +33,10 @@
       }
     ],
     "win": {
-      "target": ["nsis"],
-      "requestedExecutionLevel": "asInvoker",
-      "icon": "assets/icon.ico"
+      "target": [
+        "nsis"
+      ],
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": true,
@@ -43,8 +44,6 @@
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "runAfterFinish": true,
-      "installerIcon": "assets/icon.ico",
-      "uninstallerIcon": "assets/icon.ico",
       "shortcutName": "MySetup"
     }
   }

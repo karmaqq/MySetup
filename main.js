@@ -20,7 +20,7 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadFile(path.join(__dirname, "index.html"));
+  mainWindow.loadFile(path.join(__dirname, "..", "index.html"));
   mainWindow.setMenu(null);
 
   mainWindow.webContents.on("did-finish-load", () => {
@@ -51,3 +51,5 @@ app.whenReady().then(createWindow);
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
+
+mainWindow.webContents.openDevTools();
