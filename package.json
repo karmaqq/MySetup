@@ -3,7 +3,7 @@
   "version": "1.1.4",
   "description": "Profesyonel Envanter ve Kurulum Yönetim Sistemi",
   "author": "Karma <shbkarma@gmail.com>",
-  "main": "main.js",
+  "main": "js/main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder"
