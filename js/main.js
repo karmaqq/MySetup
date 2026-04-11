@@ -1,10 +1,12 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
+const { autoUpdater } = require("electron-updater");
 const path = require("path");
-const { setupUpdater, checkForUpdates } = require("./updater");
 
 let mainWindow;
 
-/* ─── PENCERE OLUŞTURMA ──────────────────────────────────────────────────────── */
+// 1. Güncellemeyi otomatik indirme, biz butona basınca insin
+autoUpdater.autoDownload = false;
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1300,
@@ -21,18 +23,29 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, "index.html"));
   mainWindow.setMenu(null);
 
-  // Güncelleme olaylarını ve IPC kanallarını bir kez kur
-  setupUpdater(mainWindow);
-
   mainWindow.webContents.on("did-finish-load", () => {
-    // Renderer'a uygulama versiyonunu gönder
     mainWindow.webContents.send("app_version", app.getVersion());
-    // Program açıldığında sessizce güncelleme kontrol et
-    checkForUpdates();
+    autoUpdater.checkForUpdates();
   });
 }
 
-/* ─── UYGULAMA YAŞAM DÖNGÜSÜ ─────────────────────────────────────────────────── */
+// 2. Güncelleme bittiğinde HİÇBİR ŞEY SORMADAN kapat ve kur
+autoUpdater.on("update-downloaded", () => {
+  autoUpdater.quitAndInstall(false, true); // (sessiz, zorla başlat)
+});
+
+// 3. Yarım saatte bir sessiz kontrol
+setInterval(
+  () => {
+    autoUpdater.checkForUpdates();
+  },
+  1000 * 60 * 30,
+);
+
+ipcMain.on("start_download", () => {
+  autoUpdater.downloadUpdate();
+});
+
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
