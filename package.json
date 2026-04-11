@@ -1,0 +1,46 @@
+{
+  "name": "mysetup",
+  "version": "1.0.0",
+  "description": "Profesyonel Envanter ve Kurulum Yönetim Sistemi",
+  "author": "Karma <shbkarma@gmail.com>",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
+  },
+  "devDependencies": {
+    "electron": "*",
+    "electron-builder": "*"
+  },
+  "build": {
+    "appId": "com.mysetup.app",
+    "productName": "MySetup Inventory",
+    "copyright": "Copyright © 2026 Karma",
+    "directories": {
+      "output": "dist"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "GITHUB_KULLANICI_ADIN",
+        "repo": "my_setup"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MySetup"
+    }
+  }
+}
