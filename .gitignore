@@ -1,4 +1,4 @@
+.env.bat
 update.bat
-deploy.bat
 dist/
 node_modules/
