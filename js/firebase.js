@@ -19,8 +19,17 @@ const isElectronRuntime =
 /* firebase.database() çağrılmadan ÖNCE forceLongPolling çağrılmazsa etkisizdir.             */
 if (isElectronRuntime) {
   try {
-    if (typeof firebase.database?.INTERNAL?.forceLongPolling === "function") {
+    if (
+      typeof firebase.database === "function" &&
+      firebase.database.INTERNAL &&
+      typeof firebase.database.INTERNAL.forceLongPolling === "function"
+    ) {
       firebase.database.INTERNAL.forceLongPolling();
+
+      /* Bazı ortamlarda WebSocket fallback'i listener'ı kilitleyebilir. */
+      if (typeof firebase.database.INTERNAL.forceWebSockets === "function") {
+        firebase.database.INTERNAL.forceWebSockets(false);
+      }
     }
   } catch (_lpError) {
     /* sessizce devam et */
@@ -61,12 +70,41 @@ function onceWithTimeout(ref, timeoutMs) {
 
 /* attach data listener fonksiyon basligi */
 
-function attachDataListener(uid, dataRef) {
+function attachDataListener(uid, dataRef, attempt) {
+  const retryAttempt = typeof attempt === "number" ? attempt : 0;
   let hasRetriedAfterError = false;
+  let hasReceivedFirstSnapshot = false;
+
+  const firstSnapshotWatchdog = setTimeout(async () => {
+    if (hasReceivedFirstSnapshot) return;
+    if (retryAttempt >= 1) {
+      updateSystemStatus("Veri dinleyici başlatılamadı", "error");
+      if (typeof showToast === "function") {
+        showToast(
+          "Liste verisi alınamıyor. Bağlantı tekrar denenemedi.",
+          "error",
+          5200,
+        );
+      }
+      return;
+    }
+
+    try {
+      const user = firebase.auth?.().currentUser;
+      if (user) {
+        await user.getIdToken(true);
+      }
+    } catch (_refreshError) {}
+
+    dataRef.off();
+    attachDataListener(uid, dataRef, retryAttempt + 1);
+  }, 12000);
 
   dataRef.on(
     "value",
     (snapshot) => {
+      hasReceivedFirstSnapshot = true;
+      clearTimeout(firstSnapshotWatchdog);
       allData = snapshot.val() || {};
       if (typeof renderAll === "function") {
         renderAll();
@@ -80,13 +118,15 @@ function attachDataListener(uid, dataRef) {
           const user = firebase.auth?.().currentUser;
           if (user) {
             await user.getIdToken(true);
+            clearTimeout(firstSnapshotWatchdog);
             dataRef.off();
-            attachDataListener(uid, dataRef);
+            attachDataListener(uid, dataRef, retryAttempt + 1);
             return;
           }
         } catch (_retryError) {}
       }
 
+      clearTimeout(firstSnapshotWatchdog);
       updateSystemStatus("Veri alınamadı", "error");
       if (typeof showToast === "function") {
         showToast("Firebase bağlantı/izin hatası", "error", 5200);
@@ -193,7 +233,7 @@ function initUserDataRef(uid) {
     activeBasePath = resolved.path;
     userDataRef = resolved.ref;
 
-    attachDataListener(uid, userDataRef);
+    attachDataListener(uid, userDataRef, 0);
   };
 
   setupRef();
