@@ -1,10 +1,10 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
-const { autoUpdater } = require("electron-updater");
+const { app, BrowserWindow } = require("electron");
 const path = require("path");
+const { setupUpdater, checkForUpdates } = require("./js/updater.js");
 
 let mainWindow;
 
-autoUpdater.autoDownload = false;
+/* create window fonksiyon basligi */
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -14,47 +14,28 @@ function createWindow() {
     title: "MySetup Inventory",
     backgroundColor: "#090b10",
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
+      preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: false,
     },
   });
 
-  // Dosya ana klasöre geldiği için artık '..' kullanmıyoruz.
   mainWindow.loadFile(path.join(__dirname, "index.html"));
   mainWindow.setMenu(null);
 
   mainWindow.webContents.on("did-finish-load", () => {
     mainWindow.webContents.send("app_version", app.getVersion());
-    autoUpdater.checkForUpdates();
+    checkForUpdates();
   });
+
+  setupUpdater(mainWindow);
 }
-
-autoUpdater.on("update-available", (info) => {
-  mainWindow.webContents.send("update_available", info.version);
-});
-
-autoUpdater.on("update-downloaded", () => {
-  // İlk parametre: isSilent (true yaparsak hiç ekran gelmez)
-  // İkinci parametre: isForceRunAfter (true yaparsak otomatik açılır)
-  autoUpdater.quitAndInstall(true, true);
-});
-autoUpdater.on("error", (err) => {
-  mainWindow.webContents.send("update_error", err.message);
-});
-
-ipcMain.on("start_download", () => {
-  autoUpdater.downloadUpdate();
-});
-
-setInterval(
-  () => {
-    autoUpdater.checkForUpdates();
-  },
-  1000 * 60 * 30,
-);
 
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });

@@ -1,4 +1,5 @@
-/* ─── FİLTRELE + SIRALA ──────────────────────────────────────────────────────── */
+/* get filtered sorted list fonksiyon basligi */
+
 function getFilteredSortedList() {
   let list = Object.keys(allData).map((id) => ({ id, ...allData[id] }));
 
@@ -46,7 +47,8 @@ function getFilteredSortedList() {
   return list;
 }
 
-/* ─── RENDER PIPELINE ────────────────────────────────────────────────────────── */
+/* render all fonksiyon basligi */
+
 function renderAll() {
   const list = getFilteredSortedList();
   updateStats(list);
@@ -54,7 +56,8 @@ function renderAll() {
   updateResultCount(list.length);
 }
 
-/* ─── STATS CARDS ────────────────────────────────────────────────────────────── */
+/* update stats fonksiyon basligi */
+
 function updateStats(filteredList) {
   const all = Object.values(allData);
   const total = all.reduce((s, i) => s + (parseFloat(i.price) || 0), 0);
@@ -68,41 +71,44 @@ function updateStats(filteredList) {
     null,
   );
 
-  document.getElementById("statTotal").textContent =
-    CURRENCY_FORMAT.format(total) + " ₺";
-  document.getElementById("statCount").textContent = count;
-  document.getElementById("statHealthy").textContent = healthy;
-  document.getElementById("statExpensive").textContent = mostExp
-    ? mostExp.component
-    : "—";
+  if (document.getElementById("statTotal"))
+    document.getElementById("statTotal").textContent =
+      CURRENCY_FORMAT.format(total) + " ₺";
+
+  if (document.getElementById("statCount"))
+    document.getElementById("statCount").textContent = count;
+
+  if (document.getElementById("statHealthy"))
+    document.getElementById("statHealthy").textContent = healthy;
+
+  if (document.getElementById("statExpensive"))
+    document.getElementById("statExpensive").textContent = mostExp
+      ? mostExp.component
+      : "—";
 
   const filteredTotal = filteredList.reduce(
     (s, i) => s + (parseFloat(i.price) || 0),
     0,
   );
-  document.getElementById("totalCostDisplay").textContent =
-    CURRENCY_FORMAT.format(filteredTotal) + " ₺";
+  if (document.getElementById("totalCostDisplay"))
+    document.getElementById("totalCostDisplay").textContent =
+      CURRENCY_FORMAT.format(filteredTotal) + " ₺";
 }
 
-/* ─── STATUS CLASS ───────────────────────────────────────────────────────────── */
-function getStatusClassName(statusValue) {
-  const key = normalizeTr(statusValue);
-  for (const [k, v] of Object.entries(STATUS_MAP)) {
-    if (key.includes(k)) return v;
-  }
-  return "status-healthy";
-}
+/* update result count fonksiyon basligi */
 
-/* ─── RESULT COUNT ───────────────────────────────────────────────────────────── */
 function updateResultCount(filteredCount) {
   const total = Object.keys(allData).length;
   const isFiltered = currentSearch || currentStatusFilter !== "all";
-  resultCount.textContent = isFiltered
-    ? `${filteredCount} / ${total} kayıt`
-    : "";
+  if (document.getElementById("resultCount")) {
+    document.getElementById("resultCount").textContent = isFiltered
+      ? `${filteredCount} / ${total} kayıt`
+      : "";
+  }
 }
 
-/* ─── SATIR ELEMENTI OLUŞTUR ─────────────────────────────────────────────────── */
+/* create row el fonksiyon basligi */
+
 function createRowEl(item) {
   const tr = document.createElement("tr");
   tr.dataset.id = item.id;
@@ -132,7 +138,143 @@ function createRowEl(item) {
   return tr;
 }
 
-/* ─── TABLO SATIRLARINI RENDER ET ────────────────────────────────────────────── */
+/* build brand cell html fonksiyon basligi */
+
+function buildBrandCellHTML(item) {
+  const safeUrl = safeExternalUrl(item.url);
+  if (safeUrl) {
+    return `<a href="${escAttr(safeUrl)}" target="_blank" rel="noopener noreferrer" class="brand-link" title="Ürüne Git">${escHtml(item.brand)} <span class="link-icon">🔗</span></a>`;
+  }
+  return escHtml(item.brand);
+}
+
+/* build status cell inner html fonksiyon basligi */
+
+function buildStatusCellInnerHTML(item) {
+  const statusClass = getStatusClassName(item.status);
+  const safeId = escAttr(item.id);
+  const safeStatus = escHtml(item.status);
+  return `<div class="status-cell-inner">
+    <div class="status-menu">
+      <span class="status-label ${statusClass}">${safeStatus}</span>
+      <div class="status-options">
+        <div data-action="update-status" data-id="${safeId}" data-status="sağlıklı">✓ Sağlıklı</div>
+        <div data-action="update-status" data-id="${safeId}" data-status="bozuk">✗ Bozuk</div>
+        <div data-action="update-status" data-id="${safeId}" data-status="yedek">◉ Yedek</div>
+        <div data-action="update-status" data-id="${safeId}" data-status="atıldı">⊘ Atıldı</div>
+      </div>
+    </div>
+    <div class="row-actions">
+      <button class="action-btn edit-btn" data-action="edit-item" data-id="${safeId}" title="Düzenle">✎</button>
+      <button class="action-btn delete-btn" data-action="delete-item" data-id="${safeId}" title="Sil">✕</button>
+    </div>
+  </div>`;
+}
+
+/* build status cell html fonksiyon basligi */
+
+function buildStatusCellHTML(item) {
+  return `<td class="status-cell">${buildStatusCellInnerHTML(item)}</td>`;
+}
+
+/* update item status fonksiyon basligi */
+
+function updateItemStatus(itemId, newStatus) {
+  const currentItem = allData[itemId];
+  if (!currentItem) return;
+
+  if (normalizeTr(currentItem.status) === normalizeTr(newStatus)) return;
+
+  const prevData = allData;
+  const nextData = {
+    ...allData,
+    [itemId]: {
+      ...currentItem,
+      status: newStatus,
+    },
+  };
+
+  allData = nextData;
+  syncStatusOnlyChanges(prevData, nextData, [itemId]);
+
+  if (typeof updateComponentStatusInFirebase !== "function") {
+    showToast("Durum güncelleme fonksiyonu bulunamadı", "error");
+    return;
+  }
+
+  updateComponentStatusInFirebase(itemId, newStatus).catch(() => {
+    allData = prevData;
+    syncStatusOnlyChanges(nextData, prevData, [itemId]);
+    showToast("Durum güncellenemedi", "error");
+  });
+}
+
+/* delete item fonksiyon basligi */
+
+function deleteItem(itemId) {
+  if (!allData[itemId]) return;
+
+  const performDelete = () => {
+    if (typeof deleteComponentFromFirebase !== "function") {
+      showToast("Silme fonksiyonu bulunamadı", "error");
+      return;
+    }
+
+    deleteComponentFromFirebase(itemId)
+      .then(() => {
+        showToast("Kayıt silindi", "success", 2200);
+      })
+      .catch(() => {
+        showToast("Kayıt silinemedi", "error");
+      });
+  };
+
+  if (typeof showConfirm === "function") {
+    showConfirm("Bu kaydı silmek istediğinize emin misiniz?", performDelete);
+    return;
+  }
+
+  performDelete();
+}
+
+/* sync status only changes fonksiyon basligi */
+
+function syncStatusOnlyChanges(prevData, nextData, changedStatusIds) {
+  if (currentStatusFilter !== "all" || currentSearch) {
+    renderAll();
+    return;
+  }
+
+  let needsFullRender = false;
+
+  changedStatusIds.forEach((id) => {
+    const row = tableBody.querySelector(`tr[data-id="${id}"]`);
+    const statusCell = row?.querySelector(".status-cell");
+
+    if (!statusCell || !nextData[id]) {
+      needsFullRender = true;
+      return;
+    }
+
+    if (
+      normalizeTr(prevData[id]?.status) === normalizeTr(nextData[id]?.status)
+    ) {
+      return;
+    }
+
+    statusCell.innerHTML = buildStatusCellInnerHTML({ id, ...nextData[id] });
+  });
+
+  if (needsFullRender) {
+    renderAll();
+    return;
+  }
+
+  updateStats(getFilteredSortedList());
+}
+
+/* render table rows fonksiyon basligi */
+
 function renderTableRows(list) {
   const unsavedRows = Array.from(tableBody.querySelectorAll(".new-item-row"));
   tableBody.innerHTML = "";
@@ -184,12 +326,9 @@ function renderTableRows(list) {
       });
 
       let dateRowSpanIndex = 0;
-
       vendorGroups.forEach((vGroup) => {
         vGroup.items.forEach((item, itemIdx) => {
           const tr = createRowEl(item);
-          const statusClass = getStatusClassName(item.status);
-
           const dateCell =
             dateRowSpanIndex === 0
               ? `<td class="col-date" rowspan="${group.items.length}">${group.label}</td>`
@@ -202,33 +341,11 @@ function renderTableRows(list) {
           tr.innerHTML = `
             ${dateCell}
             <td class="col-component">${escHtml(item.component)}</td>
-            <td class="col-brand">
-              ${
-                item.url && item.url.trim() !== ""
-                  ? `<a href="${item.url}" target="_blank" class="brand-link" title="Ürüne Git">${escHtml(item.brand)} <span class="link-icon">🔗</span></a>`
-                  : escHtml(item.brand)
-              }
-            </td>
+            <td class="col-brand">${buildBrandCellHTML(item)}</td>
             <td class="col-specs">${escHtml(item.specs)}</td>
             <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
             ${vendorCell}
-            <td class="status-cell">
-              <div class="status-cell-inner">
-                <div class="status-menu">
-                  <span class="status-label ${statusClass}">${item.status}</span>
-                  <div class="status-options">
-                    <div onclick="updateItemStatus('${item.id}', 'sağlıklı')">✓ Sağlıklı</div>
-                    <div onclick="updateItemStatus('${item.id}', 'bozuk')">✗ Bozuk</div>
-                    <div onclick="updateItemStatus('${item.id}', 'yedek')">◉ Yedek</div>
-                    <div onclick="updateItemStatus('${item.id}', 'atıldı')">⊘ Atıldı</div>
-                  </div>
-                </div>
-                <div class="row-actions">
-                  <button class="action-btn edit-btn" onclick="openEditModal('${item.id}')" title="Düzenle (çift tıkla)">✎</button>
-                  <button class="action-btn delete-btn" onclick="deleteItem('${item.id}')" title="Sil">✕</button>
-                </div>
-              </div>
-            </td>
+            ${buildStatusCellHTML(item)}
           `;
           tableBody.appendChild(tr);
           dateRowSpanIndex++;
@@ -243,39 +360,16 @@ function renderTableRows(list) {
 
     list.forEach((item) => {
       const tr = createRowEl(item);
-      const statusClass = getStatusClassName(item.status);
       const formattedDate = DATE_FORMAT(item.date);
 
       tr.innerHTML = `
         <td class="col-date">${formattedDate}</td>
         <td class="col-component">${escHtml(item.component)}</td>
-        <td class="col-brand">
-          ${
-            item.url && item.url.trim() !== ""
-              ? `<a href="${item.url}" target="_blank" class="brand-link" title="Ürüne Git">${escHtml(item.brand)} <span class="link-icon">🔗</span></a>`
-              : escHtml(item.brand)
-          }
-        </td>
+        <td class="col-brand">${buildBrandCellHTML(item)}</td>
         <td class="col-specs">${escHtml(item.specs)}</td>
         <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
         <td class="col-vendor">${escHtml(item.vendor)}</td>
-        <td class="status-cell">
-          <div class="status-cell-inner">
-            <div class="status-menu">
-              <span class="status-label ${statusClass}">${item.status}</span>
-              <div class="status-options">
-                <div onclick="updateItemStatus('${item.id}', 'sağlıklı')">✓ Sağlıklı</div>
-                <div onclick="updateItemStatus('${item.id}', 'bozuk')">✗ Bozuk</div>
-                <div onclick="updateItemStatus('${item.id}', 'yedek')">◉ Yedek</div>
-                <div onclick="updateItemStatus('${item.id}', 'atıldı')">⊘ Atıldı</div>
-              </div>
-            </div>
-            <div class="row-actions">
-              <button class="action-btn edit-btn" onclick="openEditModal('${item.id}')" title="Düzenle (çift tıkla)">✎</button>
-              <button class="action-btn delete-btn" onclick="deleteItem('${item.id}')" title="Sil">✕</button>
-            </div>
-          </div>
-        </td>
+        ${buildStatusCellHTML(item)}
       `;
       tableBody.appendChild(tr);
     });
@@ -284,76 +378,74 @@ function renderTableRows(list) {
   unsavedRows.forEach((r) => tableBody.appendChild(r));
 }
 
-/* ─── SORT HEADERS ───────────────────────────────────────────────────────────── */
+if (tableBody) {
+  tableBody.addEventListener("click", (event) => {
+    const actionEl = event.target.closest("[data-action]");
+    if (!actionEl) return;
+
+    event.stopPropagation();
+
+    const itemId = actionEl.dataset.id;
+    if (!itemId) return;
+
+    if (actionEl.dataset.action === "update-status") {
+      updateItemStatus(itemId, actionEl.dataset.status);
+      return;
+    }
+
+    if (actionEl.dataset.action === "edit-item") {
+      openEditModal(itemId);
+      return;
+    }
+
+    if (actionEl.dataset.action === "delete-item") {
+      deleteItem(itemId);
+    }
+  });
+}
+
 document.querySelectorAll(".sortable").forEach((th) => {
   th.addEventListener("click", () => {
-    const col = th.dataset.col;
-    currentSort =
-      currentSort.col === col
-        ? { col, dir: currentSort.dir === "asc" ? "desc" : "asc" }
-        : { col, dir: "asc" };
+    const col = th.dataset.sort || th.dataset.col;
+    if (!col) return;
+
+    if (currentSort.col === col) {
+      currentSort.dir = currentSort.dir === "asc" ? "desc" : "asc";
+    } else {
+      currentSort.col = col;
+      currentSort.dir = "asc";
+    }
+
     updateSortIcons();
     renderAll();
   });
 });
 
+/* update sort icons fonksiyon basligi */
+
 function updateSortIcons() {
   document.querySelectorAll(".sortable").forEach((th) => {
     const icon = th.querySelector(".sort-icon");
-    if (th.dataset.col === currentSort.col) {
-      icon.textContent = currentSort.dir === "asc" ? "↑" : "↓";
+    const col = th.dataset.sort || th.dataset.col;
+
+    if (col === currentSort.col) {
+      if (icon) icon.textContent = currentSort.dir === "asc" ? "↑" : "↓";
       th.classList.add("sort-active");
+      th.classList.remove("asc", "desc");
+      th.classList.add(currentSort.dir);
     } else {
-      icon.textContent = "↕";
-      th.classList.remove("sort-active");
+      if (icon) icon.textContent = "↕";
+      th.classList.remove("sort-active", "asc", "desc");
     }
   });
 }
 
-/* ─── SEARCH ─────────────────────────────────────────────────────────────────── */
-searchInput.addEventListener("input", () => {
-  currentSearch = searchInput.value;
-  clearSearch.style.display = currentSearch ? "flex" : "none";
-  renderAll();
-});
+/* get status class name fonksiyon basligi */
 
-clearSearch.addEventListener("click", () => {
-  searchInput.value = "";
-  currentSearch = "";
-  clearSearch.style.display = "none";
-  renderAll();
-  searchInput.focus();
-});
-
-/* ─── STATUS FILTER BUTTONS ──────────────────────────────────────────────────── */
-document.querySelectorAll(".filter-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document
-      .querySelectorAll(".filter-btn")
-      .forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentStatusFilter = btn.dataset.status;
-    renderAll();
-  });
-});
-
-/* ─── FİREBASE TABLO AKSİYONLARI ─────────────────────────────────────────────── */
-window.updateItemStatus = (id, newStatus) => {
-  database
-    .ref("components/" + id)
-    .update({ status: newStatus })
-    .then(() => showToast(`Durum güncellendi: ${newStatus}`, "success"))
-    .catch(() => showToast("Güncelleme başarısız", "error"));
-};
-
-window.deleteItem = (id) => {
-  const item = allData[id];
-  const name = item ? item.component : "Kayıt";
-  showConfirm(`"${name}" silinsin mi?`, () => {
-    database
-      .ref("components/" + id)
-      .remove()
-      .then(() => showToast("Kayıt silindi", "success"))
-      .catch(() => showToast("Silme başarısız", "error"));
-  });
-};
+function getStatusClassName(statusValue) {
+  const key = normalizeTr(statusValue);
+  for (const [k, v] of Object.entries(STATUS_MAP)) {
+    if (key.includes(k)) return v;
+  }
+  return "status-healthy";
+}

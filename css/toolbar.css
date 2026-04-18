@@ -1,13 +1,13 @@
-/* ─── Toolbar ───────────────────────────────────────────────────────────────── */
+/* .toolbar stil basligi */
 .toolbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 16px;
-  flex-wrap: wrap;
 }
 
-/* ─── Search ─────────────────────────────────────────────────────────────────── */
+/* .search-wrapper stil basligi */
 .search-wrapper {
   position: relative;
   display: flex;
@@ -16,15 +16,17 @@
   min-width: 200px;
 }
 
+/* .search-icon stil basligi */
 .search-icon {
   position: absolute;
   left: 13px;
-  font-size: 18px;
-  color: var(--text-dim);
-  pointer-events: none;
   z-index: 1;
+  color: var(--text-dim);
+  font-size: 18px;
+  pointer-events: none;
 }
 
+/* .search-input stil basligi */
 .search-input {
   width: 100%;
   padding: 10px 36px 10px 40px;
@@ -40,99 +42,121 @@
     box-shadow 0.2s;
 }
 
+/* .search-input::placeholder stil basligi */
 .search-input::placeholder {
   color: var(--text-dim);
 }
 
+/* .search-input:focus stil basligi */
 .search-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
+/* .clear-search stil basligi */
 .clear-search {
   position: absolute;
   right: 10px;
-  background: none;
-  border: none;
-  color: var(--text-dim);
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   width: 22px;
   height: 22px;
+  background: none;
+  border: none;
   border-radius: 50%;
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
   transition: 0.2s;
 }
 
+/* .clear-search.visible stil basligi */
+.clear-search.visible {
+  display: flex;
+}
+
+/* #importCsvInput stil basligi */
+#importCsvInput {
+  display: none;
+}
+
+/* .clear-search:hover stil basligi */
 .clear-search:hover {
   background: var(--surface3);
   color: var(--text);
 }
 
-/* ─── Filter Buttons ─────────────────────────────────────────────────────────── */
+/* .filter-group stil basligi */
 .filter-group {
   display: flex;
   gap: 4px;
+  padding: 4px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 4px;
 }
 
+/* .filter-btn stil basligi */
 .filter-btn {
   padding: 6px 14px;
+  background: transparent;
   border: none;
   border-radius: var(--radius);
-  background: transparent;
   color: var(--text-dim);
   font-family: var(--font-ui);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.18s ease;
   white-space: nowrap;
+  transition: all 0.18s ease;
 }
 
+/* .filter-btn:hover stil basligi */
 .filter-btn:hover {
-  color: var(--text);
   background: var(--surface2);
+  color: var(--text);
 }
 
+/* .filter-btn.active[data-status="all"] stil basligi */
 .filter-btn.active[data-status="all"] {
   background: var(--yellow);
   color: #000;
 }
 
+/* .filter-btn.active[data-status="saglikli"] stil basligi */
 .filter-btn.active[data-status="saglikli"] {
   background: var(--blue);
   color: #000;
 }
 
+/* .filter-btn.active[data-status="yedek"] stil basligi */
 .filter-btn.active[data-status="yedek"] {
   background: var(--yellow);
   color: #000;
 }
 
+/* .filter-btn.active[data-status="bozuk"] stil basligi */
 .filter-btn.active[data-status="bozuk"] {
   background: var(--red);
   color: #fff;
 }
 
+/* .filter-btn.active[data-status="atildi"] stil basligi */
 .filter-btn.active[data-status="atildi"] {
   background: var(--purple);
   color: #fff;
 }
 
-/* ─── Action Group (İçe / Dışa Aktar) ───────────────────────────────────────── */
+/* .action-group stil basligi */
 .action-group {
   display: flex;
   align-items: center;
-  gap: 8px;
   flex-wrap: nowrap;
+  gap: 8px;
 }
 
+/* .export-btn stil basligi */
 .export-btn {
   display: inline-flex;
   align-items: center;
@@ -147,26 +171,29 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* .export-btn:active stil basligi */
+.export-btn:active {
+  transform: translateY(0);
+}
+
+/* .btn-export:hover stil basligi */
 .btn-export:hover {
+  background: var(--accent-dim);
   border-color: var(--accent);
   color: var(--accent);
-  background: var(--accent-dim);
   box-shadow: 0 4px 12px rgba(232, 160, 32, 0.1);
   transform: translateY(-1px);
 }
 
+/* .btn-import:hover stil basligi */
 .btn-import:hover {
+  background: var(--blue-dim);
   border-color: var(--blue);
   color: var(--blue);
-  background: var(--blue-dim);
   box-shadow: 0 4px 12px rgba(74, 158, 255, 0.1);
   transform: translateY(-1px);
-}
-
-.export-btn:active {
-  transform: translateY(0);
 }
