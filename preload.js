@@ -1,11 +1,13 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                     PRELOAD - RENDERER API KÖPRÜSÜ                       */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("electronAPI", {
-  /* versiyon */
   onAppVersion: (callback) =>
     ipcRenderer.on("app_version", (_event, version) => callback(version)),
 
-  /* güncelleme akışı */
   onUpdateAvailable: (callback) =>
     ipcRenderer.on("update_available", (_event, version) => callback(version)),
 

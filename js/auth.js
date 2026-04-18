@@ -1,6 +1,11 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                  KİMLİK DOĞRULAMA VE HESAP YÖNETİMİ                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 const auth = firebase.auth();
 
-/* ─── YÜKLEME EKRANINI KALDIR ─────────────────────────────────────────────── */
+/* ─────────────────── Yükleme Ekranını Kaldır ─────────────────── */
+
 function hideLoading() {
   const el = document.getElementById("authLoading");
   if (!el) return;
@@ -9,7 +14,8 @@ function hideLoading() {
   setTimeout(() => el.remove(), 260);
 }
 
-/* ─── OTURUM DURUMU DİNLEYİCİSİ ──────────────────────────────────────────── */
+/* ─────────────────── Oturum Durumu Dinleyicisi ─────────────────── */
+
 auth.onAuthStateChanged((user) => {
   hideLoading();
   if (user) {
@@ -19,7 +25,10 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-/* ─── GİRİŞ YAPILDIĞINDA ──────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          GİRİŞ YAPILDIĞINDA                              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 async function onUserLoggedIn(user) {
   const authOverlay = document.getElementById("authOverlay");
   if (authOverlay) authOverlay.classList.remove("active");
@@ -37,15 +46,8 @@ async function onUserLoggedIn(user) {
   if (userInfo) userInfo.classList.remove("hidden");
   if (userEmailEl) userEmailEl.textContent = displayName;
 
-  /* ─── KRİTİK DÜZELTME: getIdToken(true) ile zorla yenile ──────────────── */
-  /* Orijinal kodda getIdToken() (force=false) kullanılıyordu.               */
-  /* Electron'da uygulama 1+ saat açık kalırsa token süresi dolar.           */
-  /* Tarayıcının aksine Electron otomatik yenileyemez.                       */
-  /* Süresi dolmuş token ile Firebase okuma izniz olsa bile boş veri döner. */
   try {
-    await user.getIdToken(
-      true,
-    ); /* force=true: her zaman sunucudan taze token al */
+    await user.getIdToken(true);
   } catch (_tokenError) {}
 
   if (typeof initUserDataRef === "function") {
@@ -53,7 +55,10 @@ async function onUserLoggedIn(user) {
   }
 }
 
-/* ─── ÇIKIŞ YAPILDIĞINDA ─────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          ÇIKIŞ YAPILDIĞINDA                              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 function onUserLoggedOut() {
   const pageWrapper = document.getElementById("pageWrapper");
   const appFooter = document.getElementById("appFooter");
@@ -121,7 +126,8 @@ function onUserLoggedOut() {
   if (authOverlay) authOverlay.classList.add("active");
 }
 
-/* ─── ŞİFRE GİZLE / GÖSTER ───────────────────────────────────────────────── */
+/* ─────────────────── Şifre Gizle / Göster ─────────────────── */
+
 document.querySelectorAll(".toggle-password").forEach((btn) => {
   btn.addEventListener("click", function () {
     const input = this.previousElementSibling;
@@ -137,7 +143,8 @@ document.querySelectorAll(".toggle-password").forEach((btn) => {
   });
 });
 
-/* ─── ŞİFRE EŞLEŞTİRME ───────────────────────────────────────────────────── */
+/* ─────────────────── Şifre Eşleştirme Kontrolü ─────────────────── */
+
 const regPasswordInput = document.getElementById("regPassword");
 const regPasswordConfirm = document.getElementById("regPasswordConfirm");
 
@@ -173,7 +180,10 @@ if (regPasswordConfirm) {
   regPasswordConfirm.addEventListener("input", validatePasswords);
 }
 
-/* ─── GİRİŞ FORMU ─────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                             GİRİŞ FORMU                                  */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 const loginForm = document.getElementById("loginForm");
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
@@ -204,7 +214,8 @@ if (loginForm) {
   });
 }
 
-/* ─── KULLANICI ADI UYGUNLUK KONTROLÜ ────────────────────────────────────── */
+/* ─────────────────── Kullanıcı Adı Uygunluk Kontrolü ─────────────────── */
+
 let usernameCheckTimer = null;
 const regUsernameInput = document.getElementById("regUsername");
 const usernameHint = document.getElementById("usernameHint");
@@ -249,7 +260,10 @@ if (regUsernameInput) {
   });
 }
 
-/* ─── KAYIT FORMU ──────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                             KAYIT FORMU                                  */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 const registerForm = document.getElementById("registerForm");
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
@@ -301,7 +315,8 @@ if (registerForm) {
   });
 }
 
-/* ─── PANEL GEÇİŞİ ─────────────────────────────────────────────────────────── */
+/* ─────────────────── Panel Geçişi ─────────────────── */
+
 document.getElementById("goToRegister")?.addEventListener("click", () => {
   document.getElementById("loginPanel")?.classList.add("hidden");
   document.getElementById("registerPanel")?.classList.remove("hidden");
@@ -312,7 +327,8 @@ document.getElementById("goToLogin")?.addEventListener("click", () => {
   document.getElementById("loginPanel")?.classList.remove("hidden");
 });
 
-/* ─── AYARLAR VE ÇIKIŞ ─────────────────────────────────────────────────────── */
+/* ─────────────────── Ayarlar Modal Değişkenleri ─────────────────── */
+
 const settingsModal =
   document.getElementById("settingsModal") ||
   document.getElementById("userSettingsModal");
@@ -320,6 +336,8 @@ const changePasswordModal = document.getElementById("changePasswordModal");
 const deleteAccountModal = document.getElementById("deleteAccountModal");
 const settingsTrigger =
   document.getElementById("settingsBtn") || document.getElementById("userInfo");
+
+/* ─────────────────── Modal Kapatma Fonksiyonları ─────────────────── */
 
 function closeSettingsModal() {
   if (settingsModal) settingsModal.classList.remove("active");
@@ -330,6 +348,8 @@ function closeChangePassModal() {
 function closeDeleteModal() {
   if (deleteAccountModal) deleteAccountModal.classList.remove("active");
 }
+
+/* ─────────────────── Ayarlar Modalını Açma ─────────────────── */
 
 settingsTrigger?.addEventListener("click", (e) => {
   if (e.target && e.target.closest && e.target.closest("#logoutBtn")) return;
@@ -345,6 +365,8 @@ settingsTrigger?.addEventListener("click", (e) => {
   if (settingsModal) settingsModal.classList.add("active");
 });
 
+/* ─────────────────── Modal Kapat Butonları ─────────────────── */
+
 document
   .getElementById("closeSettingsBtn")
   ?.addEventListener("click", closeSettingsModal);
@@ -358,6 +380,8 @@ document
   .getElementById("closeDeleteBtn")
   ?.addEventListener("click", closeDeleteModal);
 
+/* ─────────────────── Modal Dış Tıklama ─────────────────── */
+
 settingsModal?.addEventListener("click", (e) => {
   if (e.target === settingsModal) closeSettingsModal();
 });
@@ -368,10 +392,14 @@ deleteAccountModal?.addEventListener("click", (e) => {
   if (e.target === deleteAccountModal) closeDeleteModal();
 });
 
+/* ─────────────────── Çıkış Butonu ─────────────────── */
+
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
   closeSettingsModal();
   auth.signOut();
 });
+
+/* ─────────────────── Ayarlara Geri Dön ─────────────────── */
 
 function goBackToSettings(fromModal) {
   if (fromModal === "changePass") closeChangePassModal();
@@ -386,7 +414,8 @@ document
   .getElementById("backToSettingsFromDelete")
   ?.addEventListener("click", () => goBackToSettings("deleteAcc"));
 
-/* ─── KULLANICI ADI DÜZENLEME ────────────────────────────────────────────── */
+/* ─────────────────── Kullanıcı Adı Düzenleme ─────────────────── */
+
 const editBtn = document.getElementById("editUsernameBtn");
 const saveBtn = document.getElementById("saveUsernameBtn");
 const nameInput = document.getElementById("settingsDisplayName");
@@ -416,7 +445,10 @@ saveBtn?.addEventListener("click", async () => {
   }
 });
 
-/* ─── ŞİFRE DEĞİŞTİRME ────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          ŞİFRE DEĞİŞTİRME                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 document.getElementById("openChangePassBtn")?.addEventListener("click", () => {
   closeSettingsModal();
   if (changePasswordModal) changePasswordModal.classList.add("active");
@@ -495,7 +527,10 @@ document
     }
   });
 
-/* ─── HESAP SİLME ─────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                            HESAP SİLME                                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 document
   .getElementById("openDeleteAccountBtn")
   ?.addEventListener("click", () => {
@@ -581,7 +616,8 @@ document
     }
   });
 
-/* ─── HATA MESAJLARI ──────────────────────────────────────────────────────── */
+/* ─────────────────── Auth Hata Mesajları ─────────────────── */
+
 function getAuthErrorMessage(code) {
   const messages = {
     "auth/user-not-found": "E-posta veya şifre hatalı.",

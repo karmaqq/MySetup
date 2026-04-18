@@ -1,3 +1,9 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                       FIREBASE VERİTABANI YÖNETİMİ                      */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Firebase Yapılandırma ─────────────────── */
+
 const firebaseConfig = {
   apiKey: "AIzaSyDINeXkzy4JCwt9cSjII5Icm-x_NpmtmK4",
   authDomain: "mysetup-8dcd5.firebaseapp.com",
@@ -11,51 +17,93 @@ const firebaseConfig = {
 
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
-const isElectronRuntime =
-  typeof navigator !== "undefined" && /Electron/i.test(navigator.userAgent);
+/* ─────────────────── Electron Ortam Tespiti ─────────────────── */
 
-/* ─── KRİTİK DÜZELTME 1: Long polling, database instance OLUŞTURULMADAN önce ayarlanmalı ─── */
-/* Electron'da WebSocket bağlantısı sessizce başarısız olabilir.                              */
-/* firebase.database() çağrılmadan ÖNCE forceLongPolling çağrılmazsa etkisizdir.             */
-if (isElectronRuntime) {
-  try {
-    if (
-      typeof firebase.database === "function" &&
-      firebase.database.INTERNAL &&
-      typeof firebase.database.INTERNAL.forceLongPolling === "function"
-    ) {
-      firebase.database.INTERNAL.forceLongPolling();
+const isElectronRuntime = !!(
+  window.electronAPI ||
+  (typeof navigator !== "undefined" && /Electron/i.test(navigator.userAgent))
+);
 
-      /* Bazı ortamlarda WebSocket fallback'i listener'ı kilitleyebilir. */
-      if (typeof firebase.database.INTERNAL.forceWebSockets === "function") {
-        firebase.database.INTERNAL.forceWebSockets(false);
-      }
-    }
-  } catch (_lpError) {
-    /* sessizce devam et */
+/* ─────────────────── Long Polling Zorlama ─────────────────── */
+
+try {
+  if (
+    typeof firebase.database === "function" &&
+    firebase.database.INTERNAL &&
+    typeof firebase.database.INTERNAL.forceLongPolling === "function"
+  ) {
+    firebase.database.INTERNAL.forceLongPolling();
   }
-}
+} catch (_lpError) {}
+
+/* ─────────────────── Veritabanı Bağlantısı ─────────────────── */
 
 const database = firebase.database();
 
-/* database instance alındıktan sonra da settings() ile deneyelim (bazı compat sürümleri destekler) */
-if (isElectronRuntime) {
-  try {
-    database.settings({ experimentalForceLongPolling: true });
-  } catch (_settingsError) {
-    /* bu API bazı compat sürümlerinde mevcut değil, sessizce geç */
-  }
-}
+/* ─────────────────── Global Durum Değişkenleri ─────────────────── */
 
 let userDataRef = null;
 let currentUid = null;
 let activeBasePath = null;
+let restPollIntervalId = null;
 
-/* ─── KRİTİK DÜZELTME 2: .once() çağrısı için timeout wrapper ─────────────────────────── */
-/* Electron'da WebSocket çalışmıyorsa .once("value") SONSUZA KADAR bekleyebilir.            */
-/* Bu yüzden resolveAccessibleRef hiç resolve etmez, userDataRef null kalır,                */
-/* ama addComponentToFirebase HTTP üzerinden yazabildiği için Firebase'e veri gider.        */
-/* Kullanıcı veri ekleyebilir ama liste hep boş görünür. Bu asıl bug!                      */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                           REST API FALLBACK                              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── REST ile Veri Çekme ─────────────────── */
+
+async function fetchViaRest(path, timeoutMs) {
+  var ms = timeoutMs || 10000;
+  var user = firebase.auth && firebase.auth().currentUser;
+  if (!user) throw new Error("Kullanıcı oturum açmamış");
+
+  var token = await user.getIdToken();
+  var url = firebaseConfig.databaseURL + "/" + path + ".json";
+  var controller = new AbortController();
+  var timer = setTimeout(function () {
+    controller.abort();
+  }, ms);
+
+  try {
+    var res = await fetch(url, {
+      headers: { Authorization: "Bearer " + token },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return await res.json();
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
+  }
+}
+
+/* ─────────────────── REST Yoklama Durdurma ─────────────────── */
+
+function stopRestPolling() {
+  if (restPollIntervalId) {
+    clearInterval(restPollIntervalId);
+    restPollIntervalId = null;
+  }
+}
+
+/* ─────────────────── REST Yoklama Başlatma ─────────────────── */
+
+function startRestPolling(path) {
+  stopRestPolling();
+  var poll = async function () {
+    try {
+      var data = await fetchViaRest(path, 10000);
+      allData = data || {};
+      if (typeof renderAll === "function") renderAll();
+    } catch (_e) {}
+  };
+  restPollIntervalId = setInterval(poll, 30000);
+}
+
+/* ─────────────────── Zaman Aşımlı Tek Okuma ─────────────────── */
+
 function onceWithTimeout(ref, timeoutMs) {
   var ms = timeoutMs || 8000;
   return Promise.race([
@@ -68,7 +116,9 @@ function onceWithTimeout(ref, timeoutMs) {
   ]);
 }
 
-/* attach data listener fonksiyon basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                           VERİ DİNLEYİCİ                                */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 function attachDataListener(uid, dataRef, attempt) {
   const retryAttempt = typeof attempt === "number" ? attempt : 0;
@@ -77,6 +127,21 @@ function attachDataListener(uid, dataRef, attempt) {
 
   const firstSnapshotWatchdog = setTimeout(async () => {
     if (hasReceivedFirstSnapshot) return;
+
+    if (activeBasePath) {
+      try {
+        var restData = await fetchViaRest(activeBasePath, 10000);
+        if (!hasReceivedFirstSnapshot) {
+          allData = restData || {};
+          if (typeof renderAll === "function") renderAll();
+          updateSystemStatus("Bağlandı (REST)", "ok");
+          hasReceivedFirstSnapshot = true;
+          startRestPolling(activeBasePath);
+          return;
+        }
+      } catch (_restError) {}
+    }
+
     if (retryAttempt >= 1) {
       updateSystemStatus("Veri dinleyici başlatılamadı", "error");
       if (typeof showToast === "function") {
@@ -105,6 +170,7 @@ function attachDataListener(uid, dataRef, attempt) {
     (snapshot) => {
       hasReceivedFirstSnapshot = true;
       clearTimeout(firstSnapshotWatchdog);
+      stopRestPolling();
       allData = snapshot.val() || {};
       if (typeof renderAll === "function") {
         renderAll();
@@ -135,7 +201,7 @@ function attachDataListener(uid, dataRef, attempt) {
   );
 }
 
-/* update system status fonksiyon basligi */
+/* ─────────────────── Sistem Durumu Güncelleme ─────────────────── */
 
 function updateSystemStatus(text, state) {
   if (statusText) statusText.textContent = text;
@@ -146,6 +212,8 @@ function updateSystemStatus(text, state) {
 
 updateSystemStatus("Bağlanıyor...", "warn");
 
+/* ─────────────────── Bağlantı Durumu İzleyici ─────────────────── */
+
 database.ref(".info/connected").on("value", (snapshot) => {
   const isConnected = snapshot.val() === true;
   updateSystemStatus(
@@ -154,7 +222,7 @@ database.ref(".info/connected").on("value", (snapshot) => {
   );
 });
 
-/* resolve accessible ref fonksiyon basligi */
+/* ─────────────────── Erişilebilir Ref Çözümleme ─────────────────── */
 
 async function resolveAccessibleRef(uid) {
   const candidates = [];
@@ -178,13 +246,23 @@ async function resolveAccessibleRef(uid) {
     } catch (_error) {}
   }
 
+  for (const candidate of candidates) {
+    try {
+      await fetchViaRest(candidate.path, 8000);
+      return candidate;
+    } catch (_error) {}
+  }
+
   return null;
 }
 
-/* init user data ref fonksiyon basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                       KULLANICI VERİ BAŞLATMA                            */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 function initUserDataRef(uid) {
   if (userDataRef) userDataRef.off();
+  stopRestPolling();
 
   if (!uid) {
     currentUid = null;
@@ -198,20 +276,13 @@ function initUserDataRef(uid) {
 
   currentUid = uid;
 
-  /* ─── KRİTİK DÜZELTME 3: ref resolve edilmeden ÖNCE token yenileme ──────────────────── */
-  /* Firebase token'ı süresi dolmuşsa (>1 saat) .once() izin hatası verir.                */
-  /* Electron'da browser otomatik yenileyemez, elle force refresh şart.                   */
   const setupRef = async () => {
     try {
       const user = firebase.auth?.().currentUser;
       if (user) {
-        await user.getIdToken(
-          true,
-        ); /* force refresh - süresi dolmuş token'ı yenile */
+        await user.getIdToken(true);
       }
-    } catch (_tokenError) {
-      /* token yenileme başarısız olsa bile devam et */
-    }
+    } catch (_tokenError) {}
 
     let resolved = null;
     try {
@@ -240,7 +311,7 @@ function initUserDataRef(uid) {
   return null;
 }
 
-/* ensure data ref ready fonksiyon basligi */
+/* ─────────────────── Veri Referansı Hazır Kontrolü ─────────────────── */
 
 function ensureDataRefReady() {
   if (!userDataRef || !activeBasePath) {
@@ -249,7 +320,7 @@ function ensureDataRefReady() {
   return null;
 }
 
-/* add component to firebase fonksiyon basligi */
+/* ─────────────────── Yeni Bileşen Ekleme ─────────────────── */
 
 function addComponentToFirebase(itemData) {
   const err = ensureDataRefReady();
@@ -257,7 +328,7 @@ function addComponentToFirebase(itemData) {
   return userDataRef.push(itemData);
 }
 
-/* replace user data in firebase fonksiyon basligi */
+/* ─────────────────── Tüm Veriyi Değiştirme ─────────────────── */
 
 function replaceUserDataInFirebase(itemsMap) {
   const err = ensureDataRefReady();
@@ -265,7 +336,7 @@ function replaceUserDataInFirebase(itemsMap) {
   return userDataRef.set(itemsMap || {});
 }
 
-/* update component in firebase fonksiyon basligi */
+/* ─────────────────── Bileşen Güncelleme ─────────────────── */
 
 function updateComponentInFirebase(id, itemData) {
   const err = ensureDataRefReady();
@@ -273,7 +344,7 @@ function updateComponentInFirebase(id, itemData) {
   return database.ref(activeBasePath + "/" + id).update(itemData);
 }
 
-/* update component status in firebase fonksiyon basligi */
+/* ─────────────────── Durum Güncelleme ─────────────────── */
 
 function updateComponentStatusInFirebase(id, newStatus) {
   const err = ensureDataRefReady();
@@ -281,7 +352,7 @@ function updateComponentStatusInFirebase(id, newStatus) {
   return database.ref(activeBasePath + "/" + id).update({ status: newStatus });
 }
 
-/* delete component from firebase fonksiyon basligi */
+/* ─────────────────── Bileşen Silme ─────────────────── */
 
 function deleteComponentFromFirebase(id) {
   const err = ensureDataRefReady();

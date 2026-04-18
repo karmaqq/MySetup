@@ -1,4 +1,10 @@
-/* get filtered sorted list fonksiyon basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                     TABLO VERİ GÖSTERME VE YÖNETİMİ                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                        FİLTRELEME VE SIRALAMA                            */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 function getFilteredSortedList() {
   let list = Object.keys(allData).map((id) => ({ id, ...allData[id] }));
@@ -47,7 +53,7 @@ function getFilteredSortedList() {
   return list;
 }
 
-/* render all fonksiyon basligi */
+/* ─────────────────── Tüm Tabloyu Yeniden Çiz ─────────────────── */
 
 function renderAll() {
   const list = getFilteredSortedList();
@@ -56,7 +62,7 @@ function renderAll() {
   updateResultCount(list.length);
 }
 
-/* update stats fonksiyon basligi */
+/* ─────────────────── İstatistik Kartlarını Güncelle ─────────────────── */
 
 function updateStats(filteredList) {
   const all = Object.values(allData);
@@ -95,7 +101,7 @@ function updateStats(filteredList) {
       CURRENCY_FORMAT.format(filteredTotal) + " ₺";
 }
 
-/* update result count fonksiyon basligi */
+/* ─────────────────── Sonuç Sayısı Güncelleme ─────────────────── */
 
 function updateResultCount(filteredCount) {
   const total = Object.keys(allData).length;
@@ -107,7 +113,7 @@ function updateResultCount(filteredCount) {
   }
 }
 
-/* create row el fonksiyon basligi */
+/* ─────────────────── Tablo Satırı Oluşturma ─────────────────── */
 
 function createRowEl(item) {
   const tr = document.createElement("tr");
@@ -138,7 +144,7 @@ function createRowEl(item) {
   return tr;
 }
 
-/* build brand cell html fonksiyon basligi */
+/* ─────────────────── Marka Hücresi HTML Oluşturma ─────────────────── */
 
 function buildBrandCellHTML(item) {
   const safeUrl = safeExternalUrl(item.url);
@@ -148,7 +154,7 @@ function buildBrandCellHTML(item) {
   return escHtml(item.brand);
 }
 
-/* build status cell inner html fonksiyon basligi */
+/* ─────────────────── Durum Hücresi İç HTML ─────────────────── */
 
 function buildStatusCellInnerHTML(item) {
   const statusClass = getStatusClassName(item.status);
@@ -171,13 +177,13 @@ function buildStatusCellInnerHTML(item) {
   </div>`;
 }
 
-/* build status cell html fonksiyon basligi */
+/* ─────────────────── Durum Hücresi HTML Sarmalayıcı ─────────────────── */
 
 function buildStatusCellHTML(item) {
   return `<td class="status-cell">${buildStatusCellInnerHTML(item)}</td>`;
 }
 
-/* update item status fonksiyon basligi */
+/* ─────────────────── Kayıt Durumu Güncelleme ─────────────────── */
 
 function updateItemStatus(itemId, newStatus) {
   const currentItem = allData[itemId];
@@ -209,7 +215,7 @@ function updateItemStatus(itemId, newStatus) {
   });
 }
 
-/* delete item fonksiyon basligi */
+/* ─────────────────── Kayıt Silme ─────────────────── */
 
 function deleteItem(itemId) {
   if (!allData[itemId]) return;
@@ -237,7 +243,7 @@ function deleteItem(itemId) {
   performDelete();
 }
 
-/* sync status only changes fonksiyon basligi */
+/* ─────────────────── Sadece Durum Değişikliği Senkronu ─────────────────── */
 
 function syncStatusOnlyChanges(prevData, nextData, changedStatusIds) {
   if (currentStatusFilter !== "all" || currentSearch) {
@@ -273,7 +279,9 @@ function syncStatusOnlyChanges(prevData, nextData, changedStatusIds) {
   updateStats(getFilteredSortedList());
 }
 
-/* render table rows fonksiyon basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                            TABLO RENDER                                  */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 function renderTableRows(list) {
   const unsavedRows = Array.from(tableBody.querySelectorAll(".new-item-row"));
@@ -378,6 +386,8 @@ function renderTableRows(list) {
   unsavedRows.forEach((r) => tableBody.appendChild(r));
 }
 
+/* ─────────────────── Tablo Tıklama Delegasyonu ─────────────────── */
+
 if (tableBody) {
   tableBody.addEventListener("click", (event) => {
     const actionEl = event.target.closest("[data-action]");
@@ -404,6 +414,8 @@ if (tableBody) {
   });
 }
 
+/* ─────────────────── Sıralama Tıklama Dinleyicisi ─────────────────── */
+
 document.querySelectorAll(".sortable").forEach((th) => {
   th.addEventListener("click", () => {
     const col = th.dataset.sort || th.dataset.col;
@@ -421,7 +433,7 @@ document.querySelectorAll(".sortable").forEach((th) => {
   });
 });
 
-/* update sort icons fonksiyon basligi */
+/* ─────────────────── Sıralama İkonları Güncelleme ─────────────────── */
 
 function updateSortIcons() {
   document.querySelectorAll(".sortable").forEach((th) => {
@@ -440,7 +452,7 @@ function updateSortIcons() {
   });
 }
 
-/* get status class name fonksiyon basligi */
+/* ─────────────────── Durum CSS Sınıfı Eşleme ─────────────────── */
 
 function getStatusClassName(statusValue) {
   const key = normalizeTr(statusValue);

@@ -3,10 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://*.googletagmanager.com https://*.firebaseio.com https://*.firebasedatabase.app; script-src-elem 'self' 'unsafe-inline' https://www.gstatic.com https://*.googletagmanager.com https://*.firebaseio.com https://*.firebasedatabase.app; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.googleapis.com https://*.gstatic.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://www.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data:; object-src 'none'; base-uri 'self';"
-    />
     <title>MySetup</title>
     <link rel="icon" type="image/x-icon" href="assets/icon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -26,8 +22,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   </head>
   <body>
-    <!-- Uygulama govdesi -->
-
     <div class="auth-loading" id="authLoading">
       <div class="loading-content">
         <h1 class="loading-brand">My<span class="accent-text">SETUP</span></h1>
@@ -37,7 +31,6 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Kimlik katmani -->
     <div class="auth-overlay" id="authOverlay">
       <div class="auth-container">
         <div class="auth-brand">
@@ -586,7 +579,6 @@
         </table>
       </div>
 
-      <!-- Duzenleme modali -->
       <div class="modal-overlay" id="editModal">
         <div class="modal-box">
           <div class="modal-header">
@@ -689,7 +681,6 @@
       </div>
     </div>
 
-    <!-- Alt bilgi alani -->
     <footer class="app-footer hidden" id="appFooter">
       <span>© 2026 MySetup | <b>Karma</b> tarafından oluşturuldu.</span>
     </footer>

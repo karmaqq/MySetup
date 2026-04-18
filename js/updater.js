@@ -1,3 +1,7 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          OTOMATİK GÜNCELLEME                             */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 const { autoUpdater } = require("electron-updater");
 const { ipcMain } = require("electron");
 
@@ -8,7 +12,7 @@ let updaterInitialized = false;
 let updateIntervalId = null;
 let updaterWindow = null;
 
-/* setup updater fonksiyon basligi */
+/* ─────────────────── Güncelleme Sistemi Kurulumu ─────────────────── */
 
 function setupUpdater(mainWindow) {
   updaterWindow = mainWindow;
@@ -28,8 +32,6 @@ function setupUpdater(mainWindow) {
   autoUpdater.on("update-downloaded", () => {
     updaterWindow?.webContents.send("update_ready");
 
-    /* isSilent=true  → Windows NSIS installer herhangi bir dialog açmaz  */
-    /* isForceRunAfter=true → kurulum bitince uygulama otomatik yeniden başlar */
     setTimeout(() => {
       autoUpdater.quitAndInstall(true, true);
     }, 1500);
@@ -51,7 +53,7 @@ function setupUpdater(mainWindow) {
   );
 }
 
-/* check for updates fonksiyon basligi */
+/* ─────────────────── Güncelleme Kontrolü Başlatma ─────────────────── */
 
 function checkForUpdates() {
   autoUpdater.checkForUpdates();

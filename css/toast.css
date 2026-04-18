@@ -1,4 +1,9 @@
-/* .toast-container stil basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          BİLDİRİM TOASTLARI                             */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Toast Kapsayıcı ─────────────────── */
+
 .toast-container {
   position: fixed;
   bottom: 28px;
@@ -10,7 +15,8 @@
   pointer-events: none;
 }
 
-/* .toast stil basligi */
+/* ─────────────────── Toast Yapısı ─────────────────── */
+
 .toast {
   display: flex;
   align-items: center;
@@ -31,13 +37,13 @@
     transform 0.22s ease;
 }
 
-/* .toast.visible stil basligi */
 .toast.visible {
   opacity: 1;
   transform: translateX(0);
 }
 
-/* .toast-icon stil basligi */
+/* ─────────────────── Toast İkonları ─────────────────── */
+
 .toast-icon {
   display: flex;
   align-items: center;
@@ -50,35 +56,32 @@
   font-weight: 700;
 }
 
-/* .toast-success .toast-icon stil basligi */
 .toast-success .toast-icon {
   background: var(--green-dim);
   border: 1px solid rgba(61, 214, 140, 0.3);
   color: var(--green);
 }
 
-/* .toast-error .toast-icon stil basligi */
 .toast-error .toast-icon {
   background: var(--red-dim);
   border: 1px solid rgba(245, 96, 96, 0.3);
   color: var(--red);
 }
 
-/* .toast-warn .toast-icon stil basligi */
 .toast-warn .toast-icon {
   background: var(--yellow-dim);
   border: 1px solid rgba(245, 200, 66, 0.3);
   color: var(--yellow);
 }
 
-/* .toast-info .toast-icon stil basligi */
 .toast-info .toast-icon {
   background: var(--blue-dim);
   border: 1px solid rgba(74, 158, 255, 0.3);
   color: var(--blue);
 }
 
-/* .toast-confirm stil basligi */
+/* ─────────────────── Onay Toastı ─────────────────── */
+
 .toast-confirm {
   flex-direction: column;
   align-items: flex-start;
@@ -86,7 +89,6 @@
   min-width: 220px;
 }
 
-/* .toast-actions stil basligi */
 .toast-actions {
   display: flex;
   gap: 8px;
@@ -94,8 +96,6 @@
 }
 
 .toast-yes,
-
-/* .toast-no stil basligi */
 .toast-no {
   flex: 1;
   padding: 6px 12px;
@@ -108,26 +108,22 @@
   transition: 0.15s;
 }
 
-/* .toast-yes stil basligi */
 .toast-yes {
   background: var(--red-dim);
   border-color: rgba(245, 96, 96, 0.3);
   color: var(--red);
 }
 
-/* .toast-yes:hover stil basligi */
 .toast-yes:hover {
   background: var(--red);
   color: #fff;
 }
 
-/* .toast-no stil basligi */
 .toast-no {
   background: var(--surface3);
   color: var(--text);
 }
 
-/* .toast-no:hover stil basligi */
 .toast-no:hover {
   border-color: var(--text-dim);
 }

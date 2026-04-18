@@ -1,4 +1,9 @@
-/* :root stil basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          TEMEL STİLLER                                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── CSS Değişkenleri ─────────────────── */
+
 :root {
   --bg: #090b10;
   --surface: #0f1218;
@@ -30,22 +35,22 @@
   --radius-lg: 12px;
 }
 
+/* ─────────────────── Sıfırlama ─────────────────── */
+
 *,
 *::before,
-
-/* *::after stil basligi */
 *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* ::-webkit-scrollbar stil basligi */
 ::-webkit-scrollbar {
   display: none;
 }
 
-/* body stil basligi */
+/* ─────────────────── Body ─────────────────── */
+
 body {
   min-height: 100vh;
   background: var(--bg);
@@ -67,14 +72,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* .page-wrapper stil basligi */
+/* ─────────────────── Sayfa Sarmalayıcısı ─────────────────── */
+
 .page-wrapper {
   width: min(100%, 1300px);
   margin: 0 auto;
   padding: 36px 40px 60px;
 }
 
-/* .app-footer stil basligi */
+/* ─────────────────── Alt Bilgi ─────────────────── */
+
 .app-footer {
   position: fixed;
   bottom: 0;
@@ -94,63 +101,56 @@ body {
   pointer-events: none;
 }
 
-/* .app-footer b stil basligi */
 .app-footer b {
   margin-left: 4px;
   color: #daa924;
 }
 
-/* .hidden stil basligi */
+/* ─────────────────── Yardımcı Sınıflar ─────────────────── */
+
 .hidden {
   display: none !important;
 }
 
+/* ─────────────────── Duyarlı Tasarım ─────────────────── */
+
 @media (max-width: 900px) {
-  /* .page-wrapper stil basligi */
   .page-wrapper {
     padding: 20px 16px 40px;
   }
 
-  /* .stats-row stil basligi */
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* h1 stil basligi */
   h1 {
     font-size: 26px;
   }
 
-  /* .table-wrapper stil basligi */
   .table-wrapper {
     overflow-x: auto;
   }
 }
 
 @media (max-width: 600px) {
-  /* .stats-row stil basligi */
   .stats-row {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
 
-  /* .toolbar stil basligi */
   .toolbar {
     flex-wrap: wrap;
   }
 
-  /* .filter-group stil basligi */
   .filter-group {
     overflow-x: auto;
     padding-bottom: 4px;
   }
 
-  /* .modal-body stil basligi */
   .modal-body {
     grid-template-columns: 1fr;
   }
 
-  /* .field-full stil basligi */
   .field-full {
     grid-column: 1;
   }

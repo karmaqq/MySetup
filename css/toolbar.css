@@ -1,4 +1,9 @@
-/* .toolbar stil basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                            ARAÇ ÇUBUĞU                                  */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Araç Çubuğu Yapısı ─────────────────── */
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -7,7 +12,8 @@
   margin-bottom: 16px;
 }
 
-/* .search-wrapper stil basligi */
+/* ─────────────────── Arama Alanı ─────────────────── */
+
 .search-wrapper {
   position: relative;
   display: flex;
@@ -16,7 +22,6 @@
   min-width: 200px;
 }
 
-/* .search-icon stil basligi */
 .search-icon {
   position: absolute;
   left: 13px;
@@ -26,7 +31,6 @@
   pointer-events: none;
 }
 
-/* .search-input stil basligi */
 .search-input {
   width: 100%;
   padding: 10px 36px 10px 40px;
@@ -42,18 +46,15 @@
     box-shadow 0.2s;
 }
 
-/* .search-input::placeholder stil basligi */
 .search-input::placeholder {
   color: var(--text-dim);
 }
 
-/* .search-input:focus stil basligi */
 .search-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
-/* .clear-search stil basligi */
 .clear-search {
   position: absolute;
   right: 10px;
@@ -71,23 +72,21 @@
   transition: 0.2s;
 }
 
-/* .clear-search.visible stil basligi */
 .clear-search.visible {
   display: flex;
 }
 
-/* #importCsvInput stil basligi */
 #importCsvInput {
   display: none;
 }
 
-/* .clear-search:hover stil basligi */
 .clear-search:hover {
   background: var(--surface3);
   color: var(--text);
 }
 
-/* .filter-group stil basligi */
+/* ─────────────────── Filtre Grubu ─────────────────── */
+
 .filter-group {
   display: flex;
   gap: 4px;
@@ -97,7 +96,6 @@
   border-radius: var(--radius-lg);
 }
 
-/* .filter-btn stil basligi */
 .filter-btn {
   padding: 6px 14px;
   background: transparent;
@@ -112,43 +110,38 @@
   transition: all 0.18s ease;
 }
 
-/* .filter-btn:hover stil basligi */
 .filter-btn:hover {
   background: var(--surface2);
   color: var(--text);
 }
 
-/* .filter-btn.active[data-status="all"] stil basligi */
 .filter-btn.active[data-status="all"] {
   background: var(--yellow);
   color: #000;
 }
 
-/* .filter-btn.active[data-status="saglikli"] stil basligi */
 .filter-btn.active[data-status="saglikli"] {
   background: var(--blue);
   color: #000;
 }
 
-/* .filter-btn.active[data-status="yedek"] stil basligi */
 .filter-btn.active[data-status="yedek"] {
   background: var(--yellow);
   color: #000;
 }
 
-/* .filter-btn.active[data-status="bozuk"] stil basligi */
 .filter-btn.active[data-status="bozuk"] {
   background: var(--red);
   color: #fff;
 }
 
-/* .filter-btn.active[data-status="atildi"] stil basligi */
 .filter-btn.active[data-status="atildi"] {
   background: var(--purple);
   color: #fff;
 }
 
-/* .action-group stil basligi */
+/* ─────────────────── İşlem Grubu ─────────────────── */
+
 .action-group {
   display: flex;
   align-items: center;
@@ -156,7 +149,6 @@
   gap: 8px;
 }
 
-/* .export-btn stil basligi */
 .export-btn {
   display: inline-flex;
   align-items: center;
@@ -175,12 +167,10 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* .export-btn:active stil basligi */
 .export-btn:active {
   transform: translateY(0);
 }
 
-/* .btn-export:hover stil basligi */
 .btn-export:hover {
   background: var(--accent-dim);
   border-color: var(--accent);
@@ -189,7 +179,6 @@
   transform: translateY(-1px);
 }
 
-/* .btn-import:hover stil basligi */
 .btn-import:hover {
   background: var(--blue-dim);
   border-color: var(--blue);
