@@ -1,4 +1,9 @@
-/* .modal-overlay stil basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          DÜZENLEME MODALI                                */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Modal Overlay ─────────────────── */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -15,13 +20,13 @@
     visibility 0.22s ease;
 }
 
-/* .modal-overlay.active stil basligi */
 .modal-overlay.active {
   opacity: 1;
   visibility: visible;
 }
 
-/* .modal-box stil basligi */
+/* ─────────────────── Modal Kutu ─────────────────── */
+
 .modal-box {
   width: min(520px, 95vw);
   background: var(--surface);
@@ -32,12 +37,12 @@
   transition: transform 0.22s ease;
 }
 
-/* .modal-overlay.active .modal-box stil basligi */
 .modal-overlay.active .modal-box {
   transform: translateY(0) scale(1);
 }
 
-/* .modal-header stil basligi */
+/* ─────────────────── Modal Başlık ─────────────────── */
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -46,7 +51,6 @@
   border-bottom: 1px solid var(--border);
 }
 
-/* .modal-title stil basligi */
 .modal-title {
   font-family: var(--font-display);
   font-size: 17px;
@@ -54,7 +58,6 @@
   color: var(--text-bright);
 }
 
-/* .modal-close stil basligi */
 .modal-close {
   display: flex;
   align-items: center;
@@ -70,14 +73,14 @@
   transition: 0.15s;
 }
 
-/* .modal-close:hover stil basligi */
 .modal-close:hover {
   background: var(--red-dim);
   border-color: var(--red);
   color: var(--red);
 }
 
-/* .modal-body stil basligi */
+/* ─────────────────── Modal İçerik ─────────────────── */
+
 .modal-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -85,19 +88,16 @@
   padding: 20px 24px;
 }
 
-/* .field-group stil basligi */
 .field-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* .field-full stil basligi */
 .field-full {
   grid-column: 1 / -1;
 }
 
-/* .field-group label stil basligi */
 .field-group label {
   font-size: 11px;
   font-weight: 600;
@@ -106,37 +106,32 @@
   letter-spacing: 0.8px;
 }
 
-/* .required stil basligi */
 .required {
   color: var(--red);
 }
 
-/* .modal-title--danger stil basligi */
 .modal-title--danger {
   color: var(--red);
 }
 
-/* .settings-field-mb stil basligi */
 .settings-field-mb {
   margin-bottom: 24px;
 }
 
-/* .modal-submit-mt stil basligi */
 .modal-submit-mt {
   margin-top: 8px;
 }
 
-/* .btn-username stil basligi */
 .btn-username {
   display: none;
 }
 
-/* .btn-username.visible stil basligi */
 .btn-username.visible {
   display: block;
 }
 
-/* .modal-input stil basligi */
+/* ─────────────────── Modal Girdileri ─────────────────── */
+
 .modal-input {
   width: 100%;
   padding: 9px 12px;
@@ -153,31 +148,28 @@
     box-shadow 0.15s;
 }
 
-/* .modal-input:focus stil basligi */
 .modal-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
-/* .modal-input::placeholder stil basligi */
 .modal-input::placeholder {
   color: var(--text-dim);
 }
 
-/* .modal-select stil basligi */
 .modal-select {
   appearance: auto;
   cursor: pointer;
 }
 
-/* #editUrl stil basligi */
 #editUrl {
   color: var(--blue);
   font-family: var(--font-data);
   font-size: 12px;
 }
 
-/* .modal-footer stil basligi */
+/* ─────────────────── Modal Alt Bilgi ─────────────────── */
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -186,7 +178,6 @@
   border-top: 1px solid var(--border);
 }
 
-/* .btn-modal-cancel stil basligi */
 .btn-modal-cancel {
   padding: 9px 20px;
   background: none;
@@ -200,13 +191,11 @@
   transition: 0.15s;
 }
 
-/* .btn-modal-cancel:hover stil basligi */
 .btn-modal-cancel:hover {
   background: var(--surface2);
   border-color: var(--text-dim);
 }
 
-/* .btn-modal-save stil basligi */
 .btn-modal-save {
   padding: 9px 24px;
   background: var(--accent);
@@ -220,19 +209,18 @@
   transition: 0.15s;
 }
 
-/* .btn-modal-save:hover stil basligi */
 .btn-modal-save:hover {
   background: #f5b030;
   box-shadow: 0 4px 12px var(--accent-glow);
 }
 
-/* .col-brand stil basligi */
+/* ─────────────────── Marka Bağlantısı ─────────────────── */
+
 .col-brand {
   position: relative;
   padding: 11px 16px !important;
 }
 
-/* .brand-link stil basligi */
 .brand-link {
   display: flex;
   align-items: center;
@@ -244,12 +232,10 @@
   transition: all 0.2s ease;
 }
 
-/* .brand-link:hover stil basligi */
 .brand-link:hover {
   color: var(--accent);
 }
 
-/* .link-icon stil basligi */
 .link-icon {
   flex-shrink: 0;
   margin-left: 8px;
@@ -259,7 +245,6 @@
   transition: all 0.2s ease;
 }
 
-/* .brand-link:hover .link-icon stil basligi */
 .brand-link:hover .link-icon {
   opacity: 1;
   filter: grayscale(0);

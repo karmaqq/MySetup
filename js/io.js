@@ -1,4 +1,12 @@
-/* show toast fonksiyon basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          GİRDİ / ÇIKTI İŞLEMLERİ                        */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                           BİLDİRİM SİSTEMİ                              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Toast Bildirimi Gösterme ─────────────────── */
 
 window.showToast = function (message, type = "info", duration = 3200) {
   if (!toastContainer) return;
@@ -25,7 +33,7 @@ window.showToast = function (message, type = "info", duration = 3200) {
   }, duration);
 };
 
-/* show confirm fonksiyon basligi */
+/* ─────────────────── Onay Diyalogu Gösterme ─────────────────── */
 
 window.showConfirm = function (message, onConfirm) {
   if (!toastContainer) return;
@@ -59,14 +67,14 @@ window.showConfirm = function (message, onConfirm) {
     });
   };
 
-  /* onclick fonksiyon basligi */
-
   yesBtn.onclick = () => {
     dismiss();
     onConfirm();
   };
   noBtn.onclick = dismiss;
 };
+
+/* ─────────────────── Arama Alanı Dinleyicisi ─────────────────── */
 
 if (searchInput && clearSearch) {
   searchInput.addEventListener("input", () => {
@@ -84,6 +92,8 @@ if (searchInput && clearSearch) {
   });
 }
 
+/* ─────────────────── Filtre Butonları Dinleyicisi ─────────────────── */
+
 document.querySelectorAll(".filter-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
@@ -99,7 +109,9 @@ const importCsvBtn = document.getElementById("importCsvBtn");
 const exportCsvBtn = document.getElementById("exportCsvBtn");
 const importCsvInput = document.getElementById("importCsvInput");
 
-/* process csv fonksiyon basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                           CSV İÇE AKTARMA                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 function processCsv(csvText) {
   const lines = csvText.split(/\r?\n/).filter((l) => l.trim());
@@ -108,18 +120,11 @@ function processCsv(csvText) {
     return;
   }
 
-  /* ─── KRİTİK DÜZELTME: userDataRef null olsa bile key üretilebilmeli ──────── */
-  /* Orijinal kodda: userDataRef.push().key kullanılıyordu.                      */
-  /* userDataRef henüz null ise (init tamamlanmamışsa) tüm satırlar atlanır,     */
-  /* CSV import başarısız görünmez ama hiçbir şey aktarılmaz.                    */
-  /* Düzeltme: activeBasePath'ten türetilen bir ref kullan;                      */
-  /* o da yoksa database kökünden geçici bir key üret (veri yazmaz, key üretir). */
   const getNewKey = () => {
     if (typeof database === "undefined") return null;
     if (typeof activeBasePath !== "undefined" && activeBasePath) {
       return database.ref(activeBasePath).push().key;
     }
-    /* activeBasePath yoksa database kökünden key üret - bu sadece ID, write değil */
     return database.ref().push().key;
   };
 
@@ -164,12 +169,6 @@ function processCsv(csvText) {
 
       try {
         await replaceUserDataInFirebase(importPayload);
-        /* ─── KRİTİK DÜZELTME: allData'yı elle ATAMA ─────────────────────────── */
-        /* Orijinal kodda: allData = importPayload yapılıyordu.                   */
-        /* Bu, on("value") listener'ının Firebase'den dönecek güncel veriyle      */
-        /* çakışmasına ve race condition'a yol açıyordu.                          */
-        /* Düzeltme: listener zaten tetiklenecek ve allData'yı güncelleyecek.     */
-        /* Elle atama kaldırıldı. Sadece başarı bildirimi göster.                 */
         showToast(`${importCount} kayıt sıfırdan yüklendi.`, "success");
       } catch (_error) {
         showToast("CSV aktarımı tamamlanamadı", "error");
@@ -178,20 +177,23 @@ function processCsv(csvText) {
   );
 }
 
+/* ─────────────────── CSV Dosya Seçici Dinleyicisi ─────────────────── */
+
 if (importCsvBtn && importCsvInput) {
   importCsvBtn.addEventListener("click", () => importCsvInput.click());
   importCsvInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-
-    /* onload fonksiyon basligi */
-
     reader.onload = (ev) => processCsv(ev.target.result);
     reader.readAsText(file);
     importCsvInput.value = "";
   });
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          CSV DIŞA AKTARMA                                */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 if (exportCsvBtn) {
   exportCsvBtn.addEventListener("click", () => {
@@ -245,6 +247,10 @@ if (exportCsvBtn) {
   });
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                        ELECTRON GÜNCELLEMELERİ                          */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 if (electronAPI) {
   electronAPI.onAppVersion((version) => {
     if (versionDisplay) versionDisplay.innerText = `v${version}`;
@@ -257,10 +263,7 @@ if (electronAPI) {
     updateBtn.style.pointerEvents = "auto";
     updateBtn.textContent = `🟨 Güncelleme Mevcut (v${version})`;
 
-    /* onclick fonksiyon basligi */
-
     updateBtn.onclick = () => {
-      /* Butona basıldıktan sonra her şey otomatik - dialog yok, onay yok */
       updateBtn.textContent = "⏳ İndiriliyor... 0%";
       updateBtn.style.pointerEvents = "none";
       updateBtn.style.color = "var(--text-dim)";
@@ -268,7 +271,6 @@ if (electronAPI) {
     };
   });
 
-  /* indirme ilerlemesini butonda göster */
   if (typeof electronAPI.onUpdateProgress === "function") {
     electronAPI.onUpdateProgress((percent) => {
       if (!updateBtn) return;
@@ -276,7 +278,6 @@ if (electronAPI) {
     });
   }
 
-  /* indirme bitti, kurulum başlıyor bildirimi */
   if (typeof electronAPI.onUpdateReady === "function") {
     electronAPI.onUpdateReady(() => {
       if (!updateBtn) return;

@@ -1,10 +1,39 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          ELECTRON ANA SÜREÇ                              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 const { setupUpdater, checkForUpdates } = require("./js/updater.js");
 
 let mainWindow;
 
-/* create window fonksiyon basligi */
+/* ─────────────────── CSP Başlık Tanımlaması ─────────────────── */
+
+const APP_CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://*.googletagmanager.com https://*.firebaseio.com https://*.firebasedatabase.app",
+  "script-src-elem 'self' 'unsafe-inline' https://www.gstatic.com https://*.googletagmanager.com https://*.firebaseio.com https://*.firebasedatabase.app",
+  "connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.googleapis.com https://*.gstatic.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://www.googleapis.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data:",
+  "object-src 'none'",
+  "base-uri 'self'",
+].join("; ");
+
+/* ─────────────────── CSP Header Kurulumu ─────────────────── */
+
+function setupCspHeaders() {
+  const ses = require("electron").session.defaultSession;
+  ses.webRequest.onHeadersReceived((details, callback) => {
+    const responseHeaders = details.responseHeaders || {};
+    responseHeaders["Content-Security-Policy"] = [APP_CSP];
+    callback({ responseHeaders });
+  });
+}
+
+/* ─────────────────── Pencere Oluşturma ─────────────────── */
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -32,7 +61,14 @@ function createWindow() {
   setupUpdater(mainWindow);
 }
 
-app.whenReady().then(createWindow);
+/* ─────────────────── Uygulama Başlatma ─────────────────── */
+
+app.whenReady().then(() => {
+  setupCspHeaders();
+  createWindow();
+});
+
+/* ─────────────────── Pencere Kapatma ─────────────────── */
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {

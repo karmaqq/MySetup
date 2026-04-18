@@ -1,15 +1,25 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          GENEL YARDIMCI ARAÇLAR                          */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 const electronAPI = window.electronAPI || null;
+
+/* ─────────────────── Para Birimi Formatlayıcı ─────────────────── */
 
 const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
+/* ─────────────────── Tarih Formatlayıcı ─────────────────── */
+
 const DATE_FORMAT = (dateString) => {
   if (!dateString) return "-";
   const date = new Date(dateString);
   return isNaN(date.getTime()) ? dateString : date.toLocaleDateString("tr-TR");
 };
+
+/* ─────────────────── Durum Sınıfı Haritası ─────────────────── */
 
 const STATUS_MAP = {
   bozuk: "status-broken",
@@ -18,11 +28,15 @@ const STATUS_MAP = {
   saglikli: "status-healthy",
 };
 
+/* ─────────────────── Global Değişkenler ─────────────────── */
+
 let allData = {};
 let currentSearch = "";
 let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
+
+/* ─────────────────── DOM Referansları ─────────────────── */
 
 const versionDisplay = document.getElementById("versionDisplay");
 const updateBtn = document.getElementById("updateBtn");
@@ -58,7 +72,7 @@ const editPrice = document.getElementById("editPrice");
 const editVendor = document.getElementById("editVendor");
 const editStatus = document.getElementById("editStatus");
 
-/* normalize tr fonksiyon basligi */
+/* ─────────────────── Türkçe Karakter Normalizasyonu ─────────────────── */
 
 function normalizeTr(s) {
   return (s || "")
@@ -71,7 +85,7 @@ function normalizeTr(s) {
     .replace(/ç/g, "c");
 }
 
-/* esc html fonksiyon basligi */
+/* ─────────────────── HTML Karakter Kaçışı ─────────────────── */
 
 function escHtml(str) {
   return (str || "")
@@ -80,13 +94,13 @@ function escHtml(str) {
     .replace(/>/g, "&gt;");
 }
 
-/* esc attr fonksiyon basligi */
+/* ─────────────────── Attribute Karakter Kaçışı ─────────────────── */
 
 function escAttr(str) {
   return escHtml(str).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-/* safe external url fonksiyon basligi */
+/* ─────────────────── Güvenli Harici URL Doğrulama ─────────────────── */
 
 function safeExternalUrl(value) {
   if (!value) return "";
@@ -102,7 +116,7 @@ function safeExternalUrl(value) {
   }
 }
 
-/* apply price format fonksiyon basligi */
+/* ─────────────────── Fiyat Giriş Formatlama ─────────────────── */
 
 function applyPriceFormat(inputEl) {
   if (!inputEl) return;
@@ -120,6 +134,8 @@ function applyPriceFormat(inputEl) {
     inputEl.value = "";
   }
 }
+
+/* ─────────────────── Fiyat Input Dinleyicisi ─────────────────── */
 
 if (editPrice) {
   editPrice.addEventListener("input", function () {

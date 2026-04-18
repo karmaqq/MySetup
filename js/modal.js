@@ -1,4 +1,8 @@
-/* open edit modal fonksiyon basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          DÜZENLEME MODALI                                */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Düzenleme Modalını Aç ─────────────────── */
 
 window.openEditModal = function (id, focusTarget = "component") {
   const item = allData[id];
@@ -54,14 +58,14 @@ window.openEditModal = function (id, focusTarget = "component") {
   }, 80);
 };
 
-/* close edit modal fonksiyon basligi */
+/* ─────────────────── Düzenleme Modalını Kapat ─────────────────── */
 
 window.closeEditModal = function () {
   if (editModal) editModal.classList.remove("active");
   editingId = null;
 };
 
-/* save edit modal fonksiyon basligi */
+/* ─────────────────── Düzenleme Kaydını Kaydet ─────────────────── */
 
 window.saveEditModal = function () {
   if (!editingId) return;
@@ -107,9 +111,13 @@ window.saveEditModal = function () {
     .catch(() => showToast("Güncelleme başarısız", "error"));
 };
 
+/* ─────────────────── Modal Kapat Butonları ─────────────────── */
+
 if (modalClose) modalClose.onclick = closeEditModal;
 if (modalCancel) modalCancel.onclick = closeEditModal;
 if (modalSave) modalSave.onclick = saveEditModal;
+
+/* ─────────────────── Modal Dış Tıklama ile Kapatma ─────────────────── */
 
 if (editModal) {
   editModal.addEventListener("click", (e) => {
@@ -117,12 +125,10 @@ if (editModal) {
   });
 }
 
+/* ─────────────────── Takvim İkonu Tarih Seçici ─────────────────── */
+
 if (editCalIcon && editDatePicker) {
-  /* onclick fonksiyon basligi */
-
   editCalIcon.onclick = () => editDatePicker.showPicker();
-
-  /* onchange fonksiyon basligi */
 
   editDatePicker.onchange = (e) => {
     const [y, m, d] = e.target.value.split("-");
@@ -130,15 +136,17 @@ if (editCalIcon && editDatePicker) {
   };
 }
 
+/* ─────────────────── Modal Fiyat Formatlama ─────────────────── */
+
 if (editPrice) {
   editPrice.addEventListener("input", function () {
     if (typeof applyPriceFormat === "function") applyPriceFormat(this);
   });
 }
 
-if (addItemBtn) {
-  /* onclick fonksiyon basligi */
+/* ─────────────────── Ürün Ekle Butonu ─────────────────── */
 
+if (addItemBtn) {
   addItemBtn.onclick = () => {
     if (!tableBody) return;
     const existing = tableBody.querySelector(".new-item-row");
@@ -150,7 +158,9 @@ if (addItemBtn) {
   };
 }
 
-/* initiate add row fonksiyon basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          YENİ KAYIT SATIRI                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 function initiateAddRow() {
   const tr = document.createElement("tr");
@@ -180,11 +190,7 @@ function initiateAddRow() {
   const saveBtn = tr.querySelector(".save-btn");
   const priceInput = tr.querySelector(".price-input");
 
-  /* onclick fonksiyon basligi */
-
   calendarIcon.onclick = () => hiddenPicker.showPicker();
-
-  /* onchange fonksiyon basligi */
 
   hiddenPicker.onchange = (e) => {
     const [y, m, d] = e.target.value.split("-");
@@ -210,15 +216,13 @@ function initiateAddRow() {
     if (e.key === "Enter" && inputs[1].value.trim()) submitNewItem(tr, inputs);
   });
 
-  /* onclick fonksiyon basligi */
-
   saveBtn.onclick = () => submitNewItem(tr, inputs);
 
   setTimeout(() => inputs[1].focus(), 30);
   return tr;
 }
 
-/* submit new item fonksiyon basligi */
+/* ─────────────────── Yeni Kayıt Gönderme ─────────────────── */
 
 function submitNewItem(tr, inputs) {
   const component = inputs[1].value.trim();
@@ -259,6 +263,10 @@ function submitNewItem(tr, inputs) {
       .catch(() => showToast("Kayıt eklenemedi", "error"));
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          KLAVYE KISAYOLLARI                              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {

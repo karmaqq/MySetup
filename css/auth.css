@@ -1,4 +1,9 @@
-/* .auth-loading stil basligi */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                    KİMLİK DOĞRULAMA STİLLERİ                            */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Yükleme Ekranı ─────────────────── */
+
 .auth-loading {
   position: fixed;
   inset: 0;
@@ -13,10 +18,13 @@
       rgba(232, 160, 32, 0.08) 0%,
       transparent 55%
     ),
-    radial-gradient();
+    radial-gradient(
+      ellipse at 80% 90%,
+      rgba(74, 158, 255, 0.05) 0%,
+      transparent 55%
+    );
 }
 
-/* .loading-content stil basligi */
 .loading-content {
   display: flex;
   flex-direction: column;
@@ -24,7 +32,6 @@
   gap: 32px;
 }
 
-/* .loading-brand stil basligi */
 .loading-brand {
   font-family: var(--font-display);
   font-size: 46px;
@@ -35,12 +42,10 @@
   margin: 0;
 }
 
-/* .loading-brand .accent-text stil basligi */
 .loading-brand .accent-text {
   color: var(--accent);
 }
 
-/* .spinner-ring stil basligi */
 .spinner-ring {
   width: 36px;
   height: 36px;
@@ -51,13 +56,13 @@
 }
 
 @keyframes spin {
-  /* to stil basligi */
   to {
     transform: rotate(360deg);
   }
 }
 
-/* .auth-overlay stil basligi */
+/* ─────────────────── Auth Overlay ─────────────────── */
+
 .auth-overlay {
   position: fixed;
   inset: 0;
@@ -76,13 +81,11 @@
   overflow-y: auto;
 }
 
-/* .auth-overlay.active stil basligi */
 .auth-overlay.active {
   opacity: 1;
   visibility: visible;
 }
 
-/* .auth-container stil basligi */
 .auth-container {
   width: 100%;
   max-width: 440px;
@@ -93,17 +96,16 @@
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
 }
 
-/* .auth-overlay.active .auth-container stil basligi */
 .auth-overlay.active .auth-container {
   transform: translateY(0) scale(1);
 }
 
-/* .auth-brand stil basligi */
+/* ─────────────────── Auth Marka Alanı ─────────────────── */
+
 .auth-brand {
   text-align: center;
 }
 
-/* .auth-brand h1 stil basligi */
 .auth-brand h1 {
   font-family: var(--font-display);
   font-size: 44px;
@@ -114,12 +116,10 @@
   margin: 0;
 }
 
-/* .auth-brand h1 .accent-text stil basligi */
 .auth-brand h1 .accent-text {
   color: var(--accent);
 }
 
-/* .auth-brand p stil basligi */
 .auth-brand p {
   color: var(--text-dim);
   font-family: var(--font-ui);
@@ -128,7 +128,8 @@
   margin-bottom: 0;
 }
 
-/* .auth-panel stil basligi */
+/* ─────────────────── Giriş / Kayıt Panelleri ─────────────────── */
+
 .auth-panel {
   background: var(--surface);
   border: 1px solid var(--border2);
@@ -137,7 +138,6 @@
   padding: 40px 48px;
 }
 
-/* .auth-panel h2 stil basligi */
 .auth-panel h2 {
   font-family: var(--font-display);
   font-size: 22px;
@@ -149,21 +149,20 @@
   text-align: center;
 }
 
-/* .auth-panel form stil basligi */
 .auth-panel form {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-/* .auth-field stil basligi */
+/* ─────────────────── Form Alanları ─────────────────── */
+
 .auth-field {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* .auth-field label stil basligi */
 .auth-field label {
   font-family: var(--font-ui);
   font-size: 12px;
@@ -173,7 +172,6 @@
   letter-spacing: 1px;
 }
 
-/* .auth-field input stil basligi */
 .auth-field input {
   width: 100%;
   padding: 14px 16px;
@@ -190,32 +188,29 @@
     background-color 0.2s;
 }
 
-/* .auth-field input:focus:not(#settingsDisplayName) stil basligi */
 .auth-field input:focus:not(#settingsDisplayName) {
   background: var(--surface3);
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--accent-dim);
 }
 
-/* .auth-field input::placeholder stil basligi */
 .auth-field input::placeholder {
   color: var(--text-dim);
   opacity: 0.7;
 }
 
-/* .password-wrapper stil basligi */
+/* ─────────────────── Şifre Gizle / Göster ─────────────────── */
+
 .password-wrapper {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-/* .password-wrapper input stil basligi */
 .password-wrapper input {
   padding-right: 48px !important;
 }
 
-/* .toggle-password stil basligi */
 .toggle-password {
   position: absolute;
   right: 16px;
@@ -232,20 +227,19 @@
     transform 0.2s;
 }
 
-/* .toggle-password:hover stil basligi */
 .toggle-password:hover {
   color: var(--text-bright);
   transform: scale(1.1);
 }
 
-/* .toggle-password svg stil basligi */
 .toggle-password svg {
   width: 18px;
   height: 18px;
   fill: currentColor;
 }
 
-/* .remember-me-wrapper stil basligi */
+/* ─────────────────── Beni Hatırla ─────────────────── */
+
 .remember-me-wrapper {
   display: flex;
   align-items: center;
@@ -254,7 +248,6 @@
   margin-bottom: 8px;
 }
 
-/* .remember-me-wrapper input[type="checkbox"] stil basligi */
 .remember-me-wrapper input[type="checkbox"] {
   appearance: none;
   width: 16px;
@@ -269,13 +262,11 @@
     border-color 0.2s;
 }
 
-/* .remember-me-wrapper input[type="checkbox"]:checked stil basligi */
 .remember-me-wrapper input[type="checkbox"]:checked {
   background: var(--accent);
   border-color: var(--accent);
 }
 
-/* .remember-me-wrapper input[type="checkbox"]:checked::after stil basligi */
 .remember-me-wrapper input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
@@ -288,7 +279,6 @@
   transform: rotate(45deg);
 }
 
-/* .remember-me-wrapper label stil basligi */
 .remember-me-wrapper label {
   color: var(--text-dim);
   font-size: 13px;
@@ -298,24 +288,24 @@
   transition: color 0.2s;
 }
 
-/* .remember-me-wrapper:hover label stil basligi */
 .remember-me-wrapper:hover label {
   color: var(--text-bright);
 }
 
-/* .auth-field input.match-success stil basligi */
+/* ─────────────────── Şifre Eşleştirme Durumu ─────────────────── */
+
 .auth-field input.match-success {
   border-color: var(--green) !important;
   box-shadow: 0 0 0 3px var(--green-dim) !important;
 }
 
-/* .auth-field input.match-error stil basligi */
 .auth-field input.match-error {
   border-color: var(--red) !important;
   box-shadow: 0 0 0 3px var(--red-dim) !important;
 }
 
-/* .auth-error stil basligi */
+/* ─────────────────── Hata Mesajları ─────────────────── */
+
 .auth-error {
   font-family: var(--font-ui);
   font-size: 13px;
@@ -327,7 +317,6 @@
   margin: 0;
 }
 
-/* .username-hint stil basligi */
 .username-hint {
   font-family: var(--font-ui);
   font-size: 12px;
@@ -337,22 +326,20 @@
   transition: color 0.18s ease;
 }
 
-/* .username-hint.hint-error stil basligi */
 .username-hint.hint-error {
   color: var(--red);
 }
 
-/* .username-hint.hint-success stil basligi */
-.username-hint.hint-success {
+.username-hint.hint-ok {
   color: var(--green);
 }
 
-/* .username-hint.hint-checking stil basligi */
 .username-hint.hint-checking {
   color: var(--text-dim);
 }
 
-/* .auth-submit-btn stil basligi */
+/* ─────────────────── Gönder Butonu ─────────────────── */
+
 .auth-submit-btn {
   width: 100%;
   padding: 15px;
@@ -371,19 +358,16 @@
   margin-top: 8px;
 }
 
-/* .auth-submit-btn:hover:not(:disabled) stil basligi */
 .auth-submit-btn:hover:not(:disabled) {
   background: #f5b030;
   box-shadow: 0 8px 24px var(--accent-glow);
   transform: translateY(-2px);
 }
 
-/* .auth-submit-btn:active:not(:disabled) stil basligi */
 .auth-submit-btn:active:not(:disabled) {
   transform: translateY(0);
 }
 
-/* .auth-submit-btn:disabled stil basligi */
 .auth-submit-btn:disabled {
   background: var(--border2);
   color: var(--text-dim);
@@ -391,7 +375,8 @@
   cursor: not-allowed;
 }
 
-/* .auth-switch stil basligi */
+/* ─────────────────── Panel Geçişi ─────────────────── */
+
 .auth-switch {
   text-align: center;
   font-family: var(--font-ui);
@@ -402,7 +387,6 @@
   border-top: 1px solid var(--border);
 }
 
-/* .auth-switch button stil basligi */
 .auth-switch button {
   background: none;
   border: none;
@@ -418,7 +402,6 @@
     text-shadow 0.2s;
 }
 
-/* .auth-switch button:hover stil basligi */
 .auth-switch button:hover {
   color: #f5b030;
   text-decoration: underline;
@@ -426,7 +409,8 @@
   text-shadow: 0 0 8px var(--accent-glow);
 }
 
-/* .user-info stil basligi */
+/* ─────────────────── Kullanıcı Bilgisi ─────────────────── */
+
 .user-info {
   display: flex;
   cursor: pointer;
@@ -439,12 +423,10 @@
   transition: border-color 0.2s;
 }
 
-/* .user-info:hover stil basligi */
 .user-info:hover {
   border-color: var(--accent-dim);
 }
 
-/* .user-displayname stil basligi */
 .user-displayname {
   font-family: var(--font-ui);
   font-size: 13.5px;
@@ -456,7 +438,6 @@
   white-space: nowrap;
 }
 
-/* .logout-btn stil basligi */
 .logout-btn {
   padding: 6px 12px;
   background: none;
@@ -472,20 +453,19 @@
   transition: all 0.2s;
 }
 
-/* .label-hint stil basligi */
 .label-hint {
   color: var(--text-dim);
   font-weight: 400;
 }
 
-/* .logout-btn:hover stil basligi */
 .logout-btn:hover {
   background: var(--red-dim);
   border-color: var(--red);
   color: var(--red);
 }
 
-/* .premium-modal stil basligi */
+/* ─────────────────── Ayarlar Modalları ─────────────────── */
+
 .premium-modal {
   width: 100%;
   max-width: 500px;
@@ -495,12 +475,10 @@
   gap: 22px;
 }
 
-/* .premium-modal.wide stil basligi */
 .premium-modal.wide {
   max-width: 540px;
 }
 
-/* .premium-modal .modal-header stil basligi */
 .premium-modal .modal-header {
   display: flex;
   align-items: center;
@@ -510,22 +488,18 @@
   margin-bottom: 0;
 }
 
-/* .premium-modal .header-left stil basligi */
 .premium-modal .header-left {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* .premium-modal .modal-title stil basligi */
 .premium-modal .modal-title {
   font-size: 18px;
   font-weight: 700;
 }
 
 .premium-modal .back-icon-btn,
-
-/* .premium-modal .modal-close stil basligi */
 .premium-modal .modal-close {
   width: 36px !important;
   height: 36px !important;
@@ -542,7 +516,6 @@
   transition: all 0.2s;
 }
 
-/* .premium-modal .modal-close stil basligi */
 .premium-modal .modal-close {
   background: var(--surface2);
   border: 1px solid var(--border2);
@@ -550,26 +523,21 @@
 }
 
 .premium-modal .back-icon-btn:hover,
-
-/* .premium-modal .modal-close:hover stil basligi */
 .premium-modal .modal-close:hover {
   color: var(--text-bright);
   border-color: var(--accent-dim);
   background: var(--surface3);
 }
 
-/* .premium-modal .back-icon-btn:hover stil basligi */
 .premium-modal .back-icon-btn:hover {
   transform: translateX(-2px);
 }
 
-/* .premium-modal .back-icon-btn svg stil basligi */
 .premium-modal .back-icon-btn svg {
   width: 18px !important;
   height: 18px !important;
 }
 
-/* .premium-modal .modal-body stil basligi */
 .premium-modal .modal-body {
   display: flex;
   flex-direction: column;
@@ -577,7 +545,6 @@
   padding: 0;
 }
 
-/* .premium-modal form stil basligi */
 .premium-modal form {
   display: flex;
   flex-direction: column;
@@ -585,7 +552,6 @@
   width: 100%;
 }
 
-/* .premium-modal .form-grid stil basligi */
 .premium-modal .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -593,7 +559,6 @@
   width: 100%;
 }
 
-/* .premium-modal .auth-field stil basligi */
 .premium-modal .auth-field {
   display: flex;
   flex-direction: column;
@@ -601,12 +566,10 @@
   min-width: 0;
 }
 
-/* .premium-modal .form-col-full stil basligi */
 .premium-modal .form-col-full {
   grid-column: 1 / -1;
 }
 
-/* .premium-modal .auth-field label stil basligi */
 .premium-modal .auth-field label {
   font-size: 11px;
   font-weight: 700;
@@ -615,7 +578,6 @@
   color: var(--text-dim);
 }
 
-/* .premium-modal .modal-input stil basligi */
 .premium-modal .modal-input {
   width: 100% !important;
   min-height: 48px;
@@ -630,7 +592,8 @@
   box-sizing: border-box;
 }
 
-/* .username-edit-box stil basligi */
+/* ─────────────────── Kullanıcı Adı Düzenleme ─────────────────── */
+
 .username-edit-box {
   display: flex;
   align-items: center;
@@ -645,7 +608,6 @@
   cursor: default;
 }
 
-/* .username-edit-box .clean-input stil basligi */
 .username-edit-box .clean-input {
   flex: 1;
   width: 100%;
@@ -658,12 +620,10 @@
   outline: none;
 }
 
-/* .username-edit-box .clean-input[readonly] stil basligi */
 .username-edit-box .clean-input[readonly] {
   cursor: default;
 }
 
-/* #settingsDisplayName:focus stil basligi */
 #settingsDisplayName:focus {
   background: transparent;
   border-color: transparent;
@@ -671,7 +631,6 @@
   outline: none;
 }
 
-/* .action-icon-btn stil basligi */
 .action-icon-btn {
   width: 32px;
   height: 32px;
@@ -690,36 +649,32 @@
     background 0.2s;
 }
 
-/* .action-icon-btn svg stil basligi */
 .action-icon-btn svg {
   width: 18px !important;
   height: 18px !important;
 }
 
-/* .action-icon-btn:hover stil basligi */
 .action-icon-btn:hover {
   color: var(--text-bright);
   border-color: var(--accent-dim);
   background: rgba(232, 160, 32, 0.08);
 }
 
-/* .action-icon-btn.success stil basligi */
 .action-icon-btn.success {
   color: var(--green);
 }
 
-/* .action-icon-btn.success:hover stil basligi */
 .action-icon-btn.success:hover {
   border-color: rgba(61, 214, 140, 0.28);
   background: rgba(61, 214, 140, 0.08);
 }
 
-/* #userSettingsModal .premium-modal stil basligi */
+/* ─────────────────── Ayarlar Modal Düzeni ─────────────────── */
+
 #userSettingsModal .premium-modal {
   max-width: 560px;
 }
 
-/* #userSettingsModal .modal-body stil basligi */
 #userSettingsModal .modal-body {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.9fr);
@@ -727,19 +682,18 @@
   align-items: end;
 }
 
-/* #userSettingsModal .settings-field-mb stil basligi */
 #userSettingsModal .settings-field-mb {
   margin-bottom: 0;
 }
 
-/* #userSettingsModal .settings-actions stil basligi */
 #userSettingsModal .settings-actions {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
 }
 
-/* .premium-modal .warning-box stil basligi */
+/* ─────────────────── Hesap Silme ─────────────────── */
+
 .premium-modal .warning-box {
   background: var(--red-dim);
   border-left: 4px solid var(--red);
@@ -751,7 +705,6 @@
   margin-bottom: 0;
 }
 
-/* .danger-check-wrapper stil basligi */
 .danger-check-wrapper {
   display: flex;
   align-items: flex-start;
@@ -765,7 +718,6 @@
   box-sizing: border-box;
 }
 
-/* .danger-check-wrapper input[type="checkbox"] stil basligi */
 .danger-check-wrapper input[type="checkbox"] {
   appearance: none;
   width: 20px !important;
@@ -780,13 +732,11 @@
   flex-shrink: 0;
 }
 
-/* .danger-check-wrapper input[type="checkbox"]:checked stil basligi */
 .danger-check-wrapper input[type="checkbox"]:checked {
   background: var(--red);
   border-color: var(--red);
 }
 
-/* .danger-check-wrapper input[type="checkbox"]:checked::after stil basligi */
 .danger-check-wrapper input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
@@ -799,7 +749,6 @@
   transform: rotate(45deg);
 }
 
-/* .check-text stil basligi */
 .check-text {
   font-size: 13px;
   line-height: 1.4;
@@ -807,7 +756,8 @@
   padding-top: 2px;
 }
 
-/* .settings-actions stil basligi */
+/* ─────────────────── Ayar Butonları ─────────────────── */
+
 .settings-actions {
   display: flex;
   flex-direction: column;
@@ -816,8 +766,6 @@
 
 .btn-settings-yellow,
 .btn-settings-danger,
-
-/* .auth-submit-btn stil basligi */
 .auth-submit-btn {
   width: 100%;
   min-height: 54px;
@@ -831,92 +779,80 @@
   transition: all 0.2s;
 }
 
-/* .btn-settings-yellow stil basligi */
 .btn-settings-yellow {
   background: var(--accent);
   color: #000;
 }
 
-/* .btn-settings-yellow:hover stil basligi */
 .btn-settings-yellow:hover {
   background: #f5b030;
   box-shadow: 0 8px 22px rgba(232, 160, 32, 0.18);
 }
 
-/* .btn-settings-danger stil basligi */
 .btn-settings-danger {
   background: var(--red-dim);
   color: var(--red);
   border: 1px solid rgba(245, 96, 96, 0.3);
 }
 
-/* .btn-settings-danger:hover stil basligi */
 .btn-settings-danger:hover {
   background: rgba(245, 96, 96, 0.2);
 }
 
-#changePasswordModal .premium-modal.wide,
+/* ─────────────────── Şifre / Hesap Silme Modalları ─────────────────── */
 
-/* #deleteAccountModal .premium-modal.wide stil basligi */
+#changePasswordModal .premium-modal.wide,
 #deleteAccountModal .premium-modal.wide {
   max-width: 600px;
 }
 
 #changePasswordModal .modal-body,
-
-/* #deleteAccountModal .modal-body stil basligi */
 #deleteAccountModal .modal-body {
   gap: 18px;
 }
 
-/* #deleteAccountModal .warning-box stil basligi */
 #deleteAccountModal .warning-box {
   border-radius: 12px;
   padding: 16px 18px;
 }
 
-/* #deleteAccountModal .danger-check-wrapper stil basligi */
 #deleteAccountModal .danger-check-wrapper {
   margin-top: 0;
 }
+
+/* ─────────────────── Duyarlı Tasarım ─────────────────── */
 
 @media (max-width: 760px) {
   .premium-modal,
   .premium-modal.wide,
   #userSettingsModal .premium-modal,
   #changePasswordModal .premium-modal.wide,
-
-/* #deleteAccountModal .premium-modal.wide stil basligi */
   #deleteAccountModal .premium-modal.wide {
     max-width: min(100%, 94vw);
     padding: 24px 20px !important;
   }
 
   #userSettingsModal .modal-body,
-
-/* .premium-modal .form-grid stil basligi */
   .premium-modal .form-grid {
     grid-template-columns: 1fr;
   }
 
-  /* #userSettingsModal .settings-actions stil basligi */
   #userSettingsModal .settings-actions {
     grid-template-columns: 1fr;
   }
 
-  /* .premium-modal .form-col-full stil basligi */
   .premium-modal .form-col-full {
     grid-column: auto;
   }
 }
 
-/* .btn-danger stil basligi */
+/* ─────────────────── Tehlike Butonu ─────────────────── */
+
 .btn-danger {
   background: var(--red) !important;
   color: #fff !important;
 }
 
-/* .btn-danger:disabled stil basligi */
 .btn-danger:disabled {
   background: var(--border2) !important;
   color: var(--text-dim) !important;
