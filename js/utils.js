@@ -1,23 +1,16 @@
-/* ─── ELECTRON IPC ──────────────────────────────────────────────────────────── */
-let ipcRenderer = null;
+const electronAPI = window.electronAPI || null;
 
-try {
-  const electron = require("electron");
-  ipcRenderer = electron.ipcRenderer;
-} catch (e) {
-  console.log("Tarayıcı modu: Electron fonksiyonları pasif.");
-}
-
-/* ─── FORMATLAMA ─────────────────────────────────────────────────────────────── */
 const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
-const DATE_FORMAT = (dateString) =>
-  new Date(dateString).toLocaleDateString("tr-TR");
+const DATE_FORMAT = (dateString) => {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? dateString : date.toLocaleDateString("tr-TR");
+};
 
-/* ─── DURUM HARİTALAMA ─────────────────────────────────────────────────────────── */
 const STATUS_MAP = {
   bozuk: "status-broken",
   yedek: "status-reserve",
@@ -25,28 +18,31 @@ const STATUS_MAP = {
   saglikli: "status-healthy",
 };
 
-/* ─── STATE ───────────────────────────────────────────────────────────────────── */
 let allData = {};
 let currentSearch = "";
 let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
 
-/* ─── DOM REFERANSLARI ─────────────────────────────────────────────────────────── */
 const versionDisplay = document.getElementById("versionDisplay");
 const updateBtn = document.getElementById("updateBtn");
 const statusPanel = document.getElementById("statusPanel");
 const statusDot = document.getElementById("statusDot");
 const statusText = document.getElementById("statusText");
-const tableBody = document.getElementById("tableBody");
-const addItemBtn = document.getElementById("addItemBtn");
-const searchInput = document.getElementById("searchInput");
-const clearSearch = document.getElementById("clearSearch");
-const exportBtn = document.getElementById("exportBtn");
-const resultCount = document.getElementById("resultCount");
 const toastContainer = document.getElementById("toastContainer");
 
-// Modal DOM referansları
+const searchInput = document.getElementById("searchInput");
+const clearSearch = document.getElementById("clearSearch");
+
+const tableBody = document.getElementById("tableBody");
+const addItemBtn = document.getElementById("addItemBtn");
+const resultCount = document.getElementById("resultCount");
+const statTotal = document.getElementById("statTotal");
+const statCount = document.getElementById("statCount");
+const statHealthy = document.getElementById("statHealthy");
+const statExpensive = document.getElementById("statExpensive");
+const totalCostDisplay = document.getElementById("totalCostDisplay");
+
 const editModal = document.getElementById("editModal");
 const modalClose = document.getElementById("modalClose");
 const modalCancel = document.getElementById("modalCancel");
@@ -62,7 +58,8 @@ const editPrice = document.getElementById("editPrice");
 const editVendor = document.getElementById("editVendor");
 const editStatus = document.getElementById("editStatus");
 
-/* ─── YARDIMCI FONKSİYONLAR ─────────────────────────────────────────────────── */
+/* normalize tr fonksiyon basligi */
+
 function normalizeTr(s) {
   return (s || "")
     .toLowerCase()
@@ -74,6 +71,8 @@ function normalizeTr(s) {
     .replace(/ç/g, "c");
 }
 
+/* esc html fonksiyon basligi */
+
 function escHtml(str) {
   return (str || "")
     .replace(/&/g, "&amp;")
@@ -81,10 +80,35 @@ function escHtml(str) {
     .replace(/>/g, "&gt;");
 }
 
-// Fiyat input'unu Türk formatına (1.234,56) çevirir
+/* esc attr fonksiyon basligi */
+
+function escAttr(str) {
+  return escHtml(str).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+/* safe external url fonksiyon basligi */
+
+function safeExternalUrl(value) {
+  if (!value) return "";
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "";
+    }
+    return parsed.toString();
+  } catch (_error) {
+    return "";
+  }
+}
+
+/* apply price format fonksiyon basligi */
+
 function applyPriceFormat(inputEl) {
+  if (!inputEl) return;
   let value = inputEl.value.replace(/[^0-9,]/g, "");
   const parts = value.split(",");
+
   if (parts.length > 2) value = parts[0] + "," + parts.slice(1).join("");
 
   if (value) {
@@ -97,9 +121,8 @@ function applyPriceFormat(inputEl) {
   }
 }
 
-/* ─── EDIT FİYAT KUTUSUNU AYARLA ────────────────────────────────────────────── */
-editPrice.type = "text";
-editPrice.inputMode = "decimal";
-editPrice.addEventListener("input", function () {
-  applyPriceFormat(this);
-});
+if (editPrice) {
+  editPrice.addEventListener("input", function () {
+    applyPriceFormat(this);
+  });
+}

@@ -1,4 +1,4 @@
-/* ─── Variables ─────────────────────────────────────────────────────────────── */
+/* :root stil basligi */
 :root {
   --bg: #090b10;
   --surface: #0f1218;
@@ -30,19 +30,22 @@
   --radius-lg: 12px;
 }
 
-/* ─── Reset & Base ──────────────────────────────────────────────────────────── */
 *,
 *::before,
+
+/* *::after stil basligi */
 *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+/* ::-webkit-scrollbar stil basligi */
 ::-webkit-scrollbar {
   display: none;
 }
 
+/* body stil basligi */
 body {
   min-height: 100vh;
   background: var(--bg);
@@ -61,105 +64,93 @@ body {
   font-family: var(--font-ui);
   font-size: 14px;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Page Layout ───────────────────────────────────────────────────────────── */
+/* .page-wrapper stil basligi */
 .page-wrapper {
   width: min(100%, 1300px);
   margin: 0 auto;
   padding: 36px 40px 60px;
 }
 
+/* .app-footer stil basligi */
 .app-footer {
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
-  height: 30px;
-  background: rgba(0, 0, 0, 0.2); /* Hafif şeffaf arka plan */
-  backdrop-filter: blur(5px); /* Arkayı hafif buğular */
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5); /* Çok parlamayan soft beyaz */
-  letter-spacing: 0.5px;
+  width: 100%;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  z-index: 9999;
-  pointer-events: none; /* Tıklamaları engeller, arkadaki butonlara basılabilir */
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  pointer-events: none;
 }
 
+/* .app-footer b stil basligi */
 .app-footer b {
-  color: #daa924; /* İsmini vurgulamak için projendeki ana rengi kullanabilirsin */
   margin-left: 4px;
+  color: #daa924;
 }
 
-/* ─── Animations ────────────────────────────────────────────────────────────── */
-@keyframes pulse-dot {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
+/* .hidden stil basligi */
+.hidden {
+  display: none !important;
 }
 
-@keyframes pulse-attention {
-  0% {
-    box-shadow: 0 0 0 0 rgba(245, 200, 66, 0.4);
-    transform: scale(1);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(245, 200, 66, 0);
-    transform: scale(1.05);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(245, 200, 66, 0);
-    transform: scale(1);
-  }
-}
-
-@keyframes bounce-ready {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-/* ─── Responsive ────────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
+  /* .page-wrapper stil basligi */
   .page-wrapper {
     padding: 20px 16px 40px;
   }
+
+  /* .stats-row stil basligi */
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  /* h1 stil basligi */
   h1 {
     font-size: 26px;
   }
+
+  /* .table-wrapper stil basligi */
   .table-wrapper {
     overflow-x: auto;
   }
 }
 
 @media (max-width: 600px) {
+  /* .stats-row stil basligi */
   .stats-row {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
+
+  /* .toolbar stil basligi */
   .toolbar {
     flex-wrap: wrap;
   }
+
+  /* .filter-group stil basligi */
   .filter-group {
     overflow-x: auto;
+    padding-bottom: 4px;
   }
+
+  /* .modal-body stil basligi */
   .modal-body {
     grid-template-columns: 1fr;
   }
+
+  /* .field-full stil basligi */
   .field-full {
     grid-column: 1;
   }
