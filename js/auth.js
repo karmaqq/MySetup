@@ -313,9 +313,13 @@ document.getElementById("goToLogin")?.addEventListener("click", () => {
 });
 
 /* ─── AYARLAR VE ÇIKIŞ ─────────────────────────────────────────────────────── */
-const settingsModal = document.getElementById("settingsModal");
+const settingsModal =
+  document.getElementById("settingsModal") ||
+  document.getElementById("userSettingsModal");
 const changePasswordModal = document.getElementById("changePasswordModal");
 const deleteAccountModal = document.getElementById("deleteAccountModal");
+const settingsTrigger =
+  document.getElementById("settingsBtn") || document.getElementById("userInfo");
 
 function closeSettingsModal() {
   if (settingsModal) settingsModal.classList.remove("active");
@@ -327,7 +331,8 @@ function closeDeleteModal() {
   if (deleteAccountModal) deleteAccountModal.classList.remove("active");
 }
 
-document.getElementById("settingsBtn")?.addEventListener("click", () => {
+settingsTrigger?.addEventListener("click", (e) => {
+  if (e.target && e.target.closest && e.target.closest("#logoutBtn")) return;
   const user = auth.currentUser;
   if (!user) return;
   const nameInput = document.getElementById("settingsDisplayName");
@@ -348,6 +353,9 @@ document
   ?.addEventListener("click", closeChangePassModal);
 document
   .getElementById("closeDeleteAccountBtn")
+  ?.addEventListener("click", closeDeleteModal);
+document
+  .getElementById("closeDeleteBtn")
   ?.addEventListener("click", closeDeleteModal);
 
 settingsModal?.addEventListener("click", (e) => {
