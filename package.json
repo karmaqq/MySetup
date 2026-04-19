@@ -1,7 +1,7 @@
 {
     "name":  "mysetup",
-    "version":  "1.5.4",
-    "description":  "Profesyonel Envanter ve Kurulum YÃƒÂ¶netim Sistemi",
+    "version":  "1.5.5",
+    "description":  "Profesyonel Envanter ve Kurulum YÃƒÆ’Ã‚Â¶netim Sistemi",
     "author":  "Karma \u003cshbkarma@gmail.com\u003e",
     "main":  "main.js",
     "scripts":  {
@@ -13,13 +13,14 @@
                      },
     "devDependencies":  {
                             "electron":  "^33.0.0",
-                            "electron-builder":  "^25.0.0"
+                            "electron-builder":  "^25.0.0",
+                            "progress-estimator":  "^0.3.1"
                         },
     "build":  {
                   "appId":  "com.mysetup.app",
                   "productName":  "MySetup",
                   "artifactName":  "MySetup.exe",
-                  "copyright":  "Copyright Ã‚Â© 2026 Karma",
+                  "copyright":  "Copyright Ãƒâ€šÃ‚Â© 2026 Karma",
                   "directories":  {
                                       "output":  "dist",
                                       "buildResources":  "build"
