@@ -1,56 +1,430 @@
 <!doctype html>
-<html>
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
+    <title>MySetup Güncelleyici</title>
     <style>
+      /* ── Temel ────────────────────────────────────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #090b10;
+        --surface: #0f1218;
+        --border: #1e2535;
+        --border2: #28344a;
+        --text: #b8c6d8;
+        --dim: #4e5f78;
+        --bright: #e0eaf5;
+        --accent: #e8a020;
+        --accent-d: rgba(232, 160, 32, 0.15);
+        --green: #3dd68c;
+        --green-d: rgba(61, 214, 140, 0.12);
+        --red: #f56060;
+        --red-d: rgba(245, 96, 96, 0.12);
+        --blue: #4a9eff;
+      }
+
       body {
-        background: #090b10;
-        color: #e0eaf5;
-        font-family: sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", system-ui, sans-serif;
+        height: 100vh;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        height: 100vh;
-        margin: 0;
         overflow: hidden;
+        user-select: none;
+        -webkit-app-region: drag;
       }
-      .container {
-        width: 80%;
-        text-align: center;
+
+      /* ── Arka plan parıltısı ──────────────────────────────────────────────── */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 60% 40% at 20% 10%,
+            rgba(232, 160, 32, 0.06) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 40% 60% at 80% 90%,
+            rgba(74, 158, 255, 0.04) 0%,
+            transparent 70%
+          );
+        pointer-events: none;
       }
-      .bar-bg {
-        width: 100%;
-        height: 6px;
-        background: #1a2030;
-        border-radius: 3px;
-        margin-top: 20px;
+
+      /* ── Logo ─────────────────────────────────────────────────────────────── */
+      .logo {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: var(--bright);
+        margin-bottom: 28px;
+        opacity: 0;
+        transform: translateY(-8px);
+        animation: fadeUp 0.5s 0.1s ease forwards;
+      }
+      .logo span {
+        color: var(--accent);
+      }
+
+      /* ── Kart ─────────────────────────────────────────────────────────────── */
+      .card {
+        width: 380px;
+        background: var(--surface);
+        border: 1px solid var(--border2);
+        border-radius: 16px;
+        padding: 24px 28px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+        -webkit-app-region: no-drag;
+        opacity: 0;
+        transform: translateY(12px);
+        animation: fadeUp 0.5s 0.25s ease forwards;
+      }
+
+      /* ── Adımlar ──────────────────────────────────────────────────────────── */
+      .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        background: transparent;
+        transition:
+          background 0.3s,
+          border-color 0.3s;
+        opacity: 0.35;
+        transition:
+          opacity 0.3s,
+          background 0.3s,
+          border-color 0.3s;
+      }
+
+      /* Bekleme: soluk */
+      .step.waiting {
+        opacity: 0.3;
+      }
+
+      /* Aktif: vurgu */
+      .step.active {
+        opacity: 1;
+        background: var(--accent-d);
+        border-color: rgba(232, 160, 32, 0.25);
+      }
+
+      /* Tamamlandı */
+      .step.done {
+        opacity: 0.7;
+        background: var(--green-d);
+        border-color: rgba(61, 214, 140, 0.15);
+      }
+
+      /* Hata */
+      .step.error {
+        opacity: 1;
+        background: var(--red-d);
+        border-color: rgba(245, 96, 96, 0.3);
+      }
+
+      /* ── Adım ikonu ───────────────────────────────────────────────────────── */
+      .step-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 14px;
+        background: var(--border);
+        color: var(--dim);
+        transition:
+          background 0.3s,
+          color 0.3s;
+        position: relative;
+      }
+
+      .step.active .step-icon {
+        background: var(--accent-d);
+        color: var(--accent);
+      }
+      .step.done .step-icon {
+        background: var(--green-d);
+        color: var(--green);
+      }
+      .step.error .step-icon {
+        background: var(--red-d);
+        color: var(--red);
+      }
+
+      /* Spinner sadece active'de görünür */
+      .step-icon .spinner {
+        display: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(232, 160, 32, 0.25);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        position: absolute;
+      }
+      .step.active .step-icon .spinner {
+        display: block;
+      }
+      .step.active .step-icon .icon-char {
+        display: none;
+      }
+      .step.done .step-icon .icon-char::after {
+        content: "✓";
+        color: var(--green);
+      }
+      .step.error .step-icon .icon-char::after {
+        content: "✕";
+        color: var(--red);
+      }
+
+      /* ── Adım metni ───────────────────────────────────────────────────────── */
+      .step-body {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .step-label {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--bright);
+        white-space: nowrap;
         overflow: hidden;
+        text-overflow: ellipsis;
       }
-      .bar-fill {
-        width: 0%;
+      .step.waiting .step-label,
+      .step.done .step-label {
+        color: var(--text);
+      }
+
+      .step-sub {
+        font-size: 11.5px;
+        color: var(--dim);
+        margin-top: 2px;
+        min-height: 14px;
+        transition: color 0.2s;
+      }
+      .step.active .step-sub {
+        color: var(--accent);
+      }
+      .step.done .step-sub {
+        color: var(--green);
+      }
+      .step.error .step-sub {
+        color: var(--red);
+      }
+
+      /* ── Progress bar (indirme adımı) ────────────────────────────────────── */
+      .step-progress {
+        height: 3px;
+        background: var(--border);
+        border-radius: 2px;
+        margin-top: 8px;
+        overflow: hidden;
+        display: none;
+      }
+      .step[data-step="2"].active .step-progress {
+        display: block;
+      }
+      .step[data-step="2"].done .step-progress {
+        display: block;
+      }
+
+      .step-progress-fill {
         height: 100%;
-        background: #e8a020;
+        background: var(--accent);
+        border-radius: 2px;
+        width: 0%;
         transition: width 0.3s ease;
       }
-      .status {
-        font-size: 13px;
-        color: #4e5f78;
-        margin-top: 10px;
+      .step.done .step-progress-fill {
+        background: var(--green);
+        width: 100% !important;
+      }
+
+      /* ── Hata mesajı ─────────────────────────────────────────────────────── */
+      .error-box {
+        display: none;
+        margin-top: 16px;
+        padding: 12px 14px;
+        background: var(--red-d);
+        border: 1px solid rgba(245, 96, 96, 0.3);
+        border-radius: 8px;
+        font-size: 12.5px;
+        color: var(--red);
+        line-height: 1.5;
+      }
+      .error-box.visible {
+        display: block;
+      }
+
+      /* ── Animasyonlar ────────────────────────────────────────────────────── */
+      @keyframes fadeUp {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <h3 id="title">Sistem Güncelleniyor</h3>
-      <div class="bar-bg"><div id="progress" class="bar-fill"></div></div>
-      <div id="status" class="status">Dosyalar hazırlanıyor...</div>
+    <div class="logo">My<span>SETUP</span></div>
+
+    <div class="card">
+      <div class="steps">
+        <div class="step waiting" data-step="1">
+          <div class="step-icon">
+            <div class="spinner"></div>
+            <span class="icon-char"></span>
+          </div>
+          <div class="step-body">
+            <div class="step-label">Sunucuya bağlanılıyor</div>
+            <div class="step-sub" id="sub1">Güncelleme kontrol ediliyor…</div>
+          </div>
+        </div>
+
+        <div class="step waiting" data-step="2">
+          <div class="step-icon">
+            <div class="spinner"></div>
+            <span class="icon-char"></span>
+          </div>
+          <div class="step-body">
+            <div class="step-label">Güncelleme indiriliyor</div>
+            <div class="step-sub" id="sub2">Bekleniyor…</div>
+            <div class="step-progress">
+              <div class="step-progress-fill" id="progressFill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step waiting" data-step="3">
+          <div class="step-icon">
+            <div class="spinner"></div>
+            <span class="icon-char"></span>
+          </div>
+          <div class="step-body">
+            <div class="step-label">Güncelleme kuruluyor</div>
+            <div class="step-sub" id="sub3">Bekleniyor…</div>
+          </div>
+        </div>
+
+        <div class="step waiting" data-step="4">
+          <div class="step-icon">
+            <div class="spinner"></div>
+            <span class="icon-char"></span>
+          </div>
+          <div class="step-body">
+            <div class="step-label">Uygulama başlatılıyor</div>
+            <div class="step-sub" id="sub4">Bekleniyor…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="error-box" id="errorBox"></div>
     </div>
+
     <script>
       const { ipcRenderer } = require("electron");
-      ipcRenderer.on("status", (e, { msg, percent }) => {
-        document.getElementById("status").innerText = msg;
-        document.getElementById("progress").style.width = percent + "%";
+
+      const SUB_ACTIVE = {
+        1: "GitHub ile iletişim kuruluyor…",
+        2: "Dosya indiriliyor…",
+        3: "Yükleyici çalıştırılıyor, lütfen bekleyin…",
+        4: "MySetup açılıyor…",
+      };
+
+      const SUB_DONE = {
+        1: "Sürüm bilgisi alındı.",
+        2: "İndirme tamamlandı.",
+        3: "Kurulum tamamlandı.",
+        4: "Uygulama başlatıldı!",
+      };
+
+      function getStepEl(n) {
+        return document.querySelector(`.step[data-step="${n}"]`);
+      }
+
+      ipcRenderer.on("step", (_e, { step, state, progress }) => {
+        const el = getStepEl(step);
+        const sub = document.getElementById(`sub${step}`);
+        const fill = document.getElementById("progressFill");
+
+        /* Tüm state class'larını temizle */
+        el.classList.remove("waiting", "active", "done", "error");
+        el.classList.add(state);
+
+        if (state === "active") {
+          if (sub) sub.textContent = SUB_ACTIVE[step] || "";
+          if (step === 2 && fill && progress !== null) {
+            fill.style.width = progress + "%";
+            if (sub) sub.textContent = `İndiriliyor… %${progress}`;
+          }
+        }
+
+        if (state === "done") {
+          if (sub) sub.textContent = SUB_DONE[step] || "Tamamlandı.";
+          if (step === 2 && fill) fill.style.width = "100%";
+        }
+
+        if (state === "error") {
+          if (sub) sub.textContent = "Hata oluştu.";
+        }
+      });
+
+      /* İndirme progress güncellemesi (active event içinden de geliyor ama
+       burada daha sık gelirse progress'i tekrar güncelle) */
+      ipcRenderer.on("download_progress", (_e, percent) => {
+        const el = getStepEl(2);
+        const sub = document.getElementById("sub2");
+        const fill = document.getElementById("progressFill");
+
+        if (!el.classList.contains("active")) return;
+        if (fill) fill.style.width = percent + "%";
+        if (sub) sub.textContent = `İndiriliyor… %${percent}`;
+      });
+
+      ipcRenderer.on("fatal_error", (_e, message) => {
+        /* Aktif adımı hata olarak işaretle */
+        document.querySelectorAll(".step.active").forEach((el) => {
+          el.classList.remove("active");
+          el.classList.add("error");
+          const stepNum = el.dataset.step;
+          const sub = document.getElementById(`sub${stepNum}`);
+          if (sub) sub.textContent = "Hata oluştu.";
+        });
+
+        const box = document.getElementById("errorBox");
+        if (box) {
+          box.textContent = message;
+          box.classList.add("visible");
+        }
       });
     </script>
   </body>
