@@ -14,7 +14,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
     onceListener("app_version", (_event, version) => callback(version)),
 
   onUpdateAvailable: (callback) =>
-    onceListener("update_available", (_event, version) => callback(version)),
+    onceListener("update_available", (_event, version, auto) =>
+      callback(version, auto),
+    ),
 
   onUpdateProgress: (callback) =>
     onceListener("update_progress", (_event, percent) => callback(percent)),
@@ -26,6 +28,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     onceListener("update_error", (_event, message) => callback(message)),
 
   startDownload: () => ipcRenderer.send("start_download"),
+
+  installUpdate: () => ipcRenderer.send("install_update"),
 
   setAutoUpdate: (enabled) => ipcRenderer.send("set_auto_update", !!enabled),
 });

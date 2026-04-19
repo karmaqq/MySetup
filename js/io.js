@@ -351,12 +351,12 @@ if (electronAPI) {
   }
 
   /* ─── Güncelleme mevcut → header simge veya otomatik indir ─── */
-  electronAPI.onUpdateAvailable((version) => {
+  electronAPI.onUpdateAvailable((version, auto) => {
     if (stepDownloadLabel) {
       stepDownloadLabel.innerHTML = `v${version} indiriliyor<span class="step-dots"></span>`;
     }
 
-    if (isAutoUpdate()) {
+    if (auto) {
       showUpdateScreen();
       goToStep(1);
       setProgress(0);
@@ -400,6 +400,11 @@ if (electronAPI) {
       setTimeout(() => {
         goToStep(4);
       }, 1200);
+
+      /* Adım 4 göründükten sonra yüklemeyi başlat */
+      setTimeout(() => {
+        electronAPI.installUpdate();
+      }, 3000);
     });
   }
 

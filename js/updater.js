@@ -11,6 +11,7 @@ autoUpdater.autoInstallOnAppQuit = false;
 let updaterInitialized = false;
 let updateIntervalId = null;
 let updaterWindow = null;
+let isAutoUpdateEnabled = false;
 
 /* ─────────────────── Güncelleme Sistemi Kurulumu ─────────────────── */
 
@@ -21,7 +22,11 @@ function setupUpdater(mainWindow) {
   updaterInitialized = true;
 
   autoUpdater.on("update-available", (info) => {
-    updaterWindow?.webContents.send("update_available", info.version);
+    updaterWindow?.webContents.send(
+      "update_available",
+      info.version,
+      isAutoUpdateEnabled,
+    );
   });
 
   autoUpdater.on("download-progress", (progress) => {
@@ -31,10 +36,6 @@ function setupUpdater(mainWindow) {
 
   autoUpdater.on("update-downloaded", () => {
     updaterWindow?.webContents.send("update_ready");
-
-    setTimeout(() => {
-      autoUpdater.quitAndInstall(true, true);
-    }, 1500);
   });
 
   autoUpdater.on("error", (err) => {
@@ -45,8 +46,12 @@ function setupUpdater(mainWindow) {
     autoUpdater.downloadUpdate();
   });
 
+  ipcMain.on("install_update", () => {
+    autoUpdater.quitAndInstall(true, true);
+  });
+
   ipcMain.on("set_auto_update", (_event, enabled) => {
-    autoUpdater.autoDownload = !!enabled;
+    isAutoUpdateEnabled = !!enabled;
   });
 
   updateIntervalId = setInterval(
