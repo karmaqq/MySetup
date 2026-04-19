@@ -55,12 +55,50 @@ function getFilteredSortedList() {
 
 /* ─────────────────── Tüm Tabloyu Yeniden Çiz ─────────────────── */
 
+let _pendingRender = false;
+let _lastDataSnapshot = null;
+
+function isAnyModalOpen() {
+  return !!document.querySelector(".modal-overlay.active");
+}
+
 function renderAll() {
+  if (isAnyModalOpen()) {
+    _pendingRender = true;
+    const list = getFilteredSortedList();
+    updateStats(list);
+    updateResultCount(list.length);
+    return;
+  }
+
+  const wrapper = document.querySelector(".table-wrapper");
+  const scrollTop = wrapper ? wrapper.scrollTop : 0;
+  const scrollLeft = wrapper ? wrapper.scrollLeft : 0;
+
   const list = getFilteredSortedList();
   updateStats(list);
   renderTableRows(list);
   updateResultCount(list.length);
+
+  if (wrapper) {
+    wrapper.scrollTop = scrollTop;
+    wrapper.scrollLeft = scrollLeft;
+  }
 }
+
+/* ─────────────────── Modal Kapanınca Ertelenen Render ─────────────────── */
+
+(function () {
+  const observer = new MutationObserver(() => {
+    if (_pendingRender && !isAnyModalOpen()) {
+      _pendingRender = false;
+      renderAll();
+    }
+  });
+  document.querySelectorAll(".modal-overlay").forEach((el) => {
+    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
+  });
+})();
 
 /* ─────────────────── İstatistik Kartlarını Güncelle ─────────────────── */
 

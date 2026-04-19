@@ -132,10 +132,32 @@ function processCsv(csvText) {
   const importPayload = {};
 
   dataLines.forEach((line) => {
-    const match = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-    if (!match) return;
+    const row = [];
+    let current = "";
+    let inQuotes = false;
 
-    const row = match.map((value) => value.replace(/^"|"$/g, "").trim());
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuotes) {
+        if (ch === '"' && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else if (ch === '"') {
+          inQuotes = false;
+        } else {
+          current += ch;
+        }
+      } else if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ",") {
+        row.push(current.trim());
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+    row.push(current.trim());
+
     if (row.length < 2 || !row[1]) return;
 
     const entryId = getNewKey();
@@ -256,41 +278,148 @@ if (electronAPI) {
     if (versionDisplay) versionDisplay.innerText = `v${version}`;
   });
 
-  electronAPI.onUpdateAvailable((version) => {
-    if (!updateBtn) return;
+  /* ─── Loading ekranı elemanları ─── */
+  const authLoading = document.getElementById("authLoading");
+  const loadingSpinner = document.getElementById("loadingSpinner");
+  const updateRingWrapper = document.getElementById("updateRingWrapper");
+  const updateRingProgress = document.getElementById("updateRingProgress");
+  const updateRingPercent = document.getElementById("updateRingPercent");
+  const updateSteps = document.getElementById("updateSteps");
+  const stepDownloadLabel = document.getElementById("stepDownloadLabel");
+  const CIRCUMFERENCE = 2 * Math.PI * 52;
 
+  let currentStep = 0;
+
+  function showUpdateScreen() {
+    if (authLoading) authLoading.style.display = "";
+    if (loadingSpinner) loadingSpinner.classList.add("hidden");
+    if (updateRingWrapper) updateRingWrapper.classList.add("active");
+    if (updateSteps) updateSteps.classList.add("active");
+  }
+
+  function setProgress(percent) {
+    if (updateRingProgress) {
+      const offset = CIRCUMFERENCE - (percent / 100) * CIRCUMFERENCE;
+      updateRingProgress.style.strokeDashoffset = offset;
+    }
+    if (updateRingPercent) updateRingPercent.textContent = `${percent}%`;
+  }
+
+  function goToStep(stepNum) {
+    if (!updateSteps || stepNum <= currentStep) return;
+    const allSteps = updateSteps.querySelectorAll(".update-step");
+
+    if (currentStep > 0) {
+      const prev = updateSteps.querySelector(`[data-step="${currentStep}"]`);
+      if (prev) {
+        prev.classList.remove("active");
+        prev.classList.add("done");
+        setTimeout(() => prev.classList.add("exiting"), 300);
+      }
+    }
+
+    currentStep = stepNum;
+
+    setTimeout(
+      () => {
+        const next = updateSteps.querySelector(`[data-step="${stepNum}"]`);
+        if (next) next.classList.add("active");
+      },
+      currentStep === 1 ? 0 : 350,
+    );
+  }
+
+  /* ─── Otomatik güncelleme ayarı ─── */
+  const autoUpdateCheckbox = document.getElementById("autoUpdateCheckbox");
+  const isAutoUpdate = () => localStorage.getItem("autoUpdate") === "true";
+
+  if (autoUpdateCheckbox) {
+    autoUpdateCheckbox.checked = isAutoUpdate();
+    autoUpdateCheckbox.addEventListener("change", () => {
+      const enabled = autoUpdateCheckbox.checked;
+      localStorage.setItem("autoUpdate", String(enabled));
+      if (electronAPI.setAutoUpdate) electronAPI.setAutoUpdate(enabled);
+    });
+  }
+
+  if (electronAPI.setAutoUpdate) {
+    electronAPI.setAutoUpdate(isAutoUpdate());
+  }
+
+  /* ─── Güncelleme mevcut → header simge veya otomatik indir ─── */
+  electronAPI.onUpdateAvailable((version) => {
+    if (stepDownloadLabel) {
+      stepDownloadLabel.innerHTML = `v${version} indiriliyor<span class="step-dots"></span>`;
+    }
+
+    if (isAutoUpdate()) {
+      showUpdateScreen();
+      goToStep(1);
+      setProgress(0);
+      setTimeout(() => {
+        goToStep(2);
+        electronAPI.startDownload();
+      }, 1200);
+      return;
+    }
+
+    if (!updateBtn) return;
     updateBtn.classList.add("visible");
-    updateBtn.style.pointerEvents = "auto";
-    updateBtn.textContent = `🟨 Güncelleme Mevcut (v${version})`;
+    updateBtn.title = `Güncelleme Mevcut (v${version})`;
 
     updateBtn.onclick = () => {
-      updateBtn.textContent = "⏳ İndiriliyor... 0%";
-      updateBtn.style.pointerEvents = "none";
-      updateBtn.style.color = "var(--text-dim)";
-      electronAPI.startDownload();
+      updateBtn.classList.remove("visible");
+      showUpdateScreen();
+      goToStep(1);
+      setProgress(0);
+
+      setTimeout(() => {
+        goToStep(2);
+        electronAPI.startDownload();
+      }, 1200);
     };
   });
 
+  /* ─── İndirme ilerlemesi ─── */
   if (typeof electronAPI.onUpdateProgress === "function") {
     electronAPI.onUpdateProgress((percent) => {
-      if (!updateBtn) return;
-      updateBtn.textContent = `⏳ İndiriliyor... ${percent}%`;
+      setProgress(percent);
     });
   }
 
+  /* ─── İndirme tamamlandı ─── */
   if (typeof electronAPI.onUpdateReady === "function") {
     electronAPI.onUpdateReady(() => {
-      if (!updateBtn) return;
-      updateBtn.textContent = "✅ Kuruluyor, yeniden başlıyor...";
-      updateBtn.style.color = "var(--green)";
+      setProgress(100);
+      goToStep(3);
+
+      setTimeout(() => {
+        goToStep(4);
+      }, 1200);
     });
   }
 
+  /* ─── Hata → geri dön ─── */
   electronAPI.onUpdateError(() => {
-    if (updateBtn) {
-      updateBtn.textContent = "❌ Güncelleme Hatası";
-      updateBtn.style.color = "var(--red)";
-      updateBtn.style.pointerEvents = "auto";
+    if (updateRingWrapper) updateRingWrapper.classList.remove("active");
+    if (updateSteps) updateSteps.classList.remove("active");
+    if (loadingSpinner) loadingSpinner.classList.remove("hidden");
+
+    if (updateSteps) {
+      updateSteps.querySelectorAll(".update-step").forEach((s) => {
+        s.classList.remove("active", "done", "exiting");
+      });
+    }
+    currentStep = 0;
+
+    /* Güncelleme ekranı açıksa kapat, değilse dokunma */
+    if (authLoading && authLoading.style.display !== "none") {
+      if (typeof showToast === "function") {
+        showToast("Güncelleme hatası oluştu", "error", 4000);
+      }
+      setTimeout(() => {
+        if (authLoading) authLoading.style.display = "none";
+      }, 2000);
     }
   });
 }

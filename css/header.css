@@ -47,63 +47,34 @@ h1 .accent-text {
   padding-left: 2px;
 }
 
-/* ─────────────────── Durum Paneli ─────────────────── */
+/* ─────────────────── Güncelleme Simgesi ─────────────────── */
 
-.header-info-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-
-.status-panel {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  font-size: 12px;
-  font-family: var(--font-data);
-  transition: all 0.3s ease;
-}
-
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--text-dim);
-  transition: all 0.3s ease;
-}
-
-/* ─────────────────── Güncelleme Bağlantısı ─────────────────── */
-
-.update-text-link {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--yellow);
-  cursor: pointer;
+.update-icon-btn {
   display: none;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  margin-left: -8px;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
-}
-
-.update-text-link:hover {
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   background: var(--yellow-dim);
-  color: #f5b030;
+  border: 1px solid var(--yellow);
+  border-radius: 50%;
+  color: var(--yellow);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  animation: update-pulse 2s ease-in-out infinite;
 }
 
-.update-text-link:active {
-  transform: translateY(1px);
+.update-icon-btn:hover {
+  background: rgba(245, 200, 66, 0.25);
+  transform: scale(1.1);
 }
 
-.update-text-link.visible {
+.update-icon-btn:active {
+  transform: scale(0.95);
+}
+
+.update-icon-btn.visible {
   display: flex;
 }
 
@@ -151,6 +122,12 @@ h1 .accent-text {
   flex-shrink: 0;
 }
 
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .stat-value {
   font-family: var(--font-data);
   font-size: 18px;
@@ -170,44 +147,4 @@ h1 .accent-text {
   text-transform: uppercase;
   letter-spacing: 0.8px;
   margin-top: 2px;
-}
-
-/* ─────────────────── Durum Nokta Animasyonları ─────────────────── */
-
-.status-ok .status-dot {
-  background: var(--green);
-  box-shadow: 0 0 6px var(--green);
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-.status-warn .status-dot {
-  background: var(--yellow);
-  box-shadow: 0 0 6px var(--yellow);
-}
-
-.status-error .status-dot {
-  background: var(--red);
-  box-shadow: 0 0 6px var(--red);
-}
-
-.status-ok .status-text {
-  color: var(--green);
-}
-
-.status-warn .status-text {
-  color: var(--yellow);
-}
-
-.status-error .status-text {
-  color: var(--red);
-}
-
-@keyframes pulse-dot {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
 }

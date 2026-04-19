@@ -64,19 +64,20 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: none;
-  border: 1px solid var(--border2);
+  background: rgba(245, 96, 96, 0.1);
+  border: 1px solid rgba(245, 96, 96, 0.25);
   border-radius: var(--radius-sm);
-  color: var(--text-dim);
+  color: var(--red);
   font-size: 14px;
   cursor: pointer;
   transition: 0.15s;
 }
 
 .modal-close:hover {
-  background: var(--red-dim);
-  border-color: var(--red);
-  color: var(--red);
+  background: rgba(245, 96, 96, 0.22);
+  border-color: rgba(245, 96, 96, 0.5);
+  color: #ff8080;
+  box-shadow: 0 0 8px rgba(245, 96, 96, 0.2);
 }
 
 /* ─────────────────── Modal İçerik ─────────────────── */
@@ -249,4 +250,564 @@
   opacity: 1;
   filter: grayscale(0);
   transform: scale(1.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          AYARLAR MODALLARI                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Premium Modal Temel ─────────────────── */
+
+.premium-modal {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.premium-modal.wide {
+  max-width: 400px;
+}
+
+.premium-modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+
+.premium-modal .header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.premium-modal .modal-title {
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.premium-modal .back-icon-btn,
+.premium-modal .modal-close {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0 !important;
+  font-size: 17px;
+  transition: all 0.2s;
+}
+
+.premium-modal .modal-close {
+  background: rgba(245, 96, 96, 0.1);
+  border: 1px solid rgba(245, 96, 96, 0.25);
+  color: var(--red);
+  font-size: 17px;
+}
+
+.premium-modal .back-icon-btn:hover,
+.premium-modal .modal-close:hover {
+  color: var(--text-bright);
+  border-color: var(--accent-dim);
+  background: var(--surface3);
+}
+
+.premium-modal .modal-close:hover {
+  background: rgba(245, 96, 96, 0.22);
+  border-color: rgba(245, 96, 96, 0.5);
+  color: #ff8080;
+  box-shadow: 0 0 8px rgba(245, 96, 96, 0.2);
+}
+
+.premium-modal .back-icon-btn:hover {
+  transform: translateX(-2px);
+}
+
+.premium-modal .back-icon-btn svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.premium-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+}
+
+.premium-modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.premium-modal .form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.premium-modal .auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.premium-modal .form-col-full {
+  grid-column: 1 / -1;
+}
+
+.premium-modal .auth-field label {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--text-dim);
+}
+
+.premium-modal .modal-input {
+  width: 100% !important;
+  min-height: 52px;
+  padding: 10px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  color: var(--text-bright);
+  font-family: var(--font-ui);
+  font-size: 17px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* ─────────────────── Kullanıcı Adı Düzenleme ─────────────────── */
+
+.username-edit-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  min-height: 52px;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: default;
+}
+
+.username-edit-box .clean-input {
+  flex: 1;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-bright);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  outline: none;
+}
+
+.username-edit-box .clean-input[readonly] {
+  cursor: default;
+}
+
+#settingsDisplayName:focus {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.action-icon-btn {
+  width: 38px;
+  height: 38px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.action-icon-btn svg {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+.action-icon-btn:hover {
+  color: var(--text-bright);
+  border-color: var(--accent-dim);
+  background: rgba(232, 160, 32, 0.08);
+}
+
+.action-icon-btn.success {
+  color: var(--green);
+}
+
+.action-icon-btn.success:hover {
+  border-color: rgba(61, 214, 140, 0.28);
+  background: rgba(61, 214, 140, 0.08);
+}
+
+/* ─────────────────── Ayarlar Modal Düzeni ─────────────────── */
+
+#userSettingsModal .setting-row {
+  min-height: 0;
+  height: 52px;
+  padding: 0 16px;
+  gap: 10px;
+}
+
+#userSettingsModal .setting-row-label {
+  font-size: 17px;
+  letter-spacing: 0.6px;
+  text-transform: none;
+  color: var(--text-dim);
+}
+
+#userSettingsModal .username-edit-box .clean-input {
+  height: auto;
+  line-height: 1;
+  font-size: 17px;
+  color: var(--text-bright);
+}
+
+#userSettingsModal .toggle-label {
+  font-size: 17px;
+  color: var(--text);
+}
+
+#userSettingsModal .setting-row-btn {
+  font-size: 17px;
+  color: var(--text);
+}
+
+#userSettingsModal .action-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+}
+
+#userSettingsModal .action-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.settings-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 6px 0;
+}
+
+/* ─────────────────── Hesap Silme ─────────────────── */
+
+.premium-modal .warning-box {
+  background: var(--red-dim);
+  border-left: none;
+  color: var(--text-bright);
+  padding: 12px 16px;
+  font-size: 16px;
+  line-height: 1.4;
+  border-radius: 6px;
+  margin-bottom: 0;
+}
+
+.danger-check-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-top: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.danger-check-wrapper input[type="checkbox"] {
+  appearance: none;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  border: 2px solid var(--border2);
+  border-radius: 4px;
+  background: var(--surface3);
+  cursor: pointer;
+  position: relative;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.danger-check-wrapper input[type="checkbox"]:checked {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.danger-check-wrapper input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 4px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.check-text {
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--text-bright);
+  padding-top: 1px;
+}
+
+/* ─────────────────── Ayar Satırları (Ortak Çerçeve) ─────────────────── */
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+  min-height: 56px;
+}
+
+.setting-row:hover {
+  border-color: var(--accent-dim);
+}
+
+.setting-row-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.setting-row .username-edit-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  padding: 0;
+  background: none;
+}
+
+.setting-row .clean-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-bright);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+}
+
+.setting-row-btn {
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+  justify-content: center;
+}
+
+.setting-row-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.setting-row-btn.danger:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* ─────────────────── Ayar Toggle Switch ─────────────────── */
+
+.setting-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+
+.setting-toggle input[type="checkbox"] {
+  display: none;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  background: var(--border2);
+  border-radius: 13px;
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: background 0.25s;
+}
+
+.toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.setting-toggle input:checked + .toggle-label + .toggle-switch {
+  background: var(--accent);
+}
+
+.setting-toggle input:checked + .toggle-label + .toggle-switch::after {
+  left: 24px;
+  background: var(--bg);
+}
+
+.toggle-label {
+  font-family: var(--font-ui);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.btn-settings-yellow,
+.btn-settings-danger {
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-family: var(--font-ui);
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-settings-yellow {
+  background: var(--accent);
+  color: #000;
+}
+
+.btn-settings-yellow:hover {
+  background: #f5b030;
+  box-shadow: 0 8px 22px rgba(232, 160, 32, 0.18);
+}
+
+.btn-settings-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid rgba(245, 96, 96, 0.3);
+}
+
+.btn-settings-danger:hover {
+  background: rgba(245, 96, 96, 0.2);
+}
+
+/* ─────────────────── Şifre / Hesap Silme Modalları ─────────────────── */
+
+#changePasswordModal .premium-modal.wide,
+#deleteAccountModal .premium-modal.wide {
+  max-width: 600px;
+}
+
+#changePasswordModal .modal-body,
+#deleteAccountModal .modal-body {
+  gap: 18px;
+}
+
+#deleteAccountModal .warning-box {
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+#deleteAccountModal .danger-check-wrapper {
+  margin-top: 0;
+}
+
+.premium-modal .auth-submit-btn:disabled {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.premium-modal .auth-submit-btn:disabled:hover {
+  background: var(--surface2);
+  box-shadow: none;
+  transform: none;
+}
+
+/* ─────────────────── Tehlike Butonu ─────────────────── */
+
+.btn-danger {
+  background: var(--red) !important;
+  color: #fff !important;
+}
+
+.btn-danger:disabled {
+  background: var(--border2) !important;
+  color: var(--text-dim) !important;
+  cursor: not-allowed;
+}
+
+/* ─────────────────── Duyarlı Tasarım (Ayarlar) ─────────────────── */
+
+@media (max-width: 760px) {
+  .premium-modal,
+  .premium-modal.wide,
+  #userSettingsModal .premium-modal,
+  #changePasswordModal .premium-modal.wide,
+  #deleteAccountModal .premium-modal.wide {
+    max-width: min(100%, 94vw);
+    padding: 24px 20px !important;
+  }
+
+  #userSettingsModal .modal-body,
+  .premium-modal .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #userSettingsModal .settings-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .premium-modal .form-col-full {
+    grid-column: auto;
+  }
 }
