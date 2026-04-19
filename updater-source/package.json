@@ -1,9 +1,8 @@
 {
   "name": "mysetup-patcher",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "patcher.js",
   "author": "Karma",
-  "description": "MySetup Güncelleme Servisi",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder"
@@ -16,9 +15,11 @@
     "electron-builder": "24.4.0"
   },
   "build": {
+    "appId": "com.mysetup.patcher",
     "productName": "update",
     "win": {
-      "target": "dir"
+      "target": "portable",
+      "artifactName": "update.exe"
     }
   }
 }
