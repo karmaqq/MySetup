@@ -2,8 +2,9 @@
 /*                          ELECTRON ANA SÜREÇ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const { app, BrowserWindow, shell } = require("electron");
+const { app, BrowserWindow, shell, session, ipcMain } = require("electron");
 const path = require("path");
+
 const { setupUpdater, checkForUpdates } = require("./js/updater.js");
 
 let mainWindow;
@@ -95,3 +96,4 @@ app.on("will-quit", () => {
   /* Uygulama tamamen kapanmadan önce tüm IPC dinleyicilerini temizle */
   ipcMain.removeAllListeners();
 });
+
