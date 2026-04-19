@@ -47,7 +47,7 @@ function setupUpdater(mainWindow) {
   });
 
   ipcMain.on("install_update", () => {
-    autoUpdater.quitAndInstall(true, true);
+    autoUpdater.quitAndInstall(false, true);
   });
 
   ipcMain.on("set_auto_update", (_event, enabled) => {
