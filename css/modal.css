@@ -653,56 +653,6 @@
   color: var(--red);
 }
 
-/* ─────────────────── Ayar Toggle Switch ─────────────────── */
-
-.setting-toggle {
-  cursor: pointer;
-  user-select: none;
-}
-
-.setting-toggle input[type="checkbox"] {
-  display: none;
-}
-
-.toggle-switch {
-  position: relative;
-  width: 46px;
-  height: 26px;
-  background: var(--border2);
-  border-radius: 13px;
-  flex-shrink: 0;
-  margin-left: auto;
-  transition: background 0.25s;
-}
-
-.toggle-switch::after {
-  content: "";
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 18px;
-  height: 18px;
-  background: var(--text-dim);
-  border-radius: 50%;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.setting-toggle input:checked + .toggle-label + .toggle-switch {
-  background: var(--accent);
-}
-
-.setting-toggle input:checked + .toggle-label + .toggle-switch::after {
-  left: 24px;
-  background: var(--bg);
-}
-
-.toggle-label {
-  font-family: var(--font-ui);
-  font-size: 17px;
-  font-weight: 500;
-  color: var(--text);
-}
-
 .btn-settings-yellow,
 .btn-settings-danger {
   width: 100%;

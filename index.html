@@ -27,7 +27,6 @@
     <div class="auth-loading" id="authLoading">
       <div class="loading-content">
         <h1 class="loading-brand">My<span class="accent-text">SETUP</span></h1>
-
         <div class="spinner-ring" id="loadingSpinner"></div>
       </div>
     </div>
@@ -331,18 +330,6 @@
                     class="auth-error"
                     style="min-height: 20px"
                   ></p>
-
-                  <label
-                    class="setting-row setting-toggle"
-                    id="autoUpdateToggle"
-                  >
-                    <input type="checkbox" id="autoUpdateCheckbox" />
-                    <span class="toggle-label">Otomatik Güncelleştirme</span>
-                    <span class="toggle-switch"></span>
-                  </label>
-
-                  <div style="min-height: 20px"></div>
-
                   <button
                     id="openChangePassBtn"
                     class="setting-row setting-row-btn"
@@ -419,7 +406,6 @@
                           required
                         />
                       </div>
-
                       <div class="auth-field">
                         <label for="newPassword">Yeni Şifre</label>
                         <input
@@ -432,7 +418,6 @@
                           required
                         />
                       </div>
-
                       <div class="auth-field">
                         <label for="newPasswordConfirm"
                           >Yeni Şifre (Tekrar)</label
@@ -448,7 +433,6 @@
                         />
                       </div>
                     </div>
-
                     <p id="changePassError" class="auth-error"></p>
                     <button
                       type="submit"
@@ -499,7 +483,6 @@
                     kayıtlarınız ve kişisel verileriniz kalıcı olarak
                     silinecektir.
                   </div>
-
                   <form id="deleteAccountForm">
                     <div class="form-grid">
                       <div class="auth-field">
@@ -525,7 +508,6 @@
                         />
                       </div>
                     </div>
-
                     <label
                       class="danger-check-wrapper"
                       for="deleteConfirmCheck"
@@ -536,7 +518,6 @@
                         geri alamayacağımı anlıyorum.</span
                       >
                     </label>
-
                     <p id="deleteAccountError" class="auth-error"></p>
                     <button
                       type="submit"
@@ -714,8 +695,8 @@
                     id="editDatePicker"
                     tabindex="-1"
                   />
-                  <span class="calendar-icon" id="editCalIcon"
-                    ><svg
+                  <span class="calendar-icon" id="editCalIcon">
+                    <svg
                       viewBox="0 0 24 24"
                       width="16"
                       height="16"
@@ -728,8 +709,9 @@
                       <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                       <line x1="16" y1="2" x2="16" y2="6" />
                       <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" /></svg
-                  ></span>
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  </span>
                 </div>
               </div>
               <div class="field-group">
@@ -812,11 +794,12 @@
       <span>© 2026 MySetup | <b>Karma</b> tarafından oluşturuldu.</span>
     </footer>
 
+    <!-- SCRIPT YÜKLEME SIRASI: utils → firebase → table → io → modal → auth -->
     <script src="js/utils.js"></script>
+    <script src="js/firebase.js"></script>
     <script src="js/table.js"></script>
     <script src="js/io.js"></script>
     <script src="js/modal.js"></script>
-    <script src="js/firebase.js"></script>
     <script src="js/auth.js"></script>
   </body>
 </html>

@@ -33,23 +33,19 @@ async function onUserLoggedIn(user) {
   const authOverlay = document.getElementById("authOverlay");
   if (authOverlay) authOverlay.classList.remove("active");
 
-  const pageWrapper = document.getElementById("pageWrapper");
   const mainScroll = document.getElementById("mainScroll");
   const appFooter = document.getElementById("appFooter");
   if (mainScroll) mainScroll.classList.remove("hidden");
   if (appFooter) appFooter.classList.remove("hidden");
 
-  const displayName = user.displayName || "Kullanıcı";
-
   const userInfo = document.getElementById("userInfo");
   const userEmailEl = document.getElementById("userEmail");
-
   if (userInfo) userInfo.classList.remove("hidden");
-  if (userEmailEl) userEmailEl.textContent = displayName;
+  if (userEmailEl) userEmailEl.textContent = user.displayName || "Kullanıcı";
 
   try {
     await user.getIdToken(true);
-  } catch (_tokenError) {}
+  } catch (_) {}
 
   if (typeof initUserDataRef === "function") {
     initUserDataRef(user.uid);
@@ -61,7 +57,6 @@ async function onUserLoggedIn(user) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 function onUserLoggedOut() {
-  const pageWrapper = document.getElementById("pageWrapper");
   const mainScroll = document.getElementById("mainScroll");
   const appFooter = document.getElementById("appFooter");
   const userInfo = document.getElementById("userInfo");
@@ -78,10 +73,10 @@ function onUserLoggedOut() {
 
   if (loginForm) {
     loginForm.reset();
-    const loginBtn = loginForm.querySelector(".auth-submit-btn");
-    if (loginBtn) {
-      loginBtn.textContent = "Giriş Yap";
-      loginBtn.disabled = false;
+    const btn = loginForm.querySelector(".auth-submit-btn");
+    if (btn) {
+      btn.textContent = "Giriş Yap";
+      btn.disabled = false;
     }
   }
 
@@ -136,7 +131,6 @@ document.querySelectorAll(".toggle-password").forEach((btn) => {
   btn.addEventListener("click", function () {
     const input = this.previousElementSibling;
     if (!input) return;
-
     if (input.type === "password") {
       input.type = "text";
       this.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
@@ -163,13 +157,13 @@ function validatePasswords() {
   }
 
   if (p1 === p2 && p1.length >= 6) {
-    regPasswordInput?.classList.remove("match-error");
-    regPasswordConfirm?.classList.remove("match-error");
+    regPasswordInput?.classList.replace("match-error", "match-success");
+    regPasswordConfirm?.classList.replace("match-error", "match-success");
     regPasswordInput?.classList.add("match-success");
     regPasswordConfirm?.classList.add("match-success");
   } else {
-    regPasswordInput?.classList.remove("match-success");
-    regPasswordConfirm?.classList.remove("match-success");
+    regPasswordInput?.classList.replace("match-success", "match-error");
+    regPasswordConfirm?.classList.replace("match-success", "match-error");
     if (p2.length > 0) {
       regPasswordInput?.classList.add("match-error");
       regPasswordConfirm?.classList.add("match-error");
@@ -177,12 +171,8 @@ function validatePasswords() {
   }
 }
 
-if (regPasswordInput) {
-  regPasswordInput.addEventListener("input", validatePasswords);
-}
-if (regPasswordConfirm) {
-  regPasswordConfirm.addEventListener("input", validatePasswords);
-}
+regPasswordInput?.addEventListener("input", validatePasswords);
+regPasswordConfirm?.addEventListener("input", validatePasswords);
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                             GİRİŞ FORMU                                  */
@@ -204,8 +194,7 @@ if (loginForm) {
 
     try {
       await auth.signInWithEmailAndPassword(email, password);
-
-      if (rememberMeCheck && rememberMeCheck.checked) {
+      if (rememberMeCheck?.checked) {
         localStorage.setItem("rememberedEmail", email);
       } else {
         localStorage.removeItem("rememberedEmail");
@@ -235,47 +224,27 @@ if (regUsernameInput) {
     clearTimeout(usernameCheckTimer);
     const val = regUsernameInput.value;
 
-    if (!val.trim()) {
-      setHint("", "");
-      return;
-    }
-
-    if (/\s/.test(val)) {
-      setHint("Kullanıcı adında boşluk kullanılamaz", "error");
-      return;
-    }
-
-    if (/[A-Z]/.test(val)) {
-      setHint("Büyük harf kullanılamaz, sadece küçük harf (a-z)", "error");
-      return;
-    }
-
-    if (
-      /[\u00e7\u011f\u0131\u00f6\u015f\u00fc\u00c7\u011e\u0130\u00d6\u015e\u00dc]/.test(
-        val,
-      )
-    ) {
-      setHint("Türkçe karakter kullanılamaz (ç, ğ, ı, ö, ş, ü)", "error");
-      return;
-    }
-
-    if (/[^a-z0-9._-]/.test(val)) {
-      setHint(
+    if (!val.trim()) return setHint("", "");
+    if (/\s/.test(val))
+      return setHint("Kullanıcı adında boşluk kullanılamaz", "error");
+    if (/[A-Z]/.test(val))
+      return setHint(
+        "Büyük harf kullanılamaz, sadece küçük harf (a-z)",
+        "error",
+      );
+    if (/[çğıöşüÇĞİÖŞÜ]/.test(val))
+      return setHint(
+        "Türkçe karakter kullanılamaz (ç, ğ, ı, ö, ş, ü)",
+        "error",
+      );
+    if (/[^a-z0-9._-]/.test(val))
+      return setHint(
         "Sadece a-z, 0-9, nokta, tire, alt çizgi kullanılabilir",
         "error",
       );
-      return;
-    }
-
-    if (val.length < 3) {
-      setHint("En az 3 karakter gerekli", "error");
-      return;
-    }
-
-    if (val.length > 32) {
-      setHint("En fazla 32 karakter olabilir", "error");
-      return;
-    }
+    if (val.length < 3) return setHint("En az 3 karakter gerekli", "error");
+    if (val.length > 32)
+      return setHint("En fazla 32 karakter olabilir", "error");
 
     setHint("Kontrol ediliyor...", "");
 
@@ -284,12 +253,13 @@ if (regUsernameInput) {
         const snap = await database
           .ref("usernames/" + val.toLowerCase())
           .once("value");
-        if (snap.exists()) {
-          setHint("Bu kullanıcı adı alınmış", "error");
-        } else {
-          setHint("Bu kullanıcı adı kullanılabilir", "ok");
-        }
-      } catch (_err) {
+        setHint(
+          snap.exists()
+            ? "Bu kullanıcı adı alınmış"
+            : "Bu kullanıcı adı kullanılabilir",
+          snap.exists() ? "error" : "ok",
+        );
+      } catch (_) {
         setHint("", "");
       }
     }, 500);
@@ -318,13 +288,11 @@ if (registerForm) {
       errEl.textContent = "Kullanıcı adı en az 3 karakter olmalıdır.";
       return;
     }
-
     if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
       errEl.textContent =
         "Kullanıcı adı sadece küçük harf (a-z), rakam, nokta, tire, alt çizgi içerebilir.";
       return;
     }
-
     if (password !== passwordConfirm) {
       errEl.textContent = "Şifreler uyuşmuyor.";
       return;
@@ -335,7 +303,6 @@ if (registerForm) {
 
     try {
       const usernameKey = username.toLowerCase();
-
       const snap = await database.ref("usernames/" + usernameKey).once("value");
       if (snap.exists()) {
         errEl.textContent = "Bu kullanıcı adı zaten alınmış.";
@@ -353,14 +320,11 @@ if (registerForm) {
         try {
           await cred.user.delete();
         } catch (_) {}
-        if (
+        errEl.textContent =
           claimErr.code === "PERMISSION_DENIED" ||
-          (claimErr.message && claimErr.message.includes("Permission"))
-        ) {
-          errEl.textContent = "Bu kullanıcı adı zaten alınmış.";
-        } else {
-          throw claimErr;
-        }
+          claimErr.message?.includes("Permission")
+            ? "Bu kullanıcı adı zaten alınmış."
+            : "Bir hata oluştu.";
         btn.textContent = "Kayıt Ol";
         btn.disabled = false;
       }
@@ -378,37 +342,32 @@ document.getElementById("goToRegister")?.addEventListener("click", () => {
   document.getElementById("loginPanel")?.classList.add("hidden");
   document.getElementById("registerPanel")?.classList.remove("hidden");
 });
-
 document.getElementById("goToLogin")?.addEventListener("click", () => {
   document.getElementById("registerPanel")?.classList.add("hidden");
   document.getElementById("loginPanel")?.classList.remove("hidden");
 });
 
-/* ─────────────────── Ayarlar Modal Değişkenleri ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                       AYARLAR MODALI                                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
-const settingsModal =
-  document.getElementById("settingsModal") ||
-  document.getElementById("userSettingsModal");
+const settingsModal = document.getElementById("userSettingsModal");
 const changePasswordModal = document.getElementById("changePasswordModal");
 const deleteAccountModal = document.getElementById("deleteAccountModal");
 const settingsTrigger = document.querySelector("#userInfo .settings-icon");
 
-/* ─────────────────── Modal Kapatma Fonksiyonları ─────────────────── */
-
 function closeSettingsModal() {
-  if (settingsModal) settingsModal.classList.remove("active");
+  settingsModal?.classList.remove("active");
 }
 function closeChangePassModal() {
-  if (changePasswordModal) changePasswordModal.classList.remove("active");
+  changePasswordModal?.classList.remove("active");
 }
 function closeDeleteModal() {
-  if (deleteAccountModal) deleteAccountModal.classList.remove("active");
+  deleteAccountModal?.classList.remove("active");
 }
 
-/* ─────────────────── Ayarlar Modalını Açma ─────────────────── */
-
 settingsTrigger?.addEventListener("click", (e) => {
-  if (e.target && e.target.closest && e.target.closest("#logoutBtn")) return;
+  if (e.target?.closest("#logoutBtn")) return;
   const user = auth.currentUser;
   if (!user) return;
   const nameInput = document.getElementById("settingsDisplayName");
@@ -418,10 +377,8 @@ settingsTrigger?.addEventListener("click", (e) => {
   }
   document.getElementById("editUsernameBtn")?.classList.remove("hidden");
   document.getElementById("saveUsernameBtn")?.classList.add("hidden");
-  if (settingsModal) settingsModal.classList.add("active");
+  settingsModal?.classList.add("active");
 });
-
-/* ─────────────────── Modal Kapat Butonları ─────────────────── */
 
 document
   .getElementById("closeSettingsBtn")
@@ -430,13 +387,8 @@ document
   .getElementById("closeChangePassBtn")
   ?.addEventListener("click", closeChangePassModal);
 document
-  .getElementById("closeDeleteAccountBtn")
-  ?.addEventListener("click", closeDeleteModal);
-document
   .getElementById("closeDeleteBtn")
   ?.addEventListener("click", closeDeleteModal);
-
-/* ─────────────────── Modal Dış Tıklama ─────────────────── */
 
 settingsModal?.addEventListener("click", (e) => {
   if (e.target === settingsModal) closeSettingsModal();
@@ -448,19 +400,15 @@ deleteAccountModal?.addEventListener("click", (e) => {
   if (e.target === deleteAccountModal) closeDeleteModal();
 });
 
-/* ─────────────────── Çıkış Butonu ─────────────────── */
-
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
   closeSettingsModal();
   auth.signOut();
 });
 
-/* ─────────────────── Ayarlara Geri Dön ─────────────────── */
-
-function goBackToSettings(fromModal) {
-  if (fromModal === "changePass") closeChangePassModal();
-  if (fromModal === "deleteAcc") closeDeleteModal();
-  if (settingsModal) settingsModal.classList.add("active");
+function goBackToSettings(from) {
+  if (from === "changePass") closeChangePassModal();
+  if (from === "deleteAcc") closeDeleteModal();
+  settingsModal?.classList.add("active");
 }
 
 document
@@ -475,6 +423,7 @@ document
 const editBtn = document.getElementById("editUsernameBtn");
 const saveBtn = document.getElementById("saveUsernameBtn");
 const nameInput = document.getElementById("settingsDisplayName");
+const usernameErrEl = document.getElementById("usernameError");
 
 editBtn?.addEventListener("click", () => {
   nameInput.readOnly = false;
@@ -483,33 +432,17 @@ editBtn?.addEventListener("click", () => {
   saveBtn.classList.remove("hidden");
 });
 
-const usernameErrEl = document.getElementById("usernameError");
-
 nameInput?.addEventListener("input", () => {
-  if (nameInput.readOnly) return;
+  if (nameInput.readOnly || !usernameErrEl) return;
   const val = nameInput.value;
   let msg = "";
-
-  if (/\s/.test(val)) {
-    msg = "Boşluk kullanılamaz";
-  } else if (/[A-Z]/.test(val)) {
-    msg = "Büyük harf kullanılamaz";
-  } else if (
-    /[\u00e7\u011f\u0131\u00f6\u015f\u00fc\u00c7\u011e\u0130\u00d6\u015e\u00dc]/.test(
-      val,
-    )
-  ) {
-    msg = "Türkçe karakter kullanılamaz";
-  } else if (/[^a-z0-9._-]/.test(val)) {
-    msg = "Geçersiz karakter";
-  } else if (val.length > 0 && val.length < 3) {
-    msg = "En az 3 karakter gerekli";
-  }
-
-  if (usernameErrEl) {
-    usernameErrEl.textContent = msg;
-    usernameErrEl.style.color = msg ? "var(--red)" : "";
-  }
+  if (/\s/.test(val)) msg = "Boşluk kullanılamaz";
+  else if (/[A-Z]/.test(val)) msg = "Büyük harf kullanılamaz";
+  else if (/[çğıöşüÇĞİÖŞÜ]/.test(val)) msg = "Türkçe karakter kullanılamaz";
+  else if (/[^a-z0-9._-]/.test(val)) msg = "Geçersiz karakter";
+  else if (val.length > 0 && val.length < 3) msg = "En az 3 karakter gerekli";
+  usernameErrEl.textContent = msg;
+  usernameErrEl.style.color = msg ? "var(--red)" : "";
 });
 
 saveBtn?.addEventListener("click", async () => {
@@ -538,7 +471,6 @@ saveBtn?.addEventListener("click", async () => {
     }
 
     await user.getIdToken(true);
-
     const oldName = (user.displayName || "").trim().toLowerCase();
     const newKey = newName.toLowerCase();
 
@@ -551,7 +483,6 @@ saveBtn?.addEventListener("click", async () => {
         saveBtn.disabled = false;
         return;
       }
-
       const snap = await database.ref("usernames/" + newKey).once("value");
       if (snap.exists() && snap.val() !== user.uid) {
         if (usernameErrEl) {
@@ -561,35 +492,27 @@ saveBtn?.addEventListener("click", async () => {
         saveBtn.disabled = false;
         return;
       }
-
       await database.ref("usernames/" + newKey).set(user.uid);
-
       if (oldName && oldName !== newKey) {
         try {
           await database.ref("usernames/" + oldName).set(null);
-        } catch (_e) {}
+        } catch (_) {}
       }
     }
 
     await user.updateProfile({ displayName: newName });
     document.getElementById("userEmail").textContent = newName;
     if (usernameErrEl) usernameErrEl.textContent = "";
-    if (typeof showToast === "function") {
+    if (typeof showToast === "function")
       showToast("Kullanıcı adı güncellendi", "success");
-    }
     nameInput.readOnly = true;
     saveBtn.classList.add("hidden");
     editBtn.classList.remove("hidden");
   } catch (err) {
-    let msg = "Hata oluştu";
-    if (
-      err.code === "PERMISSION_DENIED" ||
-      (err.message && err.message.includes("Permission"))
-    ) {
-      msg = "Yetki hatası — tekrar giriş yapıp deneyin";
-    } else if (err.message) {
-      msg = err.message;
-    }
+    const msg =
+      err.code === "PERMISSION_DENIED" || err.message?.includes("Permission")
+        ? "Yetki hatası — tekrar giriş yapıp deneyin"
+        : err.message || "Hata oluştu";
     if (usernameErrEl) {
       usernameErrEl.textContent = msg;
       usernameErrEl.style.color = "var(--red)";
@@ -605,7 +528,7 @@ saveBtn?.addEventListener("click", async () => {
 
 document.getElementById("openChangePassBtn")?.addEventListener("click", () => {
   closeSettingsModal();
-  if (changePasswordModal) changePasswordModal.classList.add("active");
+  changePasswordModal?.classList.add("active");
 });
 
 (function () {
@@ -615,12 +538,11 @@ document.getElementById("openChangePassBtn")?.addEventListener("click", () => {
   const submitBtn = document.getElementById("changePassSubmitBtn");
   const errEl = document.getElementById("changePassError");
 
-  function validateChangePassForm() {
+  function validate() {
     if (!oldPassEl || !newPassEl || !newPassConfEl || !submitBtn) return;
     const oldVal = oldPassEl.value;
     const newVal = newPassEl.value;
     const confirmVal = newPassConfEl.value;
-
     let errorMsg = "";
     let newPassInvalid = false;
     let confirmInvalid = false;
@@ -639,30 +561,28 @@ document.getElementById("openChangePassBtn")?.addEventListener("click", () => {
 
     newPassEl.classList.toggle("input-error", newPassInvalid);
     newPassConfEl.classList.toggle("input-error", confirmInvalid);
-
     if (errEl) {
       errEl.textContent = errorMsg;
       errEl.style.color = errorMsg ? "var(--red)" : "";
     }
 
-    const valid =
+    submitBtn.disabled = !(
       oldVal.length > 0 &&
       newVal.length >= 6 &&
       confirmVal.length >= 6 &&
-      newVal === confirmVal;
-    submitBtn.disabled = !valid;
+      newVal === confirmVal
+    );
   }
 
-  oldPassEl?.addEventListener("input", validateChangePassForm);
-  newPassEl?.addEventListener("input", validateChangePassForm);
-  newPassConfEl?.addEventListener("input", validateChangePassForm);
+  oldPassEl?.addEventListener("input", validate);
+  newPassEl?.addEventListener("input", validate);
+  newPassConfEl?.addEventListener("input", validate);
 })();
 
 document
   .getElementById("changePasswordForm")
   ?.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const oldPass = document.getElementById("oldPassword").value;
     const newPass = document.getElementById("newPassword").value;
     const newPassConfirm = document.getElementById("newPasswordConfirm").value;
@@ -684,23 +604,12 @@ document
       return;
     }
 
-    if (newPass.length < 6) {
-      errEl.style.color = "var(--red)";
-      errEl.textContent = "Yeni şifre en az 6 karakter olmalıdır.";
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Şifreyi Kaydet";
-      }
-      return;
-    }
-
     try {
       const user = auth.currentUser;
       const credential = firebase.auth.EmailAuthProvider.credential(
         user.email,
         oldPass,
       );
-
       await user.reauthenticateWithCredential(credential);
       await user.updatePassword(newPass);
       await user.reload();
@@ -716,9 +625,8 @@ document
           submitBtn.disabled = false;
           submitBtn.textContent = "Şifreyi Kaydet";
         }
-        if (typeof showToast === "function") {
+        if (typeof showToast === "function")
           showToast("Şifre güncellendi", "success");
-        }
       }, 900);
     } catch (err) {
       errEl.style.color = "var(--red)";
@@ -742,7 +650,7 @@ document
   .getElementById("openDeleteAccountBtn")
   ?.addEventListener("click", () => {
     closeSettingsModal();
-    if (deleteAccountModal) deleteAccountModal.classList.add("active");
+    deleteAccountModal?.classList.add("active");
   });
 
 document
@@ -755,7 +663,6 @@ document
   .getElementById("deleteAccountForm")
   ?.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const email = document.getElementById("deleteEmail").value;
     const pass = document.getElementById("deletePassword").value;
     const errEl = document.getElementById("deleteAccountError");
@@ -768,9 +675,8 @@ document
 
     try {
       const user = auth.currentUser;
-      if (!user) {
+      if (!user)
         throw new Error("Oturum bulunamadı, lütfen yeniden giriş yapın.");
-      }
 
       const credential = firebase.auth.EmailAuthProvider.credential(
         email,
@@ -780,27 +686,21 @@ document
 
       if (typeof database !== "undefined" && user.uid) {
         await database.ref("users/" + user.uid).remove();
-
         const usernameKey = (user.displayName || "").trim().toLowerCase();
         if (usernameKey) {
-          const usernameRef = database.ref("usernames/" + usernameKey);
-          const usernameSnap = await usernameRef.once("value");
-          if (usernameSnap.val() === user.uid) {
-            await usernameRef.remove();
-          }
+          const ref = database.ref("usernames/" + usernameKey);
+          const snap = await ref.once("value");
+          if (snap.val() === user.uid) await ref.remove();
         }
       }
 
       await user.delete();
-
-      if (typeof showToast === "function") {
+      if (typeof showToast === "function")
         showToast("Hesabınız kalıcı olarak silindi.", "info");
-      }
       closeDeleteModal();
     } catch (err) {
       errEl.style.color = "var(--red)";
       const code = err?.code || "";
-
       if (
         code === "auth/wrong-password" ||
         code === "auth/invalid-credential"
@@ -810,12 +710,10 @@ document
         errEl.textContent = "Çok fazla deneme. Lütfen bekleyin.";
       } else if (code === "auth/requires-recent-login") {
         errEl.textContent = "Yeniden giriş yapmanız gerekiyor.";
-      } else if (err?.message) {
-        errEl.textContent = err.message;
       } else {
-        errEl.textContent = "Bir hata oluştu. Lütfen tekrar deneyin.";
+        errEl.textContent =
+          err?.message || "Bir hata oluştu. Lütfen tekrar deneyin.";
       }
-
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = "Hesabı Kalıcı Olarak Sil";
