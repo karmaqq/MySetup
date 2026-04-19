@@ -72,17 +72,26 @@ function createWindow() {
   setupUpdater(mainWindow);
 }
 
-/* ─────────────────── Uygulama Başlatma ─────────────────── */
+/* ─────────────────── UYGULAMA YAŞAM DÖNGÜSÜ ─────────────────── */
 
 app.whenReady().then(() => {
   setupCspHeaders();
   createWindow();
 });
 
-/* ─────────────────── Pencere Kapatma ─────────────────── */
-
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
+});
+
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
+app.on("will-quit", () => {
+  /* Uygulama tamamen kapanmadan önce tüm IPC dinleyicilerini temizle */
+  ipcMain.removeAllListeners();
 });

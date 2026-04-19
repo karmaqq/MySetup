@@ -1,0 +1,24 @@
+{
+  "name": "mysetup-patcher",
+  "version": "1.0.0",
+  "main": "patcher.js",
+  "author": "Karma",
+  "description": "MySetup Güncelleme Servisi",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "fs-extra": "^11.1.1"
+  },
+  "devDependencies": {
+    "electron": "25.0.0",
+    "electron-builder": "24.4.0"
+  },
+  "build": {
+    "productName": "update",
+    "win": {
+      "target": "dir"
+    }
+  }
+}
