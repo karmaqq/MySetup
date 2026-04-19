@@ -4,21 +4,28 @@
 
 const { contextBridge, ipcRenderer } = require("electron");
 
+function onceListener(channel, handler) {
+  ipcRenderer.removeAllListeners(channel);
+  ipcRenderer.on(channel, handler);
+}
+
 contextBridge.exposeInMainWorld("electronAPI", {
   onAppVersion: (callback) =>
-    ipcRenderer.on("app_version", (_event, version) => callback(version)),
+    onceListener("app_version", (_event, version) => callback(version)),
 
   onUpdateAvailable: (callback) =>
-    ipcRenderer.on("update_available", (_event, version) => callback(version)),
+    onceListener("update_available", (_event, version) => callback(version)),
 
   onUpdateProgress: (callback) =>
-    ipcRenderer.on("update_progress", (_event, percent) => callback(percent)),
+    onceListener("update_progress", (_event, percent) => callback(percent)),
 
   onUpdateReady: (callback) =>
-    ipcRenderer.on("update_ready", (_event) => callback()),
+    onceListener("update_ready", (_event) => callback()),
 
   onUpdateError: (callback) =>
-    ipcRenderer.on("update_error", (_event, message) => callback(message)),
+    onceListener("update_error", (_event, message) => callback(message)),
 
   startDownload: () => ipcRenderer.send("start_download"),
+
+  setAutoUpdate: (enabled) => ipcRenderer.send("set_auto_update", !!enabled),
 });

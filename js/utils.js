@@ -2,8 +2,6 @@
 /*                          GENEL YARDIMCI ARAÇLAR                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const electronAPI = window.electronAPI || null;
-
 /* ─────────────────── Para Birimi Formatlayıcı ─────────────────── */
 
 const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
@@ -40,9 +38,7 @@ let editingId = null;
 
 const versionDisplay = document.getElementById("versionDisplay");
 const updateBtn = document.getElementById("updateBtn");
-const statusPanel = document.getElementById("statusPanel");
-const statusDot = document.getElementById("statusDot");
-const statusText = document.getElementById("statusText");
+
 const toastContainer = document.getElementById("toastContainer");
 
 const searchInput = document.getElementById("searchInput");
@@ -136,9 +132,3 @@ function applyPriceFormat(inputEl) {
 }
 
 /* ─────────────────── Fiyat Input Dinleyicisi ─────────────────── */
-
-if (editPrice) {
-  editPrice.addEventListener("input", function () {
-    applyPriceFormat(this);
-  });
-}

@@ -2,65 +2,6 @@
 /*                    KİMLİK DOĞRULAMA STİLLERİ                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Yükleme Ekranı ─────────────────── */
-
-.auth-loading {
-  position: fixed;
-  inset: 0;
-  z-index: 9000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg);
-  background-image:
-    radial-gradient(
-      ellipse at 20% 10%,
-      rgba(232, 160, 32, 0.08) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse at 80% 90%,
-      rgba(74, 158, 255, 0.05) 0%,
-      transparent 55%
-    );
-}
-
-.loading-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 32px;
-}
-
-.loading-brand {
-  font-family: var(--font-display);
-  font-size: 46px;
-  font-weight: 800;
-  color: var(--text-bright);
-  letter-spacing: -0.5px;
-  line-height: 1;
-  margin: 0;
-}
-
-.loading-brand .accent-text {
-  color: var(--accent);
-}
-
-.spinner-ring {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--border2);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* ─────────────────── Auth Overlay ─────────────────── */
 
 .auth-overlay {
@@ -317,6 +258,11 @@
   margin: 0;
 }
 
+.modal-input.input-error {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 0 1px rgba(245, 96, 96, 0.25);
+}
+
 .username-hint {
   font-family: var(--font-ui);
   font-size: 12px;
@@ -413,18 +359,29 @@
 
 .user-info {
   display: flex;
-  cursor: pointer;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 6px 8px 6px 14px;
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: 24px;
   transition: border-color 0.2s;
+  margin-left: auto;
 }
 
 .user-info:hover {
   border-color: var(--accent-dim);
+}
+
+.settings-icon {
+  color: var(--text-dim);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.settings-icon:hover {
+  color: var(--accent);
 }
 
 .user-displayname {
@@ -439,16 +396,17 @@
 }
 
 .logout-btn {
-  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
   background: none;
   border: 1px solid var(--border2);
-  border-radius: 8px;
+  border-radius: 50%;
   color: var(--text-dim);
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.2s;
 }
@@ -462,399 +420,4 @@
   background: var(--red-dim);
   border-color: var(--red);
   color: var(--red);
-}
-
-/* ─────────────────── Ayarlar Modalları ─────────────────── */
-
-.premium-modal {
-  width: 100%;
-  max-width: 500px;
-  padding: 28px 30px !important;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
-.premium-modal.wide {
-  max-width: 540px;
-}
-
-.premium-modal .modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 0;
-}
-
-.premium-modal .header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.premium-modal .modal-title {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.premium-modal .back-icon-btn,
-.premium-modal .modal-close {
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  color: var(--text-dim);
-  cursor: pointer;
-  padding: 0 !important;
-  transition: all 0.2s;
-}
-
-.premium-modal .modal-close {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  font-size: 16px;
-}
-
-.premium-modal .back-icon-btn:hover,
-.premium-modal .modal-close:hover {
-  color: var(--text-bright);
-  border-color: var(--accent-dim);
-  background: var(--surface3);
-}
-
-.premium-modal .back-icon-btn:hover {
-  transform: translateX(-2px);
-}
-
-.premium-modal .back-icon-btn svg {
-  width: 18px !important;
-  height: 18px !important;
-}
-
-.premium-modal .modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 0;
-}
-
-.premium-modal form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  width: 100%;
-}
-
-.premium-modal .form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px 18px;
-  width: 100%;
-}
-
-.premium-modal .auth-field {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  min-width: 0;
-}
-
-.premium-modal .form-col-full {
-  grid-column: 1 / -1;
-}
-
-.premium-modal .auth-field label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-.premium-modal .modal-input {
-  width: 100% !important;
-  min-height: 48px;
-  padding: 12px 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  color: var(--text-bright);
-  font-family: var(--font-ui);
-  font-size: 14px;
-  outline: none;
-  box-sizing: border-box;
-}
-
-/* ─────────────────── Kullanıcı Adı Düzenleme ─────────────────── */
-
-.username-edit-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 12px;
-  padding: 10px 12px;
-  height: 54px;
-  width: 100%;
-  box-sizing: border-box;
-  cursor: default;
-}
-
-.username-edit-box .clean-input {
-  flex: 1;
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--text-bright);
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
-  outline: none;
-}
-
-.username-edit-box .clean-input[readonly] {
-  cursor: default;
-}
-
-#settingsDisplayName:focus {
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
-  outline: none;
-}
-
-.action-icon-btn {
-  width: 32px;
-  height: 32px;
-  background: var(--surface3);
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  color: var(--text-dim);
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    color 0.2s,
-    border-color 0.2s,
-    background 0.2s;
-}
-
-.action-icon-btn svg {
-  width: 18px !important;
-  height: 18px !important;
-}
-
-.action-icon-btn:hover {
-  color: var(--text-bright);
-  border-color: var(--accent-dim);
-  background: rgba(232, 160, 32, 0.08);
-}
-
-.action-icon-btn.success {
-  color: var(--green);
-}
-
-.action-icon-btn.success:hover {
-  border-color: rgba(61, 214, 140, 0.28);
-  background: rgba(61, 214, 140, 0.08);
-}
-
-/* ─────────────────── Ayarlar Modal Düzeni ─────────────────── */
-
-#userSettingsModal .premium-modal {
-  max-width: 560px;
-}
-
-#userSettingsModal .modal-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.9fr);
-  gap: 22px;
-  align-items: end;
-}
-
-#userSettingsModal .settings-field-mb {
-  margin-bottom: 0;
-}
-
-#userSettingsModal .settings-actions {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-/* ─────────────────── Hesap Silme ─────────────────── */
-
-.premium-modal .warning-box {
-  background: var(--red-dim);
-  border-left: 4px solid var(--red);
-  color: var(--text-bright);
-  padding: 12px 16px;
-  font-size: 13px;
-  line-height: 1.5;
-  border-radius: 6px;
-  margin-bottom: 0;
-}
-
-.danger-check-wrapper {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin-top: 8px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.danger-check-wrapper input[type="checkbox"] {
-  appearance: none;
-  width: 20px !important;
-  height: 20px !important;
-  min-width: 20px !important;
-  border: 2px solid var(--border2);
-  border-radius: 4px;
-  background: var(--surface3);
-  cursor: pointer;
-  position: relative;
-  margin: 0;
-  flex-shrink: 0;
-}
-
-.danger-check-wrapper input[type="checkbox"]:checked {
-  background: var(--red);
-  border-color: var(--red);
-}
-
-.danger-check-wrapper input[type="checkbox"]:checked::after {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 2px;
-  width: 4px;
-  height: 8px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.check-text {
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--text-bright);
-  padding-top: 2px;
-}
-
-/* ─────────────────── Ayar Butonları ─────────────────── */
-
-.settings-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.btn-settings-yellow,
-.btn-settings-danger,
-.auth-submit-btn {
-  width: 100%;
-  min-height: 54px;
-  padding: 14px 18px;
-  border-radius: 12px;
-  font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
-}
-
-.btn-settings-yellow {
-  background: var(--accent);
-  color: #000;
-}
-
-.btn-settings-yellow:hover {
-  background: #f5b030;
-  box-shadow: 0 8px 22px rgba(232, 160, 32, 0.18);
-}
-
-.btn-settings-danger {
-  background: var(--red-dim);
-  color: var(--red);
-  border: 1px solid rgba(245, 96, 96, 0.3);
-}
-
-.btn-settings-danger:hover {
-  background: rgba(245, 96, 96, 0.2);
-}
-
-/* ─────────────────── Şifre / Hesap Silme Modalları ─────────────────── */
-
-#changePasswordModal .premium-modal.wide,
-#deleteAccountModal .premium-modal.wide {
-  max-width: 600px;
-}
-
-#changePasswordModal .modal-body,
-#deleteAccountModal .modal-body {
-  gap: 18px;
-}
-
-#deleteAccountModal .warning-box {
-  border-radius: 12px;
-  padding: 16px 18px;
-}
-
-#deleteAccountModal .danger-check-wrapper {
-  margin-top: 0;
-}
-
-/* ─────────────────── Duyarlı Tasarım ─────────────────── */
-
-@media (max-width: 760px) {
-  .premium-modal,
-  .premium-modal.wide,
-  #userSettingsModal .premium-modal,
-  #changePasswordModal .premium-modal.wide,
-  #deleteAccountModal .premium-modal.wide {
-    max-width: min(100%, 94vw);
-    padding: 24px 20px !important;
-  }
-
-  #userSettingsModal .modal-body,
-  .premium-modal .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  #userSettingsModal .settings-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .premium-modal .form-col-full {
-    grid-column: auto;
-  }
-}
-
-/* ─────────────────── Tehlike Butonu ─────────────────── */
-
-.btn-danger {
-  background: var(--red) !important;
-  color: #fff !important;
-}
-
-.btn-danger:disabled {
-  background: var(--border2) !important;
-  color: var(--text-dim) !important;
-  cursor: not-allowed;
 }

@@ -6,7 +6,7 @@
 
 .toast-container {
   position: fixed;
-  bottom: 28px;
+  bottom: 52px;
   right: 28px;
   z-index: 2000;
   display: flex;

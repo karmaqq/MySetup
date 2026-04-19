@@ -45,6 +45,10 @@ function setupUpdater(mainWindow) {
     autoUpdater.downloadUpdate();
   });
 
+  ipcMain.on("set_auto_update", (_event, enabled) => {
+    autoUpdater.autoDownload = !!enabled;
+  });
+
   updateIntervalId = setInterval(
     () => {
       autoUpdater.checkForUpdates();
@@ -56,6 +60,7 @@ function setupUpdater(mainWindow) {
 /* ─────────────────── Güncelleme Kontrolü Başlatma ─────────────────── */
 
 function checkForUpdates() {
+  if (!require("electron").app.isPackaged) return;
   autoUpdater.checkForUpdates();
 }
 

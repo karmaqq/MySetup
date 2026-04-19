@@ -2,7 +2,7 @@
 /*                          ELECTRON ANA SÜREÇ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, shell } = require("electron");
 const path = require("path");
 const { setupUpdater, checkForUpdates } = require("./js/updater.js");
 
@@ -12,7 +12,7 @@ let mainWindow;
 
 const APP_CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://*.googletagmanager.com https://*.firebaseio.com https://*.firebasedatabase.app",
+  "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.googletagmanager.com https://*.firebaseio.com https://*.firebasedatabase.app",
   "script-src-elem 'self' 'unsafe-inline' https://www.gstatic.com https://*.googletagmanager.com https://*.firebaseio.com https://*.firebasedatabase.app",
   "connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.googleapis.com https://*.gstatic.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://www.googleapis.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -41,17 +41,28 @@ function createWindow() {
     height: 900,
     minWidth: 950,
     title: "MySetup Inventory",
-    backgroundColor: "#090b10",
+    backgroundColor: "#00000000",
+    titleBarStyle: "hidden",
+    titleBarOverlay: {
+      color: "#00000000",
+      symbolColor: "#8a8f98",
+      height: 36,
+    },
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false,
+      sandbox: true,
     },
   });
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
   mainWindow.setMenu(null);
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith("http")) shell.openExternal(url);
+    return { action: "deny" };
+  });
 
   mainWindow.webContents.on("did-finish-load", () => {
     mainWindow.webContents.send("app_version", app.getVersion());

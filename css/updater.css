@@ -1,0 +1,245 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                       YÜKLEME & GÜNCELLEME STİLLERİ                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Yükleme Ekranı ─────────────────── */
+
+.auth-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  background-image:
+    radial-gradient(
+      ellipse at 20% 10%,
+      rgba(232, 160, 32, 0.08) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 80% 90%,
+      rgba(74, 158, 255, 0.05) 0%,
+      transparent 55%
+    );
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.loading-brand {
+  font-family: var(--font-display);
+  font-size: 46px;
+  font-weight: 800;
+  color: var(--text-bright);
+  letter-spacing: -0.5px;
+  line-height: 1;
+  margin: 0;
+}
+
+.loading-brand .accent-text {
+  color: var(--accent);
+}
+
+/* ─────────────────── Güncelleme İlerleme Halkası ─────────────────── */
+
+.update-ring-wrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.update-ring-wrapper.active {
+  display: flex;
+}
+
+.update-ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.update-ring-track {
+  fill: none;
+  stroke: var(--border2);
+  stroke-width: 6;
+}
+
+.update-ring-progress {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 326.73;
+  stroke-dashoffset: 326.73;
+  transition: stroke-dashoffset 0.4s ease;
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+
+.update-ring-percent {
+  position: absolute;
+  font-family: var(--font-data);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-bright);
+  letter-spacing: -0.5px;
+}
+
+/* ─────────────────── Güncelleme Adımları ─────────────────── */
+
+.update-steps {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  min-height: 48px;
+  position: relative;
+}
+
+.update-steps.active {
+  display: flex;
+}
+
+.update-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(8px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.update-step.active {
+  height: 36px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.update-step.done {
+  height: 36px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.update-step.done .step-label {
+  color: var(--text-dim);
+}
+
+.update-step.exiting {
+  opacity: 0;
+  height: 0;
+  transform: translateY(-8px);
+}
+
+.step-counter {
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 3px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.step-label {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-bright);
+  white-space: nowrap;
+}
+
+.step-dots {
+  display: inline-block;
+  width: 18px;
+  text-align: left;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.step-dots::after {
+  content: "...";
+  display: inline-block;
+  animation: dots-wave 1.4s steps(4, end) infinite;
+  letter-spacing: 1px;
+}
+
+.update-step.done .step-dots {
+  display: none;
+}
+
+@keyframes dots-wave {
+  0% {
+    width: 0;
+  }
+  25% {
+    width: 6px;
+  }
+  50% {
+    width: 12px;
+  }
+  75% {
+    width: 18px;
+  }
+  100% {
+    width: 0;
+  }
+}
+
+.step-check {
+  width: 18px;
+  height: 18px;
+  color: var(--green);
+  flex-shrink: 0;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.update-step.done .step-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@keyframes update-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.spinner-ring {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
+}
+
+.spinner-ring.hidden {
+  display: none !important;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
