@@ -1,10 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          GİRDİ / ÇIKTI İŞLEMLERİ                        */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                           BİLDİRİM SİSTEMİ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+// Versiyon numarasını header'a yaz
+if (typeof window.electronAPI !== "undefined") {
+  window.electronAPI.onAppVersion((version) => {
+    if (versionDisplay) versionDisplay.textContent = "v" + version;
+  });
+}
 
 /* ─────────────────── Toast Bildirimi Gösterme ─────────────────── */
 
