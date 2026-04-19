@@ -1,7 +1,7 @@
 {
     "name":  "mysetup",
-    "version":  "1.7.1",
-    "description":  "Profesyonel Envanter ve Kurulum YÃ¶netim Sistemi",
+    "version":  "1.7.2",
+    "description":  "Profesyonel Envanter ve Kurulum YÃƒÂ¶netim Sistemi",
     "author":  "Karma shbkarma@gmail.com",
     "main":  "main.js",
     "scripts":  {
@@ -21,7 +21,7 @@
                   "appId":  "com.mysetup.app",
                   "productName":  "MySetup",
                   "artifactName":  "MySetup-Installer.exe",
-                  "copyright":  "Copyright Â© 2026 Karma",
+                  "copyright":  "Copyright Ã‚Â© 2026 Karma",
                   "directories":  {
                                       "output":  "dist",
                                       "buildResources":  "build"
