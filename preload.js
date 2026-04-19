@@ -4,32 +4,24 @@
 
 const { contextBridge, ipcRenderer } = require("electron");
 
+/* Her kanal için önceki listener'ı temizleyerek ekler (çift tetiklenmeyi önler) */
 function onceListener(channel, handler) {
   ipcRenderer.removeAllListeners(channel);
   ipcRenderer.on(channel, handler);
 }
 
 contextBridge.exposeInMainWorld("electronAPI", {
-  onAppVersion: (callback) =>
-    onceListener("app_version", (_event, version) => callback(version)),
+  /* Uygulama versiyonu */
+  onAppVersion: (cb) =>
+    onceListener("app_version", (_e, version) => cb(version)),
 
-  onUpdateAvailable: (callback) =>
-    onceListener("update_available", (_event, version, auto) =>
-      callback(version, auto),
-    ),
+  /* Güncelleme mevcut → UI'da butonu göster */
+  onUpdateAvailable: (cb) =>
+    onceListener("update_available", (_e, version) => cb(version)),
 
-  onUpdateProgress: (callback) =>
-    onceListener("update_progress", (_event, percent) => callback(percent)),
+  /* Güncelleme hatası */
+  onUpdateError: (cb) => onceListener("update_error", (_e, msg) => cb(msg)),
 
-  onUpdateReady: (callback) =>
-    onceListener("update_ready", (_event) => callback()),
-
-  onUpdateError: (callback) =>
-    onceListener("update_error", (_event, message) => callback(message)),
-
-  startDownload: () => ipcRenderer.send("start_download"),
-
-  installUpdate: () => ipcRenderer.send("install_update"),
-
-  setAutoUpdate: (enabled) => ipcRenderer.send("set_auto_update", !!enabled),
+  /* Kullanıcı butona bastı → main process'e ilet */
+  launchUpdater: () => ipcRenderer.send("launch_updater"),
 });

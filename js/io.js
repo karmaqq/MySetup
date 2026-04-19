@@ -269,15 +269,49 @@ if (exportCsvBtn) {
   });
 }
 
-/* ─────────────────── YENİ SESSİZ GÜNCELLEME MANTIĞI ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*  io.js — GÜNCELLEME BÖLÜMÜ (sadece bu bloğu değiştir)                   */
+/*                                                                           */
+/*  Mevcut io.js dosyandaki en alttaki güncelleme bloğunu                   */
+/*  aşağıdaki kodla değiştir.                                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
-if (typeof electronAPI.onUpdateAvailable === "function") {
-  electronAPI.onUpdateAvailable((version) => {
-    // Artık ring veya adım yok, sadece küçük bir bildirim butonu gösteriyoruz
-    const updateIcon = document.getElementById("updateIconBtn");
-    if (updateIcon) {
-      updateIcon.classList.add("visible");
-      showToast(`Yeni sürüm mevcut: v${version}`, "info");
-    }
-  });
+/* ─────────────────── YENİ GÜNCELLEME MANTIĞI ─────────────────── */
+
+if (typeof window.electronAPI !== "undefined") {
+  /* 1. Güncelleme mevcut → ikonu göster + toast */
+  if (typeof window.electronAPI.onUpdateAvailable === "function") {
+    window.electronAPI.onUpdateAvailable((version) => {
+      const updateIconBtn = document.getElementById("updateBtn"); // index.html'deki doğru ID
+      if (updateIconBtn) {
+        updateIconBtn.classList.add("visible");
+      }
+      showToast(
+        `Yeni sürüm mevcut: v${version} — Güncellemek için ikona tıkla`,
+        "info",
+        5000,
+      );
+    });
+  }
+
+  /* 2. Güncelleme hatası → toast */
+  if (typeof window.electronAPI.onUpdateError === "function") {
+    window.electronAPI.onUpdateError((message) => {
+      showToast("Güncelleme hatası: " + message, "error", 6000);
+    });
+  }
+
+  /* 3. Güncelle butonuna tıklanınca → patcher'ı başlat */
+  const updateBtn = document.getElementById("updateBtn");
+  if (updateBtn) {
+    updateBtn.addEventListener("click", () => {
+      if (typeof window.electronAPI.launchUpdater === "function") {
+        showToast("Güncelleme başlatılıyor…", "info", 3000);
+        /* Kısa gecikme: toast göründükten sonra uygulama kapanır */
+        setTimeout(() => {
+          window.electronAPI.launchUpdater();
+        }, 600);
+      }
+    });
+  }
 }
