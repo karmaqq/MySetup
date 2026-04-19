@@ -1,33 +1,33 @@
 const { autoUpdater } = require("electron-updater");
 const { ipcMain } = require("electron");
 
-autoUpdater.autoDownload = false;
+/* GÜNCELLEME AYARLARI */
+autoUpdater.autoDownload = false; // Kullanıcı basınca inecek
 autoUpdater.autoInstallOnAppQuit = false;
 
 let updaterInitialized = false;
-let updateIntervalId = null;
 let updaterWindow = null;
-let isAutoUpdateEnabled = false;
 
 function setupUpdater(mainWindow) {
   updaterWindow = mainWindow;
-
   if (updaterInitialized) return;
   updaterInitialized = true;
 
+  // 1. GÜNCELLEME VAR MI?
   autoUpdater.on("update-available", (info) => {
-    updaterWindow?.webContents.send(
-      "update_available",
-      info.version,
-      isAutoUpdateEnabled,
-    );
+    // Sadece butonu görünür yap
+    updaterWindow?.webContents.send("update_available", info.version);
   });
 
-  autoUpdater.on("error", (err) => {
-    updaterWindow?.webContents.send("update_error", err.message);
-  });
-
+  // 2. KULLANICI BUTONA BASTI (İNDİRMEYİ BAŞLAT)
   ipcMain.on("install_update", () => {
+    // Önce indir, sonra patcher'ı açacağız
+    autoUpdater.downloadUpdate();
+    // Renderer'a "İndiriliyor..." mesajı gönderilebilir (isteğe bağlı)
+  });
+
+  // 3. İNDİRME TAMAMLANDI (İŞTE ŞİMDİ PATCHER ZAMANI!)
+  autoUpdater.on("update-downloaded", () => {
     const { spawn } = require("child_process");
     const path = require("path");
     const { app } = require("electron");
@@ -43,25 +43,23 @@ function setupUpdater(mainWindow) {
           "update.exe",
         );
 
+    // Patcher'ı bağımsız olarak başlat
     const child = spawn(updaterPath, [], {
       detached: true,
       stdio: "ignore",
     });
 
     child.unref();
-    app.quit();
+
+    // Ana uygulamayı kapat ki dosyalar kilitli kalmasın
+    setTimeout(() => {
+      app.quit();
+    }, 500);
   });
 
-  ipcMain.on("set_auto_update", (_event, enabled) => {
-    isAutoUpdateEnabled = !!enabled;
+  autoUpdater.on("error", (err) => {
+    updaterWindow?.webContents.send("update_error", err.message);
   });
-
-  updateIntervalId = setInterval(
-    () => {
-      autoUpdater.checkForUpdates();
-    },
-    1000 * 60 * 30,
-  );
 }
 
 function checkForUpdates() {
