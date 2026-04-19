@@ -47,9 +47,14 @@ function setupUpdater(mainWindow) {
   });
 
   ipcMain.on("install_update", () => {
-    autoUpdater.quitAndInstall(false, true);
-  });
+    const { BrowserWindow } = require("electron");
+    BrowserWindow.getAllWindows().forEach((w) => w.close());
 
+    setTimeout(() => {
+      autoUpdater.quitAndInstall(false, true);
+    }, 1000);
+  });
+  
   ipcMain.on("set_auto_update", (_event, enabled) => {
     isAutoUpdateEnabled = !!enabled;
   });
