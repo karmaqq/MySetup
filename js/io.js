@@ -2,13 +2,6 @@
 /*                           BİLDİRİM SİSTEMİ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-// Versiyon numarasını header'a yaz
-if (typeof window.electronAPI !== "undefined") {
-  window.electronAPI.onAppVersion((version) => {
-    if (versionDisplay) versionDisplay.textContent = "v" + version;
-  });
-}
-
 /* ─────────────────── Toast Bildirimi Gösterme ─────────────────── */
 
 window.showToast = function (message, type = "info", duration = 3200) {
@@ -317,4 +310,14 @@ if (typeof window.electronAPI !== "undefined") {
       }
     });
   }
+}
+
+// 1. Uygulama açıldığında versiyonu header'a yazdır
+if (typeof electronAPI.onAppVersion === "function") {
+  electronAPI.onAppVersion((version) => {
+    const versionEl = document.getElementById("versionDisplay");
+    if (versionEl) {
+      versionEl.textContent = `v${version}`;
+    }
+  });
 }
