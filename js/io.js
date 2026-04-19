@@ -291,7 +291,11 @@ if (electronAPI) {
   let currentStep = 0;
 
   function showUpdateScreen() {
-    if (authLoading) authLoading.style.display = "";
+    if (authLoading) {
+      authLoading.style.display = "";
+      authLoading.style.opacity = "1";
+      authLoading.style.transition = "none";
+    }
     if (loadingSpinner) loadingSpinner.classList.add("hidden");
     if (updateRingWrapper) updateRingWrapper.classList.add("active");
     if (updateSteps) updateSteps.classList.add("active");
