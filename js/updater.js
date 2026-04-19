@@ -34,8 +34,31 @@ function setupUpdater(mainWindow) {
     updaterWindow?.webContents.send("update_progress", percent);
   });
 
-  autoUpdater.on("update-downloaded", () => {
-    updaterWindow?.webContents.send("update_ready");
+  /* ─────────────────── GÜNCELLEME HAZIRLIK MANTIĞI ─────────────────── */
+
+  autoUpdater.on("update-downloaded", async (info) => {
+    const fs = require("fs-extra");
+    const path = require("path");
+    const { app } = require("electron");
+
+    try {
+      const pendingDir = path.join(app.getPath("userData"), "pending-update");
+
+      // Klasörü temizle ve yeniden oluştur
+      if (await fs.pathExists(pendingDir)) await fs.remove(pendingDir);
+      await fs.ensureDir(pendingDir);
+
+      // İndirilen kurulum dosyasını (installer) güvenli bölgeye kopyala
+      const installerPath = info.downloadedFile;
+      const destPath = path.join(pendingDir, "update-package.exe");
+      await fs.copy(installerPath, destPath);
+
+      // Renderer'a "Her şey hazır, butona basabilirsin" mesajı gönder
+      updaterWindow?.webContents.send("update_ready");
+    } catch (err) {
+      console.error("Hazırlık hatası:", err);
+      updaterWindow?.webContents.send("update_error", "Dosya hazırlanamadı.");
+    }
   });
 
   autoUpdater.on("error", (err) => {
@@ -47,14 +70,30 @@ function setupUpdater(mainWindow) {
   });
 
   ipcMain.on("install_update", () => {
-    const { BrowserWindow } = require("electron");
-    BrowserWindow.getAllWindows().forEach((w) => w.close());
+    const { spawn } = require("child_process");
+    const path = require("path");
+    const { app } = require("electron");
 
-    setTimeout(() => {
-      autoUpdater.quitAndInstall(false, true);
-    }, 1000);
+    const updaterPath = app.isPackaged
+      ? path.join(path.dirname(app.getPath("exe")), "update.exe")
+      : path.join(
+          __dirname,
+          "..",
+          "updater-source",
+          "dist",
+          "win-unpacked",
+          "update.exe",
+        );
+
+    const child = spawn(updaterPath, [], {
+      detached: true,
+      stdio: "ignore",
+    });
+
+    child.unref();
+    app.quit();
   });
-  
+
   ipcMain.on("set_auto_update", (_event, enabled) => {
     isAutoUpdateEnabled = !!enabled;
   });

@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        background: #090b10;
+        color: #e0eaf5;
+        font-family: sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden;
+      }
+      .container {
+        width: 80%;
+        text-align: center;
+      }
+      .bar-bg {
+        width: 100%;
+        height: 6px;
+        background: #1a2030;
+        border-radius: 3px;
+        margin-top: 20px;
+        overflow: hidden;
+      }
+      .bar-fill {
+        width: 0%;
+        height: 100%;
+        background: #e8a020;
+        transition: width 0.3s ease;
+      }
+      .status {
+        font-size: 13px;
+        color: #4e5f78;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h3 id="title">Sistem Güncelleniyor</h3>
+      <div class="bar-bg"><div id="progress" class="bar-fill"></div></div>
+      <div id="status" class="status">Dosyalar hazırlanıyor...</div>
+    </div>
+    <script>
+      const { ipcRenderer } = require("electron");
+      ipcRenderer.on("status", (e, { msg, percent }) => {
+        document.getElementById("status").innerText = msg;
+        document.getElementById("progress").style.width = percent + "%";
+      });
+    </script>
+  </body>
+</html>
