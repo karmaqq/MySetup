@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>MySetup Güncelleyici</title>
     <style>
-      /* ── Temel ────────────────────────────────────────────────────────────── */
+      /* ── Temel Tasarım ────────────────────────────────────────────────────── */
       *,
       *::before,
       *::after {
@@ -27,7 +27,6 @@
         --green-d: rgba(61, 214, 140, 0.12);
         --red: #f56060;
         --red-d: rgba(245, 96, 96, 0.12);
-        --blue: #4a9eff;
       }
 
       body {
@@ -41,10 +40,10 @@
         justify-content: center;
         overflow: hidden;
         user-select: none;
-        -webkit-app-region: drag;
+        -webkit-app-region: drag; /* Pencereyi sürüklenebilir yapar */
       }
 
-      /* ── Arka plan parıltısı ──────────────────────────────────────────────── */
+      /* ── Arka Plan Parıltısı ─────────────────────────────────────────────── */
       body::before {
         content: "";
         position: fixed;
@@ -63,191 +62,119 @@
         pointer-events: none;
       }
 
-      /* ── Logo ─────────────────────────────────────────────────────────────── */
       .logo {
-        font-size: 22px;
+        font-size: 24px;
         font-weight: 800;
-        letter-spacing: -0.5px;
         color: var(--bright);
-        margin-bottom: 28px;
-        opacity: 0;
-        transform: translateY(-8px);
-        animation: fadeUp 0.5s 0.1s ease forwards;
+        margin-bottom: 30px;
+        letter-spacing: -0.5px;
       }
       .logo span {
         color: var(--accent);
       }
 
-      /* ── Kart ─────────────────────────────────────────────────────────────── */
       .card {
-        width: 380px;
+        width: 400px;
         background: var(--surface);
         border: 1px solid var(--border2);
         border-radius: 16px;
-        padding: 24px 28px;
-        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+        padding: 30px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
         -webkit-app-region: no-drag;
-        opacity: 0;
-        transform: translateY(12px);
-        animation: fadeUp 0.5s 0.25s ease forwards;
       }
 
       /* ── Adımlar ──────────────────────────────────────────────────────────── */
       .steps {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
       }
 
       .step {
         display: flex;
         align-items: center;
-        gap: 14px;
-        padding: 12px 14px;
-        border-radius: 10px;
+        gap: 15px;
+        padding: 14px;
+        border-radius: 12px;
         border: 1px solid transparent;
-        background: transparent;
-        transition:
-          background 0.3s,
-          border-color 0.3s;
-        opacity: 0.35;
-        transition:
-          opacity 0.3s,
-          background 0.3s,
-          border-color 0.3s;
-      }
-
-      /* Bekleme: soluk */
-      .step.waiting {
         opacity: 0.3;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      /* Aktif: vurgu */
       .step.active {
         opacity: 1;
         background: var(--accent-d);
-        border-color: rgba(232, 160, 32, 0.25);
+        border-color: rgba(232, 160, 32, 0.2);
       }
-
-      /* Tamamlandı */
       .step.done {
-        opacity: 0.7;
+        opacity: 0.6;
         background: var(--green-d);
-        border-color: rgba(61, 214, 140, 0.15);
+        border-color: rgba(61, 214, 140, 0.1);
       }
-
-      /* Hata */
       .step.error {
         opacity: 1;
         background: var(--red-d);
-        border-color: rgba(245, 96, 96, 0.3);
+        border-color: rgba(245, 96, 96, 0.2);
       }
 
-      /* ── Adım ikonu ───────────────────────────────────────────────────────── */
       .step-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        flex-shrink: 0;
-        font-size: 14px;
         background: var(--border);
-        color: var(--dim);
-        transition:
-          background 0.3s,
-          color 0.3s;
         position: relative;
+        font-weight: bold;
       }
 
-      .step.active .step-icon {
-        background: var(--accent-d);
-        color: var(--accent);
-      }
-      .step.done .step-icon {
-        background: var(--green-d);
-        color: var(--green);
-      }
-      .step.error .step-icon {
-        background: var(--red-d);
-        color: var(--red);
-      }
-
-      /* Spinner sadece active'de görünür */
-      .step-icon .spinner {
+      .spinner {
         display: none;
-        width: 16px;
-        height: 16px;
-        border: 2px solid rgba(232, 160, 32, 0.25);
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(232, 160, 32, 0.2);
         border-top-color: var(--accent);
         border-radius: 50%;
-        animation: spin 0.7s linear infinite;
-        position: absolute;
+        animation: spin 0.8s linear infinite;
       }
-      .step.active .step-icon .spinner {
+
+      .step.active .spinner {
         display: block;
       }
-      .step.active .step-icon .icon-char {
+      .step.active .icon-char {
         display: none;
       }
-      .step.done .step-icon .icon-char::after {
+      .step.done .icon-char::after {
         content: "✓";
         color: var(--green);
       }
-      .step.error .step-icon .icon-char::after {
+      .step.error .icon-char::after {
         content: "✕";
         color: var(--red);
       }
 
-      /* ── Adım metni ───────────────────────────────────────────────────────── */
-      .step-body {
-        flex: 1;
-        min-width: 0;
-      }
-
       .step-label {
-        font-size: 13.5px;
+        font-size: 14px;
         font-weight: 600;
         color: var(--bright);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }
-      .step.waiting .step-label,
-      .step.done .step-label {
-        color: var(--text);
-      }
-
       .step-sub {
-        font-size: 11.5px;
+        font-size: 12px;
         color: var(--dim);
-        margin-top: 2px;
-        min-height: 14px;
-        transition: color 0.2s;
-      }
-      .step.active .step-sub {
-        color: var(--accent);
-      }
-      .step.done .step-sub {
-        color: var(--green);
-      }
-      .step.error .step-sub {
-        color: var(--red);
+        margin-top: 3px;
       }
 
-      /* ── Progress bar (indirme adımı) ────────────────────────────────────── */
+      /* ── Progress Bar ─────────────────────────────────────────────────────── */
       .step-progress {
-        height: 3px;
+        height: 4px;
         background: var(--border);
-        border-radius: 2px;
-        margin-top: 8px;
-        overflow: hidden;
+        border-radius: 10px;
+        margin-top: 10px;
         display: none;
+        overflow: hidden;
       }
-      .step[data-step="2"].active .step-progress {
-        display: block;
-      }
+      .step[data-step="2"].active .step-progress,
       .step[data-step="2"].done .step-progress {
         display: block;
       }
@@ -255,38 +182,40 @@
       .step-progress-fill {
         height: 100%;
         background: var(--accent);
-        border-radius: 2px;
         width: 0%;
         transition: width 0.3s ease;
       }
-      .step.done .step-progress-fill {
-        background: var(--green);
-        width: 100% !important;
-      }
 
-      /* ── Hata mesajı ─────────────────────────────────────────────────────── */
       .error-box {
         display: none;
-        margin-top: 16px;
-        padding: 12px 14px;
+        margin-top: 20px;
+        padding: 12px;
         background: var(--red-d);
-        border: 1px solid rgba(245, 96, 96, 0.3);
+        border: 1px solid rgba(245, 96, 96, 0.2);
         border-radius: 8px;
-        font-size: 12.5px;
+        font-size: 12px;
         color: var(--red);
-        line-height: 1.5;
+        text-align: center;
       }
       .error-box.visible {
         display: block;
       }
 
-      /* ── Animasyonlar ────────────────────────────────────────────────────── */
-      @keyframes fadeUp {
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      .close-btn {
+        margin-top: 15px;
+        width: 100%;
+        padding: 10px;
+        background: var(--border);
+        border: none;
+        color: var(--text);
+        border-radius: 8px;
+        cursor: pointer;
+        display: none;
       }
+      .error-box.visible + .close-btn {
+        display: block;
+      }
+
       @keyframes spin {
         to {
           transform: rotate(360deg);
@@ -305,8 +234,8 @@
             <span class="icon-char"></span>
           </div>
           <div class="step-body">
-            <div class="step-label">Sunucuya bağlanılıyor</div>
-            <div class="step-sub" id="sub1">Güncelleme kontrol ediliyor…</div>
+            <div class="step-label">Sunucu Bağlantısı</div>
+            <div id="sub1" class="step-sub">Sürüm kontrol ediliyor...</div>
           </div>
         </div>
 
@@ -316,10 +245,10 @@
             <span class="icon-char"></span>
           </div>
           <div class="step-body">
-            <div class="step-label">Güncelleme indiriliyor</div>
-            <div class="step-sub" id="sub2">Bekleniyor…</div>
+            <div class="step-label">Dosya İndirme</div>
+            <div id="sub2" class="step-sub">Sıraya alındı...</div>
             <div class="step-progress">
-              <div class="step-progress-fill" id="progressFill"></div>
+              <div id="progressFill" class="step-progress-fill"></div>
             </div>
           </div>
         </div>
@@ -330,8 +259,8 @@
             <span class="icon-char"></span>
           </div>
           <div class="step-body">
-            <div class="step-label">Güncelleme kuruluyor</div>
-            <div class="step-sub" id="sub3">Bekleniyor…</div>
+            <div class="step-label">Sistem Güncelleme</div>
+            <div id="sub3" class="step-sub">Hazırlanıyor...</div>
           </div>
         </div>
 
@@ -341,90 +270,68 @@
             <span class="icon-char"></span>
           </div>
           <div class="step-body">
-            <div class="step-label">Uygulama başlatılıyor</div>
-            <div class="step-sub" id="sub4">Bekleniyor…</div>
+            <div class="step-label">Tamamlanıyor</div>
+            <div id="sub4" class="step-sub">Bekleniyor...</div>
           </div>
         </div>
       </div>
 
       <div class="error-box" id="errorBox"></div>
+      <button class="close-btn" onclick="window.close()">Kapat</button>
     </div>
 
     <script>
       const { ipcRenderer } = require("electron");
 
-      const SUB_ACTIVE = {
-        1: "GitHub ile iletişim kuruluyor…",
-        2: "Dosya indiriliyor…",
-        3: "Yükleyici çalıştırılıyor, lütfen bekleyin…",
-        4: "MySetup açılıyor…",
+      const TEXTS = {
+        active: {
+          1: "GitHub Release API kontrol ediliyor...",
+          2: "Yeni sürüm paketi indiriliyor...",
+          3: "Kurulum başlatıldı, lütfen bekleyin...",
+          4: "MySetup yeniden başlatılıyor...",
+        },
+        done: {
+          1: "Yeni sürüm bilgisi doğrulandı.",
+          2: "Dosya başarıyla indirildi.",
+          3: "Kurulum tamamlandı.",
+          4: "Uygulama hazır!",
+        },
       };
-
-      const SUB_DONE = {
-        1: "Sürüm bilgisi alındı.",
-        2: "İndirme tamamlandı.",
-        3: "Kurulum tamamlandı.",
-        4: "Uygulama başlatıldı!",
-      };
-
-      function getStepEl(n) {
-        return document.querySelector(`.step[data-step="${n}"]`);
-      }
 
       ipcRenderer.on("step", (_e, { step, state, progress }) => {
-        const el = getStepEl(step);
+        const el = document.querySelector(`.step[data-step="${step}"]`);
         const sub = document.getElementById(`sub${step}`);
         const fill = document.getElementById("progressFill");
 
-        /* Tüm state class'larını temizle */
+        if (!el) return;
+
+        // State yönetimi
         el.classList.remove("waiting", "active", "done", "error");
         el.classList.add(state);
 
         if (state === "active") {
-          if (sub) sub.textContent = SUB_ACTIVE[step] || "";
-          if (step === 2 && fill && progress !== null) {
+          sub.textContent = TEXTS.active[step];
+          if (step === 2 && progress !== null) {
             fill.style.width = progress + "%";
-            if (sub) sub.textContent = `İndiriliyor… %${progress}`;
+            sub.textContent = `İndiriliyor: %${progress}`;
           }
+        } else if (state === "done") {
+          sub.textContent = TEXTS.done[step];
+          if (step === 2) fill.style.width = "100%";
         }
-
-        if (state === "done") {
-          if (sub) sub.textContent = SUB_DONE[step] || "Tamamlandı.";
-          if (step === 2 && fill) fill.style.width = "100%";
-        }
-
-        if (state === "error") {
-          if (sub) sub.textContent = "Hata oluştu.";
-        }
-      });
-
-      /* İndirme progress güncellemesi (active event içinden de geliyor ama
-       burada daha sık gelirse progress'i tekrar güncelle) */
-      ipcRenderer.on("download_progress", (_e, percent) => {
-        const el = getStepEl(2);
-        const sub = document.getElementById("sub2");
-        const fill = document.getElementById("progressFill");
-
-        if (!el.classList.contains("active")) return;
-        if (fill) fill.style.width = percent + "%";
-        if (sub) sub.textContent = `İndiriliyor… %${percent}`;
       });
 
       ipcRenderer.on("fatal_error", (_e, message) => {
-        /* Aktif adımı hata olarak işaretle */
-        document.querySelectorAll(".step.active").forEach((el) => {
-          el.classList.remove("active");
-          el.classList.add("error");
-          const stepNum = el.dataset.step;
-          const sub = document.getElementById(`sub${stepNum}`);
-          if (sub) sub.textContent = "Hata oluştu.";
-        });
+        // Aktif olan adımı hata moduna çek
+        const activeStep = document.querySelector(".step.active");
+        if (activeStep) {
+          activeStep.classList.remove("active");
+          activeStep.classList.add("error");
+        }
 
         const box = document.getElementById("errorBox");
-        if (box) {
-          box.textContent = message;
-          box.classList.add("visible");
-        }
+        box.textContent = `Hata: ${message}`;
+        box.classList.add("visible");
       });
     </script>
   </body>
