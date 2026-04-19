@@ -1,8 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                           BİLDİRİM SİSTEMİ                              */
+/*                          GİRDİ / ÇIKTI İŞLEMLERİ                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Toast Bildirimi Gösterme ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                           BİLDİRİM SİSTEMİ                              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 window.showToast = function (message, type = "info", duration = 3200) {
   if (!toastContainer) return;
@@ -16,11 +18,9 @@ window.showToast = function (message, type = "info", duration = 3200) {
   text.textContent = message;
   toast.append(icon, text);
   toastContainer.appendChild(toast);
-
   requestAnimationFrame(() => {
     requestAnimationFrame(() => toast.classList.add("visible"));
   });
-
   setTimeout(() => {
     toast.classList.remove("visible");
     toast.addEventListener("transitionend", () => toast.remove(), {
@@ -28,8 +28,6 @@ window.showToast = function (message, type = "info", duration = 3200) {
     });
   }, duration);
 };
-
-/* ─────────────────── Onay Diyalogu Gösterme ─────────────────── */
 
 window.showConfirm = function (message, onConfirm) {
   if (!toastContainer) return;
@@ -39,7 +37,6 @@ window.showConfirm = function (message, onConfirm) {
   const actions = document.createElement("div");
   const yesBtn = document.createElement("button");
   const noBtn = document.createElement("button");
-
   text.textContent = message;
   actions.className = "toast-actions";
   yesBtn.className = "toast-yes";
@@ -51,18 +48,15 @@ window.showConfirm = function (message, onConfirm) {
   actions.append(yesBtn, noBtn);
   toast.append(text, actions);
   toastContainer.appendChild(toast);
-
   requestAnimationFrame(() => {
     requestAnimationFrame(() => toast.classList.add("visible"));
   });
-
   const dismiss = () => {
     toast.classList.remove("visible");
     toast.addEventListener("transitionend", () => toast.remove(), {
       once: true,
     });
   };
-
   yesBtn.onclick = () => {
     dismiss();
     onConfirm();
@@ -78,7 +72,6 @@ if (searchInput && clearSearch) {
     clearSearch.classList.toggle("visible", !!currentSearch);
     if (typeof renderAll === "function") renderAll();
   });
-
   clearSearch.addEventListener("click", () => {
     searchInput.value = "";
     currentSearch = "";
@@ -101,13 +94,13 @@ document.querySelectorAll(".filter-btn").forEach((btn) => {
   });
 });
 
-const importCsvBtn = document.getElementById("importCsvBtn");
-const exportCsvBtn = document.getElementById("exportCsvBtn");
-const importCsvInput = document.getElementById("importCsvInput");
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                           CSV İÇE AKTARMA                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+const importCsvBtn = document.getElementById("importCsvBtn");
+const exportCsvBtn = document.getElementById("exportCsvBtn");
+const importCsvInput = document.getElementById("importCsvInput");
 
 function processCsv(csvText) {
   const lines = csvText.split(/\r?\n/).filter((l) => l.trim());
@@ -124,14 +117,12 @@ function processCsv(csvText) {
     return database.ref().push().key;
   };
 
-  const dataLines = lines.slice(1);
   const importPayload = {};
 
-  dataLines.forEach((line) => {
+  lines.slice(1).forEach((line) => {
     const row = [];
     let current = "";
     let inQuotes = false;
-
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
       if (inQuotes) {
@@ -155,7 +146,6 @@ function processCsv(csvText) {
     row.push(current.trim());
 
     if (row.length < 2 || !row[1]) return;
-
     const entryId = getNewKey();
     if (!entryId) return;
 
@@ -184,18 +174,15 @@ function processCsv(csvText) {
         showToast("Aktif kullanıcı verisi bulunamadı", "error");
         return;
       }
-
       try {
         await replaceUserDataInFirebase(importPayload);
         showToast(`${importCount} kayıt sıfırdan yüklendi.`, "success");
-      } catch (_error) {
+      } catch (_) {
         showToast("CSV aktarımı tamamlanamadı", "error");
       }
     },
   );
 }
-
-/* ─────────────────── CSV Dosya Seçici Dinleyicisi ─────────────────── */
 
 if (importCsvBtn && importCsvInput) {
   importCsvBtn.addEventListener("click", () => importCsvInput.click());
@@ -266,22 +253,21 @@ if (exportCsvBtn) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*  io.js — GÜNCELLEME BÖLÜMÜ (sadece bu bloğu değiştir)                   */
-/*                                                                           */
-/*  Mevcut io.js dosyandaki en alttaki güncelleme bloğunu                   */
-/*  aşağıdaki kodla değiştir.                                               */
+/*                          ELECTRON / GÜNCELLEME                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── YENİ GÜNCELLEME MANTIĞI ─────────────────── */
-
 if (typeof window.electronAPI !== "undefined") {
-  /* 1. Güncelleme mevcut → ikonu göster + toast */
+  /* Uygulama versiyonunu header'a yaz */
+  if (typeof window.electronAPI.onAppVersion === "function") {
+    window.electronAPI.onAppVersion((version) => {
+      if (versionDisplay) versionDisplay.textContent = `v${version}`;
+    });
+  }
+
+  /* Güncelleme mevcut → butonu göster + toast */
   if (typeof window.electronAPI.onUpdateAvailable === "function") {
     window.electronAPI.onUpdateAvailable((version) => {
-      const updateIconBtn = document.getElementById("updateBtn"); // index.html'deki doğru ID
-      if (updateIconBtn) {
-        updateIconBtn.classList.add("visible");
-      }
+      if (updateBtn) updateBtn.classList.add("visible");
       showToast(
         `Yeni sürüm mevcut: v${version} — Güncellemek için ikona tıkla`,
         "info",
@@ -290,34 +276,18 @@ if (typeof window.electronAPI !== "undefined") {
     });
   }
 
-  /* 2. Güncelleme hatası → toast */
+  /* Güncelleme hatası */
   if (typeof window.electronAPI.onUpdateError === "function") {
     window.electronAPI.onUpdateError((message) => {
       showToast("Güncelleme hatası: " + message, "error", 6000);
     });
   }
 
-  /* 3. Güncelle butonuna tıklanınca → patcher'ı başlat */
-  const updateBtn = document.getElementById("updateBtn");
-  if (updateBtn) {
+  /* Güncelle butonuna tıklanınca patcher'ı başlat */
+  if (updateBtn && typeof window.electronAPI.launchUpdater === "function") {
     updateBtn.addEventListener("click", () => {
-      if (typeof window.electronAPI.launchUpdater === "function") {
-        showToast("Güncelleme başlatılıyor…", "info", 3000);
-        /* Kısa gecikme: toast göründükten sonra uygulama kapanır */
-        setTimeout(() => {
-          window.electronAPI.launchUpdater();
-        }, 600);
-      }
+      showToast("Güncelleme başlatılıyor…", "info", 3000);
+      setTimeout(() => window.electronAPI.launchUpdater(), 600);
     });
   }
-}
-
-// 1. Uygulama açıldığında versiyonu header'a yazdır
-if (typeof electronAPI.onAppVersion === "function") {
-  electronAPI.onAppVersion((version) => {
-    const versionEl = document.getElementById("versionDisplay");
-    if (versionEl) {
-      versionEl.textContent = `v${version}`;
-    }
-  });
 }
