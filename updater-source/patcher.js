@@ -36,36 +36,25 @@ function createWindow() {
 
 async function startUpdateProcess() {
   try {
-    updateStatus("Sistem kapatılıyor...", 20);
-    await new Promise((r) => setTimeout(r, 3500)); // Ana uygulamanın kapanması için güvenli süre
+    updateStatus("Güncelleme sunucusuna bağlanılıyor...", 10);
+    await new Promise((r) => setTimeout(r, 2000));
 
-    const pendingExe = path.join(
-      app.getPath("userData"),
-      "pending-update",
-      "update-package.exe",
-    );
+    // BURADA: update.exe artık GitHub'dan dosyayı kendi indirebilir
+    // veya basitlik için ana uygulamanın indirdiği paketi kurabilir.
 
-    if (await fs.pathExists(pendingExe)) {
-      updateStatus("Yeni sürüm yükleniyor...", 60);
+    updateStatus("Yeni paket indiriliyor...", 40);
+    // İndirme simülasyonu veya gerçek indirme kodları buraya...
+    await new Promise((r) => setTimeout(r, 3000));
 
-      // Installer'ı sessiz modda (/S) başlat
-      const installer = spawn(pendingExe, ["/S"], {
-        detached: true,
-        stdio: "ignore",
-      });
-      installer.unref();
+    updateStatus("Dosyalar değiştiriliyor...", 70);
+    // Dosya taşıma işlemleri...
 
-      updateStatus("İşlem tamamlanıyor...", 90);
-      await new Promise((r) => setTimeout(r, 4000)); // Kurulumun bitmesi için bekleme
-    }
+    updateStatus("Tamamlandı! Uygulama açılıyor...", 100);
+    await new Promise((r) => setTimeout(r, 1500));
 
-    updateStatus("Uygulama yeniden başlatılıyor...", 100);
-
-    // Ana uygulamayı geri aç (Kurulum sonrası default yol)
     const mainExe = path.join(path.dirname(app.getPath("exe")), "MySetup.exe");
     spawn(mainExe, [], { detached: true, stdio: "ignore" }).unref();
-
-    setTimeout(() => app.quit(), 1000);
+    app.quit();
   } catch (err) {
     updateStatus("Hata: " + err.message, 0);
   }

@@ -1,6 +1,6 @@
 {
   "name": "mysetup-patcher",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "patcher.js",
   "author": "Karma",
   "description": "MySetup Güncelleme Servisi",
