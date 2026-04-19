@@ -1,6 +1,6 @@
-{
+﻿{
     "name":  "mysetup",
-    "version":  "1.7.8",
+    "version":  "1.7.10",
     "description":  "Envanter Sistemi",
     "author":  "Karma shbkarma@gmail.com",
     "main":  "main.js",
@@ -21,7 +21,7 @@
                   "appId":  "com.mysetup.app",
                   "productName":  "MySetup",
                   "artifactName":  "MySetup-Installer.exe",
-                  "copyright":  "Copyright © 2026 Karma",
+                  "copyright":  "Copyright Â© 2026 Karma",
                   "directories":  {
                                       "output":  "dist",
                                       "buildResources":  "build"
