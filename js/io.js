@@ -1,10 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          GİRDİ / ÇIKTI İŞLEMLERİ                        */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                           BİLDİRİM SİSTEMİ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Toast Bildirimi Gösterme ─────────────────── */
 
 window.showToast = function (message, type = "info", duration = 3200) {
   if (!toastContainer) return;
@@ -18,9 +16,11 @@ window.showToast = function (message, type = "info", duration = 3200) {
   text.textContent = message;
   toast.append(icon, text);
   toastContainer.appendChild(toast);
+
   requestAnimationFrame(() => {
     requestAnimationFrame(() => toast.classList.add("visible"));
   });
+
   setTimeout(() => {
     toast.classList.remove("visible");
     toast.addEventListener("transitionend", () => toast.remove(), {
@@ -28,6 +28,8 @@ window.showToast = function (message, type = "info", duration = 3200) {
     });
   }, duration);
 };
+
+/* ─────────────────── Onay Diyalogu Gösterme ─────────────────── */
 
 window.showConfirm = function (message, onConfirm) {
   if (!toastContainer) return;
@@ -37,6 +39,7 @@ window.showConfirm = function (message, onConfirm) {
   const actions = document.createElement("div");
   const yesBtn = document.createElement("button");
   const noBtn = document.createElement("button");
+
   text.textContent = message;
   actions.className = "toast-actions";
   yesBtn.className = "toast-yes";
@@ -48,15 +51,18 @@ window.showConfirm = function (message, onConfirm) {
   actions.append(yesBtn, noBtn);
   toast.append(text, actions);
   toastContainer.appendChild(toast);
+
   requestAnimationFrame(() => {
     requestAnimationFrame(() => toast.classList.add("visible"));
   });
+
   const dismiss = () => {
     toast.classList.remove("visible");
     toast.addEventListener("transitionend", () => toast.remove(), {
       once: true,
     });
   };
+
   yesBtn.onclick = () => {
     dismiss();
     onConfirm();
@@ -72,6 +78,7 @@ if (searchInput && clearSearch) {
     clearSearch.classList.toggle("visible", !!currentSearch);
     if (typeof renderAll === "function") renderAll();
   });
+
   clearSearch.addEventListener("click", () => {
     searchInput.value = "";
     currentSearch = "";
@@ -94,13 +101,13 @@ document.querySelectorAll(".filter-btn").forEach((btn) => {
   });
 });
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                           CSV İÇE AKTARMA                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
 const importCsvBtn = document.getElementById("importCsvBtn");
 const exportCsvBtn = document.getElementById("exportCsvBtn");
 const importCsvInput = document.getElementById("importCsvInput");
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                           CSV İÇE AKTARMA                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 function processCsv(csvText) {
   const lines = csvText.split(/\r?\n/).filter((l) => l.trim());
@@ -117,12 +124,14 @@ function processCsv(csvText) {
     return database.ref().push().key;
   };
 
+  const dataLines = lines.slice(1);
   const importPayload = {};
 
-  lines.slice(1).forEach((line) => {
+  dataLines.forEach((line) => {
     const row = [];
     let current = "";
     let inQuotes = false;
+
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
       if (inQuotes) {
@@ -146,6 +155,7 @@ function processCsv(csvText) {
     row.push(current.trim());
 
     if (row.length < 2 || !row[1]) return;
+
     const entryId = getNewKey();
     if (!entryId) return;
 
@@ -174,15 +184,18 @@ function processCsv(csvText) {
         showToast("Aktif kullanıcı verisi bulunamadı", "error");
         return;
       }
+
       try {
         await replaceUserDataInFirebase(importPayload);
         showToast(`${importCount} kayıt sıfırdan yüklendi.`, "success");
-      } catch (_) {
+      } catch (_error) {
         showToast("CSV aktarımı tamamlanamadı", "error");
       }
     },
   );
 }
+
+/* ─────────────────── CSV Dosya Seçici Dinleyicisi ─────────────────── */
 
 if (importCsvBtn && importCsvInput) {
   importCsvBtn.addEventListener("click", () => importCsvInput.click());
@@ -253,41 +266,69 @@ if (exportCsvBtn) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          ELECTRON / GÜNCELLEME                           */
+/*                          GÜNCELLEME YÖNETİCİSİ                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-if (typeof window.electronAPI !== "undefined") {
-  /* Uygulama versiyonunu header'a yaz */
-  if (typeof window.electronAPI.onAppVersion === "function") {
-    window.electronAPI.onAppVersion((version) => {
-      if (versionDisplay) versionDisplay.textContent = `v${version}`;
-    });
-  }
+if (window.electronAPI) {
+  const updateBtn = document.getElementById("updateBtn");
 
-  /* Güncelleme mevcut → butonu göster + toast */
-  if (typeof window.electronAPI.onUpdateAvailable === "function") {
-    window.electronAPI.onUpdateAvailable((version) => {
-      if (updateBtn) updateBtn.classList.add("visible");
-      showToast(
-        `Yeni sürüm mevcut: v${version} — Güncellemek için ikona tıkla`,
-        "info",
-        5000,
-      );
-    });
-  }
+  // 1. Versiyonu yazdır
+  window.electronAPI.onAppVersion?.((version) => {
+    const vEl = document.getElementById("versionDisplay");
+    if (vEl) vEl.textContent = `v${version}`;
+  });
 
-  /* Güncelleme hatası */
-  if (typeof window.electronAPI.onUpdateError === "function") {
-    window.electronAPI.onUpdateError((message) => {
-      showToast("Güncelleme hatası: " + message, "error", 6000);
-    });
-  }
+  // 2. Güncelleme bulunduğunda
+  window.electronAPI.onUpdateAvailable?.((version) => {
+    if (updateBtn) {
+      updateBtn.classList.add("visible");
+      updateBtn.style.display = "flex";
+      updateBtn.innerText = `Güncelleme Mevcut v${version}`;
+    }
+  });
 
-  /* Güncelle butonuna tıklanınca patcher'ı başlat */
-  if (updateBtn && typeof window.electronAPI.launchUpdater === "function") {
-    updateBtn.addEventListener("click", () => {
-      showToast("Güncelleme başlatılıyor…", "info", 3000);
-      setTimeout(() => window.electronAPI.launchUpdater(), 600);
-    });
-  }
+  // 3. İndirme aşaması ve Renk Yönetimi
+  window.electronAPI.onUpdateProgress?.((percent) => {
+    if (!updateBtn) return;
+    const p = Math.round(percent);
+
+    if (p < 100) {
+      updateBtn.innerText = `İndiriliyor: %${p}`;
+    } else {
+      // %100 olduğunda yeşil moda geç
+      updateBtn.innerText = `Kuruluyor...`;
+      updateBtn.style.background = "var(--green, #10b981)";
+      updateBtn.style.borderColor = "var(--green, #10b981)";
+      updateBtn.style.color = "#fff";
+    }
+  });
+
+  // 4. İndirme bittiğinde
+  window.electronAPI.onUpdateDownloaded?.(() => {
+    if (updateBtn) {
+      updateBtn.innerText = "Yeniden Başlatılıyor...";
+      // Yeşil rengi koru
+      updateBtn.style.background = "var(--green, #10b981)";
+      updateBtn.style.borderColor = "var(--green, #10b981)";
+      updateBtn.style.color = "#fff";
+    }
+  });
+
+  // 5. Hata durumu
+  window.electronAPI.onUpdateError?.((err) => {
+    if (updateBtn) {
+      updateBtn.innerText = "Güncelleme Hatası";
+      updateBtn.style.background = "var(--red, #ef4444)";
+      updateBtn.style.borderColor = "var(--red, #ef4444)";
+      updateBtn.style.color = "#fff";
+      updateBtn.style.pointerEvents = "auto";
+    }
+  });
+
+  // Butona tıklandığında süreci başlat
+  updateBtn?.addEventListener("click", () => {
+    updateBtn.innerText = "Bağlanıyor...";
+    updateBtn.style.pointerEvents = "none";
+    window.electronAPI.launchUpdater();
+  });
 }
