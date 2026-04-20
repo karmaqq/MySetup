@@ -38,12 +38,19 @@ let editingId = null;
 
 const versionDisplay = document.getElementById("versionDisplay");
 const updateBtn = document.getElementById("updateBtn");
+
 const toastContainer = document.getElementById("toastContainer");
+
 const searchInput = document.getElementById("searchInput");
 const clearSearch = document.getElementById("clearSearch");
+
 const tableBody = document.getElementById("tableBody");
 const addItemBtn = document.getElementById("addItemBtn");
 const resultCount = document.getElementById("resultCount");
+const statTotal = document.getElementById("statTotal");
+const statCount = document.getElementById("statCount");
+const statHealthy = document.getElementById("statHealthy");
+const statExpensive = document.getElementById("statExpensive");
 const totalCostDisplay = document.getElementById("totalCostDisplay");
 
 const editModal = document.getElementById("editModal");
@@ -93,11 +100,14 @@ function escAttr(str) {
 
 function safeExternalUrl(value) {
   if (!value) return "";
+
   try {
     const parsed = new URL(value);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "";
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "";
+    }
     return parsed.toString();
-  } catch (_) {
+  } catch (_error) {
     return "";
   }
 }
@@ -108,7 +118,9 @@ function applyPriceFormat(inputEl) {
   if (!inputEl) return;
   let value = inputEl.value.replace(/[^0-9,]/g, "");
   const parts = value.split(",");
+
   if (parts.length > 2) value = parts[0] + "," + parts.slice(1).join("");
+
   if (value) {
     let [integerPart, decimalPart] = value.split(",");
     integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -117,4 +129,27 @@ function applyPriceFormat(inputEl) {
   } else {
     inputEl.value = "";
   }
+}
+
+/* ─────────────────── Güncelleme Butonu ─────────────────── */
+
+if (window.electronAPI && updateBtn) {
+  window.electronAPI.onUpdateAvailable((latestVersion) => {
+    updateBtn.classList.add("visible");
+    if (updateBtn.title) {
+      updateBtn.title = `Güncelleme Mevcut: v${latestVersion}`;
+    }
+  });
+
+  window.electronAPI.onDownloadProgress((percent) => {
+    updateBtn.innerText = `İndiriliyor: %${Math.round(percent)}`;
+    updateBtn.style.pointerEvents = "none";
+  });
+
+  updateBtn.addEventListener("click", () => {
+    if (window.electronAPI.launchUpdater) {
+      updateBtn.innerText = "Hazırlanıyor...";
+      window.electronAPI.launchUpdater();
+    }
+  });
 }

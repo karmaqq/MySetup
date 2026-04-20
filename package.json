@@ -1,62 +1,59 @@
 {
-    "name":  "mysetup",
-    "version":  "1.8.6",
-    "description":  "Envanter Sistemi",
-    "author":  "Karma shbkarma@gmail.com",
-    "main":  "main.js",
-    "scripts":  {
-                    "start":  "electron .",
-                    "build":  "electron-builder"
-                },
-    "dependencies":  {
-                         "electron-updater":  "^6.8.3",
-                         "fs-extra":  "^11.1.1"
-                     },
-    "devDependencies":  {
-                            "electron":  "^33.0.0",
-                            "electron-builder":  "^25.0.0",
-                            "progress-estimator":  "^0.3.1"
-                        },
-    "build":  {
-                  "appId":  "com.mysetup.app",
-                  "productName":  "MySetup",
-                  "artifactName":  "MySetup-Installer.exe",
-                  "copyright":  "Copyright ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© 2026 Karma",
-                  "directories":  {
-                                      "output":  "dist",
-                                      "buildResources":  "build"
-                                  },
-                  "extraFiles":  [
-                                     {
-                                         "from":  "updater-source/dist/update.exe",
-                                         "to":  "update.exe"
-                                     }
-                                 ],
-                  "publish":  [
-                                  {
-                                      "provider":  "github",
-                                      "owner":  "karmaqq",
-                                      "repo":  "MySetup",
-                                      "releaseType":  "release"
-                                  }
-                              ],
-                  "win":  {
-                              "target":  [
-                                             "nsis"
-                                         ],
-                              "icon":  "assets/icon.ico",
-                              "requestedExecutionLevel":  "requireAdministrator"
-                          },
-                  "nsis":  {
-                               "oneClick":  false,
-                               "allowToChangeInstallationDirectory":  true,
-                               "perMachine":  true,
-                               "allowElevation":  true,
-                               "runAfterFinish":  true,
-                               "installerIcon":  "assets/icon.ico",
-                               "uninstallerIcon":  "assets/icon.ico",
-                               "shortcutName":  "MySetup",
-                               "deleteAppDataOnUninstall":  false
-                           }
-              }
+  "name": "mysetup",
+  "version": "1.9.9",
+  "description": "Envanter Sistemi",
+  "author": "Karma shbkarma@gmail.com",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3",
+    "fs-extra": "^11.1.1"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "progress-estimator": "^0.3.1"
+  },
+  "build": {
+    "appId": "com.mysetup.app",
+    "productName": "MySetup",
+    "artifactName": "MySetup-Installer.exe",
+    "copyright": "Copyright 2026 Karma",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "karmaqq",
+        "repo": "MySetup",
+        "releaseType": "release"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": true,
+      "allowElevation": true,
+      "runAfterFinish": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "shortcutName": "MySetup",
+      "deleteAppDataOnUninstall": false,
+      "warningsAsErrors": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
 }

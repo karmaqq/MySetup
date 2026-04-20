@@ -47,19 +47,24 @@ h1 .accent-text {
   padding-left: 2px;
 }
 
-/* ─────────────────── Güncelleme Simgesi ─────────────────── */
+/* ─────────────────── Güncelleme Butonu ─────────────────── */
 
 .update-icon-btn {
   display: none;
   align-items: center;
   justify-content: center;
-  width: 34px;
   height: 34px;
-  padding: 0;
+  padding: 0 16px;
+  min-width: 140px;
+  text-align: center;
   background: var(--yellow-dim);
   border: 1px solid var(--yellow);
-  border-radius: 50%;
+  border-radius: 17px;
   color: var(--yellow);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
   animation: update-pulse 2s ease-in-out infinite;
@@ -67,7 +72,7 @@ h1 .accent-text {
 
 .update-icon-btn:hover {
   background: rgba(245, 200, 66, 0.25);
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .update-icon-btn:active {
