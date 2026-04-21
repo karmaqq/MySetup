@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          TEMEL STİLLER                                   */
+/* GENEL DEĞİŞKENLER VE SIFIRLAMA                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── CSS Değişkenleri ─────────────────── */
@@ -47,44 +47,9 @@
   user-select: none;
 }
 
-/* ─────────────────── Title Bar Sürükleme ─────────────────── */
-
-.title-bar-drag {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 36px;
-  -webkit-app-region: drag;
-  z-index: 10000;
-  background: rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  pointer-events: auto;
-}
-
-/* ─────────────────── Scrollbar ─────────────────── */
-
-::-webkit-scrollbar {
-  width: 20px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border2);
-  border-radius: 10px;
-  border: 5px solid transparent;
-  background-clip: padding-box;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-dim);
-  border: 5px solid transparent;
-  background-clip: padding-box;
-}
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* TEMEL YAPILAR VE GÖRÜNÜM                         */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Body ─────────────────── */
 
@@ -110,6 +75,49 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ─────────────────── Scrollbar ─────────────────── */
+
+::-webkit-scrollbar {
+  width: 20px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 10px;
+  border: 5px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+  border: 5px solid transparent;
+  background-clip: padding-box;
+}
+
+/* ─────────────────── Title Bar Sürükleme ─────────────────── */
+
+.title-bar-drag {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  -webkit-app-region: drag;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  pointer-events: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* SAYFA VE BİLEŞEN DÜZENİ                          */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 /* ─────────────────── Sayfa Scroll Container ─────────────────── */
 
 .main-scroll {
@@ -130,6 +138,7 @@ body {
 }
 
 /* ─────────────────── Yükleme Ekranı (Global) ─────────────────── */
+
 .auth-loading {
   position: fixed;
   inset: 0;
@@ -171,7 +180,9 @@ body {
 .loading-brand .accent-text {
   color: var(--accent);
 }
+
 /* ─────────────────── Loading Spinner (Global) ─────────────────── */
+
 .spinner-ring {
   width: 36px;
   height: 36px;
@@ -185,6 +196,136 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          BİLDİRİM TOASTLARI                             */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Toast Kapsayıcı ─────────────────── */
+
+.toast-container {
+  position: fixed;
+  bottom: 52px;
+  right: 28px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* ─────────────────── Toast Yapısı ─────────────────── */
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 320px;
+  padding: 12px 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  color: var(--text-bright);
+  font-size: 13.5px;
+  pointer-events: all;
+  opacity: 0;
+  transform: translateX(24px);
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ─────────────────── Toast İkonları ─────────────────── */
+
+.toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.toast-success .toast-icon {
+  background: var(--green-dim);
+  border: 1px solid rgba(61, 214, 140, 0.3);
+  color: var(--green);
+}
+
+.toast-error .toast-icon {
+  background: var(--red-dim);
+  border: 1px solid rgba(245, 96, 96, 0.3);
+  color: var(--red);
+}
+
+.toast-warn .toast-icon {
+  background: var(--yellow-dim);
+  border: 1px solid rgba(245, 200, 66, 0.3);
+  color: var(--yellow);
+}
+
+.toast-info .toast-icon {
+  background: var(--blue-dim);
+  border: 1px solid rgba(74, 158, 255, 0.3);
+  color: var(--blue);
+}
+
+/* ─────────────────── Onay Toastı ─────────────────── */
+
+.toast-confirm {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 220px;
+}
+
+.toast-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.toast-yes,
+.toast-no {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.toast-yes {
+  background: var(--red-dim);
+  border-color: rgba(245, 96, 96, 0.3);
+  color: var(--red);
+}
+
+.toast-yes:hover {
+  background: var(--red);
+  color: #fff;
+}
+
+.toast-no {
+  background: var(--surface3);
+  color: var(--text);
+}
+
+.toast-no:hover {
+  border-color: var(--text-dim);
 }
 
 /* ─────────────────── Alt Bilgi ─────────────────── */
@@ -220,6 +361,10 @@ body {
   color: #daa924;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* YARDIMCI VE İŞLEVSEL SINIFLAR                      */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 /* ─────────────────── Yardımcı Sınıflar ─────────────────── */
 
 .hidden {
@@ -242,7 +387,11 @@ td * {
   user-select: text;
 }
 
-/* ─────────────────── Duyarlı Tasarım ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* DUYARLI TASARIM                              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Medya Sorguları ─────────────────── */
 
 @media (max-width: 900px) {
   .page-wrapper {

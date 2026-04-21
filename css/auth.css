@@ -245,7 +245,7 @@
   box-shadow: 0 0 0 3px var(--red-dim) !important;
 }
 
-/* ─────────────────── Hata Mesajları ─────────────────── */
+/* ─────────────────── Hata ve İpucu Mesajları ─────────────────── */
 
 .auth-error {
   font-family: var(--font-ui);
@@ -256,11 +256,6 @@
   line-height: 1.5;
   font-weight: 500;
   margin: 0;
-}
-
-.modal-input.input-error {
-  border-color: var(--red) !important;
-  box-shadow: 0 0 0 1px rgba(245, 96, 96, 0.25);
 }
 
 .username-hint {
@@ -353,71 +348,4 @@
   text-decoration: underline;
   text-underline-offset: 4px;
   text-shadow: 0 0 8px var(--accent-glow);
-}
-
-/* ─────────────────── Kullanıcı Bilgisi ─────────────────── */
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px 6px 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 24px;
-  transition: border-color 0.2s;
-  margin-left: auto;
-}
-
-.user-info:hover {
-  border-color: var(--accent-dim);
-}
-
-.settings-icon {
-  color: var(--text-dim);
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.settings-icon:hover {
-  color: var(--accent);
-}
-
-.user-displayname {
-  font-family: var(--font-ui);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--text-bright);
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.logout-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  background: none;
-  border: 1px solid var(--border2);
-  border-radius: 50%;
-  color: var(--text-dim);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.2s;
-}
-
-.label-hint {
-  color: var(--text-dim);
-  font-weight: 400;
-}
-
-.logout-btn:hover {
-  background: var(--red-dim);
-  border-color: var(--red);
-  color: var(--red);
 }
