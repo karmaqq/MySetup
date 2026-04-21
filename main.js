@@ -14,10 +14,10 @@ const APP_CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.googletagmanager.com https://*.firebaseio.com https://*.firebasedatabase.app",
   "script-src-elem 'self' 'unsafe-inline' https://www.gstatic.com https://*.googletagmanager.com https://*.firebaseio.com https://*.firebasedatabase.app",
-  "connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.googleapis.com https://*.gstatic.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://www.googleapis.com",
+  "connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.googleapis.com https://*.gstatic.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://www.googleapis.com https://firebasestorage.googleapis.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data:",
+  "img-src 'self' data: https://firebasestorage.googleapis.com",
   "object-src 'none'",
   "base-uri 'self'",
 ].join("; ");
@@ -28,7 +28,16 @@ function setupCspHeaders() {
   const ses = require("electron").session.defaultSession;
   ses.webRequest.onHeadersReceived((details, callback) => {
     const responseHeaders = details.responseHeaders || {};
+
+    // CSP her yanıta ekle
     responseHeaders["Content-Security-Policy"] = [APP_CSP];
+
+    // Firebase Storage yanıtlarına CORS header ekle
+    if (details.url.includes("firebasestorage.googleapis.com")) {
+      responseHeaders["Access-Control-Allow-Origin"] = ["*"];
+      responseHeaders["Access-Control-Allow-Methods"] = ["GET, HEAD, OPTIONS"];
+    }
+
     callback({ responseHeaders });
   });
 }
