@@ -168,6 +168,7 @@ function processCsv(csvText) {
       vendor: row[5] || "-",
       status: row[6] || "sağlıklı",
       url: safeExternalUrl(row[7]),
+      imageUrl: row[8] || "",
     };
   });
 
@@ -233,6 +234,7 @@ if (exportCsvBtn) {
       "Satıcı",
       "Durum",
       "URL",
+      "imageUrl",
     ];
     const csvContent = [
       headers.join(","),
@@ -246,6 +248,7 @@ if (exportCsvBtn) {
           item.vendor || "-",
           item.status || "sağlıklı",
           item.url || "",
+          item.imageUrl || "",
         ]
           .map((v) => `"${String(v).replace(/"/g, '""')}"`)
           .join(","),
