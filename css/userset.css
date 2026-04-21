@@ -1,527 +1,83 @@
-/* ─────────────────── Modal + Önizleme Wrapper ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                     KULLANICI AYARLARI STİLLERİ                         */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
-/*
-  modal-with-preview: modal-box sağda sabit, önizleme solda.
-  Önizleme sağ-üst köşeye sabitlenmiş (modal-box'ın sol kenarından
-  soldan büyür, aşağı doğru uzar). Overflow: visible ile taşma olmaz.
-*/
-.modal-with-preview {
-  position: relative; /* önizlemenin absolute referansı */
-  display: inline-block; /* modal-box boyutunu alır */
-}
+/* ─────────────────── Kullanıcı Bilgi Çubuğu ─────────────────── */
 
-/* ─────────────────── Floating Görsel Önizleme ─────────────────── */
-
-/*
-  Konumlandırma stratejisi:
-    - top: 0  → modal-box'ın üst kenarıyla hizalı
-    - right: 100% + 10px gap → tamamen solda, modalin içine girmez
-    - Büyüme: yalnızca aşağı (height artar) ve sola (width artar,
-      right sabit olduğu için)
-    - Maksimum: 340×260 px (abartıyı önler)
-    - Minimum: 180×140 px
-*/
-.floating-preview {
-  position: absolute;
-  top: 0;
-  right: calc(100% + 10px); /* modalin soluna, 10px boşluk */
-  z-index: 1100;
-
-  /* Adaptif boyut: JS tarafından width/height set edilir */
-  min-width: 180px;
-  min-height: 140px;
-  max-width: 340px;
-  max-height: 260px;
-  width: 200px; /* başlangıç / görsel yokken kullanılmaz */
-  height: 160px;
-
-  border-radius: 14px;
-  border: 2px solid var(--accent);
-  background: var(--surface3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.38);
-  overflow: hidden;
-
-  /* Modalin açılıp kapanmasıyla senkron animasyon */
-  opacity: 0;
-  transform: translateY(10px) scale(0.96);
-  transition:
-    opacity 0.22s ease,
-    transform 0.22s ease,
-    width 0.18s ease,
-    height 0.18s ease;
-  pointer-events: none; /* gizliyken tıklanamaz */
-}
-
-/* Modal aktifleşince önizleme de aynı anda belirir */
-.modal-overlay.active .floating-preview {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-
-/* Görsel yoksa önizleme tamamen sıfırlanır (display:none yerine
-   opacity+pointer-events ile — böylece transition çalışır) */
-.floating-preview.hidden {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transform: translateY(10px) scale(0.96) !important;
-}
-
-.floating-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Görsel silme butonu – sağ üst köşe */
-.preview-delete-btn {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(14, 14, 14, 0.78);
-  border: 1.5px solid rgba(245, 96, 96, 0.55);
-  color: var(--red, #ef4444);
-  font-size: 13px;
-  line-height: 1;
-  cursor: pointer;
+.user-info {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition:
-    background 0.15s,
-    transform 0.15s;
-  z-index: 10;
+  gap: 10px;
+  padding: 6px 8px 6px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 24px;
+  transition: border-color 0.2s;
+  margin-left: auto;
 }
 
-.preview-delete-btn:hover {
-  background: rgba(245, 96, 96, 0.88);
-  color: #fff;
-  transform: scale(1.13);
+.user-info:hover {
+  border-color: var(--accent-dim);
 }
 
-/* ─────────────────── Durum + Görsel Yükleme Satırı ─────────────────── */
-
-.status-image-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-}
-
-.status-image-row .modal-select {
-  height: 44px;
-  min-width: 0;
-}
-
-.status-image-row .image-upload-cell {
-  margin-left: 0;
-}
-
-/* ─────────────────── Görsel Yükleme Butonu ─────────────────── */
-
-.image-upload-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 16px;
-}
-
-/* Görsel yok: varsayılan noktalı kutu */
-.image-upload-cell button {
-  width: 44px;
-  height: 44px;
-  border: 1.5px dashed var(--border2, #ccc);
-  background: var(--surface2, #f8f8f8);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    color 0.2s;
-  color: var(--text-dim);
-}
-
-.image-upload-cell button:hover {
-  border-color: var(--accent, #f5b030);
-  color: var(--accent, #f5b030);
-}
-
-/* Görsel yüklü: ikon yeşil */
-.image-upload-cell button.has-image {
-  border-color: var(--green, #3dd68c);
-  color: var(--green, #3dd68c);
-  background: var(--green-dim, rgba(61, 214, 140, 0.08));
-}
-
-/* ─────────────────── Modal-box konum referansı ─────────────────── */
-
-.modal-box {
-  position: relative;
-}
-
-/* ─────────────────── Önizleme Mini Loading ─────────────────── */
-
-/*
-  floating-preview içinde yükleme sırasında gösterilen
-  minyatür loading ekranı — sayfa genelindekinin küçük versiyonu.
-*/
-.preview-loading {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: var(--surface3);
-  background-image:
-    radial-gradient(
-      ellipse at 20% 20%,
-      rgba(232, 160, 32, 0.1) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse at 80% 80%,
-      rgba(74, 158, 255, 0.06) 0%,
-      transparent 60%
-    );
-}
-
-.preview-loading-brand {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 800;
+.user-displayname {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 600;
   color: var(--text-bright);
-  letter-spacing: -0.2px;
-  line-height: 1;
-  margin: 0;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.preview-loading-brand .accent-text {
+.label-hint {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+/* ─────────────────── Ayarlar İkonu ─────────────────── */
+
+.settings-icon {
+  color: var(--text-dim);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.settings-icon:hover {
   color: var(--accent);
 }
 
-/* Spinner — sayfa genelindekiyle aynı animasyon, küçük boyut */
-@keyframes spin-ring {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
+/* ─────────────────── Çıkış Butonu ─────────────────── */
 
-.preview-spinner {
-  width: 28px;
-  height: 28px;
-  border: 2.5px solid var(--border2);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin-ring 0.72s linear infinite;
-  flex-shrink: 0;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          DÜZENLEME MODALI                                */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Modal Overlay ─────────────────── */
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
+.logout-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 0.22s ease,
-    visibility 0.22s ease;
-}
-
-.modal-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* ─────────────────── Modal Kutu ─────────────────── */
-
-.modal-box {
-  width: min(520px, 95vw);
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 16px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
-  transform: translateY(16px) scale(0.97);
-  transition: transform 0.22s ease;
-}
-
-.modal-overlay.active .modal-box {
-  transform: translateY(0) scale(1);
-}
-
-/* ─────────────────── Modal Başlık ─────────────────── */
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.modal-title {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text-bright);
-}
-
-.modal-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: rgba(245, 96, 96, 0.1);
-  border: 1px solid rgba(245, 96, 96, 0.25);
-  border-radius: var(--radius-sm);
-  color: var(--red);
-  font-size: 14px;
-  cursor: pointer;
-  transition: 0.15s;
-}
-
-.modal-close:hover {
-  background: rgba(245, 96, 96, 0.22);
-  border-color: rgba(245, 96, 96, 0.5);
-  color: #ff8080;
-  box-shadow: 0 0 8px rgba(245, 96, 96, 0.2);
-}
-
-/* ─────────────────── Modal İçerik ─────────────────── */
-
-.modal-body {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px 16px;
-  padding: 20px 24px;
-}
-
-.field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field-full {
-  grid-column: 1 / -1;
-}
-
-/* Görsel yükleme alanı */
-.image-upload-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 16px;
-}
-.image-upload-cell button {
-  width: 44px;
-  height: 44px;
-  border: 1.5px dashed var(--border2, #ccc);
-  background: var(--surface2, #f8f8f8);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-.image-upload-cell button:hover {
-  border-color: var(--accent, #f5b030);
-}
-
-/* Görsel önizleme alanı */
-.image-preview-cell {
-  width: 88px;
-  height: 88px;
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--surface2, #f8f8f8);
-  border: 1.5px solid var(--border2, #ccc);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-.image-preview-cell img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.field-group label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-}
-
-.required {
-  color: var(--red);
-}
-
-.modal-title--danger {
-  color: var(--red);
-}
-
-.settings-field-mb {
-  margin-bottom: 24px;
-}
-
-.modal-submit-mt {
-  margin-top: 8px;
-}
-
-.btn-username {
-  display: none;
-}
-
-.btn-username.visible {
-  display: block;
-}
-
-/* ─────────────────── Modal Girdileri ─────────────────── */
-
-.modal-input {
-  width: 100%;
-  padding: 9px 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text-bright);
-  font-family: var(--font-ui);
-  font-size: 14px;
-  outline: none;
-  resize: vertical;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
-}
-
-.modal-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-dim);
-}
-
-.modal-input::placeholder {
-  color: var(--text-dim);
-}
-
-.modal-select {
-  appearance: auto;
-  cursor: pointer;
-}
-
-#editUrl {
-  color: var(--blue);
-  font-family: var(--font-data);
-  font-size: 12px;
-}
-
-/* ─────────────────── Modal Alt Bilgi ─────────────────── */
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 16px 24px 20px;
-  border-top: 1px solid var(--border);
-}
-
-.btn-modal-cancel {
-  padding: 9px 20px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
   background: none;
   border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: 50%;
+  color: var(--text-dim);
   cursor: pointer;
-  transition: 0.15s;
-}
-
-.btn-modal-cancel:hover {
-  background: var(--surface2);
-  border-color: var(--text-dim);
-}
-
-.btn-modal-save {
-  padding: 9px 24px;
-  background: var(--accent);
-  border: none;
-  border-radius: var(--radius);
-  color: #000;
-  font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.15s;
-}
-
-.btn-modal-save:hover {
-  background: #f5b030;
-  box-shadow: 0 4px 12px var(--accent-glow);
-}
-
-/* ─────────────────── Marka Bağlantısı ─────────────────── */
-
-.col-brand {
-  position: relative;
-  padding: 11px 16px !important;
-}
-
-.brand-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.brand-link:hover {
-  color: var(--accent);
-}
-
-.link-icon {
   flex-shrink: 0;
-  margin-left: 8px;
-  font-size: 11px;
-  opacity: 0.4;
-  filter: grayscale(1);
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
-.brand-link:hover .link-icon {
-  opacity: 1;
-  filter: grayscale(0);
-  transform: scale(1.2);
+.logout-btn:hover {
+  background: var(--red-dim);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* ─────────────────── Modal Input Hata Stili ─────────────────── */
+
+.modal-input.input-error {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 0 1px rgba(245, 96, 96, 0.25);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
