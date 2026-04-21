@@ -120,3 +120,24 @@ function updateComponentStatusInFirebase(id, newStatus) {
 function deleteComponentFromFirebase(id) {
   return database.ref(activeBasePath + "/" + id).remove();
 }
+
+// Firebase Storage'a görsel yükle ve URL döndür
+function uploadImageToFirebase(file, itemId) {
+  return new Promise((resolve, reject) => {
+    const user = firebase.auth().currentUser;
+    if (!user) return reject("Kullanıcı yok");
+    const storageRef = firebase.storage().ref();
+    const imageRef = storageRef.child(
+      `users/${user.uid}/components/${itemId}/image`,
+    );
+    const uploadTask = imageRef.put(file);
+    uploadTask.on(
+      "state_changed",
+      null,
+      (error) => reject(error),
+      () => {
+        uploadTask.snapshot.ref.getDownloadURL().then(resolve).catch(reject);
+      },
+    );
+  });
+}

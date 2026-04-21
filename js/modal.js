@@ -2,11 +2,44 @@
 /*                          DÜZENLEME MODALI                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Önizlemeyi Anında Sıfırla (geçiş için) ─────────────────── */
+
+let _resetRafId = null;
+
+function _resetPreviewInstant() {
+  const imagePreview = document.getElementById("editImagePreview");
+  if (!imagePreview) return;
+
+  // Önceki rAF zinciri henüz bitmemişse iptal et
+  if (_resetRafId !== null) {
+    cancelAnimationFrame(_resetRafId);
+    _resetRafId = null;
+  }
+
+  imagePreview.style.transition = "none";
+  imagePreview.style.width = "200px";
+  imagePreview.style.height = "160px";
+  imagePreview.innerHTML = "";
+  imagePreview.classList.add("hidden");
+
+  // Transition'ı iki frame sonra geri aç — tek rAF yeterli değil,
+  // style değişikliği aynı frame'de flush olmadan geri açılabilir
+  _resetRafId = requestAnimationFrame(() => {
+    _resetRafId = requestAnimationFrame(() => {
+      imagePreview.style.transition = "";
+      _resetRafId = null;
+    });
+  });
+}
+
 /* ─────────────────── Düzenleme Modalını Aç ─────────────────── */
 
 window.openEditModal = function (id, focusTarget = "component") {
   const item = allData[id];
   if (!item) return;
+
+  // Geçiş yapılıyorsa önizlemeyi anında sıfırla (önceki görsel boyutu görünmesin)
+  _resetPreviewInstant();
 
   editingId = id;
 
@@ -36,6 +69,140 @@ window.openEditModal = function (id, focusTarget = "component") {
   if (editModal) editModal.classList.add("active");
 
   setTimeout(() => {
+    // ── Görsel önizleme elemanları ──
+    const imagePreview = document.getElementById("editImagePreview");
+    const imageUploadBtn = document.getElementById("imageUploadBtn");
+    const imageFileInput = document.getElementById("imageFileInput");
+
+    /* Görselin gerçek en/boy oranına göre önizleme boyutunu hesapla */
+    const MIN_W = 180,
+      MIN_H = 140,
+      MAX_W = 340,
+      MAX_H = 260;
+
+    function applyAdaptiveSize(imgEl) {
+      const nw = imgEl.naturalWidth || 1;
+      const nh = imgEl.naturalHeight || 1;
+      const ratio = nw / nh;
+
+      let w, h;
+      if (ratio >= 1) {
+        w = MAX_W;
+        h = Math.round(w / ratio);
+        if (h < MIN_H) {
+          h = MIN_H;
+          w = Math.round(h * ratio);
+        }
+        if (w > MAX_W) {
+          w = MAX_W;
+          h = Math.round(w / ratio);
+        }
+      } else {
+        h = MAX_H;
+        w = Math.round(h * ratio);
+        if (w < MIN_W) {
+          w = MIN_W;
+          h = Math.round(w / ratio);
+        }
+        if (h > MAX_H) {
+          h = MAX_H;
+          w = Math.round(h * ratio);
+        }
+      }
+      w = Math.max(MIN_W, Math.min(MAX_W, w));
+      h = Math.max(MIN_H, Math.min(MAX_H, h));
+
+      imagePreview.style.width = w + "px";
+      imagePreview.style.height = h + "px";
+    }
+
+    /* Önizlemeyi güncelle */
+    function refreshPreview(url) {
+      if (url) {
+        const img = new Image();
+        img.onload = () => applyAdaptiveSize(img);
+        img.src = url;
+
+        imagePreview.innerHTML = `
+          <img src="${url}" alt="Ürün görseli" />
+          <button class="preview-delete-btn" id="previewDeleteBtn" title="Görseli sil">✕</button>`;
+        imagePreview.classList.remove("hidden");
+
+        if (imageUploadBtn) imageUploadBtn.classList.add("has-image");
+
+        document.getElementById("previewDeleteBtn").onclick = () => {
+          // Tıklandığı andaki editingId'yi sabitle —
+          // onay diyaloğu beklerken modal geçişi olursa yanlış ürün silinmez
+          const idToDelete = editingId;
+          if (!idToDelete) return;
+          showConfirm("Görsel kalıcı olarak silinsin mi?", async () => {
+            try {
+              const user = firebase.auth().currentUser;
+              if (user) {
+                const ref = firebase
+                  .storage()
+                  .ref(`users/${user.uid}/components/${idToDelete}/image`);
+                await ref.delete().catch(() => {});
+              }
+              await updateComponentInFirebase(idToDelete, { imageUrl: "" });
+              if (allData[idToDelete]) allData[idToDelete].imageUrl = "";
+              // Hâlâ aynı ürünün modalındaysak önizlemeyi temizle
+              if (editingId === idToDelete) refreshPreview("");
+              if (typeof renderAll === "function") renderAll();
+              showToast("Görsel silindi", "success");
+            } catch (_) {
+              showToast("Görsel silinemedi", "error");
+            }
+          });
+        };
+      } else {
+        imagePreview.innerHTML = "";
+        imagePreview.classList.add("hidden");
+        if (imageUploadBtn) imageUploadBtn.classList.remove("has-image");
+      }
+    }
+
+    // İlk yükleme
+    refreshPreview(item.imageUrl || "");
+
+    /* Dosyayı yükle ve önizle */
+    function handleImageFile(file) {
+      if (!file || !file.type.startsWith("image/")) return;
+      // Önizlemeyi göster, mini loading ekranını yerleştir
+      imagePreview.classList.remove("hidden");
+      imagePreview.style.width = "200px";
+      imagePreview.style.height = "160px";
+      imagePreview.innerHTML = `
+        <div class="preview-loading">
+          <p class="preview-loading-brand">My<span class="accent-text">SETUP</span></p>
+          <div class="preview-spinner"></div>
+        </div>`;
+      uploadImageToFirebase(file, id)
+        .then((url) => {
+          updateComponentInFirebase(id, { imageUrl: url }).then(() => {
+            if (allData[id]) allData[id].imageUrl = url;
+            refreshPreview(url);
+            if (typeof renderAll === "function") renderAll();
+          });
+        })
+        .catch(() => {
+          imagePreview.innerHTML =
+            '<span style="color:var(--red);padding:8px;font-size:12px">Yükleme başarısız</span>';
+        });
+    }
+
+    // Dosya seçici butonu
+    if (imageUploadBtn && imageFileInput) {
+      imageUploadBtn.onclick = () => imageFileInput.click();
+      imageFileInput.value = "";
+    }
+    if (imageFileInput) {
+      imageFileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) handleImageFile(file);
+      };
+    }
+
     switch (focusTarget) {
       case "date":
         if (editDate) editDate.focus();
@@ -269,6 +436,7 @@ function submitNewItem(tr, inputs) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 document.addEventListener("keydown", (e) => {
+  /* ── Escape: modalı kapat ya da yeni satırı iptal et ── */
   if (e.key === "Escape") {
     if (editModal && editModal.classList.contains("active")) {
       closeEditModal();
@@ -279,6 +447,7 @@ document.addEventListener("keydown", (e) => {
     return;
   }
 
+  /* ── Ctrl/Cmd+Enter: modalı kaydet ── */
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
     if (editModal && editModal.classList.contains("active")) {
       e.preventDefault();
@@ -287,6 +456,7 @@ document.addEventListener("keydown", (e) => {
     return;
   }
 
+  /* ── Ctrl/Cmd+F: aramaya odaklan ── */
   if ((e.ctrlKey || e.metaKey) && e.key === "f") {
     const tag = document.activeElement.tagName;
     if (tag !== "INPUT" && tag !== "TEXTAREA") {
@@ -296,5 +466,41 @@ document.addEventListener("keydown", (e) => {
         searchInput.select();
       }
     }
+    return;
+  }
+
+  /* ── Shift + Yön tuşları: modal açıkken listede gezin ──
+     Shift+Sağ / Shift+Yukarı  → listedeki bir sonraki öğeye geç
+     Shift+Sol / Shift+Aşağı   → listedeki bir önceki öğeye geç
+     Input odaklanmış olsa bile Shift zorunlu olduğu için çakışma olmaz.
+  */
+  if (editModal && editModal.classList.contains("active") && e.shiftKey) {
+    const isNext = e.key === "ArrowRight" || e.key === "ArrowUp";
+    const isPrev = e.key === "ArrowLeft" || e.key === "ArrowDown";
+
+    if (!isNext && !isPrev) return;
+
+    e.preventDefault(); // Shift+yön'ün metin seçme davranışını engelle
+
+    if (!editingId || typeof getFilteredSortedList !== "function") return;
+
+    const list = getFilteredSortedList();
+    const currentIdx = list.findIndex((item) => item.id === editingId);
+    if (currentIdx === -1) return;
+
+    let targetIdx;
+    if (isNext) {
+      targetIdx = currentIdx + 1;
+      if (targetIdx >= list.length) targetIdx = 0;
+    } else {
+      targetIdx = currentIdx - 1;
+      if (targetIdx < 0) targetIdx = list.length - 1;
+    }
+
+    const targetItem = list[targetIdx];
+    if (!targetItem) return;
+
+    _resetPreviewInstant();
+    openEditModal(targetItem.id);
   }
 });
