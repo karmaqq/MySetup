@@ -6,14 +6,16 @@
 /*                        FİLTRELEME VE SIRALAMA                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Filtrelenmiş ve Sıralanmış Liste ─────────────────── */
+
 function getFilteredSortedList() {
   let list = Object.keys(allData).map((id) => ({ id, ...allData[id] }));
 
   if (currentSearch) {
-    const q = currentSearch.toLowerCase();
+    const q = normalizeTr(currentSearch);
     list = list.filter((item) =>
       [item.component, item.brand, item.specs, item.vendor].some((v) =>
-        (v || "").toLowerCase().includes(q),
+        normalizeTr(v).includes(q),
       ),
     );
   }
@@ -53,14 +55,59 @@ function getFilteredSortedList() {
   return list;
 }
 
-/* ─────────────────── Tüm Tabloyu Yeniden Çiz ─────────────────── */
+/* ─────────────────── Sıralama İkonları Güncelleme ─────────────────── */
+
+function updateSortIcons() {
+  document.querySelectorAll(".sortable").forEach((th) => {
+    const icon = th.querySelector(".sort-icon");
+    const col = th.dataset.sort || th.dataset.col;
+
+    if (col === currentSort.col) {
+      if (icon) icon.textContent = currentSort.dir === "asc" ? "↑" : "↓";
+      th.classList.add("sort-active");
+      th.classList.remove("asc", "desc");
+      th.classList.add(currentSort.dir);
+    } else {
+      if (icon) icon.textContent = "↕";
+      th.classList.remove("sort-active", "asc", "desc");
+    }
+  });
+}
+
+/* ─────────────────── Sıralama Tıklama Dinleyicisi ─────────────────── */
+
+document.querySelectorAll(".sortable").forEach((th) => {
+  th.addEventListener("click", () => {
+    const col = th.dataset.sort || th.dataset.col;
+    if (!col) return;
+
+    if (currentSort.col === col) {
+      currentSort.dir = currentSort.dir === "asc" ? "desc" : "asc";
+    } else {
+      currentSort.col = col;
+      currentSort.dir = "asc";
+    }
+
+    updateSortIcons();
+    renderAll();
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          RENDER YÖNETİMİ                                 */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Render Durum Değişkenleri ─────────────────── */
 
 let _pendingRender = false;
-let _lastDataSnapshot = null;
+
+/* ─────────────────── Modal Açık Kontrolü ─────────────────── */
 
 function isAnyModalOpen() {
   return !!document.querySelector(".modal-overlay.active");
 }
+
+/* ─────────────────── Tüm Tabloyu Yeniden Çiz ─────────────────── */
 
 function renderAll() {
   if (isAnyModalOpen()) {
@@ -100,226 +147,7 @@ function renderAll() {
   });
 })();
 
-/* ─────────────────── İstatistik Kartlarını Güncelle ─────────────────── */
-
-function updateStats(filteredList) {
-  const all = Object.values(allData);
-  const total = all.reduce((s, i) => s + (parseFloat(i.price) || 0), 0);
-  const count = all.length;
-  const healthy = all.filter((i) =>
-    normalizeTr(i.status).includes("saglikl"),
-  ).length;
-  const mostExp = all.reduce(
-    (best, i) =>
-      (parseFloat(i.price) || 0) > (parseFloat(best?.price) || 0) ? i : best,
-    null,
-  );
-
-  if (document.getElementById("statTotal"))
-    document.getElementById("statTotal").textContent =
-      CURRENCY_FORMAT.format(total) + " ₺";
-
-  if (document.getElementById("statCount"))
-    document.getElementById("statCount").textContent = count;
-
-  if (document.getElementById("statHealthy"))
-    document.getElementById("statHealthy").textContent = healthy;
-
-  if (document.getElementById("statExpensive"))
-    document.getElementById("statExpensive").textContent = mostExp
-      ? mostExp.component
-      : "—";
-
-  const filteredTotal = filteredList.reduce(
-    (s, i) => s + (parseFloat(i.price) || 0),
-    0,
-  );
-  if (document.getElementById("totalCostDisplay"))
-    document.getElementById("totalCostDisplay").textContent =
-      CURRENCY_FORMAT.format(filteredTotal) + " ₺";
-}
-
-/* ─────────────────── Sonuç Sayısı Güncelleme ─────────────────── */
-
-function updateResultCount(filteredCount) {
-  const total = Object.keys(allData).length;
-  const isFiltered = currentSearch || currentStatusFilter !== "all";
-  if (document.getElementById("resultCount")) {
-    document.getElementById("resultCount").textContent = isFiltered
-      ? `${filteredCount} / ${total} kayıt`
-      : "";
-  }
-}
-
-/* ─────────────────── Tablo Satırı Oluşturma ─────────────────── */
-
-function createRowEl(item) {
-  const tr = document.createElement("tr");
-  tr.dataset.id = item.id;
-  tr.addEventListener("dblclick", (e) => {
-    const targetCell = e.target.closest("td");
-    let focusTarget = "component";
-
-    if (targetCell) {
-      if (targetCell.classList.contains("col-date")) focusTarget = "date";
-      else if (targetCell.classList.contains("col-brand"))
-        focusTarget = "brand";
-      else if (targetCell.classList.contains("col-specs"))
-        focusTarget = "specs";
-      else if (targetCell.classList.contains("col-price"))
-        focusTarget = "price";
-      else if (targetCell.classList.contains("col-vendor"))
-        focusTarget = "vendor";
-    }
-
-    if (
-      !e.target.closest(".status-menu") &&
-      !e.target.closest(".row-actions")
-    ) {
-      openEditModal(item.id, focusTarget);
-    }
-  });
-  return tr;
-}
-
-/* ─────────────────── Marka Hücresi HTML Oluşturma ─────────────────── */
-
-function buildBrandCellHTML(item) {
-  const safeUrl = safeExternalUrl(item.url);
-  if (safeUrl) {
-    return `<a href="${escAttr(safeUrl)}" target="_blank" rel="noopener noreferrer" class="brand-link" title="Ürüne Git">${escHtml(item.brand)} <span class="link-icon">🔗</span></a>`;
-  }
-  return escHtml(item.brand);
-}
-
-/* ─────────────────── Durum Hücresi İç HTML ─────────────────── */
-
-function buildStatusCellInnerHTML(item) {
-  const statusClass = getStatusClassName(item.status);
-  const safeId = escAttr(item.id);
-  const safeStatus = escHtml(item.status);
-  return `<div class="status-cell-inner">
-    <div class="status-menu">
-      <span class="status-label ${statusClass}">${safeStatus}</span>
-      <div class="status-options">
-        <div data-action="update-status" data-id="${safeId}" data-status="sağlıklı">✓ Sağlıklı</div>
-        <div data-action="update-status" data-id="${safeId}" data-status="bozuk">✗ Bozuk</div>
-        <div data-action="update-status" data-id="${safeId}" data-status="yedek">◉ Yedek</div>
-        <div data-action="update-status" data-id="${safeId}" data-status="atıldı">⊘ Atıldı</div>
-      </div>
-    </div>
-    <div class="row-actions">
-      <button class="action-btn edit-btn" data-action="edit-item" data-id="${safeId}" title="Düzenle">✎</button>
-      <button class="action-btn delete-btn" data-action="delete-item" data-id="${safeId}" title="Sil">✕</button>
-    </div>
-  </div>`;
-}
-
-/* ─────────────────── Durum Hücresi HTML Sarmalayıcı ─────────────────── */
-
-function buildStatusCellHTML(item) {
-  return `<td class="status-cell">${buildStatusCellInnerHTML(item)}</td>`;
-}
-
-/* ─────────────────── Kayıt Durumu Güncelleme ─────────────────── */
-
-function updateItemStatus(itemId, newStatus) {
-  const currentItem = allData[itemId];
-  if (!currentItem) return;
-
-  if (normalizeTr(currentItem.status) === normalizeTr(newStatus)) return;
-
-  const prevData = allData;
-  const nextData = {
-    ...allData,
-    [itemId]: {
-      ...currentItem,
-      status: newStatus,
-    },
-  };
-
-  allData = nextData;
-  syncStatusOnlyChanges(prevData, nextData, [itemId]);
-
-  if (typeof updateComponentStatusInFirebase !== "function") {
-    showToast("Durum güncelleme fonksiyonu bulunamadı", "error");
-    return;
-  }
-
-  updateComponentStatusInFirebase(itemId, newStatus).catch(() => {
-    allData = prevData;
-    syncStatusOnlyChanges(nextData, prevData, [itemId]);
-    showToast("Durum güncellenemedi", "error");
-  });
-}
-
-/* ─────────────────── Kayıt Silme ─────────────────── */
-
-function deleteItem(itemId) {
-  if (!allData[itemId]) return;
-
-  const performDelete = () => {
-    if (typeof deleteComponentFromFirebase !== "function") {
-      showToast("Silme fonksiyonu bulunamadı", "error");
-      return;
-    }
-
-    deleteComponentFromFirebase(itemId)
-      .then(() => {
-        showToast("Kayıt silindi", "success", 2200);
-      })
-      .catch(() => {
-        showToast("Kayıt silinemedi", "error");
-      });
-  };
-
-  if (typeof showConfirm === "function") {
-    showConfirm("Bu kaydı silmek istediğinize emin misiniz?", performDelete);
-    return;
-  }
-
-  performDelete();
-}
-
-/* ─────────────────── Sadece Durum Değişikliği Senkronu ─────────────────── */
-
-function syncStatusOnlyChanges(prevData, nextData, changedStatusIds) {
-  if (currentStatusFilter !== "all" || currentSearch) {
-    renderAll();
-    return;
-  }
-
-  let needsFullRender = false;
-
-  changedStatusIds.forEach((id) => {
-    const row = tableBody.querySelector(`tr[data-id="${id}"]`);
-    const statusCell = row?.querySelector(".status-cell");
-
-    if (!statusCell || !nextData[id]) {
-      needsFullRender = true;
-      return;
-    }
-
-    if (
-      normalizeTr(prevData[id]?.status) === normalizeTr(nextData[id]?.status)
-    ) {
-      return;
-    }
-
-    statusCell.innerHTML = buildStatusCellInnerHTML({ id, ...nextData[id] });
-  });
-
-  if (needsFullRender) {
-    renderAll();
-    return;
-  }
-
-  updateStats(getFilteredSortedList());
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                            TABLO RENDER                                  */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Tablo Satırlarını Render Et ─────────────────── */
 
 function renderTableRows(list) {
   const unsavedRows = Array.from(tableBody.querySelectorAll(".new-item-row"));
@@ -424,7 +252,237 @@ function renderTableRows(list) {
   unsavedRows.forEach((r) => tableBody.appendChild(r));
 }
 
-/* ─────────────────── Tablo Tıklama Delegasyonu ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          İSTATİSTİKLER                                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── İstatistik Kartlarını Güncelle ─────────────────── */
+
+function updateStats(filteredList) {
+  const all = Object.values(allData);
+  const total = all.reduce((s, i) => s + (parseFloat(i.price) || 0), 0);
+  const count = all.length;
+  const healthy = all.filter((i) =>
+    normalizeTr(i.status).includes("saglikl"),
+  ).length;
+  const mostExp = all.reduce(
+    (best, i) =>
+      (parseFloat(i.price) || 0) > (parseFloat(best?.price) || 0) ? i : best,
+    null,
+  );
+
+  if (statTotal) statTotal.textContent = CURRENCY_FORMAT.format(total) + " ₺";
+  if (statCount) statCount.textContent = count;
+  if (statHealthy) statHealthy.textContent = healthy;
+  if (statExpensive)
+    statExpensive.textContent = mostExp ? mostExp.component : "—";
+
+  const filteredTotal = filteredList.reduce(
+    (s, i) => s + (parseFloat(i.price) || 0),
+    0,
+  );
+  if (totalCostDisplay)
+    totalCostDisplay.textContent = CURRENCY_FORMAT.format(filteredTotal) + " ₺";
+}
+
+/* ─────────────────── Sonuç Sayısı Güncelleme ─────────────────── */
+
+function updateResultCount(filteredCount) {
+  const total = Object.keys(allData).length;
+  const isFiltered = currentSearch || currentStatusFilter !== "all";
+  if (resultCount) {
+    resultCount.textContent = isFiltered
+      ? `${filteredCount} / ${total} kayıt`
+      : "";
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                        SATIR VE HÜCRE OLUŞTURMA                          */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Durum CSS Sınıfı Eşleme ─────────────────── */
+
+function getStatusClassName(statusValue) {
+  const key = normalizeTr(statusValue);
+  for (const [k, v] of Object.entries(STATUS_MAP)) {
+    if (key.includes(k)) return v;
+  }
+  return "status-healthy";
+}
+
+/* ─────────────────── Durum Hücresi İç HTML ─────────────────── */
+
+function buildStatusCellInnerHTML(item) {
+  const statusClass = getStatusClassName(item.status);
+  const safeId = escAttr(item.id);
+  const safeStatus = escHtml(item.status);
+  return `<div class="status-cell-inner">
+    <div class="status-menu">
+      <span class="status-label ${statusClass}">${safeStatus}</span>
+      <div class="status-options">
+        <div data-action="update-status" data-id="${safeId}" data-status="sağlıklı">✓ Sağlıklı</div>
+        <div data-action="update-status" data-id="${safeId}" data-status="bozuk">✗ Bozuk</div>
+        <div data-action="update-status" data-id="${safeId}" data-status="yedek">◉ Yedek</div>
+        <div data-action="update-status" data-id="${safeId}" data-status="atıldı">⊘ Atıldı</div>
+      </div>
+    </div>
+    <div class="row-actions">
+      <button class="action-btn edit-btn" data-action="edit-item" data-id="${safeId}" title="Düzenle">✎</button>
+      <button class="action-btn delete-btn" data-action="delete-item" data-id="${safeId}" title="Sil">✕</button>
+    </div>
+  </div>`;
+}
+
+/* ─────────────────── Durum Hücresi HTML Sarmalayıcı ─────────────────── */
+
+function buildStatusCellHTML(item) {
+  return `<td class="status-cell">${buildStatusCellInnerHTML(item)}</td>`;
+}
+
+/* ─────────────────── Marka Hücresi HTML ─────────────────── */
+
+function buildBrandCellHTML(item) {
+  const safeUrl = safeExternalUrl(item.url);
+  if (safeUrl) {
+    return `<a href="${escAttr(safeUrl)}" target="_blank" rel="noopener noreferrer" class="brand-link" title="Ürüne Git">${escHtml(item.brand)} <span class="link-icon">🔗</span></a>`;
+  }
+  return escHtml(item.brand);
+}
+
+/* ─────────────────── Tablo Satırı Oluştur ─────────────────── */
+
+function createRowEl(item) {
+  const tr = document.createElement("tr");
+  tr.dataset.id = item.id;
+  tr.addEventListener("dblclick", (e) => {
+    const targetCell = e.target.closest("td");
+    let focusTarget = "component";
+
+    if (targetCell) {
+      if (targetCell.classList.contains("col-date")) focusTarget = "date";
+      else if (targetCell.classList.contains("col-brand"))
+        focusTarget = "brand";
+      else if (targetCell.classList.contains("col-specs"))
+        focusTarget = "specs";
+      else if (targetCell.classList.contains("col-price"))
+        focusTarget = "price";
+      else if (targetCell.classList.contains("col-vendor"))
+        focusTarget = "vendor";
+    }
+
+    if (
+      !e.target.closest(".status-menu") &&
+      !e.target.closest(".row-actions")
+    ) {
+      openEditModal(item.id, focusTarget);
+    }
+  });
+  return tr;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                        DURUM VE SİLME YÖNETİMİ                          */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Sadece Durum Değişikliği Senkronu ─────────────────── */
+
+function syncStatusOnlyChanges(prevData, nextData, changedStatusIds) {
+  if (currentStatusFilter !== "all" || currentSearch) {
+    renderAll();
+    return;
+  }
+
+  let needsFullRender = false;
+
+  changedStatusIds.forEach((id) => {
+    const row = tableBody.querySelector(`tr[data-id="${id}"]`);
+    const statusCell = row?.querySelector(".status-cell");
+
+    if (!statusCell || !nextData[id]) {
+      needsFullRender = true;
+      return;
+    }
+
+    if (
+      normalizeTr(prevData[id]?.status) === normalizeTr(nextData[id]?.status)
+    ) {
+      return;
+    }
+
+    statusCell.innerHTML = buildStatusCellInnerHTML({ id, ...nextData[id] });
+  });
+
+  if (needsFullRender) {
+    renderAll();
+    return;
+  }
+
+  updateStats(getFilteredSortedList());
+}
+
+/* ─────────────────── Kayıt Durumu Güncelleme ─────────────────── */
+
+function updateItemStatus(itemId, newStatus) {
+  const currentItem = allData[itemId];
+  if (!currentItem) return;
+
+  if (normalizeTr(currentItem.status) === normalizeTr(newStatus)) return;
+
+  const prevData = allData;
+  const nextData = {
+    ...allData,
+    [itemId]: { ...currentItem, status: newStatus },
+  };
+
+  allData = nextData;
+  syncStatusOnlyChanges(prevData, nextData, [itemId]);
+
+  if (typeof updateComponentStatusInFirebase !== "function") {
+    showToast("Durum güncelleme fonksiyonu bulunamadı", "error");
+    return;
+  }
+
+  updateComponentStatusInFirebase(itemId, newStatus).catch(() => {
+    allData = prevData;
+    syncStatusOnlyChanges(nextData, prevData, [itemId]);
+    showToast("Durum güncellenemedi", "error");
+  });
+}
+
+/* ─────────────────── Kayıt Silme ─────────────────── */
+
+function deleteItem(itemId) {
+  if (!allData[itemId]) return;
+
+  const performDelete = () => {
+    if (typeof deleteComponentFromFirebase !== "function") {
+      showToast("Silme fonksiyonu bulunamadı", "error");
+      return;
+    }
+
+    deleteComponentFromFirebase(itemId)
+      .then(() => {
+        showToast("Kayıt silindi", "success", 2200);
+      })
+      .catch(() => {
+        showToast("Kayıt silinemedi", "error");
+      });
+  };
+
+  if (typeof showConfirm === "function") {
+    showConfirm("Bu kaydı silmek istediğinize emin misiniz?", performDelete);
+    return;
+  }
+
+  performDelete();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                        TABLO OLAY DİNLEYİCİLERİ                         */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Tıklama Delegasyonu ─────────────────── */
 
 if (tableBody) {
   tableBody.addEventListener("click", (event) => {
@@ -450,52 +508,4 @@ if (tableBody) {
       deleteItem(itemId);
     }
   });
-}
-
-/* ─────────────────── Sıralama Tıklama Dinleyicisi ─────────────────── */
-
-document.querySelectorAll(".sortable").forEach((th) => {
-  th.addEventListener("click", () => {
-    const col = th.dataset.sort || th.dataset.col;
-    if (!col) return;
-
-    if (currentSort.col === col) {
-      currentSort.dir = currentSort.dir === "asc" ? "desc" : "asc";
-    } else {
-      currentSort.col = col;
-      currentSort.dir = "asc";
-    }
-
-    updateSortIcons();
-    renderAll();
-  });
-});
-
-/* ─────────────────── Sıralama İkonları Güncelleme ─────────────────── */
-
-function updateSortIcons() {
-  document.querySelectorAll(".sortable").forEach((th) => {
-    const icon = th.querySelector(".sort-icon");
-    const col = th.dataset.sort || th.dataset.col;
-
-    if (col === currentSort.col) {
-      if (icon) icon.textContent = currentSort.dir === "asc" ? "↑" : "↓";
-      th.classList.add("sort-active");
-      th.classList.remove("asc", "desc");
-      th.classList.add(currentSort.dir);
-    } else {
-      if (icon) icon.textContent = "↕";
-      th.classList.remove("sort-active", "asc", "desc");
-    }
-  });
-}
-
-/* ─────────────────── Durum CSS Sınıfı Eşleme ─────────────────── */
-
-function getStatusClassName(statusValue) {
-  const key = normalizeTr(statusValue);
-  for (const [k, v] of Object.entries(STATUS_MAP)) {
-    if (key.includes(k)) return v;
-  }
-  return "status-healthy";
 }

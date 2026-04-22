@@ -89,8 +89,11 @@ td.col-date,
   border-left: 3px solid var(--accent) !important;
 }
 
+/* ─────────────────── Satır Hover ─────────────────── */
+
 tbody tr {
   transition: background 0.15s;
+  user-select: none;
 }
 
 tbody tr:hover td {
@@ -260,7 +263,7 @@ tbody tr:hover .col-price {
   position: absolute;
   top: calc(100% + 4px);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(-6px);
   background: var(--surface2);
   min-width: 130px;
   z-index: 200;
@@ -271,7 +274,6 @@ tbody tr:hover .col-price {
     opacity 0.18s ease,
     visibility 0.18s ease,
     transform 0.18s ease;
-  transform-origin: top center;
 }
 
 .status-menu:hover .status-options {
@@ -306,7 +308,11 @@ tbody tr:hover .col-price {
 tbody tr:nth-last-child(-n + 3) .status-options {
   top: auto;
   bottom: calc(100% + 4px);
-  transform-origin: bottom center;
+  transform: translateX(-50%) translateY(6px);
+}
+
+tbody tr:nth-last-child(-n + 3) .status-menu:hover .status-options {
+  transform: translateX(-50%) translateY(0);
 }
 
 /* ─────────────────── Satır İşlemleri ─────────────────── */
@@ -408,7 +414,7 @@ tfoot {
   color: var(--green);
 }
 
-/* ─────────────────── Butonlar ─────────────────── */
+/* ─────────────────── Genel Butonlar ─────────────────── */
 
 .btn {
   border: none;
@@ -440,7 +446,7 @@ tfoot {
   transform: translateY(0);
 }
 
-/* ─────────────────── Yeni Kayıt Girdileri ─────────────────── */
+/* ─────────────────── Yeni Kayıt Satırı ─────────────────── */
 
 .new-item-row td {
   background: var(--surface2);

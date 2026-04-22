@@ -1,28 +1,49 @@
 ﻿<!doctype html>
 <html lang="tr">
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!--                              SAYFA BAŞLIĞI                           -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <head>
+    <!-- ─────────────────── Meta ─────────────────── -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ─────────────────── Başlık ve Favicon ─────────────────── -->
     <title>MySetup</title>
     <link rel="icon" type="image/x-icon" href="assets/icon.ico" />
+
+    <!-- ─────────────────── Google Fonts ─────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+
+    <!-- ─────────────────── Stil Dosyaları ─────────────────── -->
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/header.css" />
     <link rel="stylesheet" href="css/table.css" />
     <link rel="stylesheet" href="css/editmodal.css" />
     <link rel="stylesheet" href="css/auth.css" />
     <link rel="stylesheet" href="css/userset.css" />
+
+    <!-- ─────────────────── Firebase SDK ─────────────────── -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
   </head>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!--                              SAYFA GÖVDE                             -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <body>
+    <!-- ─────────────────── Electron Başlık Çubuğu ─────────────────── -->
     <div class="title-bar-drag"></div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--                      KİMLİK DOĞRULAMA YÜKLENİYOR                 -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <div class="auth-loading" id="authLoading">
       <div class="loading-content">
         <h1 class="loading-brand">My<span class="accent-text">SETUP</span></h1>
@@ -30,15 +51,23 @@
       </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--                        BİLDİRİM KAPSAYICI                        -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--                      KİMLİK DOĞRULAMA OVERLAY                    -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <div class="auth-overlay" id="authOverlay">
       <div class="auth-container">
+        <!-- ─────────────────── Marka Alanı ─────────────────── -->
         <div class="auth-brand">
           <h1>My<span class="accent-text">SETUP</span></h1>
           <p>Kişisel kurulum envanterinize hoş geldiniz</p>
         </div>
 
+        <!-- ─────────────────── Giriş Paneli ─────────────────── -->
         <div class="auth-panel" id="loginPanel">
           <h2>Giriş Yap</h2>
           <form id="loginForm" autocomplete="on">
@@ -94,6 +123,7 @@
           </p>
         </div>
 
+        <!-- ─────────────────── Kayıt Paneli ─────────────────── -->
         <div class="auth-panel hidden" id="registerPanel">
           <h2>Kayıt Ol</h2>
           <form id="registerForm" autocomplete="on">
@@ -193,14 +223,21 @@
       </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--                          ANA İÇERİK                              -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <div class="main-scroll hidden" id="mainScroll">
       <div class="page-wrapper" id="pageWrapper">
+        <!-- ─────────────────── Üst Başlık ─────────────────── -->
         <header class="top-bar">
           <div class="header-top-row">
+            <!-- Marka ve Versiyon -->
             <div class="brand-area">
               <h1>My<span class="accent-text">SETUP</span></h1>
               <span id="versionDisplay" class="version-tag">v0.0.0</span>
             </div>
+
+            <!-- Güncelleme Butonu -->
             <button
               id="updateBtn"
               class="update-icon-btn"
@@ -221,6 +258,8 @@
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
             </button>
+
+            <!-- Kullanıcı Bilgisi -->
             <div class="user-info hidden" id="userInfo" title="Ayarlar">
               <svg
                 class="settings-icon"
@@ -256,282 +295,9 @@
                 </svg>
               </button>
             </div>
-
-            <div class="modal-overlay" id="userSettingsModal">
-              <div class="modal-box premium-modal">
-                <div class="modal-header">
-                  <span class="modal-title">Hesap Ayarları</span>
-                  <button
-                    class="modal-close"
-                    id="closeSettingsBtn"
-                    title="Kapat"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div class="modal-body">
-                  <div class="setting-row">
-                    <label class="setting-row-label" for="settingsDisplayName"
-                      >Kullanıcı Adı:</label
-                    >
-                    <div class="username-edit-box">
-                      <input
-                        type="text"
-                        id="settingsDisplayName"
-                        class="clean-input"
-                        readonly
-                      />
-                      <button
-                        id="editUsernameBtn"
-                        class="action-icon-btn"
-                        title="Düzenle"
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          width="18"
-                          height="18"
-                          stroke="currentColor"
-                          stroke-width="2.5"
-                          fill="none"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <path
-                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                          ></path>
-                          <path
-                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                          ></path>
-                        </svg>
-                      </button>
-                      <button
-                        id="saveUsernameBtn"
-                        class="action-icon-btn success hidden"
-                        title="Kaydet"
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          width="20"
-                          height="20"
-                          stroke="currentColor"
-                          stroke-width="3"
-                          fill="none"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <p
-                    id="usernameError"
-                    class="auth-error"
-                    style="min-height: 20px"
-                  ></p>
-                  <button
-                    id="openChangePassBtn"
-                    class="setting-row setting-row-btn"
-                  >
-                    Şifre Değiştir
-                  </button>
-                  <button
-                    id="openDeleteAccountBtn"
-                    class="setting-row setting-row-btn danger"
-                  >
-                    Hesabı Sil
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-overlay" id="changePasswordModal">
-              <div class="modal-box premium-modal wide">
-                <div class="modal-header">
-                  <div class="header-left">
-                    <button
-                      class="back-icon-btn"
-                      id="backToSettingsFromPass"
-                      title="Geri Dön"
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        width="20"
-                        height="20"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                      </svg>
-                    </button>
-                    <span class="modal-title">Şifre Değiştir</span>
-                  </div>
-                  <button
-                    class="modal-close"
-                    id="closeChangePassBtn"
-                    title="Kapat"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div class="modal-body">
-                  <form id="changePasswordForm">
-                    <input
-                      type="text"
-                      id="changePasswordUsernameHint"
-                      autocomplete="username"
-                      tabindex="-1"
-                      aria-hidden="true"
-                      style="
-                        position: absolute;
-                        left: -9999px;
-                        width: 1px;
-                        height: 1px;
-                        opacity: 0;
-                      "
-                    />
-                    <div class="form-grid">
-                      <div class="auth-field form-col-full">
-                        <label for="oldPassword">Mevcut Şifre</label>
-                        <input
-                          type="password"
-                          id="oldPassword"
-                          class="modal-input"
-                          placeholder="Şu anki şifreniz"
-                          autocomplete="current-password"
-                          required
-                        />
-                      </div>
-                      <div class="auth-field">
-                        <label for="newPassword">Yeni Şifre</label>
-                        <input
-                          type="password"
-                          id="newPassword"
-                          class="modal-input"
-                          placeholder="En az 6 karakter"
-                          autocomplete="new-password"
-                          minlength="6"
-                          required
-                        />
-                      </div>
-                      <div class="auth-field">
-                        <label for="newPasswordConfirm"
-                          >Yeni Şifre (Tekrar)</label
-                        >
-                        <input
-                          type="password"
-                          id="newPasswordConfirm"
-                          class="modal-input"
-                          placeholder="Şifrenizi doğrulayın"
-                          autocomplete="new-password"
-                          minlength="6"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <p id="changePassError" class="auth-error"></p>
-                    <button
-                      type="submit"
-                      class="auth-submit-btn modal-submit-mt"
-                      id="changePassSubmitBtn"
-                      disabled
-                    >
-                      Şifreyi Kaydet
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-overlay" id="deleteAccountModal">
-              <div class="modal-box premium-modal wide">
-                <div class="modal-header">
-                  <div class="header-left">
-                    <button
-                      class="back-icon-btn"
-                      id="backToSettingsFromDelete"
-                      title="Geri Dön"
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        width="20"
-                        height="20"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                      </svg>
-                    </button>
-                    <span class="modal-title modal-title--danger"
-                      >Hesabı Sil</span
-                    >
-                  </div>
-                  <button class="modal-close" id="closeDeleteBtn" title="Kapat">
-                    ✕
-                  </button>
-                </div>
-                <div class="modal-body">
-                  <div class="warning-box">
-                    <b>Dikkat:</b> Bu işlem geri alınamaz. Tüm envanter
-                    kayıtlarınız ve kişisel verileriniz kalıcı olarak
-                    silinecektir.
-                  </div>
-                  <form id="deleteAccountForm">
-                    <div class="form-grid">
-                      <div class="auth-field">
-                        <label for="deleteEmail">E-posta Adresiniz</label>
-                        <input
-                          type="email"
-                          id="deleteEmail"
-                          class="modal-input"
-                          placeholder="ornek@email.com"
-                          autocomplete="username"
-                          required
-                        />
-                      </div>
-                      <div class="auth-field">
-                        <label for="deletePassword">Şifreniz</label>
-                        <input
-                          type="password"
-                          id="deletePassword"
-                          class="modal-input"
-                          placeholder="••••••••"
-                          autocomplete="current-password"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <label
-                      class="danger-check-wrapper"
-                      for="deleteConfirmCheck"
-                    >
-                      <input type="checkbox" id="deleteConfirmCheck" />
-                      <span class="check-text"
-                        >Hesabımı sildiğimde tüm verilerimi kaybedeceğimi ve
-                        geri alamayacağımı anlıyorum.</span
-                      >
-                    </label>
-                    <p id="deleteAccountError" class="auth-error"></p>
-                    <button
-                      type="submit"
-                      id="finalDeleteBtn"
-                      class="auth-submit-btn btn-danger"
-                      disabled
-                    >
-                      Hesabı Kalıcı Olarak Sil
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
           </div>
 
+          <!-- ─────────────────── İstatistik Kartları ─────────────────── -->
           <div class="stats-row" id="statsRow">
             <div class="stat-card">
               <div class="stat-icon">₺</div>
@@ -564,7 +330,9 @@
           </div>
         </header>
 
+        <!-- ─────────────────── Araç Çubuğu ─────────────────── -->
         <div class="toolbar">
+          <!-- Arama -->
           <div class="search-wrapper">
             <span class="search-icon">⌕</span>
             <input
@@ -577,6 +345,8 @@
               ✕
             </button>
           </div>
+
+          <!-- Durum Filtreleri -->
           <div class="filter-group">
             <button class="filter-btn active" data-status="all">Tümü</button>
             <button class="filter-btn" data-status="saglikli">Sağlıklı</button>
@@ -584,6 +354,8 @@
             <button class="filter-btn" data-status="yedek">Yedek</button>
             <button class="filter-btn" data-status="atildi">Atıldı</button>
           </div>
+
+          <!-- CSV İçe / Dışa Aktarma -->
           <div class="action-group">
             <input type="file" id="importCsvInput" accept=".csv" />
             <button id="importCsvBtn" class="export-btn btn-import">
@@ -623,8 +395,10 @@
           </div>
         </div>
 
+        <!-- ─────────────────── Veri Tablosu ─────────────────── -->
         <div class="table-wrapper">
           <table id="mainTable">
+            <!-- Tablo Başlıkları -->
             <thead>
               <tr>
                 <th class="sortable" data-sort="date">
@@ -646,7 +420,11 @@
                 <th>Durum</th>
               </tr>
             </thead>
+
+            <!-- Tablo Gövdesi -->
             <tbody id="tableBody"></tbody>
+
+            <!-- Tablo Alt Bilgi -->
             <tfoot class="control-panel-footer">
               <tr>
                 <td colspan="2" class="footer-left">
@@ -670,9 +448,13 @@
           </table>
         </div>
 
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!--                       MODALLAR                                -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+
+        <!-- ─────────────────── Kayıt Düzenleme Modali ─────────────────── -->
         <div class="modal-overlay" id="editModal">
           <div class="modal-with-preview">
-            <!-- Görsel önizleme: absolute konumlu, modal solunda -->
             <div id="editImagePreview" class="floating-preview hidden"></div>
             <div class="modal-box">
               <div class="modal-header">
@@ -832,19 +614,284 @@
                 <button class="btn-modal-save" id="modalSave">Kaydet</button>
               </div>
             </div>
-            <!-- /.modal-box -->
           </div>
-          <!-- /.modal-with-preview -->
         </div>
-        <!-- /.modal-overlay -->
+
+        <!-- ─────────────────── Hesap Ayarları Modali ─────────────────── -->
+        <div class="modal-overlay" id="userSettingsModal">
+          <div class="modal-box premium-modal">
+            <div class="modal-header">
+              <span class="modal-title">Hesap Ayarları</span>
+              <button class="modal-close" id="closeSettingsBtn" title="Kapat">
+                ✕
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="setting-row">
+                <label class="setting-row-label" for="settingsDisplayName"
+                  >Kullanıcı Adı:</label
+                >
+                <div class="username-edit-box">
+                  <input
+                    type="text"
+                    id="settingsDisplayName"
+                    class="clean-input"
+                    readonly
+                  />
+                  <button
+                    id="editUsernameBtn"
+                    class="action-icon-btn"
+                    title="Düzenle"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="18"
+                      height="18"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      fill="none"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                      ></path>
+                      <path
+                        d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                      ></path>
+                    </svg>
+                  </button>
+                  <button
+                    id="saveUsernameBtn"
+                    class="action-icon-btn success hidden"
+                    title="Kaydet"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="20"
+                      height="20"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      fill="none"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <p
+                id="usernameError"
+                class="auth-error"
+                style="min-height: 20px"
+              ></p>
+              <button
+                id="openChangePassBtn"
+                class="setting-row setting-row-btn"
+              >
+                Şifre Değiştir
+              </button>
+              <button
+                id="openDeleteAccountBtn"
+                class="setting-row setting-row-btn danger"
+              >
+                Hesabı Sil
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────── Şifre Değiştirme Modali ─────────────────── -->
+        <div class="modal-overlay" id="changePasswordModal">
+          <div class="modal-box premium-modal wide">
+            <div class="modal-header">
+              <div class="header-left">
+                <button
+                  class="back-icon-btn"
+                  id="backToSettingsFromPass"
+                  title="Geri Dön"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                <span class="modal-title">Şifre Değiştir</span>
+              </div>
+              <button class="modal-close" id="closeChangePassBtn" title="Kapat">
+                ✕
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="changePasswordForm">
+                <!-- Şifre yöneticisi uyumluluğu için gizli kullanıcı adı alanı -->
+                <input
+                  type="text"
+                  id="changePasswordUsernameHint"
+                  autocomplete="username"
+                  tabindex="-1"
+                  aria-hidden="true"
+                  style="
+                    position: absolute;
+                    left: -9999px;
+                    width: 1px;
+                    height: 1px;
+                    opacity: 0;
+                  "
+                />
+                <div class="form-grid">
+                  <div class="auth-field form-col-full">
+                    <label for="oldPassword">Mevcut Şifre</label>
+                    <input
+                      type="password"
+                      id="oldPassword"
+                      class="modal-input"
+                      placeholder="Şu anki şifreniz"
+                      autocomplete="current-password"
+                      required
+                    />
+                  </div>
+                  <div class="auth-field">
+                    <label for="newPassword">Yeni Şifre</label>
+                    <input
+                      type="password"
+                      id="newPassword"
+                      class="modal-input"
+                      placeholder="En az 6 karakter"
+                      autocomplete="new-password"
+                      minlength="6"
+                      required
+                    />
+                  </div>
+                  <div class="auth-field">
+                    <label for="newPasswordConfirm">Yeni Şifre (Tekrar)</label>
+                    <input
+                      type="password"
+                      id="newPasswordConfirm"
+                      class="modal-input"
+                      placeholder="Şifrenizi doğrulayın"
+                      autocomplete="new-password"
+                      minlength="6"
+                      required
+                    />
+                  </div>
+                </div>
+                <p id="changePassError" class="auth-error"></p>
+                <button
+                  type="submit"
+                  class="auth-submit-btn modal-submit-mt"
+                  id="changePassSubmitBtn"
+                  disabled
+                >
+                  Şifreyi Kaydet
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────── Hesap Silme Modali ─────────────────── -->
+        <div class="modal-overlay" id="deleteAccountModal">
+          <div class="modal-box premium-modal wide">
+            <div class="modal-header">
+              <div class="header-left">
+                <button
+                  class="back-icon-btn"
+                  id="backToSettingsFromDelete"
+                  title="Geri Dön"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                <span class="modal-title modal-title--danger">Hesabı Sil</span>
+              </div>
+              <button class="modal-close" id="closeDeleteBtn" title="Kapat">
+                ✕
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="warning-box">
+                <b>Dikkat:</b> Bu işlem geri alınamaz. Tüm envanter kayıtlarınız
+                ve kişisel verileriniz kalıcı olarak silinecektir.
+              </div>
+              <form id="deleteAccountForm">
+                <div class="form-grid">
+                  <div class="auth-field">
+                    <label for="deleteEmail">E-posta Adresiniz</label>
+                    <input
+                      type="email"
+                      id="deleteEmail"
+                      class="modal-input"
+                      placeholder="ornek@email.com"
+                      autocomplete="username"
+                      required
+                    />
+                  </div>
+                  <div class="auth-field">
+                    <label for="deletePassword">Şifreniz</label>
+                    <input
+                      type="password"
+                      id="deletePassword"
+                      class="modal-input"
+                      placeholder="••••••••"
+                      autocomplete="current-password"
+                      required
+                    />
+                  </div>
+                </div>
+                <label class="danger-check-wrapper" for="deleteConfirmCheck">
+                  <input type="checkbox" id="deleteConfirmCheck" />
+                  <span class="check-text"
+                    >Hesabımı sildiğimde tüm verilerimi kaybedeceğimi ve geri
+                    alamayacağımı anlıyorum.</span
+                  >
+                </label>
+                <p id="deleteAccountError" class="auth-error"></p>
+                <button
+                  type="submit"
+                  id="finalDeleteBtn"
+                  class="auth-submit-btn btn-danger"
+                  disabled
+                >
+                  Hesabı Kalıcı Olarak Sil
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--                           ALT BİLGİ                              -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <footer class="app-footer hidden" id="appFooter">
       <span>© 2026 MySetup | <b>Karma</b> tarafından oluşturuldu.</span>
     </footer>
 
-    <!-- SCRIPT YÜKLEME SIRASI: utils → firebase → table → io → modal → auth -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--           JAVASCRIPT — utils → firebase → table → io              -->
+    <!--                      → editmodal → auth → userset                 -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <script src="js/utils.js"></script>
     <script src="js/firebase.js"></script>
     <script src="js/table.js"></script>
