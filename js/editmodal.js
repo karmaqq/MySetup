@@ -2,7 +2,11 @@
 /*                          DÜZENLEME MODALI                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Önizlemeyi Anında Sıfırla (geçiş için) ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          YARDIMCI FONKSİYONLAR                           */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Önizlemeyi Anında Sıfırla ─────────────────── */
 
 let _resetRafId = null;
 
@@ -10,7 +14,6 @@ function _resetPreviewInstant() {
   const imagePreview = document.getElementById("editImagePreview");
   if (!imagePreview) return;
 
-  // Önceki rAF zinciri henüz bitmemişse iptal et
   if (_resetRafId !== null) {
     cancelAnimationFrame(_resetRafId);
     _resetRafId = null;
@@ -22,8 +25,6 @@ function _resetPreviewInstant() {
   imagePreview.innerHTML = "";
   imagePreview.classList.add("hidden");
 
-  // Transition'ı iki frame sonra geri aç — tek rAF yeterli değil,
-  // style değişikliği aynı frame'de flush olmadan geri açılabilir
   _resetRafId = requestAnimationFrame(() => {
     _resetRafId = requestAnimationFrame(() => {
       imagePreview.style.transition = "";
@@ -32,13 +33,16 @@ function _resetPreviewInstant() {
   });
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          MODAL YÖNETİMİ                                  */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 /* ─────────────────── Düzenleme Modalını Aç ─────────────────── */
 
 window.openEditModal = function (id, focusTarget = "component") {
   const item = allData[id];
   if (!item) return;
 
-  // Geçiş yapılıyorsa önizlemeyi anında sıfırla (önceki görsel boyutu görünmesin)
   _resetPreviewInstant();
 
   editingId = id;
@@ -69,12 +73,10 @@ window.openEditModal = function (id, focusTarget = "component") {
   if (editModal) editModal.classList.add("active");
 
   setTimeout(() => {
-    // ── Görsel önizleme elemanları ──
     const imagePreview = document.getElementById("editImagePreview");
     const imageUploadBtn = document.getElementById("imageUploadBtn");
     const imageFileInput = document.getElementById("imageFileInput");
 
-    /* Görselin gerçek en/boy oranına göre önizleme boyutunu hesapla */
     const MIN_W = 180,
       MIN_H = 140,
       MAX_W = 340,
@@ -116,7 +118,6 @@ window.openEditModal = function (id, focusTarget = "component") {
       imagePreview.style.height = h + "px";
     }
 
-    /* Önizlemeyi güncelle */
     function refreshPreview(url) {
       if (url) {
         const img = new Image();
@@ -131,8 +132,6 @@ window.openEditModal = function (id, focusTarget = "component") {
         if (imageUploadBtn) imageUploadBtn.classList.add("has-image");
 
         document.getElementById("previewDeleteBtn").onclick = () => {
-          // Tıklandığı andaki editingId'yi sabitle —
-          // onay diyaloğu beklerken modal geçişi olursa yanlış ürün silinmez
           const idToDelete = editingId;
           if (!idToDelete) return;
           showConfirm("Görsel kalıcı olarak silinsin mi?", async () => {
@@ -146,7 +145,6 @@ window.openEditModal = function (id, focusTarget = "component") {
               }
               await updateComponentInFirebase(idToDelete, { imageUrl: "" });
               if (allData[idToDelete]) allData[idToDelete].imageUrl = "";
-              // Hâlâ aynı ürünün modalındaysak önizlemeyi temizle
               if (editingId === idToDelete) refreshPreview("");
               if (typeof renderAll === "function") renderAll();
               showToast("Görsel silindi", "success");
@@ -162,13 +160,10 @@ window.openEditModal = function (id, focusTarget = "component") {
       }
     }
 
-    // İlk yükleme
     refreshPreview(item.imageUrl || "");
 
-    /* Dosyayı yükle ve önizle */
     function handleImageFile(file) {
       if (!file || !file.type.startsWith("image/")) return;
-      // Önizlemeyi göster, mini loading ekranını yerleştir
       imagePreview.classList.remove("hidden");
       imagePreview.style.width = "200px";
       imagePreview.style.height = "160px";
@@ -191,7 +186,6 @@ window.openEditModal = function (id, focusTarget = "component") {
         });
     }
 
-    // Dosya seçici butonu
     if (imageUploadBtn && imageFileInput) {
       imageUploadBtn.onclick = () => imageFileInput.click();
       imageFileInput.value = "";
@@ -278,7 +272,11 @@ window.saveEditModal = function () {
     .catch(() => showToast("Güncelleme başarısız", "error"));
 };
 
-/* ─────────────────── Modal Kapat Butonları ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          MODAL OLAY DİNLEYİCİLERİ                       */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Modal Kapat / Kaydet Butonları ─────────────────── */
 
 if (modalClose) modalClose.onclick = closeEditModal;
 if (modalCancel) modalCancel.onclick = closeEditModal;
@@ -328,6 +326,8 @@ if (addItemBtn) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          YENİ KAYIT SATIRI                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Yeni Kayıt Satırı Oluştur ─────────────────── */
 
 function initiateAddRow() {
   const tr = document.createElement("tr");
@@ -389,7 +389,7 @@ function initiateAddRow() {
   return tr;
 }
 
-/* ─────────────────── Yeni Kayıt Gönderme ─────────────────── */
+/* ─────────────────── Yeni Kayıt Gönder ─────────────────── */
 
 function submitNewItem(tr, inputs) {
   const component = inputs[1].value.trim();
@@ -436,7 +436,6 @@ function submitNewItem(tr, inputs) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 document.addEventListener("keydown", (e) => {
-  /* ── Escape: modalı kapat ya da yeni satırı iptal et ── */
   if (e.key === "Escape") {
     if (editModal && editModal.classList.contains("active")) {
       closeEditModal();
@@ -447,7 +446,6 @@ document.addEventListener("keydown", (e) => {
     return;
   }
 
-  /* ── Ctrl/Cmd+Enter: modalı kaydet ── */
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
     if (editModal && editModal.classList.contains("active")) {
       e.preventDefault();
@@ -456,7 +454,6 @@ document.addEventListener("keydown", (e) => {
     return;
   }
 
-  /* ── Ctrl/Cmd+F: aramaya odaklan ── */
   if ((e.ctrlKey || e.metaKey) && e.key === "f") {
     const tag = document.activeElement.tagName;
     if (tag !== "INPUT" && tag !== "TEXTAREA") {
@@ -469,18 +466,13 @@ document.addEventListener("keydown", (e) => {
     return;
   }
 
-  /* ── Shift + Yön tuşları: modal açıkken listede gezin ──
-     Shift+Sağ / Shift+Yukarı  → listedeki bir sonraki öğeye geç
-     Shift+Sol / Shift+Aşağı   → listedeki bir önceki öğeye geç
-     Input odaklanmış olsa bile Shift zorunlu olduğu için çakışma olmaz.
-  */
   if (editModal && editModal.classList.contains("active") && e.shiftKey) {
     const isNext = e.key === "ArrowRight" || e.key === "ArrowUp";
     const isPrev = e.key === "ArrowLeft" || e.key === "ArrowDown";
 
     if (!isNext && !isPrev) return;
 
-    e.preventDefault(); // Shift+yön'ün metin seçme davranışını engelle
+    e.preventDefault();
 
     if (!editingId || typeof getFilteredSortedList !== "function") return;
 

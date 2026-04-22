@@ -2,6 +2,10 @@
 /*                          GENEL YARDIMCI ARAÇLAR                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          SABİTLER VE FORMATLAR                           */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 /* ─────────────────── Para Birimi Formatlayıcı ─────────────────── */
 
 const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
@@ -26,7 +30,9 @@ const STATUS_MAP = {
   saglikli: "status-healthy",
 };
 
-/* ─────────────────── Global Değişkenler ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          GLOBAL DEĞİŞKENLER                              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 let allData = {};
 let currentSearch = "";
@@ -34,15 +40,25 @@ let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
 
-/* ─────────────────── DOM Referansları ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          DOM REFERANSLARI                                */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Sürüm ve Güncelleme ─────────────────── */
 
 const versionDisplay = document.getElementById("versionDisplay");
 const updateBtn = document.getElementById("updateBtn");
 
+/* ─────────────────── Bildirim ─────────────────── */
+
 const toastContainer = document.getElementById("toastContainer");
+
+/* ─────────────────── Arama ─────────────────── */
 
 const searchInput = document.getElementById("searchInput");
 const clearSearch = document.getElementById("clearSearch");
+
+/* ─────────────────── Tablo ve İstatistikler ─────────────────── */
 
 const tableBody = document.getElementById("tableBody");
 const addItemBtn = document.getElementById("addItemBtn");
@@ -52,6 +68,8 @@ const statCount = document.getElementById("statCount");
 const statHealthy = document.getElementById("statHealthy");
 const statExpensive = document.getElementById("statExpensive");
 const totalCostDisplay = document.getElementById("totalCostDisplay");
+
+/* ─────────────────── Düzenleme Modali ─────────────────── */
 
 const editModal = document.getElementById("editModal");
 const modalClose = document.getElementById("modalClose");
@@ -67,6 +85,10 @@ const editSpecs = document.getElementById("editSpecs");
 const editPrice = document.getElementById("editPrice");
 const editVendor = document.getElementById("editVendor");
 const editStatus = document.getElementById("editStatus");
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          YARDIMCI FONKSİYONLAR                           */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Türkçe Karakter Normalizasyonu ─────────────────── */
 
@@ -100,7 +122,6 @@ function escAttr(str) {
 
 function safeExternalUrl(value) {
   if (!value) return "";
-
   try {
     const parsed = new URL(value);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
@@ -129,27 +150,4 @@ function applyPriceFormat(inputEl) {
   } else {
     inputEl.value = "";
   }
-}
-
-/* ─────────────────── Güncelleme Butonu ─────────────────── */
-
-if (window.electronAPI && updateBtn) {
-  window.electronAPI.onUpdateAvailable((latestVersion) => {
-    updateBtn.classList.add("visible");
-    if (updateBtn.title) {
-      updateBtn.title = `Güncelleme Mevcut: v${latestVersion}`;
-    }
-  });
-
-  window.electronAPI.onDownloadProgress((percent) => {
-    updateBtn.innerText = `İndiriliyor: %${Math.round(percent)}`;
-    updateBtn.style.pointerEvents = "none";
-  });
-
-  updateBtn.addEventListener("click", () => {
-    if (window.electronAPI.launchUpdater) {
-      updateBtn.innerText = "Hazırlanıyor...";
-      window.electronAPI.launchUpdater();
-    }
-  });
 }

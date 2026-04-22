@@ -1,8 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                           BİLDİRİM SİSTEMİ                              */
+/*                        GİRİŞ / ÇIKIŞ VE BİLDİRİMLER                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Toast Bildirimi Gösterme ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          BİLDİRİM SİSTEMİ                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Toast Bildirimi Göster ─────────────────── */
 
 window.showToast = function (message, type = "info", duration = 3200) {
   if (!toastContainer) return;
@@ -29,7 +33,7 @@ window.showToast = function (message, type = "info", duration = 3200) {
   }, duration);
 };
 
-/* ─────────────────── Onay Diyalogu Gösterme ─────────────────── */
+/* ─────────────────── Onay Diyalogu Göster ─────────────────── */
 
 window.showConfirm = function (message, onConfirm) {
   if (!toastContainer) return;
@@ -70,6 +74,10 @@ window.showConfirm = function (message, onConfirm) {
   noBtn.onclick = dismiss;
 };
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          ARAMA VE FİLTRELEME                            */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 /* ─────────────────── Arama Alanı Dinleyicisi ─────────────────── */
 
 if (searchInput && clearSearch) {
@@ -101,13 +109,17 @@ document.querySelectorAll(".filter-btn").forEach((btn) => {
   });
 });
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          CSV İÇE AKTARMA                                */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── CSV Referansları ─────────────────── */
+
 const importCsvBtn = document.getElementById("importCsvBtn");
 const exportCsvBtn = document.getElementById("exportCsvBtn");
 const importCsvInput = document.getElementById("importCsvInput");
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                           CSV İÇE AKTARMA                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── CSV İşleme ─────────────────── */
 
 function processCsv(csvText) {
   const lines = csvText.split(/\r?\n/).filter((l) => l.trim());
@@ -185,7 +197,6 @@ function processCsv(csvText) {
         showToast("Aktif kullanıcı verisi bulunamadı", "error");
         return;
       }
-
       try {
         await replaceUserDataInFirebase(importPayload);
         showToast(`${importCount} kayıt sıfırdan yüklendi.`, "success");
@@ -269,19 +280,21 @@ if (exportCsvBtn) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          GÜNCELLEME YÖNETİCİSİ                                */
+/*                          GÜNCELLEME YÖNETİCİSİ                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 if (window.electronAPI) {
   const updateBtn = document.getElementById("updateBtn");
 
-  // 1. Versiyonu yazdır
+  /* ─────────────────── Versiyon Gösterimi ─────────────────── */
+
   window.electronAPI.onAppVersion?.((version) => {
     const vEl = document.getElementById("versionDisplay");
     if (vEl) vEl.textContent = `v${version}`;
   });
 
-  // 2. Güncelleme bulunduğunda
+  /* ─────────────────── Güncelleme Bulundu ─────────────────── */
+
   window.electronAPI.onUpdateAvailable?.((version) => {
     if (updateBtn) {
       updateBtn.classList.add("visible");
@@ -290,15 +303,14 @@ if (window.electronAPI) {
     }
   });
 
-  // 3. İndirme aşaması ve Renk Yönetimi
+  /* ─────────────────── İndirme İlerlemesi ─────────────────── */
+
   window.electronAPI.onUpdateProgress?.((percent) => {
     if (!updateBtn) return;
     const p = Math.round(percent);
-
     if (p < 100) {
       updateBtn.innerText = `İndiriliyor: %${p}`;
     } else {
-      // %100 olduğunda yeşil moda geç
       updateBtn.innerText = `Kuruluyor...`;
       updateBtn.style.background = "var(--green, #10b981)";
       updateBtn.style.borderColor = "var(--green, #10b981)";
@@ -306,19 +318,20 @@ if (window.electronAPI) {
     }
   });
 
-  // 4. İndirme bittiğinde
+  /* ─────────────────── İndirme Tamamlandı ─────────────────── */
+
   window.electronAPI.onUpdateDownloaded?.(() => {
     if (updateBtn) {
       updateBtn.innerText = "Yeniden Başlatılıyor...";
-      // Yeşil rengi koru
       updateBtn.style.background = "var(--green, #10b981)";
       updateBtn.style.borderColor = "var(--green, #10b981)";
       updateBtn.style.color = "#fff";
     }
   });
 
-  // 5. Hata durumu
-  window.electronAPI.onUpdateError?.((err) => {
+  /* ─────────────────── Güncelleme Hatası ─────────────────── */
+
+  window.electronAPI.onUpdateError?.(() => {
     if (updateBtn) {
       updateBtn.innerText = "Güncelleme Hatası";
       updateBtn.style.background = "var(--red, #ef4444)";
@@ -328,7 +341,8 @@ if (window.electronAPI) {
     }
   });
 
-  // Butona tıklandığında süreci başlat
+  /* ─────────────────── Güncelleme Butonu ─────────────────── */
+
   updateBtn?.addEventListener("click", () => {
     updateBtn.innerText = "Bağlanıyor...";
     updateBtn.style.pointerEvents = "none";
