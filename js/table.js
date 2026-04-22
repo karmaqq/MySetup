@@ -340,14 +340,23 @@ function buildStatusCellHTML(item) {
   return `<td class="status-cell">${buildStatusCellInnerHTML(item)}</td>`;
 }
 
-/* ─────────────────── Marka Hücresi HTML ─────────────────── */
+/* ─────────────────── URL Simgesi Oluşturma ─────────────────── */
 
 function buildBrandCellHTML(item) {
-  const safeUrl = safeExternalUrl(item.url);
-  if (safeUrl) {
-    return `<a href="${escAttr(safeUrl)}" target="_blank" rel="noopener noreferrer" class="brand-link" title="Ürüne Git">${escHtml(item.brand)} <span class="link-icon">🔗</span></a>`;
+  const brandText = escHtml(item.brand || "-");
+  if (item.url) {
+    return `<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+      <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${brandText}</span>
+      <a href="${escAttr(item.url)}" target="_blank" title="Ürün Linkine Git" style="display: flex; background: none; border: none; padding: 0; margin: 0; color: var(--text-dim); transition: color 0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+      </a>
+    </div>`;
   }
-  return escHtml(item.brand);
+  return brandText;
 }
 
 /* ─────────────────── Tablo Satırı Oluştur ─────────────────── */
@@ -482,30 +491,157 @@ function deleteItem(itemId) {
 /*                        TABLO OLAY DİNLEYİCİLERİ                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Tıklama Delegasyonu ─────────────────── */
+/* ─────────────────── Çift Tıklama Delegasyonu ─────────────────── */
 
 if (tableBody) {
-  tableBody.addEventListener("click", (event) => {
-    const actionEl = event.target.closest("[data-action]");
-    if (!actionEl) return;
+  tableBody.addEventListener("dblclick", (event) => {
+    const row = event.target.closest("tr");
+    if (!row || row.classList.contains("new-item-row")) return;
 
-    event.stopPropagation();
+    // Çift tıklamada otomatik seçilen metni temizle
+    window.getSelection().removeAllRanges();
 
-    const itemId = actionEl.dataset.id;
+    const itemId = row.dataset.id;
     if (!itemId) return;
 
-    if (actionEl.dataset.action === "update-status") {
-      updateItemStatus(itemId, actionEl.dataset.status);
-      return;
-    }
-
-    if (actionEl.dataset.action === "edit-item") {
-      openEditModal(itemId);
-      return;
-    }
-
-    if (actionEl.dataset.action === "delete-item") {
-      deleteItem(itemId);
-    }
+    if (typeof openEditModal === "function") openEditModal(itemId);
   });
 }
+
+/* ─────────────────── Ürün Ekle Butonu ─────────────────── */
+
+if (addItemBtn) {
+  addItemBtn.onclick = () => {
+    if (!tableBody) return;
+    const existing = tableBody.querySelector(".new-item-row");
+    if (existing) {
+      existing.querySelector(".component-input").focus();
+      return;
+    }
+    tableBody.appendChild(initiateAddRow());
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          YENİ KAYIT SATIRI                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Yeni Kayıt Satırı Oluştur ─────────────────── */
+
+function initiateAddRow() {
+  const tr = document.createElement("tr");
+  tr.className = "new-item-row";
+  tr.innerHTML = `
+    <td>
+      <div class="date-input-wrapper">
+        <input type="text" class="entry-input date-input" placeholder="GG.AA.YYYY">
+        <input type="date" class="hidden-picker" tabindex="-1">
+        <span class="calendar-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+      </div>
+    </td>
+    <td><input type="text" class="entry-input component-input" placeholder="Bileşen Adı *"></td>
+    <td><input type="text" class="entry-input brand-input" placeholder="Marka"></td>
+    <td><input type="text" class="entry-input specs-input" placeholder="Özellikler"></td>
+    <td><input type="text" class="entry-input price-input" placeholder="0,00" inputmode="decimal"></td>
+    <td><input type="text" class="entry-input vendor-input" placeholder="Satıcı"></td>
+    <td style="text-align: center;">
+      <button type="button" class="btn-modal-save save-btn new-row-save">Kaydet</button>
+    </td>
+  `;
+
+  const dateInput = tr.querySelector(".date-input");
+  const hiddenPicker = tr.querySelector(".hidden-picker");
+  const calendarIcon = tr.querySelector(".calendar-icon");
+  const inputs = tr.querySelectorAll(".entry-input");
+  const saveBtn = tr.querySelector(".save-btn");
+  const priceInput = tr.querySelector(".price-input");
+
+  calendarIcon.onclick = () => hiddenPicker.showPicker();
+
+  hiddenPicker.onchange = (e) => {
+    const [y, m, d] = e.target.value.split("-");
+    dateInput.value = `${d}.${m}.${y}`;
+  };
+
+  priceInput.addEventListener("input", function () {
+    if (typeof applyPriceFormat === "function") applyPriceFormat(this);
+  });
+
+  inputs[1].addEventListener("input", () => {
+    saveBtn.classList.toggle("visible", !!inputs[1].value.trim());
+  });
+
+  inputs[inputs.length - 1].addEventListener("keydown", (e) => {
+    if (e.key === "Tab" && !e.shiftKey && inputs[1].value.trim()) {
+      e.preventDefault();
+      submitNewItem(tr, inputs);
+    }
+  });
+
+  tr.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && inputs[1].value.trim()) submitNewItem(tr, inputs);
+  });
+
+  saveBtn.onclick = () => submitNewItem(tr, inputs);
+
+  setTimeout(() => inputs[1].focus(), 30);
+  return tr;
+}
+
+/* ─────────────────── Yeni Kayıt Gönder ─────────────────── */
+
+function submitNewItem(tr, inputs) {
+  const component = inputs[1].value.trim();
+  if (!component) return;
+
+  const rawDate = inputs[0].value.trim();
+  const parts = rawDate.split(/[./-]/);
+  let finalDate;
+  if (parts.length === 3) {
+    finalDate =
+      parts[0].length <= 2
+        ? `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`
+        : rawDate;
+  }
+  if (!finalDate || isNaN(new Date(finalDate).getTime())) {
+    finalDate = new Date().toISOString().split("T")[0];
+  }
+
+  const rawPrice = inputs[4].value.replace(/\./g, "").replace(",", ".");
+
+  const newItemData = {
+    date: finalDate,
+    component,
+    brand: inputs[2].value.trim() || "-",
+    specs: inputs[3].value.trim() || "-",
+    price: parseFloat(rawPrice) || 0,
+    vendor: inputs[5].value.trim() || "-",
+    status: "sağlıklı",
+    url: "",
+  };
+
+  if (typeof addComponentToFirebase === "function") {
+    addComponentToFirebase(newItemData)
+      .then(() => {
+        tr.remove();
+        showToast(`"${component}" eklendi`, "success");
+      })
+      .catch(() => showToast("Kayıt eklenemedi", "error"));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* TABLO KLAVYE KISAYOLLARI                           */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+document.addEventListener("keydown", (e) => {
+  if (
+    e.key === "Escape" &&
+    (!editModal || !editModal.classList.contains("active"))
+  ) {
+    if (tableBody) {
+      const newRow = tableBody.querySelector(".new-item-row");
+      if (newRow) newRow.remove();
+    }
+  }
+});

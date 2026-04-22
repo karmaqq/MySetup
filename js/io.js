@@ -96,6 +96,24 @@ if (searchInput && clearSearch) {
   });
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ARAMA KLAVYE KISAYOLLARI                           */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+document.addEventListener("keydown", (e) => {
+  // CTRL+F: Arama kutusuna odaklan
+  if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+    const tag = document.activeElement.tagName;
+    if (tag !== "INPUT" && tag !== "TEXTAREA") {
+      e.preventDefault();
+      if (typeof searchInput !== "undefined" && searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+    }
+  }
+});
+
 /* ─────────────────── Filtre Butonları Dinleyicisi ─────────────────── */
 
 document.querySelectorAll(".filter-btn").forEach((btn) => {
@@ -181,6 +199,9 @@ function processCsv(csvText) {
       status: row[6] || "sağlıklı",
       url: safeExternalUrl(row[7]),
       imageUrl: row[8] || "",
+      // YENİ EKLENEN VERİLER:
+      star: parseInt(row[9]) || 0,
+      opinion: row[10] || "",
     };
   });
 
@@ -246,6 +267,8 @@ if (exportCsvBtn) {
       "Durum",
       "URL",
       "imageUrl",
+      "Puan",
+      "Görüş",
     ];
     const csvContent = [
       headers.join(","),
@@ -260,6 +283,8 @@ if (exportCsvBtn) {
           item.status || "sağlıklı",
           item.url || "",
           item.imageUrl || "",
+          item.star || 0,
+          item.opinion || "-",
         ]
           .map((v) => `"${String(v).replace(/"/g, '""')}"`)
           .join(","),

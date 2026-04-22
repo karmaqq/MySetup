@@ -608,6 +608,26 @@
                     </div>
                   </div>
                 </div>
+                <div class="opinion-divider"></div>
+
+                <div class="opinion-section">
+                  <div class="opinion-header">
+                    <label class="opinion-title">GÖRÜŞLERİM</label>
+                    <div class="star-rating" id="editStarRating">
+                      <span class="star" data-value="1">★</span>
+                      <span class="star" data-value="2">★</span>
+                      <span class="star" data-value="3">★</span>
+                      <span class="star" data-value="4">★</span>
+                      <span class="star" data-value="5">★</span>
+                    </div>
+                  </div>
+                  <textarea
+                    id="editOpinionText"
+                    class="opinion-textarea"
+                    placeholder="Bu ürünle ilgili deneyimlerini buraya yazabilirsin..."
+                    maxlength="160"
+                  ></textarea>
+                </div>
               </div>
               <div class="modal-footer">
                 <button class="btn-modal-cancel" id="modalCancel">İptal</button>
@@ -665,6 +685,7 @@
                     id="saveUsernameBtn"
                     class="action-icon-btn success hidden"
                     title="Kaydet"
+                    disabled
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -677,6 +698,25 @@
                       stroke-linejoin="round"
                     >
                       <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                  <button
+                    id="cancelUsernameBtn"
+                    class="action-icon-btn cancel hidden"
+                    title="İptal"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="18"
+                      height="18"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      fill="none"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                   </button>
                 </div>

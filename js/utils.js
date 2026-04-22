@@ -85,6 +85,8 @@ const editSpecs = document.getElementById("editSpecs");
 const editPrice = document.getElementById("editPrice");
 const editVendor = document.getElementById("editVendor");
 const editStatus = document.getElementById("editStatus");
+const stars = document.querySelectorAll("#editStarRating .star");
+const opinionInput = document.getElementById("editOpinionText");
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          YARDIMCI FONKSİYONLAR                           */

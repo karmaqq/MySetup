@@ -412,6 +412,100 @@
   font-size: 12px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* GÖRÜŞLERİM VE YILDIZ SİSTEMİ                            */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.opinion-divider {
+  grid-column: 1 / -1;
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0 4px 0;
+  width: 100%;
+}
+
+.opinion-section {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.opinion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* Modal içindeki diğer başlıklarla (.field-group label) BİREBİR aynı stil */
+.opinion-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.star-rating {
+  display: flex;
+  gap: 6px;
+}
+
+.star {
+  font-size: 26px; /* İsteğine uygun olarak büyütüldü */
+  color: var(--border2);
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    transform 0.1s;
+  line-height: 1;
+}
+
+.star:hover {
+  transform: scale(1.15);
+}
+
+.star.active {
+  color: var(--accent);
+}
+
+/* Diğer inputlarla (.modal-input) BİREBİR uyumlu arkaplan ve metin stili */
+.opinion-textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-bright);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  padding: 9px 12px;
+  line-height: 1.5;
+  resize: none;
+
+  /* Yükseklik Hesabı: (14px font * 1.5 satır) = 21px satır boyu. 
+     Alt/Üst padding = 18px. 
+     2 Satır = ~60px / 4 Satır = ~102px */
+  min-height: 102px;
+  max-height: 102px;
+  overflow-y: auto;
+
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.opinion-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+  outline: none;
+}
+
+.opinion-textarea::placeholder {
+  color: var(--text-dim);
+}
+
 /* ─────────────────── Modal Alt Bilgi ─────────────────── */
 
 .modal-footer {
