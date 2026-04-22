@@ -2,6 +2,8 @@
 /*                       FIREBASE VERİTABANI YÖNETİMİ                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Uygulama Yapılandırması ─────────────────── */
+
 const firebaseConfig = {
   apiKey: "AIzaSyDINeXkzy4JCwt9cSjII5Icm-x_NpmtmK4",
   authDomain: "mysetup-8dcd5.firebaseapp.com",
@@ -15,36 +17,24 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
+/* ─────────────────── Bağlantı Durumu Değişkenleri ─────────────────── */
+
 let userDataRef = null;
 let activeBasePath = null;
-let _pollId = null;
-
-/* ─────────────────── REST ile Veri Çek ─────────────────── */
-
-async function fetchRest(path) {
-  const user = firebase.auth().currentUser;
-  if (!user) return null;
-  const token = await user.getIdToken();
-  const res = await fetch(firebaseConfig.databaseURL + "/" + path + ".json", {
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) return null;
-  return res.json();
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                       VERİ OKUMA                                         */
+/*                          VERİ OKUMA                                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Kullanıcı Verisi Dinleyici Başlat ─────────────────── */
 
 function initUserDataRef(uid) {
-  if (userDataRef) userDataRef.off();
-  if (_pollId) {
-    clearInterval(_pollId);
-    _pollId = null;
+  if (userDataRef) {
+    userDataRef.off();
+    userDataRef = null;
   }
 
   if (!uid) {
-    userDataRef = null;
     activeBasePath = null;
     allData = {};
     if (typeof renderAll === "function") renderAll();
@@ -54,74 +44,52 @@ function initUserDataRef(uid) {
   activeBasePath = "users/" + uid + "/components";
   userDataRef = database.ref(activeBasePath);
 
-  fetchRest(activeBasePath)
-    .then((data) => {
-      if (data !== null) {
-        allData = data || {};
-        if (typeof renderAll === "function") renderAll();
-      }
-    })
-    .catch(() => {});
-
-  let rtActive = false;
-
   userDataRef.on(
     "value",
     (snap) => {
-      rtActive = true;
-      if (_pollId) {
-        clearInterval(_pollId);
-        _pollId = null;
-      }
       allData = snap.val() || {};
       if (typeof renderAll === "function") renderAll();
     },
     () => {},
   );
-
-  setTimeout(() => {
-    if (!rtActive && !_pollId) {
-      _pollId = setInterval(() => {
-        fetchRest(activeBasePath)
-          .then((data) => {
-            if (data === null) return;
-            const fresh = data || {};
-            if (JSON.stringify(fresh) !== JSON.stringify(allData)) {
-              allData = fresh;
-              if (typeof renderAll === "function") renderAll();
-            }
-          })
-          .catch(() => {});
-      }, 15000);
-    }
-  }, 4000);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                              VERİ YAZMA                                  */
+/*                          VERİ YAZMA                                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Kayıt Ekle ─────────────────── */
 
 function addComponentToFirebase(itemData) {
   return userDataRef.push(itemData);
 }
 
+/* ─────────────────── Tüm Veriyi Değiştir ─────────────────── */
+
 function replaceUserDataInFirebase(itemsMap) {
   return userDataRef.set(itemsMap || {});
 }
+
+/* ─────────────────── Kayıt Güncelle ─────────────────── */
 
 function updateComponentInFirebase(id, itemData) {
   return database.ref(activeBasePath + "/" + id).update(itemData);
 }
 
+/* ─────────────────── Kayıt Durumu Güncelle ─────────────────── */
+
 function updateComponentStatusInFirebase(id, newStatus) {
   return database.ref(activeBasePath + "/" + id).update({ status: newStatus });
 }
+
+/* ─────────────────── Kayıt Sil ─────────────────── */
 
 function deleteComponentFromFirebase(id) {
   return database.ref(activeBasePath + "/" + id).remove();
 }
 
-// Firebase Storage'a görsel yükle ve URL döndür
+/* ─────────────────── Görsel Yükle ─────────────────── */
+
 function uploadImageToFirebase(file, itemId) {
   return new Promise((resolve, reject) => {
     const user = firebase.auth().currentUser;

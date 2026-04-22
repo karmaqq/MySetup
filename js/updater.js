@@ -46,10 +46,11 @@ function setupUpdater(mainWindow) {
   });
 
   /* ─────────────────── İndirme Tamamlandı ─────────────────── */
-
   autoUpdater.on("update-downloaded", () => {
     _mainWindow.webContents.send("update_downloaded");
-    autoUpdater.quitAndInstall(true, true);
+    setTimeout(() => {
+      autoUpdater.quitAndInstall(true, true);
+    }, 1500);
   });
 
   /* ─────────────────── Güncelleme Hatası ─────────────────── */
