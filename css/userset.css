@@ -298,6 +298,31 @@
   background: rgba(61, 214, 140, 0.08);
 }
 
+.action-icon-btn.success:disabled {
+  color: var(--text-dim);
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: var(--border2);
+  background: var(--surface3);
+}
+
+.action-icon-btn.success:disabled:hover {
+  color: var(--text-dim);
+  border-color: var(--border2);
+  background: var(--surface3);
+  transform: none;
+}
+
+.action-icon-btn.cancel {
+  color: var(--text-dim);
+}
+
+.action-icon-btn.cancel:hover {
+  color: var(--red);
+  border-color: rgba(245, 96, 96, 0.35);
+  background: rgba(245, 96, 96, 0.08);
+}
+
 /* ─────────────────── Ayarlar Modal Düzeni ─────────────────── */
 
 #userSettingsModal .setting-row {

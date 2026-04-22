@@ -12,6 +12,8 @@ const settingsTrigger = document.querySelector("#userInfo .settings-icon");
 /* ─────────────────── Modal Kapatma Fonksiyonları ─────────────────── */
 
 function closeSettingsModal() {
+  // resetUsernameEditState aşağıda tanımlandıktan sonra çağrılır
+  if (typeof resetUsernameEditState === "function") resetUsernameEditState();
   settingsModal?.classList.remove("active");
 }
 
@@ -29,13 +31,19 @@ settingsTrigger?.addEventListener("click", (e) => {
   if (e.target?.closest("#logoutBtn")) return;
   const user = auth.currentUser;
   if (!user) return;
-  const nameInput = document.getElementById("settingsDisplayName");
-  if (nameInput) {
-    nameInput.value = user.displayName || "";
-    nameInput.readOnly = true;
+  // Modalı açarken her zaman temiz durumdan başla
+  const _ni = document.getElementById("settingsDisplayName");
+  if (_ni) {
+    _ni.value = user.displayName || "";
+    _ni.readOnly = true;
   }
   document.getElementById("editUsernameBtn")?.classList.remove("hidden");
   document.getElementById("saveUsernameBtn")?.classList.add("hidden");
+  document.getElementById("cancelUsernameBtn")?.classList.add("hidden");
+  const _sb = document.getElementById("saveUsernameBtn");
+  if (_sb) _sb.disabled = true;
+  const _err = document.getElementById("usernameError");
+  if (_err) _err.textContent = "";
   settingsModal?.classList.add("active");
 });
 
@@ -84,38 +92,74 @@ document
   ?.addEventListener("click", () => goBackToSettings("deleteAcc"));
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                        KULLANICI ADI DÜZENLEMEsİ                        */
+/*                        KULLANICI ADI DÜZENLEMESİ                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Düzenleme Alanı Referansları ─────────────────── */
 
 const editBtn = document.getElementById("editUsernameBtn");
 const saveBtn = document.getElementById("saveUsernameBtn");
+const cancelBtn = document.getElementById("cancelUsernameBtn");
 const nameInput = document.getElementById("settingsDisplayName");
 const usernameErrEl = document.getElementById("usernameError");
+
+/* ─────────────────── Düzenleme Durumunu Sıfırla (modal kapanınca da) ─────────────────── */
+
+function resetUsernameEditState() {
+  const user = auth.currentUser;
+  if (nameInput) {
+    nameInput.value = user?.displayName || "";
+    nameInput.readOnly = true;
+  }
+  if (usernameErrEl) usernameErrEl.textContent = "";
+  editBtn?.classList.remove("hidden");
+  saveBtn?.classList.add("hidden");
+  cancelBtn?.classList.add("hidden");
+  if (saveBtn) saveBtn.disabled = true;
+}
 
 /* ─────────────────── Düzenleme Modunu Aç ─────────────────── */
 
 editBtn?.addEventListener("click", () => {
+  // Orijinal değeri data attribute'a kaydet — dirty karşılaştırması için güvenilir kaynak
+  nameInput.dataset.original = nameInput.value;
   nameInput.readOnly = false;
   nameInput.focus();
+  const len = nameInput.value.length;
+  nameInput.setSelectionRange(len, len);
   editBtn.classList.add("hidden");
   saveBtn.classList.remove("hidden");
+  cancelBtn.classList.remove("hidden");
+  saveBtn.disabled = true; // Henüz değişiklik yok → pasif
 });
 
-/* ─────────────────── Anlık Format Doğrulama ─────────────────── */
+/* ─────────────────── Anlık Format Doğrulama + Dirty Kontrolü ─────────────────── */
 
 nameInput?.addEventListener("input", () => {
   if (nameInput.readOnly || !usernameErrEl) return;
   const val = nameInput.value;
+  const originalName = nameInput.dataset.original || "";
   let msg = "";
+
   if (/\s/.test(val)) msg = "Boşluk kullanılamaz";
   else if (/[A-Z]/.test(val)) msg = "Büyük harf kullanılamaz";
   else if (/[çğıöşüÇĞİÖŞÜ]/.test(val)) msg = "Türkçe karakter kullanılamaz";
   else if (/[^a-z0-9._-]/.test(val)) msg = "Geçersiz karakter";
   else if (val.length > 0 && val.length < 3) msg = "En az 3 karakter gerekli";
+
   usernameErrEl.textContent = msg;
   usernameErrEl.style.color = msg ? "var(--red)" : "";
+
+  // Kaydet: hata yok + değişiklik var + en az 3 karakter
+  const isDirty = val.trim() !== originalName.trim();
+  const isValid = !msg && val.trim().length >= 3;
+  saveBtn.disabled = !(isDirty && isValid);
+});
+
+/* ─────────────────── İptal ─────────────────── */
+
+cancelBtn?.addEventListener("click", () => {
+  resetUsernameEditState();
 });
 
 /* ─────────────────── Kullanıcı Adını Kaydet ─────────────────── */
@@ -180,8 +224,10 @@ saveBtn?.addEventListener("click", async () => {
     if (usernameErrEl) usernameErrEl.textContent = "";
     if (typeof showToast === "function")
       showToast("Kullanıcı adı güncellendi", "success");
+    // Başarı sonrası düzenleme modundan çık
     nameInput.readOnly = true;
     saveBtn.classList.add("hidden");
+    cancelBtn.classList.add("hidden");
     editBtn.classList.remove("hidden");
   } catch (err) {
     const msg =
@@ -192,7 +238,6 @@ saveBtn?.addEventListener("click", async () => {
       usernameErrEl.textContent = msg;
       usernameErrEl.style.color = "var(--red)";
     }
-  } finally {
     saveBtn.disabled = false;
   }
 });
