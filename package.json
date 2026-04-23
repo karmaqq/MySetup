@@ -1,6 +1,6 @@
 {
     "name":  "mysetup",
-    "version":  "2.1.7",
+    "version":  "2.1.8",
     "description":  "Envanter Sistemi",
     "author":  "Karma shbkarma@gmail.com",
     "main":  "main.js",
@@ -9,9 +9,7 @@
                     "build":  "electron-builder"
                 },
     "dependencies":  {
-                         "electron-updater":  "^6.8.3",
-                         "firebase":  "^12.12.1",
-                         "fs-extra":  "^11.1.1"
+                         "electron-updater":  "^6.8.3"
                      },
     "devDependencies":  {
                             "electron":  "^33.0.0",

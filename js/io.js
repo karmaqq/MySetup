@@ -81,15 +81,20 @@ window.showConfirm = function (message, onConfirm) {
 /* ─────────────────── Arama Alanı Dinleyicisi ─────────────────── */
 
 if (searchInput && clearSearch) {
+  let _searchDebounce = null;
   searchInput.addEventListener("input", () => {
     currentSearch = searchInput.value;
     clearSearch.classList.toggle("visible", !!currentSearch);
-    if (typeof renderAll === "function") renderAll();
+    clearTimeout(_searchDebounce);
+    _searchDebounce = setTimeout(() => {
+      if (typeof renderAll === "function") renderAll();
+    }, 180);
   });
 
   clearSearch.addEventListener("click", () => {
     searchInput.value = "";
     currentSearch = "";
+    clearTimeout(_searchDebounce);
     clearSearch.classList.remove("visible");
     if (typeof renderAll === "function") renderAll();
     searchInput.focus();

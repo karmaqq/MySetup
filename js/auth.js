@@ -75,10 +75,6 @@ async function onUserLoggedIn(user) {
   if (userInfo) userInfo.classList.remove("hidden");
   if (userEmailEl) userEmailEl.textContent = user.displayName || "Kullanıcı";
 
-  try {
-    await user.getIdToken(true);
-  } catch (_) {}
-
   if (typeof initUserDataRef === "function") {
     initUserDataRef(user.uid);
   }
@@ -97,8 +93,6 @@ function onUserLoggedOut() {
   if (mainScroll) mainScroll.classList.add("hidden");
   if (appFooter) appFooter.classList.add("hidden");
   if (userInfo) userInfo.classList.add("hidden");
-
-  if (typeof allData !== "undefined") allData = {};
 
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
@@ -147,8 +141,6 @@ function onUserLoggedOut() {
   document.querySelectorAll(".toggle-password").forEach((btn) => {
     btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
   });
-
-  if (typeof initUserDataRef === "function") initUserDataRef(null);
 
   if (typeof closeSettingsModal === "function") closeSettingsModal();
   if (typeof closeChangePassModal === "function") closeChangePassModal();

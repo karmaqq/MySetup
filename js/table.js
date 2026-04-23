@@ -9,28 +9,29 @@
 /* ─────────────────── Filtrelenmiş ve Sıralanmış Liste ─────────────────── */
 
 function getFilteredSortedList() {
+  // allData içindeki verileri diziye çeviriyoruz
   let list = Object.keys(allData).map((id) => ({ id, ...allData[id] }));
 
+  // 1. Arama Filtresi (Yüksek Performanslı)
   if (currentSearch) {
     const q = normalizeTr(currentSearch);
-    list = list.filter((item) =>
-      [item.component, item.brand, item.specs, item.vendor].some((v) =>
-        normalizeTr(v).includes(q),
-      ),
-    );
+    // Artık her satırda 4 alan gezmek yerine hazır etikete bakıyoruz
+    list = list.filter((item) => item._searchTag.includes(q));
   }
 
+  // 2. Durum Filtresi (Orijinal Mantık)
   if (currentStatusFilter !== "all") {
     list = list.filter((item) => {
       const norm = normalizeTr(item.status);
-      if (currentStatusFilter === "saglikli") return norm.includes("saglikl");
+      if (currentStatusFilter === "saglikli") return norm.includes("saglikli");
       if (currentStatusFilter === "bozuk") return norm.includes("bozuk");
       if (currentStatusFilter === "yedek") return norm.includes("yedek");
-      if (currentStatusFilter === "atildi") return norm.includes("atild");
+      if (currentStatusFilter === "atildi") return norm.includes("atildi");
       return true;
     });
   }
 
+  // 3. Sıralama (Orijinal Mantık)
   list.sort((a, b) => {
     let av = a[currentSort.col] ?? "";
     let bv = b[currentSort.col] ?? "";
@@ -40,11 +41,13 @@ function getFilteredSortedList() {
       bv = parseFloat(bv) || 0;
       return currentSort.dir === "asc" ? av - bv : bv - av;
     }
+
     if (currentSort.col === "date") {
       return currentSort.dir === "asc"
         ? new Date(av) - new Date(bv)
         : new Date(bv) - new Date(av);
     }
+
     av = av.toString().toLowerCase();
     bv = bv.toString().toLowerCase();
     return currentSort.dir === "asc"
@@ -365,6 +368,7 @@ function createRowEl(item) {
   const tr = document.createElement("tr");
   tr.dataset.id = item.id;
   tr.addEventListener("dblclick", (e) => {
+    window.getSelection().removeAllRanges();
     const targetCell = e.target.closest("td");
     let focusTarget = "component";
 
@@ -488,25 +492,8 @@ function deleteItem(itemId) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                        TABLO OLAY DİNLEYİCİLERİ                         */
+/*                          YENİ KAYIT SATIRI                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Çift Tıklama Delegasyonu ─────────────────── */
-
-if (tableBody) {
-  tableBody.addEventListener("dblclick", (event) => {
-    const row = event.target.closest("tr");
-    if (!row || row.classList.contains("new-item-row")) return;
-
-    // Çift tıklamada otomatik seçilen metni temizle
-    window.getSelection().removeAllRanges();
-
-    const itemId = row.dataset.id;
-    if (!itemId) return;
-
-    if (typeof openEditModal === "function") openEditModal(itemId);
-  });
-}
 
 /* ─────────────────── Ürün Ekle Butonu ─────────────────── */
 
@@ -521,10 +508,6 @@ if (addItemBtn) {
     tableBody.appendChild(initiateAddRow());
   };
 }
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          YENİ KAYIT SATIRI                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Yeni Kayıt Satırı Oluştur ─────────────────── */
 

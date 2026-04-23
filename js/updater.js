@@ -27,12 +27,6 @@ function setupUpdater(mainWindow) {
   autoUpdater.allowPrerelease = false;
   autoUpdater.channel = "latest";
 
-  /* ─────────────────── Sayfa Yüklendiğinde Versiyon Gönder ─────────────────── */
-
-  _mainWindow.webContents.on("did-finish-load", () => {
-    _mainWindow.webContents.send("app_version", app.getVersion());
-  });
-
   /* ─────────────────── Güncelleme Bulundu ─────────────────── */
 
   autoUpdater.on("update-available", (info) => {
