@@ -1,6 +1,6 @@
 {
     "name":  "mysetup",
-    "version":  "2.1.5",
+    "version":  "2.1.6",
     "description":  "Envanter Sistemi",
     "author":  "Karma shbkarma@gmail.com",
     "main":  "main.js",
@@ -45,7 +45,7 @@
                   "nsis":  {
                                "oneClick":  true,
                                "allowToChangeInstallationDirectory":  false,
-                               "perMachine":  true,
+                               "perMachine":  false,
                                "allowElevation":  true,
                                "runAfterFinish":  true,
                                "installerIcon":  "assets/icon.ico",
