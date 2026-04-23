@@ -97,10 +97,6 @@
   min-width: 0;
 }
 
-.status-image-row .image-upload-cell {
-  margin-left: 0;
-}
-
 /* ─────────────────── Modal-box konum referansı ─────────────────── */
 
 .modal-box {
@@ -272,6 +268,10 @@
   align-items: center;
   gap: 8px;
   margin-left: 16px;
+}
+
+.status-image-row .image-upload-cell {
+  margin-left: 0;
 }
 
 .image-upload-cell button {

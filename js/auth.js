@@ -145,6 +145,8 @@ function onUserLoggedOut() {
   if (typeof closeSettingsModal === "function") closeSettingsModal();
   if (typeof closeChangePassModal === "function") closeChangePassModal();
   if (typeof closeDeleteModal === "function") closeDeleteModal();
+  if (typeof closeEditModal === "function") closeEditModal();
+  openModalCount = 0;
 
   if (authOverlay) authOverlay.classList.add("active");
 }
