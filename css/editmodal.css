@@ -101,42 +101,6 @@
   margin-left: 0;
 }
 
-/* ─────────────────── Görsel Yükleme Butonu ─────────────────── */
-
-.image-upload-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 16px;
-}
-
-.image-upload-cell button {
-  width: 44px;
-  height: 44px;
-  border: 1.5px dashed var(--border2, #ccc);
-  background: var(--surface2, #f8f8f8);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    color 0.2s;
-  color: var(--text-dim);
-}
-
-.image-upload-cell button:hover {
-  border-color: var(--accent, #f5b030);
-  color: var(--accent, #f5b030);
-}
-
-.image-upload-cell button.has-image {
-  border-color: var(--green, #3dd68c);
-  color: var(--green, #3dd68c);
-  background: var(--green-dim, rgba(61, 214, 140, 0.08));
-}
-
 /* ─────────────────── Modal-box konum referansı ─────────────────── */
 
 .modal-box {
@@ -301,12 +265,15 @@
   grid-column: 1 / -1;
 }
 
+/* ─────────────────── Görsel Yükleme Butonu ─────────────────── */
+
 .image-upload-cell {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-left: 16px;
 }
+
 .image-upload-cell button {
   width: 44px;
   height: 44px;
@@ -317,10 +284,16 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+  color: var(--text-dim);
 }
-.image-upload-cell button:hover {
-  border-color: var(--accent, #f5b030);
+
+.image-upload-cell button.has-image {
+  border-color: var(--green, #3dd68c);
+  color: var(--green, #3dd68c);
+  background: var(--green-dim, rgba(61, 214, 140, 0.08));
 }
 
 .image-preview-cell {

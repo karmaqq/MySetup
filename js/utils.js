@@ -15,10 +15,16 @@ const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
 
 /* ─────────────────── Tarih Formatlayıcı ─────────────────── */
 
+const _dateCache = new Map();
 const DATE_FORMAT = (dateString) => {
   if (!dateString) return "-";
+  if (_dateCache.has(dateString)) return _dateCache.get(dateString);
   const date = new Date(dateString);
-  return isNaN(date.getTime()) ? dateString : date.toLocaleDateString("tr-TR");
+  const result = isNaN(date.getTime())
+    ? dateString
+    : date.toLocaleDateString("tr-TR");
+  _dateCache.set(dateString, result);
+  return result;
 };
 
 /* ─────────────────── Durum Sınıfı Haritası ─────────────────── */
@@ -108,10 +114,9 @@ function normalizeTr(s) {
 /* ─────────────────── HTML Karakter Kaçışı ─────────────────── */
 
 function escHtml(str) {
-  return (str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return (str || "").replace(/[&<>]/g, (c) =>
+    c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;",
+  );
 }
 
 /* ─────────────────── Attribute Karakter Kaçışı ─────────────────── */

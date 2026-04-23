@@ -47,10 +47,26 @@ function initUserDataRef(uid) {
   userDataRef.on(
     "value",
     (snap) => {
-      allData = snap.val() || {};
+      const rawData = snap.val() || {};
+
+      // Optimizasyon: Veriyi alırken arama etiketlerini hazırlıyoruz
+      allData = Object.keys(rawData).reduce((acc, id) => {
+        const item = rawData[id];
+        // Orijinal arama alanlarını birleştiriyoruz
+        const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
+
+        acc[id] = {
+          ...item,
+          _searchTag: normalizeTr(searchRaw), // utils.js içindeki fonksiyonu kullanır
+        };
+        return acc;
+      }, {});
+
       if (typeof renderAll === "function") renderAll();
     },
-    () => {},
+    (err) => {
+      console.error("Veri okuma hatası:", err);
+    },
   );
 }
 
