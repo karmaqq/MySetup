@@ -49,15 +49,13 @@ function initUserDataRef(uid) {
     (snap) => {
       const rawData = snap.val() || {};
 
-      // Optimizasyon: Veriyi alırken arama etiketlerini hazırlıyoruz
       allData = Object.keys(rawData).reduce((acc, id) => {
         const item = rawData[id];
-        // Orijinal arama alanlarını birleştiriyoruz
         const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
 
         acc[id] = {
           ...item,
-          _searchTag: normalizeTr(searchRaw), // utils.js içindeki fonksiyonu kullanır
+          _searchTag: normalizeTr(searchRaw),
         };
         return acc;
       }, {});

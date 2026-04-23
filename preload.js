@@ -1,6 +1,5 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-// Mevcut dinleyiciyi temizleyip yenisini ekleyen yardımcı fonksiyon
 function onceListener(channel, handler) {
   ipcRenderer.removeAllListeners(channel);
   ipcRenderer.on(channel, handler);
@@ -15,7 +14,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onUpdateAvailable: (cb) =>
     onceListener("update_available", (_e, version) => cb(version)),
 
-  // İndirme Yüzdesi (updater.js içindeki 'update_progress' ile eşlendi)
+  // İndirme Yüzdesi
   onUpdateProgress: (cb) =>
     onceListener("update_progress", (_e, percent) => cb(percent)),
 

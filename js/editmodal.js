@@ -347,7 +347,6 @@ if (editStarRating) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 document.addEventListener("keydown", (e) => {
-  // Eğer modal açık değilse bu dosyadaki kısayollar çalışmasın
   if (!editModal || !editModal.classList.contains("active")) return;
 
   // 1. ESC: Modalı Kapat
@@ -363,7 +362,7 @@ document.addEventListener("keydown", (e) => {
     return;
   }
 
-  // 3. SHIFT+YÖN TUŞLARI: Modallar (Ürünler) Arası Geçiş
+  // 3. SHIFT+YÖN TUŞLARI
   if (e.shiftKey) {
     const isNext = e.key === "ArrowRight" || e.key === "ArrowUp";
     const isPrev = e.key === "ArrowLeft" || e.key === "ArrowDown";

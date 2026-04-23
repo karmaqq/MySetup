@@ -12,7 +12,6 @@ const settingsTrigger = document.querySelector("#userInfo .settings-icon");
 /* ─────────────────── Modal Kapatma Fonksiyonları ─────────────────── */
 
 function closeSettingsModal() {
-  // resetUsernameEditState aşağıda tanımlandıktan sonra çağrılır
   if (typeof resetUsernameEditState === "function") resetUsernameEditState();
   settingsModal?.classList.remove("active");
 }
@@ -31,7 +30,7 @@ settingsTrigger?.addEventListener("click", (e) => {
   if (e.target?.closest("#logoutBtn")) return;
   const user = auth.currentUser;
   if (!user) return;
-  // Modalı açarken her zaman temiz durumdan başla
+
   const _ni = document.getElementById("settingsDisplayName");
   if (_ni) {
     _ni.value = user.displayName || "";
@@ -121,7 +120,6 @@ function resetUsernameEditState() {
 /* ─────────────────── Düzenleme Modunu Aç ─────────────────── */
 
 editBtn?.addEventListener("click", () => {
-  // Orijinal değeri data attribute'a kaydet — dirty karşılaştırması için güvenilir kaynak
   nameInput.dataset.original = nameInput.value;
   nameInput.readOnly = false;
   nameInput.focus();
@@ -130,7 +128,7 @@ editBtn?.addEventListener("click", () => {
   editBtn.classList.add("hidden");
   saveBtn.classList.remove("hidden");
   cancelBtn.classList.remove("hidden");
-  saveBtn.disabled = true; // Henüz değişiklik yok → pasif
+  saveBtn.disabled = true;
 });
 
 /* ─────────────────── Anlık Format Doğrulama + Dirty Kontrolü ─────────────────── */
@@ -150,7 +148,6 @@ nameInput?.addEventListener("input", () => {
   usernameErrEl.textContent = msg;
   usernameErrEl.style.color = msg ? "var(--red)" : "";
 
-  // Kaydet: hata yok + değişiklik var + en az 3 karakter
   const isDirty = val.trim() !== originalName.trim();
   const isValid = !msg && val.trim().length >= 3;
   saveBtn.disabled = !(isDirty && isValid);
@@ -224,7 +221,7 @@ saveBtn?.addEventListener("click", async () => {
     if (usernameErrEl) usernameErrEl.textContent = "";
     if (typeof showToast === "function")
       showToast("Kullanıcı adı güncellendi", "success");
-    // Başarı sonrası düzenleme modundan çık
+
     nameInput.readOnly = true;
     saveBtn.classList.add("hidden");
     cancelBtn.classList.add("hidden");
