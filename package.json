@@ -1,6 +1,6 @@
 {
     "name":  "mysetup",
-    "version":  "2.1.6",
+    "version":  "2.1.7",
     "description":  "Envanter Sistemi",
     "author":  "Karma shbkarma@gmail.com",
     "main":  "main.js",
@@ -43,8 +43,8 @@
                               "requestedExecutionLevel":  "asInvoker"
                           },
                   "nsis":  {
-                               "oneClick":  true,
-                               "allowToChangeInstallationDirectory":  false,
+                               "oneClick":  false,
+                               "allowToChangeInstallationDirectory":  true,
                                "perMachine":  false,
                                "allowElevation":  true,
                                "runAfterFinish":  true,
