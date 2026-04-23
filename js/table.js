@@ -258,6 +258,21 @@ function renderTableRows(list) {
   tableBody.appendChild(fragment);
 }
 
+  // Satırdaki düzenle ve sil butonları için event delegation
+  if (tableBody) {
+    tableBody.addEventListener("click", function (e) {
+      const btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      if (action === "delete-item") {
+        deleteItem(id);
+      } else if (action === "edit-item") {
+        openEditModal(id);
+      }
+    });
+  }
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          İSTATİSTİKLER                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -469,7 +484,16 @@ function updateItemStatus(itemId, newStatus) {
 /* ─────────────────── Kayıt Silme ─────────────────── */
 
 function deleteItem(itemId) {
-  if (!allData[itemId]) return;
+  console.log("Sil butonuna basıldı. Gelen ID:", itemId);
+
+  if (!allData[itemId]) {
+    console.error(
+      "HATA İPTAL EDİLDİ: Bu ID allData içinde bulunamadı! Aranan ID:",
+      itemId,
+    );
+    showToast("Hata: Silinecek öğe bulunamadı!", "error");
+    return;
+  }
 
   const performDelete = () => {
     if (typeof deleteComponentFromFirebase !== "function") {
@@ -481,7 +505,8 @@ function deleteItem(itemId) {
       .then(() => {
         showToast("Kayıt silindi", "success", 2200);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Firebase silme hatası:", err);
         showToast("Kayıt silinemedi", "error");
       });
   };
