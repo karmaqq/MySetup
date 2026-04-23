@@ -13,15 +13,24 @@ const settingsTrigger = document.querySelector("#userInfo .settings-icon");
 
 function closeSettingsModal() {
   if (typeof resetUsernameEditState === "function") resetUsernameEditState();
-  settingsModal?.classList.remove("active");
+  if (settingsModal) {
+    openModalCount = Math.max(0, openModalCount - 1);
+    settingsModal.classList.remove("active");
+  }
 }
 
 function closeChangePassModal() {
-  changePasswordModal?.classList.remove("active");
+  if (changePasswordModal) {
+    openModalCount = Math.max(0, openModalCount - 1);
+    changePasswordModal.classList.remove("active");
+  }
 }
 
 function closeDeleteModal() {
-  deleteAccountModal?.classList.remove("active");
+  if (deleteAccountModal) {
+    openModalCount = Math.max(0, openModalCount - 1);
+    deleteAccountModal.classList.remove("active");
+  }
 }
 
 /* ─────────────────── Ayarlar Modalını Aç ─────────────────── */
@@ -43,7 +52,10 @@ settingsTrigger?.addEventListener("click", (e) => {
   if (_sb) _sb.disabled = true;
   const _err = document.getElementById("usernameError");
   if (_err) _err.textContent = "";
-  settingsModal?.classList.add("active");
+  if (settingsModal) {
+    openModalCount++;
+    settingsModal.classList.add("active");
+  }
 });
 
 /* ─────────────────── Modal Kapatma Olayları ─────────────────── */
@@ -80,7 +92,10 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
 function goBackToSettings(from) {
   if (from === "changePass") closeChangePassModal();
   if (from === "deleteAcc") closeDeleteModal();
-  settingsModal?.classList.add("active");
+  if (settingsModal) {
+    openModalCount++;
+    settingsModal.classList.add("active");
+  }
 }
 
 document
@@ -247,7 +262,10 @@ saveBtn?.addEventListener("click", async () => {
 
 document.getElementById("openChangePassBtn")?.addEventListener("click", () => {
   closeSettingsModal();
-  changePasswordModal?.classList.add("active");
+  if (changePasswordModal) {
+    openModalCount++;
+    changePasswordModal.classList.add("active");
+  }
 });
 
 /* ─────────────────── Anlık Şifre Doğrulama ─────────────────── */
@@ -376,7 +394,10 @@ document
   .getElementById("openDeleteAccountBtn")
   ?.addEventListener("click", () => {
     closeSettingsModal();
-    deleteAccountModal?.classList.add("active");
+    if (deleteAccountModal) {
+      openModalCount++;
+      deleteAccountModal.classList.add("active");
+    }
   });
 
 /* ─────────────────── Onay Checkbox Kontrolü ─────────────────── */

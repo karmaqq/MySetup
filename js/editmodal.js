@@ -88,7 +88,10 @@ window.openEditModal = function (id, focusTarget = "component") {
   const opinionInput = document.getElementById("editOpinionText");
   if (opinionInput) opinionInput.value = item.opinion || "";
 
-  if (editModal) editModal.classList.add("active");
+  if (editModal) {
+    openModalCount++;
+    editModal.classList.add("active");
+  }
 
   setTimeout(() => {
     const imagePreview = document.getElementById("editImagePreview");
@@ -240,7 +243,10 @@ window.openEditModal = function (id, focusTarget = "component") {
 /* ─────────────────── Düzenleme Modalını Kapat ─────────────────── */
 
 window.closeEditModal = function () {
-  if (editModal) editModal.classList.remove("active");
+  if (editModal) {
+    openModalCount = Math.max(0, openModalCount - 1);
+    editModal.classList.remove("active");
+  }
   editingId = null;
 };
 

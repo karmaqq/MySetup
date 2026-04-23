@@ -45,6 +45,7 @@ let currentSearch = "";
 let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
+let openModalCount = 0;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          DOM REFERANSLARI                                */
