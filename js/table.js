@@ -9,17 +9,13 @@
 /* ─────────────────── Filtrelenmiş ve Sıralanmış Liste ─────────────────── */
 
 function getFilteredSortedList() {
-  // allData içindeki verileri diziye çeviriyoruz
   let list = Object.keys(allData).map((id) => ({ id, ...allData[id] }));
 
-  // 1. Arama Filtresi (Yüksek Performanslı)
   if (currentSearch) {
     const q = normalizeTr(currentSearch);
-    // Artık her satırda 4 alan gezmek yerine hazır etikete bakıyoruz
     list = list.filter((item) => item._searchTag.includes(q));
   }
 
-  // 2. Durum Filtresi (Orijinal Mantık)
   if (currentStatusFilter !== "all") {
     list = list.filter((item) => {
       const norm = normalizeTr(item.status);
@@ -31,7 +27,6 @@ function getFilteredSortedList() {
     });
   }
 
-  // 3. Sıralama (Orijinal Mantık)
   list.sort((a, b) => {
     let av = a[currentSort.col] ?? "";
     let bv = b[currentSort.col] ?? "";
@@ -154,8 +149,10 @@ function renderAll() {
 
 function renderTableRows(list) {
   const unsavedRows = Array.from(tableBody.querySelectorAll(".new-item-row"));
-  tableBody.innerHTML = "";
 
+  const fragment = document.createDocumentFragment();
+
+  // Liste boşsa boş durumu bas ve çık
   if (!list.length) {
     const emptyRow = document.createElement("tr");
     emptyRow.innerHTML = `
@@ -165,8 +162,11 @@ function renderTableRows(list) {
           <span>${currentSearch || currentStatusFilter !== "all" ? "Filtreyle eşleşen kayıt bulunamadı" : "Henüz kayıt yok"}</span>
         </div>
       </td>`;
-    tableBody.appendChild(emptyRow);
-    unsavedRows.forEach((r) => tableBody.appendChild(r));
+    fragment.appendChild(emptyRow);
+    unsavedRows.forEach((r) => fragment.appendChild(r));
+
+    tableBody.innerHTML = "";
+    tableBody.appendChild(fragment);
     return;
   }
 
@@ -189,7 +189,7 @@ function renderTableRows(list) {
       const sep = document.createElement("tr");
       sep.className = "group-separator";
       sep.innerHTML = `<td colspan="7"></td>`;
-      tableBody.appendChild(sep);
+      fragment.appendChild(sep);
 
       const vendorGroups = [];
       let currentVendorGroup = null;
@@ -224,7 +224,7 @@ function renderTableRows(list) {
             ${vendorCell}
             ${buildStatusCellHTML(item)}
           `;
-          tableBody.appendChild(tr);
+          fragment.appendChild(tr);
           dateRowSpanIndex++;
         });
       });
@@ -233,7 +233,7 @@ function renderTableRows(list) {
     const topSep = document.createElement("tr");
     topSep.className = "group-separator";
     topSep.innerHTML = `<td colspan="7"></td>`;
-    tableBody.appendChild(topSep);
+    fragment.appendChild(topSep);
 
     list.forEach((item) => {
       const tr = createRowEl(item);
@@ -248,11 +248,14 @@ function renderTableRows(list) {
         <td class="col-vendor">${escHtml(item.vendor)}</td>
         ${buildStatusCellHTML(item)}
       `;
-      tableBody.appendChild(tr);
+      fragment.appendChild(tr);
     });
   }
 
-  unsavedRows.forEach((r) => tableBody.appendChild(r));
+  unsavedRows.forEach((r) => fragment.appendChild(r));
+
+  tableBody.innerHTML = "";
+  tableBody.appendChild(fragment);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

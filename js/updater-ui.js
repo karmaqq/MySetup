@@ -51,7 +51,6 @@ if (window.electronAPI) {
   /* ─────────────────── Güncelleme Hatası ─────────────────── */
 
   window.electronAPI.onUpdateError?.((errMessage) => {
-    // errMessage parametresi eklendi
     if (!updateBtn) return;
     updateBtn.innerText = "Güncelleme Hatası";
     updateBtn.style.background = "var(--red, #ef4444)";

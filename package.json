@@ -1,6 +1,6 @@
 {
     "name":  "mysetup",
-    "version":  "2.1.8",
+    "version":  "2.1.9",
     "description":  "Envanter Sistemi",
     "author":  "Karma shbkarma@gmail.com",
     "main":  "main.js",
@@ -13,7 +13,7 @@
                      },
     "devDependencies":  {
                             "electron":  "^33.0.0",
-                            "electron-builder":  "^25.0.0",
+                            "electron-builder":  "^26.8.1",
                             "progress-estimator":  "^0.3.1"
                         },
     "build":  {
