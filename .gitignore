@@ -1,4 +1,5 @@
 .env.bat
 update.bat
+optimizasyon.md
 dist/
 node_modules/
