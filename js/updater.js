@@ -51,7 +51,7 @@ function setupUpdater(mainWindow) {
     _mainWindow.webContents.send("update_downloaded");
 
     setTimeout(() => {
-      autoUpdater.quitAndInstall(false, true);
+      autoUpdater.quitAndInstall(true, true);
     }, 2000);
   });
 
