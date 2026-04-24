@@ -169,6 +169,21 @@ tbody tr:hover .col-price {
   border-top: 1px solid var(--border);
 }
 
+/* ─────────────────── Brand URL Icon ─────────────────── */
+.brand-url-icon {
+  display: flex;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--text-dim);
+  transition: color 0.2s;
+}
+
+.brand-url-icon:hover {
+  color: var(--accent);
+}
+
 /* ─────────────────── Boş Durum ─────────────────── */
 
 .empty-cell {

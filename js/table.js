@@ -1,3 +1,56 @@
+// Firebase child event'leri için: Satır ekle/güncelle
+function addOrUpdateTableRow(id, item) {
+  // Filtre ve arama aktifse tam render
+  if (currentSearch || currentStatusFilter !== "all") {
+    renderAll();
+    return;
+  }
+  // Satır zaten varsa güncelle, yoksa ekle
+  let row = tableBody.querySelector(`tr[data-id="${id}"]`);
+  const newItem = { ...item, id };
+  if (row) {
+    // Güncelle
+    const newRow = createRowEl(newItem);
+    const formattedDate = DATE_FORMAT(newItem.date);
+    newRow.innerHTML = `
+      <td class="col-date">${formattedDate}</td>
+      <td class="col-component">${escHtml(newItem.component)}</td>
+      <td class="col-brand">${buildBrandCellHTML(newItem)}</td>
+      <td class="col-specs">${escHtml(newItem.specs)}</td>
+      <td class="col-price">${CURRENCY_FORMAT.format(newItem.price)} ₺</td>
+      <td class="col-vendor">${escHtml(newItem.vendor)}</td>
+      ${buildStatusCellHTML(newItem)}
+    `;
+    tableBody.replaceChild(newRow, row);
+  } else {
+    // Ekle (en alta)
+    const newRow = createRowEl(newItem);
+    const formattedDate = DATE_FORMAT(newItem.date);
+    newRow.innerHTML = `
+      <td class="col-date">${formattedDate}</td>
+      <td class="col-component">${escHtml(newItem.component)}</td>
+      <td class="col-brand">${buildBrandCellHTML(newItem)}</td>
+      <td class="col-specs">${escHtml(newItem.specs)}</td>
+      <td class="col-price">${CURRENCY_FORMAT.format(newItem.price)} ₺</td>
+      <td class="col-vendor">${escHtml(newItem.vendor)}</td>
+      ${buildStatusCellHTML(newItem)}
+    `;
+    tableBody.appendChild(newRow);
+  }
+}
+
+// Firebase child_removed için: Satır sil
+function removeTableRow(id) {
+  // Filtre ve arama aktifse tam render
+  if (currentSearch || currentStatusFilter !== "all") {
+    renderAll();
+    return;
+  }
+  const row = tableBody.querySelector(`tr[data-id="${id}"]`);
+  if (row) row.remove();
+  // Eğer hiç kayıt kalmadıysa boş tabloyu göster
+  if (Object.keys(allData).length === 0) renderAll();
+}
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                     TABLO VERİ GÖSTERME VE YÖNETİMİ                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -18,7 +71,7 @@ function getFilteredSortedList() {
 
   if (currentStatusFilter !== "all") {
     list = list.filter((item) => {
-      const norm = normalizeTr(item.status);
+      const norm = item._statusNorm || normalizeTr(item.status);
       if (currentStatusFilter === "saglikli") return norm.includes("saglikli");
       if (currentStatusFilter === "bozuk") return norm.includes("bozuk");
       if (currentStatusFilter === "yedek") return norm.includes("yedek");
@@ -258,20 +311,32 @@ function renderTableRows(list) {
   tableBody.appendChild(fragment);
 }
 
-  // Satırdaki düzenle ve sil butonları için event delegation
-  if (tableBody) {
-    tableBody.addEventListener("click", function (e) {
-      const btn = e.target.closest("button[data-action]");
-      if (!btn) return;
-      const action = btn.dataset.action;
-      const id = btn.dataset.id;
-      if (action === "delete-item") {
-        deleteItem(id);
-      } else if (action === "edit-item") {
-        openEditModal(id);
-      }
-    });
-  }
+// Satırdaki düzenle, sil ve durum güncelleme event delegation'ı
+function initTableBodyEvents() {
+  if (!tableBody) return;
+  tableBody.addEventListener("click", function (e) {
+    // Hem button hem div yakala
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+
+    if (action === "delete-item") {
+      deleteItem(id);
+    } else if (action === "edit-item") {
+      openEditModal(id);
+    } else if (action === "update-status") {
+      updateItemStatus(id, btn.dataset.status);
+    }
+  });
+}
+
+// DOM yüklendiğinde event delegation başlat
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initTableBodyEvents);
+} else {
+  initTableBodyEvents();
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          İSTATİSTİKLER                                   */
@@ -368,7 +433,7 @@ function buildBrandCellHTML(item) {
   if (item.url) {
     return `<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
       <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${brandText}</span>
-      <a href="${escAttr(item.url)}" target="_blank" title="Ürün Linkine Git" style="display: flex; background: none; border: none; padding: 0; margin: 0; color: var(--text-dim); transition: color 0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">
+      <a href="${escAttr(item.url)}" target="_blank" title="Ürün Linkine Git" class="brand-url-icon">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
           <polyline points="15 3 21 3 21 9"></polyline>
