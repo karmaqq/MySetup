@@ -200,46 +200,48 @@ window.openEditModal = function (id, focusTarget = "component") {
     editModal.classList.add("active");
   }
 
-  setTimeout(() => {
-    const imagePreview = document.getElementById("editImagePreview");
-    const imageUploadBtn = document.getElementById("imageUploadBtn");
-    const imageFileInput = document.getElementById("imageFileInput");
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const imagePreview = document.getElementById("editImagePreview");
+      const imageUploadBtn = document.getElementById("imageUploadBtn");
+      const imageFileInput = document.getElementById("imageFileInput");
 
-    refreshPreview(item.imageUrl || "", imagePreview, imageUploadBtn);
+      refreshPreview(item.imageUrl || "", imagePreview, imageUploadBtn);
 
-    if (imageUploadBtn && !imageUploadBtn._eventsBound) {
-      imageUploadBtn.onclick = () => imageFileInput && imageFileInput.click();
-      imageUploadBtn._eventsBound = true;
-    }
-    if (imageFileInput && !imageFileInput._eventsBound) {
-      imageFileInput.value = "";
-      imageFileInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (file) handleImageFile(file, imagePreview, id, imageUploadBtn);
-      };
-      imageFileInput._eventsBound = true;
-    }
+      if (imageUploadBtn && !imageUploadBtn._eventsBound) {
+        imageUploadBtn.onclick = () => imageFileInput && imageFileInput.click();
+        imageUploadBtn._eventsBound = true;
+      }
+      if (imageFileInput && !imageFileInput._eventsBound) {
+        imageFileInput.value = "";
+        imageFileInput.onchange = (e) => {
+          const file = e.target.files[0];
+          if (file) handleImageFile(file, imagePreview, id, imageUploadBtn);
+        };
+        imageFileInput._eventsBound = true;
+      }
 
-    switch (focusTarget) {
-      case "date":
-        if (editDate) editDate.focus();
-        break;
-      case "brand":
-        if (editBrand) editBrand.focus();
-        break;
-      case "specs":
-        if (editSpecs) editSpecs.focus();
-        break;
-      case "price":
-        if (editPrice) editPrice.focus();
-        break;
-      case "vendor":
-        if (editVendor) editVendor.focus();
-        break;
-      default:
-        if (editComponent) editComponent.focus();
-    }
-  }, 80);
+      switch (focusTarget) {
+        case "date":
+          if (editDate) editDate.focus();
+          break;
+        case "brand":
+          if (editBrand) editBrand.focus();
+          break;
+        case "specs":
+          if (editSpecs) editSpecs.focus();
+          break;
+        case "price":
+          if (editPrice) editPrice.focus();
+          break;
+        case "vendor":
+          if (editVendor) editVendor.focus();
+          break;
+        default:
+          if (editComponent) editComponent.focus();
+      }
+    });
+  });
 };
 
 /* ─────────────────── Düzenleme Modalını Kapat ─────────────────── */

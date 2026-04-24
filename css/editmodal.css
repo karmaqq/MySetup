@@ -330,14 +330,6 @@
   margin-top: 8px;
 }
 
-.btn-username {
-  display: none;
-}
-
-.btn-username.visible {
-  display: block;
-}
-
 /* ─────────────────── Modal Girdileri ─────────────────── */
 
 .modal-input {

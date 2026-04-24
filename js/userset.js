@@ -2,8 +2,6 @@
 /*                       KULLANICI AYARLARI YÖNETİMİ                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-let openModalCount = 0;
-
 /* ─────────────────── Modal Referansları ─────────────────── */
 
 const settingsModal = document.getElementById("userSettingsModal");
@@ -269,7 +267,6 @@ saveBtn?.addEventListener("click", async () => {
 document.getElementById("openChangePassBtn")?.addEventListener("click", () => {
   closeSettingsModal();
   if (changePasswordModal) {
-    openModalCount++;
     changePasswordModal.classList.add("active");
   }
 });
@@ -406,7 +403,6 @@ document
   ?.addEventListener("click", () => {
     closeSettingsModal();
     if (deleteAccountModal) {
-      openModalCount++;
       deleteAccountModal.classList.add("active");
     }
   });
