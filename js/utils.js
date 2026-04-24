@@ -25,7 +25,6 @@ const DATE_FORMAT = (dateString) => {
     ? dateString
     : date.toLocaleDateString("tr-TR");
   if (_dateCache.size >= _DATECACHE_MAX) {
-    // FIFO: en eski anahtarı sil
     const firstKey = _dateCache.keys().next().value;
     if (firstKey !== undefined) _dateCache.delete(firstKey);
   }

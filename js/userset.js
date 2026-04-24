@@ -2,8 +2,8 @@
 /*                       KULLANICI AYARLARI YÖNETİMİ                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-// Açılan modal sayısını izlemek için sayaç (optimizasyon: BULGU-10)
-let openModalCount = 0; // Şu an aktif olan modal pencerelerin sayısı (debug/istatistik amaçlı)
+let openModalCount = 0;
+
 /* ─────────────────── Modal Referansları ─────────────────── */
 
 const settingsModal = document.getElementById("userSettingsModal");
@@ -211,13 +211,13 @@ saveBtn?.addEventListener("click", async () => {
         saveBtn.disabled = false;
         return;
       }
-      // Transaction ile atomic kullanıcı adı kaydı
+
       const usernameRef = database.ref("usernames/" + newKey);
       const txnResult = await usernameRef.transaction((current) => {
         if (current === null || current === user.uid) {
           return user.uid;
         }
-        return; // başka bir kullanıcıya aitse değişiklik yapma
+        return;
       });
       if (
         !txnResult.committed ||
@@ -447,7 +447,6 @@ document
       );
       await user.reauthenticateWithCredential(credential);
 
-      // 1. Realtime Database'den kullanıcı verilerini sil
       if (typeof database !== "undefined" && user.uid) {
         await database.ref("users/" + user.uid).remove();
         const usernameKey = (user.displayName || "").trim().toLowerCase();
@@ -458,8 +457,7 @@ document
         }
       }
 
-      // 2. Storage'dan kullanıcıya ait tüm dosyaları sil
-      if (typeof firebase !== "undefined" && firebase.storage && user.uid) {
+      if (typeof database !== "undefined" && user.uid) {
         try {
           const storageRef = firebase.storage().ref();
           const userFolderRef = storageRef.child(`users/${user.uid}`);
@@ -474,7 +472,6 @@ document
         }
       }
 
-      // 3. Kullanıcıyı sil
       await user.delete();
       if (typeof showToast === "function")
         showToast("Hesabınız kalıcı olarak silindi.", "info");
