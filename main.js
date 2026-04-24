@@ -2,8 +2,7 @@
 /*                          ELECTRON ANA SÜREÇ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* main.js EN ÜST KISIM */
-const { app, BrowserWindow, shell, session, ipcMain } = require("electron"); // ipcMain ve session eklendi
+const { app, BrowserWindow, shell, session, ipcMain } = require("electron");
 const path = require("path");
 const { setupUpdater, checkForUpdates } = require("./js/updater.js");
 let mainWindow;

@@ -1,6 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* DÜZENLEME MODALI                                */
+/*                       DÜZENLEME MODALI YÖNETİMİ                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Global Değişkenler ─────────────────── */
+
+let _resetRafId = null;
+let currentRating = 0;
+
+/* ─────────────────── Görsel Boyutlandırma ─────────────────── */
 
 function applyAdaptiveSize(imgEl, imagePreview) {
   const MIN_W = 180,
@@ -101,8 +108,9 @@ function handleImageFile(file, imagePreview, id, imageUploadBtn) {
       });
     })
     .catch(() => {
-      imagePreview.innerHTML =
-        '<span style="color:var(--red);padding:8px;font-size:12px">Yükleme başarısız</span>';
+      imagePreview.classList.add("hidden");
+      if (typeof showToast === "function")
+        showToast("Yükleme başarısız", "error");
     });
 }
 
@@ -111,9 +119,6 @@ function handleImageFile(file, imagePreview, id, imageUploadBtn) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Önizlemeyi Anında Sıfırla ─────────────────── */
-
-let _resetRafId = null;
-let currentRating = 0;
 
 function _resetPreviewInstant() {
   const imagePreview = document.getElementById("editImagePreview");
@@ -185,7 +190,6 @@ window.openEditModal = function (id, focusTarget = "component") {
       dPart !== undefined ? `${iPart},${dPart}` : item.price ? iPart : "";
   }
 
-  // --- GÖRÜŞLERİM VE YILDIZ VERİSİNİ YÜKLE ---
   currentRating = item.star || 0;
   updateStars(currentRating);
 
@@ -352,20 +356,17 @@ if (editStarRating) {
 document.addEventListener("keydown", (e) => {
   if (!editModal || !editModal.classList.contains("active")) return;
 
-  // 1. ESC: Modalı Kapat
   if (e.key === "Escape") {
     closeEditModal();
     return;
   }
 
-  // 2. CTRL+ENTER: Modalı Kaydet
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
     e.preventDefault();
     saveEditModal();
     return;
   }
 
-  // 3. SHIFT+YÖN TUŞLARI
   if (e.shiftKey) {
     const isNext = e.key === "ArrowRight" || e.key === "ArrowUp";
     const isPrev = e.key === "ArrowLeft" || e.key === "ArrowDown";

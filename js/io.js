@@ -106,7 +106,6 @@ if (searchInput && clearSearch) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 document.addEventListener("keydown", (e) => {
-  // CTRL+F: Arama kutusuna odaklan
   if ((e.ctrlKey || e.metaKey) && e.key === "f") {
     const tag = document.activeElement.tagName;
     if (tag !== "INPUT" && tag !== "TEXTAREA") {
@@ -225,6 +224,7 @@ function processCsv(csvText) {
       try {
         await replaceUserDataInFirebase(importPayload);
         showToast(`${importCount} kayıt sıfırdan yüklendi.`, "success");
+        if (typeof renderAll === "function") renderAll();
       } catch (_error) {
         showToast("CSV aktarımı tamamlanamadı", "error");
       }

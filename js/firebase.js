@@ -1,4 +1,9 @@
-// Tekrarlı item zenginleştirme fonksiyonu
+/* ═══════════════════════════════════════════════════════════════════════════════════ */
+/*                       FIREBASE VERİTABANI YÖNETİMİ                      */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── İtem Zenginleştirme ─────────────────── */
+
 function enrichItem(item) {
   const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
   return {
@@ -7,11 +12,8 @@ function enrichItem(item) {
     _statusNorm: normalizeTr(item.status),
   };
 }
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                       FIREBASE VERİTABANI YÖNETİMİ                      */
-/* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Uygulama Yapılandırması ─────────────────── */
+/* ─────────────────── Firebase Yapılandırma ─────────────────── */
 
 const firebaseConfig = {
   apiKey: "AIzaSyDINeXkzy4JCwt9cSjII5Icm-x_NpmtmK4",
@@ -52,8 +54,6 @@ function initUserDataRef(uid) {
 
   activeBasePath = "users/" + uid + "/components";
   userDataRef = database.ref(activeBasePath);
-
-  // İlk yüklemede tam tablo renderı
   let firstLoad = true;
   userDataRef.once("value").then((snap) => {
     const rawData = snap.val() || {};
@@ -65,7 +65,6 @@ function initUserDataRef(uid) {
     firstLoad = false;
   });
 
-  // Parçalı güncellemeler
   userDataRef.on(
     "child_added",
     (snap) => {

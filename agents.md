@@ -5,6 +5,82 @@
 
 ---
 
+## ✒ Kod Düzenleme Kuralları
+
+### Genel Yorum Başlıkları (3 Satır)
+
+```
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                                 BAŞLIK METNİ                        */
+/* ═══════════════════════════════════════════════════════════════════ */
+```
+
+- Üst çizgi: 64 karakter `=`
+- Orta satır: /_ ile boşluk, büyük harf BAŞLIK, boşluk ile _/
+- Alt çizgi: 64 karakter `=`
+
+### Normal Yorum Başlıkları
+
+```
+/* ─────────────────── Yorum Başlığı ─────────────────── */
+```
+
+- Kısa çizgi `-`: 20 karakter
+- Yorum: kısa ve öz
+- Kısa çizgi `-`: 20 karakter
+
+### Fonksiyon İçi Yorumlar
+
+- **YOK** — Kod satırında iç yorum `//` veya `/* */` **OLMAZ**
+- İşlev birden fazla adım içeriyorsa `1.` `2.` `3.` ile numaralandır
+
+### Girinti Kuralları
+
+| Yapı             | Girinti     |
+| ---------------- | ----------- |
+| Dosya başı yorum | 0 (satır 1) |
+| Fonksiyon bloğu  | 2 boşluk    |
+| İç içe blok      | +2 boşluk   |
+| Koşul/iterasyon  | +2 boşluk   |
+| Return/değişken  | +4 boşluk   |
+
+### Örnek Yapı
+
+```javascript
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                       FONKSİYON GRUBU BAŞLIĞI                    */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Yorum Başlığı ─────────────────── */
+
+function fonksiyonAdi(param1, param2) {
+  const localDeger = param1 + param2;
+
+  if (param2 > 0) {
+    return {
+      sonuc: localDeger,
+      isaret: param2,
+    };
+  }
+
+  return null;
+}
+
+/* ─────────────────── Birden Fazla İşlev ─────────────────── */
+
+function islem1() {
+  return 1;
+}
+function islem2() {
+  return 2;
+}
+function islem3() {
+  return 3;
+}
+```
+
+---
+
 ## 🔒 Evrensel Kısıtlamalar (Her Dosyada Geçerli)
 
 - `.env.bat` **asla commit'e girmez** — `GH_TOKEN` içerir. `.gitignore`'da olsa da patch/diff/yedek olarak bile oluşturma.
@@ -411,6 +487,18 @@ Versiyon yönetimine dokunulacaksa `npm version patch --no-git-tag-version` kull
 | `js/table.js`    | Tablo render, sıralama, filtreleme, istatistikler    |
 | `js/modal.js`    | Ürün ekle/düzenle modal'ı, Firebase yazma            |
 | `js/io.js`       | CSV içe/dışa aktarma                                 |
+| `js/utils.js`    | Toast, format yardımcıları (global scope)            |
+| `css/base.css`   | CSS değişkenleri, reset — tüm CSS'in temeli          |
+| `index.html`     | Tek HTML dosyası, tüm DOM yapısı ve script yüklemesi |
+| `package.json`   | Build config, publish config, versiyon               |
+| `.env.bat`       | `GH_TOKEN` — **asla commit'e girmez**                |
+|                  |
+| `js/utils.js`    | Toast, format yardımcıları (global scope)            |
+| `css/base.css`   | CSS değişkenleri, reset — tüm CSS'in temeli          |
+| `index.html`     | Tek HTML dosyası, tüm DOM yapısı ve script yüklemesi |
+| `package.json`   | Build config, publish config, versiyon               |
+| `.env.bat`       | `GH_TOKEN` — **asla commit'e girmez**                |
+|                  |
 | `js/utils.js`    | Toast, format yardımcıları (global scope)            |
 | `css/base.css`   | CSS değişkenleri, reset — tüm CSS'in temeli          |
 | `index.html`     | Tek HTML dosyası, tüm DOM yapısı ve script yüklemesi |

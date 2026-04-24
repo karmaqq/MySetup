@@ -179,7 +179,8 @@ function buildBrandCellHTML(item) {
   return brandText;
 }
 
-// Tekrarlı tablo satırı HTML şablonu fonksiyonu
+/* ─────────────────── Tablo Satırı HTML Şablonu ─────────────────── */
+
 function buildRowHTML(item) {
   const formattedDate = DATE_FORMAT(item.date);
   return `
@@ -368,9 +369,10 @@ function renderAll() {
 /* VERİ YÖNETİMİ VE CRUD İŞLEMLERİ                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-// Firebase child event'leri için: Satır ekle/güncelle
+/* ─────────────────── Firebase Ekle/Güncelle ─────────────────── */
+
 function addOrUpdateTableRow(id, item) {
-  if (currentSearch || currentStatusFilter !== "all") {
+  if (currentSearch || currentStatusFilter !== "all" || currentSort.col === "date") {
     renderAll();
     return;
   }
@@ -387,9 +389,10 @@ function addOrUpdateTableRow(id, item) {
   }
 }
 
-// Firebase child_removed için: Satır sil
+/* ─────────────────── Firebase Satır Silme ─────────────────── */
+
 function removeTableRow(id) {
-  if (currentSearch || currentStatusFilter !== "all") {
+  if (currentSearch || currentStatusFilter !== "all" || currentSort.col === "date") {
     renderAll();
     return;
   }
