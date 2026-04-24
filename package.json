@@ -1,6 +1,6 @@
 {
     "name":  "mysetup",
-    "version":  "2.2.3",
+    "version":  "2.2.4",
     "description":  "Envanter Sistemi",
     "author":  "Karma shbkarma@gmail.com",
     "main":  "main.js",
@@ -13,8 +13,7 @@
                      },
     "devDependencies":  {
                             "electron":  "^33.0.0",
-                            "electron-builder":  "^26.8.1",
-                            "progress-estimator":  "^0.3.1"
+                            "electron-builder":  "^26.8.1"
                         },
     "build":  {
                   "appId":  "com.mysetup.app",
@@ -49,7 +48,7 @@
                                "installerIcon":  "assets/icon.ico",
                                "uninstallerIcon":  "assets/icon.ico",
                                "shortcutName":  "MySetup",
-                               "deleteAppDataOnUninstall":  false,
+                               "deleteAppDataOnUninstall":  true,
                                "warningsAsErrors":  false,
                                "createDesktopShortcut":  true,
                                "createStartMenuShortcut":  true

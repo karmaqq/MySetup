@@ -14,21 +14,18 @@ const settingsTrigger = document.querySelector("#userInfo .settings-icon");
 function closeSettingsModal() {
   if (typeof resetUsernameEditState === "function") resetUsernameEditState();
   if (settingsModal) {
-    openModalCount = Math.max(0, openModalCount - 1);
     settingsModal.classList.remove("active");
   }
 }
 
 function closeChangePassModal() {
   if (changePasswordModal) {
-    openModalCount = Math.max(0, openModalCount - 1);
     changePasswordModal.classList.remove("active");
   }
 }
 
 function closeDeleteModal() {
   if (deleteAccountModal) {
-    openModalCount = Math.max(0, openModalCount - 1);
     deleteAccountModal.classList.remove("active");
   }
 }
@@ -53,7 +50,6 @@ settingsTrigger?.addEventListener("click", (e) => {
   const _err = document.getElementById("usernameError");
   if (_err) _err.textContent = "";
   if (settingsModal) {
-    openModalCount++;
     settingsModal.classList.add("active");
   }
 });
@@ -93,7 +89,6 @@ function goBackToSettings(from) {
   if (from === "changePass") closeChangePassModal();
   if (from === "deleteAcc") closeDeleteModal();
   if (settingsModal) {
-    openModalCount++;
     settingsModal.classList.add("active");
   }
 }
@@ -214,8 +209,18 @@ saveBtn?.addEventListener("click", async () => {
         saveBtn.disabled = false;
         return;
       }
-      const snap = await database.ref("usernames/" + newKey).once("value");
-      if (snap.exists() && snap.val() !== user.uid) {
+      // Transaction ile atomic kullanıcı adı kaydı
+      const usernameRef = database.ref("usernames/" + newKey);
+      const txnResult = await usernameRef.transaction((current) => {
+        if (current === null || current === user.uid) {
+          return user.uid;
+        }
+        return; // başka bir kullanıcıya aitse değişiklik yapma
+      });
+      if (
+        !txnResult.committed ||
+        (txnResult.snapshot.exists() && txnResult.snapshot.val() !== user.uid)
+      ) {
         if (usernameErrEl) {
           usernameErrEl.textContent = "Bu kullanıcı adı zaten alınmış";
           usernameErrEl.style.color = "var(--red)";
@@ -223,7 +228,6 @@ saveBtn?.addEventListener("click", async () => {
         saveBtn.disabled = false;
         return;
       }
-      await database.ref("usernames/" + newKey).set(user.uid);
       if (oldName && oldName !== newKey) {
         try {
           await database.ref("usernames/" + oldName).set(null);
@@ -436,6 +440,7 @@ document
       );
       await user.reauthenticateWithCredential(credential);
 
+      // 1. Realtime Database'den kullanıcı verilerini sil
       if (typeof database !== "undefined" && user.uid) {
         await database.ref("users/" + user.uid).remove();
         const usernameKey = (user.displayName || "").trim().toLowerCase();
@@ -446,6 +451,27 @@ document
         }
       }
 
+      // 2. Storage'dan kullanıcıya ait tüm dosyaları sil
+      if (typeof firebase !== "undefined" && firebase.storage && user.uid) {
+        try {
+          const storageRef = firebase.storage().ref();
+          const userFolderRef = storageRef.child(`users/${user.uid}`);
+          // Tüm alt dosya ve klasörleri listele ve sil
+          async function deleteAllInFolder(ref) {
+            const list = await ref.listAll();
+            // Dosyaları sil
+            await Promise.all(list.items.map((item) => item.delete()));
+            // Alt klasörler için recursive silme
+            await Promise.all(list.prefixes.map(deleteAllInFolder));
+          }
+          await deleteAllInFolder(userFolderRef);
+        } catch (storageErr) {
+          // Storage'da dosya yoksa veya erişim yoksa sessiz geç
+          console.warn("Storage silme hatası:", storageErr);
+        }
+      }
+
+      // 3. Kullanıcıyı sil
       await user.delete();
       if (typeof showToast === "function")
         showToast("Hesabınız kalıcı olarak silindi.", "info");

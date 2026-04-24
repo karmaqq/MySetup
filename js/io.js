@@ -242,7 +242,7 @@ if (importCsvBtn && importCsvInput) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => processCsv(ev.target.result);
-    reader.readAsText(file);
+    reader.readAsText(file, "UTF-8");
     importCsvInput.value = "";
   });
 }

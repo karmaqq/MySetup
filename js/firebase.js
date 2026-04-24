@@ -44,24 +44,67 @@ function initUserDataRef(uid) {
   activeBasePath = "users/" + uid + "/components";
   userDataRef = database.ref(activeBasePath);
 
+  // İlk yüklemede tam tablo renderı
+  let firstLoad = true;
+  userDataRef.once("value").then((snap) => {
+    const rawData = snap.val() || {};
+    allData = Object.keys(rawData).reduce((acc, id) => {
+      const item = rawData[id];
+      const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
+      acc[id] = {
+        ...item,
+        _searchTag: normalizeTr(searchRaw),
+        _statusNorm: normalizeTr(item.status),
+      };
+      return acc;
+    }, {});
+    if (typeof renderAll === "function") renderAll();
+    firstLoad = false;
+  });
+
+  // Parçalı güncellemeler
+  userDataRef.on("child_added", (snap) => {
+    if (firstLoad) return; // İlk yüklemede zaten renderAll çağrıldı
+    const id = snap.key;
+    const item = snap.val();
+    const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
+    allData[id] = {
+      ...item,
+      _searchTag: normalizeTr(searchRaw),
+      _statusNorm: normalizeTr(item.status),
+    };
+    if (typeof addOrUpdateTableRow === "function")
+      addOrUpdateTableRow(id, allData[id]);
+    if (typeof updateStats === "function") updateStats(getFilteredSortedList());
+    if (typeof updateResultCount === "function")
+      updateResultCount(getFilteredSortedList().length);
+  });
+  userDataRef.on("child_changed", (snap) => {
+    const id = snap.key;
+    const item = snap.val();
+    const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
+    allData[id] = {
+      ...item,
+      _searchTag: normalizeTr(searchRaw),
+      _statusNorm: normalizeTr(item.status),
+    };
+    if (typeof addOrUpdateTableRow === "function")
+      addOrUpdateTableRow(id, allData[id]);
+    if (typeof updateStats === "function") updateStats(getFilteredSortedList());
+    if (typeof updateResultCount === "function")
+      updateResultCount(getFilteredSortedList().length);
+  });
+  userDataRef.on("child_removed", (snap) => {
+    const id = snap.key;
+    delete allData[id];
+    if (typeof removeTableRow === "function") removeTableRow(id);
+    if (typeof updateStats === "function") updateStats(getFilteredSortedList());
+    if (typeof updateResultCount === "function")
+      updateResultCount(getFilteredSortedList().length);
+  });
   userDataRef.on(
     "value",
-    (snap) => {
-      const rawData = snap.val() || {};
-
-      allData = Object.keys(rawData).reduce((acc, id) => {
-        const item = rawData[id];
-        const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
-
-        acc[id] = {
-          ...item,
-          _searchTag: normalizeTr(searchRaw),
-        };
-        return acc;
-      }, {});
-
-      if (typeof renderAll === "function") renderAll();
-    },
+    (snap) => {},
     (err) => {
       console.error("Veri okuma hatası:", err);
     },

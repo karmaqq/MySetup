@@ -89,7 +89,6 @@ window.openEditModal = function (id, focusTarget = "component") {
   if (opinionInput) opinionInput.value = item.opinion || "";
 
   if (editModal) {
-    openModalCount++;
     editModal.classList.add("active");
   }
 
@@ -244,7 +243,6 @@ window.openEditModal = function (id, focusTarget = "component") {
 
 window.closeEditModal = function () {
   if (editModal) {
-    openModalCount = Math.max(0, openModalCount - 1);
     editModal.classList.remove("active");
   }
   editingId = null;
