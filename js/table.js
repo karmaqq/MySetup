@@ -64,25 +64,73 @@ function getFilteredSortedList() {
 /* İSTATİSTİKLER VE GÜNCELLEMELER                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── İstatistik Kartlarını Güncelle ─────────────────── */
-function updateStats(filteredList) {
-  let total = 0,
-    count = 0,
-    healthy = 0,
-    mostExp = null;
+/* ─────────────────── İstatistik Önbelleğini Güncelle (Delta) ─────────────────── */
+function updateStatsCacheOnChange(item, oldItem, isRemove) {
+  const newPrice = parseFloat(item.price) || 0;
+  const oldPrice = oldItem ? parseFloat(oldItem.price) || 0 : 0;
+
+  if (isRemove) {
+    _statsCache.total -= oldPrice;
+    _statsCache.count--;
+    if (oldItem && normalizeTr(oldItem.status).includes("saglikl")) {
+      _statsCache.healthy--;
+    }
+    if (_statsCache.mostExpId === item.id) {
+      rebuildStatsCache();
+    }
+  } else {
+    if (!oldItem) {
+      _statsCache.total += newPrice;
+      _statsCache.count++;
+      if (normalizeTr(item.status).includes("saglikl")) {
+        _statsCache.healthy++;
+      }
+    } else {
+      const priceDiff = newPrice - oldPrice;
+      if (priceDiff !== 0) {
+        _statsCache.total += priceDiff;
+      }
+      const oldHealthy = normalizeTr(oldItem.status).includes("saglikl");
+      const newHealthy = normalizeTr(item.status).includes("saglikl");
+      if (!oldHealthy && newHealthy) {
+        _statsCache.healthy++;
+      } else if (oldHealthy && !newHealthy) {
+        _statsCache.healthy--;
+      }
+    }
+    if (newPrice > _statsCache.mostExpPrice) {
+      _statsCache.mostExpPrice = newPrice;
+      _statsCache.mostExpId = item.id;
+    }
+  }
+}
+function rebuildStatsCache() {
+  _statsCache.total = 0;
+  _statsCache.count = 0;
+  _statsCache.healthy = 0;
+  _statsCache.mostExpId = null;
+  _statsCache.mostExpPrice = 0;
+
   for (const i of Object.values(allData)) {
     const price = parseFloat(i.price) || 0;
-    total += price;
-    count++;
-    if (normalizeTr(i.status).includes("saglikl")) healthy++;
-    if (!mostExp || price > (parseFloat(mostExp.price) || 0)) mostExp = i;
+    _statsCache.total += price;
+    _statsCache.count++;
+    if (normalizeTr(i.status).includes("saglikl")) _statsCache.healthy++;
+    if (price > _statsCache.mostExpPrice) {
+      _statsCache.mostExpPrice = price;
+      _statsCache.mostExpId = i.id;
+    }
   }
+}
 
-  if (statTotal) statTotal.textContent = CURRENCY_FORMAT.format(total) + " ₺";
-  if (statCount) statCount.textContent = count;
-  if (statHealthy) statHealthy.textContent = healthy;
+function updateStats(filteredList) {
+  if (statTotal) statTotal.textContent = CURRENCY_FORMAT.format(_statsCache.total) + " ₺";
+  if (statCount) statCount.textContent = _statsCache.count;
+  if (statHealthy) statHealthy.textContent = _statsCache.healthy;
+
+  const mostExpItem = allData[_statsCache.mostExpId];
   if (statExpensive)
-    statExpensive.textContent = mostExp ? mostExp.component : "—";
+    statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
 
   let filteredTotal = 0;
   for (const i of filteredList) {
@@ -165,8 +213,8 @@ function buildStatusCellHTML(item) {
 function buildBrandCellHTML(item) {
   const brandText = escHtml(item.brand || "-");
   if (item.url) {
-    return `<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-      <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${brandText}</span>
+    return `<div class="brand-cell-inner">
+      <span class="brand-cell-text">${brandText}</span>
       <a href="${escAttr(item.url)}" target="_blank" title="Ürün Linkine Git" class="brand-url-icon">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -190,6 +238,19 @@ function buildRowHTML(item) {
     <td class="col-specs">${escHtml(item.specs)}</td>
     <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
     <td class="col-vendor">${escHtml(item.vendor)}</td>
+    ${buildStatusCellHTML(item)}
+  `;
+}
+
+/* ─────────────────── Gruplamalı Satır HTML ─────────────────── */
+function buildGroupRowHTML(item, dateCell, vendorCell) {
+  return `
+    ${dateCell}
+    <td class="col-component">${escHtml(item.component)}</td>
+    <td class="col-brand">${buildBrandCellHTML(item)}</td>
+    <td class="col-specs">${escHtml(item.specs)}</td>
+    <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
+    ${vendorCell}
     ${buildStatusCellHTML(item)}
   `;
 }
@@ -297,15 +358,7 @@ function renderTableRows(list) {
               ? `<td class="col-vendor" rowspan="${vGroup.items.length}">${escHtml(vGroup.name)}</td>`
               : "";
 
-          tr.innerHTML = `
-            ${dateCell}
-            <td class="col-component">${escHtml(item.component)}</td>
-            <td class="col-brand">${buildBrandCellHTML(item)}</td>
-            <td class="col-specs">${escHtml(item.specs)}</td>
-            <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
-            ${vendorCell}
-            ${buildStatusCellHTML(item)}
-          `;
+          tr.innerHTML = buildGroupRowHTML(item, dateCell, vendorCell);
           fragment.appendChild(tr);
           dateRowSpanIndex++;
         });
@@ -319,17 +372,7 @@ function renderTableRows(list) {
 
     list.forEach((item) => {
       const tr = createRowEl(item);
-      const formattedDate = DATE_FORMAT(item.date);
-
-      tr.innerHTML = `
-        <td class="col-date">${formattedDate}</td>
-        <td class="col-component">${escHtml(item.component)}</td>
-        <td class="col-brand">${buildBrandCellHTML(item)}</td>
-        <td class="col-specs">${escHtml(item.specs)}</td>
-        <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
-        <td class="col-vendor">${escHtml(item.vendor)}</td>
-        ${buildStatusCellHTML(item)}
-      `;
+      tr.innerHTML = buildRowHTML(item);
       fragment.appendChild(tr);
     });
   }
@@ -349,6 +392,8 @@ function renderAll() {
     updateResultCount(list.length);
     return;
   }
+
+  rebuildStatsCache();
 
   const wrapper = document.querySelector(".table-wrapper");
   const scrollTop = wrapper ? wrapper.scrollTop : 0;
@@ -372,33 +417,63 @@ function renderAll() {
 /* ─────────────────── Firebase Ekle/Güncelle ─────────────────── */
 
 function addOrUpdateTableRow(id, item) {
-  if (currentSearch || currentStatusFilter !== "all" || currentSort.col === "date") {
+  const useFullRender =
+    currentSearch ||
+    currentStatusFilter !== "all" ||
+    currentSort.col === "date";
+
+  if (useFullRender) {
     renderAll();
     return;
   }
-  let row = tableBody.querySelector(`tr[data-id="${id}"]`);
+
+  const row = tableBody.querySelector(`tr[data-id="${id}"]`);
   const newItem = { ...item, id };
+
   if (row) {
     const newRow = createRowEl(newItem);
     newRow.innerHTML = buildRowHTML(newItem);
-    tableBody.replaceChild(newRow, row);
+    row.replaceWith(newRow);
   } else {
+    const topSep = tableBody.querySelector(".group-separator");
     const newRow = createRowEl(newItem);
     newRow.innerHTML = buildRowHTML(newItem);
-    tableBody.appendChild(newRow);
+    if (topSep && topSep.nextSibling) {
+      tableBody.insertBefore(newRow, topSep.nextSibling);
+    } else {
+      tableBody.appendChild(newRow);
+    }
+  }
+
+  if (typeof updateResultCount === "function") {
+    updateResultCount(Object.keys(allData).length);
   }
 }
 
 /* ─────────────────── Firebase Satır Silme ─────────────────── */
 
 function removeTableRow(id) {
-  if (currentSearch || currentStatusFilter !== "all" || currentSort.col === "date") {
+  const useFullRender =
+    currentSearch ||
+    currentStatusFilter !== "all" ||
+    currentSort.col === "date";
+
+  if (useFullRender) {
     renderAll();
     return;
   }
+
   const row = tableBody.querySelector(`tr[data-id="${id}"]`);
   if (row) row.remove();
-  if (Object.keys(allData).length === 0) renderAll();
+
+  if (Object.keys(allData).length === 0) {
+    renderAll();
+    return;
+  }
+
+  if (typeof updateResultCount === "function") {
+    updateResultCount(Object.keys(allData).length);
+  }
 }
 
 /* ─────────────────── Sadece Durum Değişikliği Senkronu ─────────────────── */

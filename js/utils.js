@@ -25,8 +25,12 @@ const DATE_FORMAT = (dateString) => {
     ? dateString
     : date.toLocaleDateString("tr-TR");
   if (_dateCache.size >= _DATECACHE_MAX) {
-    const firstKey = _dateCache.keys().next().value;
-    if (firstKey !== undefined) _dateCache.delete(firstKey);
+    const deleteCount = Math.floor(_DATECACHE_MAX * 0.2);
+    let removed = 0;
+    for (const key of _dateCache.keys()) {
+      _dateCache.delete(key);
+      if (++removed >= deleteCount) break;
+    }
   }
   _dateCache.set(dateString, result);
   return result;
@@ -50,6 +54,15 @@ let currentSearch = "";
 let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
+
+/* ─────────────────── İstatistik Önbelleği ─────────────────── */
+let _statsCache = {
+  total: 0,
+  count: 0,
+  healthy: 0,
+  mostExpId: null,
+  mostExpPrice: 0,
+};
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          DOM REFERANSLARI                                */
@@ -137,7 +150,12 @@ function escHtml(str) {
 /* ─────────────────── Attribute Karakter Kaçışı ─────────────────── */
 
 function escAttr(str) {
-  return escHtml(str).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return (str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 /* ─────────────────── Güvenli Harici URL Doğrulama ─────────────────── */

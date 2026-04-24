@@ -45,6 +45,12 @@ function initUserDataRef(uid) {
     userDataRef = null;
   }
 
+  _statsCache.total = 0;
+  _statsCache.count = 0;
+  _statsCache.healthy = 0;
+  _statsCache.mostExpId = null;
+  _statsCache.mostExpPrice = 0;
+
   if (!uid) {
     activeBasePath = null;
     allData = {};
@@ -61,6 +67,7 @@ function initUserDataRef(uid) {
       acc[id] = enrichItem(rawData[id]);
       return acc;
     }, {});
+    rebuildStatsCache();
     if (typeof renderAll === "function") renderAll();
     firstLoad = false;
   });
@@ -71,13 +78,15 @@ function initUserDataRef(uid) {
       if (firstLoad) return;
       const id = snap.key;
       const item = enrichItem(snap.val());
+      const oldItem = allData[id];
       allData[id] = item;
+      updateStatsCacheOnChange(item, oldItem, false);
       if (typeof addOrUpdateTableRow === "function")
         addOrUpdateTableRow(id, allData[id]);
-      if (typeof updateStats === "function")
-        updateStats(getFilteredSortedList());
-      if (typeof updateResultCount === "function")
-        updateResultCount(getFilteredSortedList().length);
+      if (typeof updateResultCount === "function") {
+        const filteredList = getFilteredSortedList();
+        updateResultCount(filteredList.length);
+      }
     },
     (err) => console.error("child_added hata:", err),
   );
@@ -86,13 +95,15 @@ function initUserDataRef(uid) {
     (snap) => {
       const id = snap.key;
       const item = enrichItem(snap.val());
+      const oldItem = allData[id];
       allData[id] = item;
+      updateStatsCacheOnChange(item, oldItem, false);
       if (typeof addOrUpdateTableRow === "function")
         addOrUpdateTableRow(id, allData[id]);
-      if (typeof updateStats === "function")
-        updateStats(getFilteredSortedList());
-      if (typeof updateResultCount === "function")
-        updateResultCount(getFilteredSortedList().length);
+      if (typeof updateResultCount === "function") {
+        const filteredList = getFilteredSortedList();
+        updateResultCount(filteredList.length);
+      }
     },
     (err) => console.error("child_changed hata:", err),
   );
@@ -100,12 +111,14 @@ function initUserDataRef(uid) {
     "child_removed",
     (snap) => {
       const id = snap.key;
+      const oldItem = allData[id];
       delete allData[id];
+      if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
       if (typeof removeTableRow === "function") removeTableRow(id);
-      if (typeof updateStats === "function")
-        updateStats(getFilteredSortedList());
-      if (typeof updateResultCount === "function")
-        updateResultCount(getFilteredSortedList().length);
+      if (typeof updateResultCount === "function") {
+        const filteredList = getFilteredSortedList();
+        updateResultCount(filteredList.length);
+      }
     },
     (err) => console.error("child_removed hata:", err),
   );

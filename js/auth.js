@@ -189,19 +189,13 @@ function validatePasswords() {
     return;
   }
 
-  if (p1 === p2 && p1.length >= 6) {
-    regPasswordInput?.classList.replace("match-error", "match-success");
-    regPasswordConfirm?.classList.replace("match-error", "match-success");
-    regPasswordInput?.classList.add("match-success");
-    regPasswordConfirm?.classList.add("match-success");
-  } else {
-    regPasswordInput?.classList.replace("match-success", "match-error");
-    regPasswordConfirm?.classList.replace("match-success", "match-error");
-    if (p2.length > 0) {
-      regPasswordInput?.classList.add("match-error");
-      regPasswordConfirm?.classList.add("match-error");
-    }
-  }
+  const isMatch = p1 === p2 && p1.length >= 6;
+  const hasInput = p2.length > 0;
+
+  regPasswordInput?.classList.toggle("match-success", isMatch);
+  regPasswordInput?.classList.toggle("match-error", !isMatch && hasInput);
+  regPasswordConfirm?.classList.toggle("match-success", isMatch);
+  regPasswordConfirm?.classList.toggle("match-error", !isMatch && hasInput);
 }
 
 regPasswordInput?.addEventListener("input", validatePasswords);
