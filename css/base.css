@@ -1,4 +1,37 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
+/* YEREL FONT YÜKLEME                                    */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("../assets/fonts/ibm-plex-sans-variable.ttf") format("truetype");
+  font-weight: 100 900;
+  font-stretch: 75 125;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../assets/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../assets/fonts/JetBrainsMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Syne";
+  src: url("../assets/fonts/syne-variable.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /* GENEL DEĞİŞKENLER VE SIFIRLAMA                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -27,8 +60,8 @@
   --yellow-dim: rgba(245, 200, 66, 0.12);
   --purple: #b57aff;
   --purple-dim: rgba(181, 122, 255, 0.12);
-  --font-ui: "DM Sans", system-ui, sans-serif;
-  --font-data: "Roboto Mono", monospace;
+  --font-ui: "IBM Plex Sans", system-ui, sans-serif;
+  --font-data: "JetBrains Mono", monospace;
   --font-display: "Syne", sans-serif;
   --radius: 8px;
   --radius-sm: 5px;
