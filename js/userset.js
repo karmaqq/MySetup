@@ -2,6 +2,8 @@
 /*                       KULLANICI AYARLARI YÖNETİMİ                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+// Açılan modal sayısını izlemek için sayaç (optimizasyon: BULGU-10)
+let openModalCount = 0; // Şu an aktif olan modal pencerelerin sayısı (debug/istatistik amaçlı)
 /* ─────────────────── Modal Referansları ─────────────────── */
 
 const settingsModal = document.getElementById("userSettingsModal");
@@ -381,6 +383,11 @@ document
         err.code === "auth/invalid-credential"
           ? "Mevcut şifre hatalı."
           : "Bir hata oluştu.";
+      const oldPassInput = document.getElementById("oldPassword");
+      if (oldPassInput) {
+        oldPassInput.value = "";
+        oldPassInput.focus();
+      }
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = "Şifreyi Kaydet";
@@ -456,17 +463,13 @@ document
         try {
           const storageRef = firebase.storage().ref();
           const userFolderRef = storageRef.child(`users/${user.uid}`);
-          // Tüm alt dosya ve klasörleri listele ve sil
           async function deleteAllInFolder(ref) {
             const list = await ref.listAll();
-            // Dosyaları sil
             await Promise.all(list.items.map((item) => item.delete()));
-            // Alt klasörler için recursive silme
             await Promise.all(list.prefixes.map(deleteAllInFolder));
           }
           await deleteAllInFolder(userFolderRef);
         } catch (storageErr) {
-          // Storage'da dosya yoksa veya erişim yoksa sessiz geç
           console.warn("Storage silme hatası:", storageErr);
         }
       }

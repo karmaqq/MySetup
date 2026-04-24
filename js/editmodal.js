@@ -2,6 +2,110 @@
 /* DÜZENLEME MODALI                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+function applyAdaptiveSize(imgEl, imagePreview) {
+  const MIN_W = 180,
+    MIN_H = 140,
+    MAX_W = 340,
+    MAX_H = 260;
+  const nw = imgEl.naturalWidth || 1;
+  const nh = imgEl.naturalHeight || 1;
+  const ratio = nw / nh;
+  let w, h;
+  if (ratio >= 1) {
+    w = MAX_W;
+    h = Math.round(w / ratio);
+    if (h < MIN_H) {
+      h = MIN_H;
+      w = Math.round(h * ratio);
+    }
+    if (w > MAX_W) {
+      w = MAX_W;
+      h = Math.round(w / ratio);
+    }
+  } else {
+    h = MAX_H;
+    w = Math.round(h * ratio);
+    if (w < MIN_W) {
+      w = MIN_W;
+      h = Math.round(w / ratio);
+    }
+    if (h > MAX_H) {
+      h = MAX_H;
+      w = Math.round(h * ratio);
+    }
+  }
+  w = Math.max(MIN_W, Math.min(MAX_W, w));
+  h = Math.max(MIN_H, Math.min(MAX_H, h));
+  imagePreview.style.width = w + "px";
+  imagePreview.style.height = h + "px";
+}
+
+function refreshPreview(url, imagePreview, imageUploadBtn) {
+  if (url) {
+    imagePreview.innerHTML = `
+      <img src="${url}" alt="Ürün görseli" id="editImagePreviewImg" />
+      <button class="preview-delete-btn" id="previewDeleteBtn" title="Görseli sil">✕</button>`;
+    imagePreview.classList.remove("hidden");
+    if (imageUploadBtn) imageUploadBtn.classList.add("has-image");
+    const imgEl = document.getElementById("editImagePreviewImg");
+    if (imgEl) {
+      imgEl.onload = () => applyAdaptiveSize(imgEl, imagePreview);
+      if (imgEl.complete) applyAdaptiveSize(imgEl, imagePreview);
+    }
+    document.getElementById("previewDeleteBtn").onclick = () => {
+      const idToDelete = editingId;
+      if (!idToDelete) return;
+      showConfirm("Görsel kalıcı olarak silinsin mi?", async () => {
+        try {
+          const user = firebase.auth().currentUser;
+          if (user) {
+            const ref = firebase
+              .storage()
+              .ref(`users/${user.uid}/components/${idToDelete}/image`);
+            await ref.delete().catch(() => {});
+          }
+          await updateComponentInFirebase(idToDelete, { imageUrl: "" });
+          if (allData[idToDelete]) allData[idToDelete].imageUrl = "";
+          if (editingId === idToDelete)
+            refreshPreview("", imagePreview, imageUploadBtn);
+          if (typeof renderAll === "function") renderAll();
+          showToast("Görsel silindi", "success");
+        } catch (_) {
+          showToast("Görsel silinemedi", "error");
+        }
+      });
+    };
+  } else {
+    imagePreview.innerHTML = "";
+    imagePreview.classList.add("hidden");
+    if (imageUploadBtn) imageUploadBtn.classList.remove("has-image");
+  }
+}
+
+function handleImageFile(file, imagePreview, id, imageUploadBtn) {
+  if (!file || !file.type.startsWith("image/")) return;
+  imagePreview.classList.remove("hidden");
+  imagePreview.style.width = "200px";
+  imagePreview.style.height = "160px";
+  imagePreview.innerHTML = `
+    <div class="preview-loading">
+      <p class="preview-loading-brand">My<span class="accent-text">SETUP</span></p>
+      <div class="preview-spinner"></div>
+    </div>`;
+  uploadImageToFirebase(file, id)
+    .then((url) => {
+      updateComponentInFirebase(id, { imageUrl: url }).then(() => {
+        if (allData[id]) allData[id].imageUrl = url;
+        refreshPreview(url, imagePreview, imageUploadBtn);
+        if (typeof renderAll === "function") renderAll();
+      });
+    })
+    .catch(() => {
+      imagePreview.innerHTML =
+        '<span style="color:var(--red);padding:8px;font-size:12px">Yükleme başarısız</span>';
+    });
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* YARDIMCI FONKSİYONLAR                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -97,124 +201,19 @@ window.openEditModal = function (id, focusTarget = "component") {
     const imageUploadBtn = document.getElementById("imageUploadBtn");
     const imageFileInput = document.getElementById("imageFileInput");
 
-    const MIN_W = 180,
-      MIN_H = 140,
-      MAX_W = 340,
-      MAX_H = 260;
+    refreshPreview(item.imageUrl || "", imagePreview, imageUploadBtn);
 
-    function applyAdaptiveSize(imgEl) {
-      const nw = imgEl.naturalWidth || 1;
-      const nh = imgEl.naturalHeight || 1;
-      const ratio = nw / nh;
-
-      let w, h;
-      if (ratio >= 1) {
-        w = MAX_W;
-        h = Math.round(w / ratio);
-        if (h < MIN_H) {
-          h = MIN_H;
-          w = Math.round(h * ratio);
-        }
-        if (w > MAX_W) {
-          w = MAX_W;
-          h = Math.round(w / ratio);
-        }
-      } else {
-        h = MAX_H;
-        w = Math.round(h * ratio);
-        if (w < MIN_W) {
-          w = MIN_W;
-          h = Math.round(w / ratio);
-        }
-        if (h > MAX_H) {
-          h = MAX_H;
-          w = Math.round(h * ratio);
-        }
-      }
-      w = Math.max(MIN_W, Math.min(MAX_W, w));
-      h = Math.max(MIN_H, Math.min(MAX_H, h));
-
-      imagePreview.style.width = w + "px";
-      imagePreview.style.height = h + "px";
+    if (imageUploadBtn && !imageUploadBtn._eventsBound) {
+      imageUploadBtn.onclick = () => imageFileInput && imageFileInput.click();
+      imageUploadBtn._eventsBound = true;
     }
-
-    function refreshPreview(url) {
-      if (url) {
-        const img = new Image();
-        img.onload = () => applyAdaptiveSize(img);
-        img.src = url;
-
-        imagePreview.innerHTML = `
-          <img src="${url}" alt="Ürün görseli" />
-          <button class="preview-delete-btn" id="previewDeleteBtn" title="Görseli sil">✕</button>`;
-        imagePreview.classList.remove("hidden");
-
-        if (imageUploadBtn) imageUploadBtn.classList.add("has-image");
-
-        document.getElementById("previewDeleteBtn").onclick = () => {
-          const idToDelete = editingId;
-          if (!idToDelete) return;
-          showConfirm("Görsel kalıcı olarak silinsin mi?", async () => {
-            try {
-              const user = firebase.auth().currentUser;
-              if (user) {
-                const ref = firebase
-                  .storage()
-                  .ref(`users/${user.uid}/components/${idToDelete}/image`);
-                await ref.delete().catch(() => {});
-              }
-              await updateComponentInFirebase(idToDelete, { imageUrl: "" });
-              if (allData[idToDelete]) allData[idToDelete].imageUrl = "";
-              if (editingId === idToDelete) refreshPreview("");
-              if (typeof renderAll === "function") renderAll();
-              showToast("Görsel silindi", "success");
-            } catch (_) {
-              showToast("Görsel silinemedi", "error");
-            }
-          });
-        };
-      } else {
-        imagePreview.innerHTML = "";
-        imagePreview.classList.add("hidden");
-        if (imageUploadBtn) imageUploadBtn.classList.remove("has-image");
-      }
-    }
-
-    refreshPreview(item.imageUrl || "");
-
-    function handleImageFile(file) {
-      if (!file || !file.type.startsWith("image/")) return;
-      imagePreview.classList.remove("hidden");
-      imagePreview.style.width = "200px";
-      imagePreview.style.height = "160px";
-      imagePreview.innerHTML = `
-        <div class="preview-loading">
-          <p class="preview-loading-brand">My<span class="accent-text">SETUP</span></p>
-          <div class="preview-spinner"></div>
-        </div>`;
-      uploadImageToFirebase(file, id)
-        .then((url) => {
-          updateComponentInFirebase(id, { imageUrl: url }).then(() => {
-            if (allData[id]) allData[id].imageUrl = url;
-            refreshPreview(url);
-            if (typeof renderAll === "function") renderAll();
-          });
-        })
-        .catch(() => {
-          imagePreview.innerHTML =
-            '<span style="color:var(--red);padding:8px;font-size:12px">Yükleme başarısız</span>';
-        });
-    }
-
-    if (imageUploadBtn && imageFileInput) {
-      imageUploadBtn.onclick = () => imageFileInput.click();
+    if (imageFileInput && !imageFileInput._eventsBound) {
       imageFileInput.value = "";
-    }
-    if (imageFileInput) {
       imageFileInput.onchange = (e) => {
         const file = e.target.files[0];
-        if (file) handleImageFile(file);
+        if (file) handleImageFile(file, imagePreview, id, imageUploadBtn);
       };
+      imageFileInput._eventsBound = true;
     }
 
     switch (focusTarget) {
@@ -379,7 +378,10 @@ document.addEventListener("keydown", (e) => {
 
     const list = getFilteredSortedList();
     const currentIdx = list.findIndex((item) => item.id === editingId);
-    if (currentIdx === -1) return;
+    if (currentIdx === -1) {
+      showToast("Kayıt listesi henüz yüklenmedi", "warn");
+      return;
+    }
 
     let targetIdx;
     if (isNext) {
