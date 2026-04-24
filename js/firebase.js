@@ -1,3 +1,12 @@
+// Tekrarlı item zenginleştirme fonksiyonu
+function enrichItem(item) {
+  const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
+  return {
+    ...item,
+    _searchTag: normalizeTr(searchRaw),
+    _statusNorm: normalizeTr(item.status),
+  };
+}
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                       FIREBASE VERİTABANI YÖNETİMİ                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -49,13 +58,7 @@ function initUserDataRef(uid) {
   userDataRef.once("value").then((snap) => {
     const rawData = snap.val() || {};
     allData = Object.keys(rawData).reduce((acc, id) => {
-      const item = rawData[id];
-      const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
-      acc[id] = {
-        ...item,
-        _searchTag: normalizeTr(searchRaw),
-        _statusNorm: normalizeTr(item.status),
-      };
+      acc[id] = enrichItem(rawData[id]);
       return acc;
     }, {});
     if (typeof renderAll === "function") renderAll();
@@ -63,51 +66,49 @@ function initUserDataRef(uid) {
   });
 
   // Parçalı güncellemeler
-  userDataRef.on("child_added", (snap) => {
-    if (firstLoad) return; // İlk yüklemede zaten renderAll çağrıldı
-    const id = snap.key;
-    const item = snap.val();
-    const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
-    allData[id] = {
-      ...item,
-      _searchTag: normalizeTr(searchRaw),
-      _statusNorm: normalizeTr(item.status),
-    };
-    if (typeof addOrUpdateTableRow === "function")
-      addOrUpdateTableRow(id, allData[id]);
-    if (typeof updateStats === "function") updateStats(getFilteredSortedList());
-    if (typeof updateResultCount === "function")
-      updateResultCount(getFilteredSortedList().length);
-  });
-  userDataRef.on("child_changed", (snap) => {
-    const id = snap.key;
-    const item = snap.val();
-    const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
-    allData[id] = {
-      ...item,
-      _searchTag: normalizeTr(searchRaw),
-      _statusNorm: normalizeTr(item.status),
-    };
-    if (typeof addOrUpdateTableRow === "function")
-      addOrUpdateTableRow(id, allData[id]);
-    if (typeof updateStats === "function") updateStats(getFilteredSortedList());
-    if (typeof updateResultCount === "function")
-      updateResultCount(getFilteredSortedList().length);
-  });
-  userDataRef.on("child_removed", (snap) => {
-    const id = snap.key;
-    delete allData[id];
-    if (typeof removeTableRow === "function") removeTableRow(id);
-    if (typeof updateStats === "function") updateStats(getFilteredSortedList());
-    if (typeof updateResultCount === "function")
-      updateResultCount(getFilteredSortedList().length);
-  });
   userDataRef.on(
-    "value",
-    (snap) => {},
-    (err) => {
-      console.error("Veri okuma hatası:", err);
+    "child_added",
+    (snap) => {
+      if (firstLoad) return;
+      const id = snap.key;
+      const item = enrichItem(snap.val());
+      allData[id] = item;
+      if (typeof addOrUpdateTableRow === "function")
+        addOrUpdateTableRow(id, allData[id]);
+      if (typeof updateStats === "function")
+        updateStats(getFilteredSortedList());
+      if (typeof updateResultCount === "function")
+        updateResultCount(getFilteredSortedList().length);
     },
+    (err) => console.error("child_added hata:", err),
+  );
+  userDataRef.on(
+    "child_changed",
+    (snap) => {
+      const id = snap.key;
+      const item = enrichItem(snap.val());
+      allData[id] = item;
+      if (typeof addOrUpdateTableRow === "function")
+        addOrUpdateTableRow(id, allData[id]);
+      if (typeof updateStats === "function")
+        updateStats(getFilteredSortedList());
+      if (typeof updateResultCount === "function")
+        updateResultCount(getFilteredSortedList().length);
+    },
+    (err) => console.error("child_changed hata:", err),
+  );
+  userDataRef.on(
+    "child_removed",
+    (snap) => {
+      const id = snap.key;
+      delete allData[id];
+      if (typeof removeTableRow === "function") removeTableRow(id);
+      if (typeof updateStats === "function")
+        updateStats(getFilteredSortedList());
+      if (typeof updateResultCount === "function")
+        updateResultCount(getFilteredSortedList().length);
+    },
+    (err) => console.error("child_removed hata:", err),
   );
 }
 

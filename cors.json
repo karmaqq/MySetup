@@ -1,8 +1,8 @@
 [
   {
-    "origin": ["null"],
-    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "origin": ["https://mysetup-8dcd5.firebaseapp.com"],
+    "method": ["GET", "HEAD", "OPTIONS"],
     "maxAgeSeconds": 3600,
-    "responseHeader": ["Content-Type", "Authorization"]
+    "responseHeader": ["Content-Type"]
   }
 ]

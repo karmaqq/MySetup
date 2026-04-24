@@ -204,7 +204,6 @@ function processCsv(csvText) {
       status: row[6] || "sağlıklı",
       url: safeExternalUrl(row[7]),
       imageUrl: row[8] || "",
-      // YENİ EKLENEN VERİLER:
       star: parseInt(row[9]) || 0,
       opinion: row[10] || "",
     };
