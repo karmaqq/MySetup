@@ -212,13 +212,12 @@ window.openEditModal = function (id, focusTarget = "component") {
         imageUploadBtn.onclick = () => imageFileInput && imageFileInput.click();
         imageUploadBtn._eventsBound = true;
       }
-      if (imageFileInput && !imageFileInput._eventsBound) {
+      if (imageFileInput) {
         imageFileInput.value = "";
         imageFileInput.onchange = (e) => {
           const file = e.target.files[0];
           if (file) handleImageFile(file, imagePreview, id, imageUploadBtn);
         };
-        imageFileInput._eventsBound = true;
       }
 
       switch (focusTarget) {

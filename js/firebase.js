@@ -37,6 +37,45 @@ let activeBasePath = null;
 /*                          VERİ OKUMA                                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── child_* Handler Fonksiyonları ─────────────────── */
+
+function _handleChildAdded(snap) {
+  const id = snap.key;
+  const item = enrichItem(snap.val());
+  const oldItem = allData[id];
+  allData[id] = item;
+  updateStatsCacheOnChange(item, oldItem, false);
+  if (typeof addOrUpdateTableRow === "function")
+    addOrUpdateTableRow(id, allData[id]);
+  if (typeof updateResultCount === "function") {
+    updateResultCount(getFilteredSortedList().length);
+  }
+}
+
+function _handleChildChanged(snap) {
+  const id = snap.key;
+  const item = enrichItem(snap.val());
+  const oldItem = allData[id];
+  allData[id] = item;
+  updateStatsCacheOnChange(item, oldItem, false);
+  if (typeof addOrUpdateTableRow === "function")
+    addOrUpdateTableRow(id, allData[id]);
+  if (typeof updateResultCount === "function") {
+    updateResultCount(getFilteredSortedList().length);
+  }
+}
+
+function _handleChildRemoved(snap) {
+  const id = snap.key;
+  const oldItem = allData[id];
+  delete allData[id];
+  if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
+  if (typeof removeTableRow === "function") removeTableRow(id);
+  if (typeof updateResultCount === "function") {
+    updateResultCount(getFilteredSortedList().length);
+  }
+}
+
 /* ─────────────────── Kullanıcı Verisi Dinleyici Başlat ─────────────────── */
 
 function initUserDataRef(uid) {
@@ -60,7 +99,7 @@ function initUserDataRef(uid) {
 
   activeBasePath = "users/" + uid + "/components";
   userDataRef = database.ref(activeBasePath);
-  let firstLoad = true;
+
   userDataRef.once("value").then((snap) => {
     const rawData = snap.val() || {};
     allData = Object.keys(rawData).reduce((acc, id) => {
@@ -69,59 +108,17 @@ function initUserDataRef(uid) {
     }, {});
     rebuildStatsCache();
     if (typeof renderAll === "function") renderAll();
-    firstLoad = false;
-  });
 
-  userDataRef.on(
-    "child_added",
-    (snap) => {
-      if (firstLoad) return;
-      const id = snap.key;
-      const item = enrichItem(snap.val());
-      const oldItem = allData[id];
-      allData[id] = item;
-      updateStatsCacheOnChange(item, oldItem, false);
-      if (typeof addOrUpdateTableRow === "function")
-        addOrUpdateTableRow(id, allData[id]);
-      if (typeof updateResultCount === "function") {
-        const filteredList = getFilteredSortedList();
-        updateResultCount(filteredList.length);
-      }
-    },
-    (err) => console.error("child_added hata:", err),
-  );
-  userDataRef.on(
-    "child_changed",
-    (snap) => {
-      const id = snap.key;
-      const item = enrichItem(snap.val());
-      const oldItem = allData[id];
-      allData[id] = item;
-      updateStatsCacheOnChange(item, oldItem, false);
-      if (typeof addOrUpdateTableRow === "function")
-        addOrUpdateTableRow(id, allData[id]);
-      if (typeof updateResultCount === "function") {
-        const filteredList = getFilteredSortedList();
-        updateResultCount(filteredList.length);
-      }
-    },
-    (err) => console.error("child_changed hata:", err),
-  );
-  userDataRef.on(
-    "child_removed",
-    (snap) => {
-      const id = snap.key;
-      const oldItem = allData[id];
-      delete allData[id];
-      if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
-      if (typeof removeTableRow === "function") removeTableRow(id);
-      if (typeof updateResultCount === "function") {
-        const filteredList = getFilteredSortedList();
-        updateResultCount(filteredList.length);
-      }
-    },
-    (err) => console.error("child_removed hata:", err),
-  );
+    userDataRef.on("child_added", _handleChildAdded, (err) =>
+      console.error("child_added hata:", err),
+    );
+    userDataRef.on("child_changed", _handleChildChanged, (err) =>
+      console.error("child_changed hata:", err),
+    );
+    userDataRef.on("child_removed", _handleChildRemoved, (err) =>
+      console.error("child_removed hata:", err),
+    );
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

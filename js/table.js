@@ -25,7 +25,7 @@ function getFilteredSortedList() {
 
   if (currentStatusFilter !== "all") {
     list = list.filter((item) => {
-      const norm = item._statusNorm || normalizeTr(item.status);
+      const norm = item._statusNorm;
       if (currentStatusFilter === "saglikli") return norm.includes("saglikli");
       if (currentStatusFilter === "bozuk") return norm.includes("bozuk");
       if (currentStatusFilter === "yedek") return norm.includes("yedek");
@@ -72,7 +72,7 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
   if (isRemove) {
     _statsCache.total -= oldPrice;
     _statsCache.count--;
-    if (oldItem && normalizeTr(oldItem.status).includes("saglikl")) {
+    if (oldItem && (oldItem._statusNorm || "").includes("saglikli")) {
       _statsCache.healthy--;
     }
     if (_statsCache.mostExpId === item.id) {
@@ -82,7 +82,8 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
     if (!oldItem) {
       _statsCache.total += newPrice;
       _statsCache.count++;
-      if (normalizeTr(item.status).includes("saglikl")) {
+
+      if ((item._statusNorm || "").includes("saglikli")) {
         _statsCache.healthy++;
       }
     } else {
@@ -90,8 +91,8 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
       if (priceDiff !== 0) {
         _statsCache.total += priceDiff;
       }
-      const oldHealthy = normalizeTr(oldItem.status).includes("saglikl");
-      const newHealthy = normalizeTr(item.status).includes("saglikl");
+      const oldHealthy = (oldItem._statusNorm || "").includes("saglikli");
+      const newHealthy = (item._statusNorm || "").includes("saglikli");
       if (!oldHealthy && newHealthy) {
         _statsCache.healthy++;
       } else if (oldHealthy && !newHealthy) {
@@ -104,6 +105,7 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
     }
   }
 }
+
 function rebuildStatsCache() {
   _statsCache.total = 0;
   _statsCache.count = 0;
@@ -115,7 +117,7 @@ function rebuildStatsCache() {
     const price = parseFloat(i.price) || 0;
     _statsCache.total += price;
     _statsCache.count++;
-    if (normalizeTr(i.status).includes("saglikl")) _statsCache.healthy++;
+    if ((i._statusNorm || "").includes("saglikli")) _statsCache.healthy++;
     if (price > _statsCache.mostExpPrice) {
       _statsCache.mostExpPrice = price;
       _statsCache.mostExpId = i.id;
@@ -124,7 +126,8 @@ function rebuildStatsCache() {
 }
 
 function updateStats(filteredList) {
-  if (statTotal) statTotal.textContent = CURRENCY_FORMAT.format(_statsCache.total) + " ₺";
+  if (statTotal)
+    statTotal.textContent = CURRENCY_FORMAT.format(_statsCache.total) + " ₺";
   if (statCount) statCount.textContent = _statsCache.count;
   if (statHealthy) statHealthy.textContent = _statsCache.healthy;
 
@@ -204,11 +207,6 @@ function buildStatusCellInnerHTML(item) {
   </div>`;
 }
 
-/* ─────────────────── Durum Hücresi HTML Sarmalayıcı ─────────────────── */
-function buildStatusCellHTML(item) {
-  return `<td class="status-cell">${buildStatusCellInnerHTML(item)}</td>`;
-}
-
 /* ─────────────────── URL Simgesi Oluşturma ─────────────────── */
 function buildBrandCellHTML(item) {
   const brandText = escHtml(item.brand || "-");
@@ -231,6 +229,7 @@ function buildBrandCellHTML(item) {
 
 function buildRowHTML(item) {
   const formattedDate = DATE_FORMAT(item.date);
+  // BULGU-12: buildStatusCellHTML wrapper'ı satır içine alındı
   return `
     <td class="col-date">${formattedDate}</td>
     <td class="col-component">${escHtml(item.component)}</td>
@@ -238,12 +237,13 @@ function buildRowHTML(item) {
     <td class="col-specs">${escHtml(item.specs)}</td>
     <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
     <td class="col-vendor">${escHtml(item.vendor)}</td>
-    ${buildStatusCellHTML(item)}
+    <td class="status-cell">${buildStatusCellInnerHTML(item)}</td>
   `;
 }
 
 /* ─────────────────── Gruplamalı Satır HTML ─────────────────── */
 function buildGroupRowHTML(item, dateCell, vendorCell) {
+  // BULGU-12: buildStatusCellHTML wrapper'ı satır içine alındı
   return `
     ${dateCell}
     <td class="col-component">${escHtml(item.component)}</td>
@@ -251,7 +251,7 @@ function buildGroupRowHTML(item, dateCell, vendorCell) {
     <td class="col-specs">${escHtml(item.specs)}</td>
     <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
     ${vendorCell}
-    ${buildStatusCellHTML(item)}
+    <td class="status-cell">${buildStatusCellInnerHTML(item)}</td>
   `;
 }
 
@@ -393,8 +393,6 @@ function renderAll() {
     return;
   }
 
-  rebuildStatsCache();
-
   const wrapper = document.querySelector(".table-wrapper");
   const scrollTop = wrapper ? wrapper.scrollTop : 0;
   const scrollLeft = wrapper ? wrapper.scrollLeft : 0;
@@ -515,17 +513,19 @@ function syncStatusOnlyChanges(prevData, nextData, changedStatusIds) {
 function updateItemStatus(itemId, newStatus) {
   const currentItem = allData[itemId];
   if (!currentItem) return;
-
   if (normalizeTr(currentItem.status) === normalizeTr(newStatus)) return;
 
-  const prevData = allData;
-  const nextData = {
-    ...allData,
-    [itemId]: { ...currentItem, status: newStatus },
-  };
+  const oldStatus = currentItem.status;
+  const oldStatusNorm = currentItem._statusNorm;
 
-  allData = nextData;
-  syncStatusOnlyChanges(prevData, nextData, [itemId]);
+  currentItem.status = newStatus;
+  currentItem._statusNorm = normalizeTr(newStatus);
+
+  syncStatusOnlyChanges(
+    { [itemId]: { status: oldStatus, _statusNorm: oldStatusNorm } },
+    allData,
+    [itemId],
+  );
 
   if (typeof updateComponentStatusInFirebase !== "function") {
     showToast("Durum güncelleme fonksiyonu bulunamadı", "error");
@@ -533,8 +533,13 @@ function updateItemStatus(itemId, newStatus) {
   }
 
   updateComponentStatusInFirebase(itemId, newStatus).catch(() => {
-    allData = prevData;
-    syncStatusOnlyChanges(nextData, prevData, [itemId]);
+    currentItem.status = oldStatus;
+    currentItem._statusNorm = oldStatusNorm;
+    syncStatusOnlyChanges(
+      { [itemId]: { status: newStatus, _statusNorm: normalizeTr(newStatus) } },
+      allData,
+      [itemId],
+    );
     showToast("Durum güncellenemedi", "error");
   });
 }

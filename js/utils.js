@@ -16,7 +16,7 @@ const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
 /* ─────────────────── Tarih Formatlayıcı ─────────────────── */
 
 const _dateCache = new Map();
-const _DATECACHE_MAX = 100;
+const _DATECACHE_MAX = 300;
 const DATE_FORMAT = (dateString) => {
   if (!dateString) return "-";
   if (_dateCache.has(dateString)) return _dateCache.get(dateString);
@@ -24,14 +24,7 @@ const DATE_FORMAT = (dateString) => {
   const result = isNaN(date.getTime())
     ? dateString
     : date.toLocaleDateString("tr-TR");
-  if (_dateCache.size >= _DATECACHE_MAX) {
-    const deleteCount = Math.floor(_DATECACHE_MAX * 0.2);
-    let removed = 0;
-    for (const key of _dateCache.keys()) {
-      _dateCache.delete(key);
-      if (++removed >= deleteCount) break;
-    }
-  }
+  if (_dateCache.size >= _DATECACHE_MAX) _dateCache.clear();
   _dateCache.set(dateString, result);
   return result;
 };
