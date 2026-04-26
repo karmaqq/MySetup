@@ -1,23 +1,66 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          TABLO STİLLERİ                                  */
+/*                               TABLO SİSTEMİ                                 */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Tablo Yapısı ─────────────────── */
+:root {
+  --col-date: 110px;
+  --col-component: 160px;
+  --col-brand: 220px;
+  --col-specs: auto;
+  --col-price: 120px;
+  --col-vendor: 130px;
+  --col-status: 170px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                               TABLO KAPLAYAN KAPSAYICI                      */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .table-wrapper {
+  width: 100%;
   overflow: visible;
   background: transparent;
   border: none;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                               TABLO ANA YAPISI                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: auto;
+  table-layout: fixed;
 }
 
-/* ─────────────────── Başlık Hücreleri ─────────────────── */
+/* ─────────────────── <colgroup> ile Sabit Sütun Genişlikleri ─────────────────── */
+
+col.col-date {
+  width: var(--col-date);
+}
+col.col-component {
+  width: var(--col-component);
+}
+col.col-brand {
+  width: var(--col-brand);
+}
+col.col-specs {
+  width: auto;
+}
+col.col-price {
+  width: var(--col-price);
+}
+col.col-vendor {
+  width: var(--col-vendor);
+}
+col.col-status {
+  width: var(--col-status);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                               BAŞLIK HÜCRELERİ                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 th {
   position: sticky;
@@ -35,6 +78,8 @@ th {
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   border-right: 1px solid var(--border);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   user-select: none;
 }
@@ -66,7 +111,9 @@ th.sort-active .sort-icon {
   opacity: 1;
 }
 
-/* ─────────────────── Veri Hücreleri ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                               VERİ HÜCRELERİ                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 td {
   padding: 11px 16px;
@@ -78,6 +125,10 @@ td {
   vertical-align: middle;
   color: var(--text);
   transition: background 0.15s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0;
 }
 
 td.col-date,
@@ -113,7 +164,9 @@ tbody tr:hover .col-price {
   background: rgba(61, 214, 140, 0.15);
 }
 
-/* ─────────────────── Sütun Stilleri ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                               SÜTUN ÖZEL STİLLERİ                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .col-component {
   background: var(--blue-dim);
@@ -139,7 +192,6 @@ tbody tr:hover .col-price {
 .col-brand,
 .col-specs {
   text-align: left;
-  max-width: 280px;
 }
 
 .col-specs {
@@ -151,18 +203,21 @@ tbody tr:hover .col-price {
   white-space: nowrap;
 }
 
-.date-dim {
-  color: transparent;
-  pointer-events: none;
+/* ─────────────────── Rowspan hücreleri dikey hizalama ─────────────────── */
+
+td[rowspan] {
+  vertical-align: middle;
 }
 
 /* ─────────────────── Grup Ayırıcı ─────────────────── */
 
 .group-separator td {
   padding: 0;
-  height: 16px;
+  height: 14px;
   background: transparent !important;
   border: none !important;
+  max-width: none;
+  overflow: visible;
 }
 
 .group-separator + tr td {
@@ -170,6 +225,7 @@ tbody tr:hover .col-price {
 }
 
 /* ─────────────────── Brand URL Icon ─────────────────── */
+
 .brand-url-icon {
   display: flex;
   background: none;
@@ -178,6 +234,7 @@ tbody tr:hover .col-price {
   margin: 0;
   color: var(--text-dim);
   transition: color 0.2s;
+  flex-shrink: 0;
 }
 
 .brand-url-icon:hover {
@@ -189,19 +246,28 @@ tbody tr:hover .col-price {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  overflow: hidden;
 }
 
 .brand-cell-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
-/* ─────────────────── Boş Durum ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                            BOŞ HÜCRELER                                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .empty-cell {
   padding: 60px 20px !important;
   border-right: 1px solid var(--border) !important;
+  border-left: 1px solid var(--border) !important;
+  overflow: visible !important;
+  max-width: none !important;
+  white-space: normal !important;
+  text-overflow: unset !important;
 }
 
 .empty-state {
@@ -217,11 +283,15 @@ tbody tr:hover .col-price {
   opacity: 0.3;
 }
 
-/* ─────────────────── Durum Hücresi ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                               DURUM HÜCRESİ                                  */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .status-cell {
   position: relative;
   padding: 8px 12px;
+  overflow: visible !important;
+  max-width: none !important;
 }
 
 .status-cell-inner {
@@ -253,6 +323,7 @@ tbody tr:hover .col-price {
   text-transform: capitalize;
   transition: filter 0.2s;
   min-width: 80px;
+  white-space: nowrap;
 }
 
 .status-label:hover {
@@ -318,6 +389,10 @@ tbody tr:hover .col-price {
   transition:
     background 0.12s,
     color 0.12s;
+  white-space: nowrap;
+  overflow: visible;
+  max-width: none;
+  text-overflow: unset;
 }
 
 .status-options div:first-child {
@@ -370,6 +445,7 @@ tbody tr:hover .row-actions {
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
+  flex-shrink: 0;
 }
 
 .edit-btn:hover {
@@ -384,7 +460,9 @@ tbody tr:hover .row-actions {
   background: var(--red-dim);
 }
 
-/* ─────────────────── Tablo Alt Bilgi ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                               TABLO ALT BİLGİ                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 tfoot {
   border: none;
@@ -394,6 +472,10 @@ tfoot {
   padding: 24px 8px 0 8px;
   border: none !important;
   background: transparent !important;
+  overflow: visible !important;
+  max-width: none !important;
+  white-space: normal !important;
+  text-overflow: unset !important;
 }
 
 .footer-left {
@@ -416,6 +498,7 @@ tfoot {
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 4px 12px;
+  white-space: nowrap;
 }
 
 .total-badge {
@@ -442,7 +525,9 @@ tfoot {
   color: var(--green);
 }
 
-/* ─────────────────── Genel Butonlar ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                               GENEL BUTONLAR                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .btn {
   border: none;
@@ -474,11 +559,16 @@ tfoot {
   transform: translateY(0);
 }
 
-/* ─────────────────── Yeni Kayıt Satırı ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                               YENİ KAYIT SATIRI                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .new-item-row td {
   background: var(--surface2);
   padding: 8px 8px;
+  overflow: visible !important;
+  max-width: none !important;
+  white-space: normal !important;
 }
 
 .entry-input {
