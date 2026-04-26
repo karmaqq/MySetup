@@ -3,7 +3,7 @@
 ## Zorunlu Kısıtlamalar
 
 - **Bundler yok.** Renderer tarafında `import`/`export`/`require` yasak. Sadece `main.js`, `preload.js`, `js/updater.js` Node ortamında çalışır.
-- **Script yükleme sırası kesinlikle korunmalı:** `utils.js → firebase.js → connect.js → table.js → io.js → updater-ui.js → editmodal.js → auth.js → userset.js`
+- **Script yükleme sırası kesinlikle korunmalı:** `utils.js → firebase.js → table.js → io.js → updater-ui.js → editmodal.js → auth.js → userset.js`
 - **Global değişkenler yalnızca `utils.js`'de tanımlanır.** `allData`, `currentSearch`, `currentStatusFilter`, `currentSort`, `editingId` başka dosyalarda `let`/`const` ile yeniden tanımlanamaz; doğrudan atama yapılır.
 - **Firebase compat SDK v9.22.1** kullanılıyor. Modular SDK sentaksı (`import { initializeApp } from 'firebase/app'`) yasak.
 - **`preload.js`** `contextIsolation: true`, `sandbox: true` ile çalışır. `ipcRenderer` doğrudan renderer'a açılamaz; yalnızca `contextBridge.exposeInMainWorld` üzerinden geçer.
@@ -33,7 +33,6 @@ Otomatik test altyapısı yok. Her değişiklik sonrası el ile kontrol:
 | ------------------- | ---------------------------------------------------------------- |
 | `js/utils.js`       | Tüm global değişkenler, DOM referansları, yardımcı fonksiyonlar  |
 | `js/firebase.js`    | Firebase init, `allData` CRUD, listener yönetimi, `enrichItem()` |
-| `js/connect.js`     | `.info/connected` listener → bağlantı durumu UI                  |
 | `js/table.js`       | Render motoru, filtre/sıralama, CRUD UI, istatistik cache        |
 | `js/io.js`          | Toast, confirm dialog, arama debounce, CSV işleme                |
 | `js/updater-ui.js`  | Güncelleme butonu ve IPC olayları (renderer tarafı)              |

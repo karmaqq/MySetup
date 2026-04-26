@@ -50,7 +50,7 @@ function applyAdaptiveSize(imgEl, imagePreview) {
 function refreshPreview(url, imagePreview, imageUploadBtn) {
   if (url) {
     imagePreview.innerHTML = `
-      <img src="${url}" alt="Ürün görseli" id="editImagePreviewImg" />
+      <img src="${escAttr(url)}" alt="Ürün görseli" id="editImagePreviewImg" />
       <button class="preview-delete-btn" id="previewDeleteBtn" title="Görseli sil">✕</button>`;
     imagePreview.classList.remove("hidden");
     if (imageUploadBtn) imageUploadBtn.classList.add("has-image");
@@ -75,7 +75,7 @@ function refreshPreview(url, imagePreview, imageUploadBtn) {
           if (allData[idToDelete]) allData[idToDelete].imageUrl = "";
           if (editingId === idToDelete)
             refreshPreview("", imagePreview, imageUploadBtn);
-          if (typeof renderAll === "function") renderAll();
+          if (typeof scheduleRender === "function") scheduleRender();
           showToast("Görsel silindi", "success");
         } catch (_) {
           showToast("Görsel silinemedi", "error");
@@ -104,7 +104,7 @@ function handleImageFile(file, imagePreview, id, imageUploadBtn) {
       updateComponentInFirebase(id, { imageUrl: url }).then(() => {
         if (allData[id]) allData[id].imageUrl = url;
         refreshPreview(url, imagePreview, imageUploadBtn);
-        if (typeof renderAll === "function") renderAll();
+        if (typeof scheduleRender === "function") scheduleRender();
       });
     })
     .catch(() => {
@@ -212,13 +212,12 @@ window.openEditModal = function (id, focusTarget = "component") {
         imageUploadBtn.onclick = () => imageFileInput && imageFileInput.click();
         imageUploadBtn._eventsBound = true;
       }
-      if (imageFileInput && !imageFileInput._eventsBound) {
+      if (imageFileInput) {
         imageFileInput.value = "";
         imageFileInput.onchange = (e) => {
           const file = e.target.files[0];
-          if (file) handleImageFile(file, imagePreview, id, imageUploadBtn);
+          if (file) handleImageFile(file, imagePreview, editingId, imageUploadBtn);
         };
-        imageFileInput._eventsBound = true;
       }
 
       switch (focusTarget) {

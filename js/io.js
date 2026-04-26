@@ -127,7 +127,7 @@ document.querySelectorAll(".filter-btn").forEach((btn) => {
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentStatusFilter = btn.dataset.status;
-    if (typeof renderAll === "function") renderAll();
+    if (typeof scheduleRender === "function") scheduleRender();
   });
 });
 
@@ -161,32 +161,19 @@ function processCsv(csvText) {
   const dataLines = lines.slice(1);
   const importPayload = {};
 
-  dataLines.forEach((line) => {
+  function parseCsvLine(line) {
     const row = [];
-    let current = "";
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (inQuotes) {
-        if (ch === '"' && line[i + 1] === '"') {
-          current += '"';
-          i++;
-        } else if (ch === '"') {
-          inQuotes = false;
-        } else {
-          current += ch;
-        }
-      } else if (ch === '"') {
-        inQuotes = true;
-      } else if (ch === ",") {
-        row.push(current.trim());
-        current = "";
-      } else {
-        current += ch;
-      }
+    const re = /("(?:[^"]|"")*"|[^,]*)(,|$)/g;
+    let m;
+    while ((m = re.exec(line)) !== null) {
+      row.push(m[1].replace(/^"|"$/g, "").replace(/""/g, '"').trim());
+      if (m[2] === "") break;
     }
-    row.push(current.trim());
+    return row;
+  }
+
+  dataLines.forEach((line) => {
+    const row = parseCsvLine(line);
 
     if (row.length < 2 || !row[1]) return;
 
@@ -303,7 +290,7 @@ if (exportCsvBtn) {
     a.href = url;
     a.download = `mysetup_yedek_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
     showToast("Veriler CSV olarak yedeklendi", "success");
   });
 }

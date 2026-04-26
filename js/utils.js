@@ -2,6 +2,16 @@
 /*                          GENEL YARDIMCI ARAÇLAR                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Render Schedule (rAF Debounce) ─────────────────── */
+let _renderRafId = null;
+function scheduleRender() {
+  if (_renderRafId) cancelAnimationFrame(_renderRafId);
+  _renderRafId = requestAnimationFrame(() => {
+    _renderRafId = null;
+    if (typeof renderAll === "function") renderAll();
+  });
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          SABİTLER VE FORMATLAR                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -16,7 +26,7 @@ const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
 /* ─────────────────── Tarih Formatlayıcı ─────────────────── */
 
 const _dateCache = new Map();
-const _DATECACHE_MAX = 100;
+const _DATECACHE_MAX = 500;
 const DATE_FORMAT = (dateString) => {
   if (!dateString) return "-";
   if (_dateCache.has(dateString)) return _dateCache.get(dateString);
