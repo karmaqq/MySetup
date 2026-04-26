@@ -67,7 +67,7 @@ function initUserDataRef(uid) {
       acc[id] = enrichItem(rawData[id]);
       return acc;
     }, {});
-    rebuildStatsCache();
+    if (typeof rebuildStatsCache === "function") rebuildStatsCache();
     if (typeof renderAll === "function") renderAll();
     firstLoad = false;
   });
@@ -83,6 +83,7 @@ function initUserDataRef(uid) {
       updateStatsCacheOnChange(item, oldItem, false);
       if (typeof addOrUpdateTableRow === "function")
         addOrUpdateTableRow(id, allData[id]);
+      if (typeof scheduleRender === "function") scheduleRender();
       if (typeof updateResultCount === "function") {
         const filteredList = getFilteredSortedList();
         updateResultCount(filteredList.length);
@@ -100,6 +101,7 @@ function initUserDataRef(uid) {
       updateStatsCacheOnChange(item, oldItem, false);
       if (typeof addOrUpdateTableRow === "function")
         addOrUpdateTableRow(id, allData[id]);
+      if (typeof scheduleRender === "function") scheduleRender();
       if (typeof updateResultCount === "function") {
         const filteredList = getFilteredSortedList();
         updateResultCount(filteredList.length);
@@ -115,6 +117,7 @@ function initUserDataRef(uid) {
       delete allData[id];
       if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
       if (typeof removeTableRow === "function") removeTableRow(id);
+      if (typeof scheduleRender === "function") scheduleRender();
       if (typeof updateResultCount === "function") {
         const filteredList = getFilteredSortedList();
         updateResultCount(filteredList.length);
@@ -178,4 +181,12 @@ function uploadImageToFirebase(file, itemId) {
       },
     );
   });
+}
+
+/* ─────────────────── Storage Klasör Silme ─────────────────── */
+
+async function deleteAllInFolder(ref) {
+  const list = await ref.listAll();
+  await Promise.all(list.items.map((item) => item.delete()));
+  await Promise.all(list.prefixes.map(deleteAllInFolder));
 }

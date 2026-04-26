@@ -457,11 +457,6 @@ document
         try {
           const storageRef = firebase.storage().ref();
           const userFolderRef = storageRef.child(`users/${user.uid}`);
-          async function deleteAllInFolder(ref) {
-            const list = await ref.listAll();
-            await Promise.all(list.items.map((item) => item.delete()));
-            await Promise.all(list.prefixes.map(deleteAllInFolder));
-          }
           await deleteAllInFolder(userFolderRef);
         } catch (storageErr) {
           console.warn("Storage silme hatası:", storageErr);

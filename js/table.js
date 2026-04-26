@@ -25,7 +25,7 @@ function getFilteredSortedList() {
 
   if (currentStatusFilter !== "all") {
     list = list.filter((item) => {
-      const norm = item._statusNorm || normalizeTr(item.status);
+      const norm = item._statusNorm;
       if (currentStatusFilter === "saglikli") return norm.includes("saglikli");
       if (currentStatusFilter === "bozuk") return norm.includes("bozuk");
       if (currentStatusFilter === "yedek") return norm.includes("yedek");
@@ -45,9 +45,8 @@ function getFilteredSortedList() {
     }
 
     if (currentSort.col === "date") {
-      return currentSort.dir === "asc"
-        ? new Date(av) - new Date(bv)
-        : new Date(bv) - new Date(av);
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return currentSort.dir === "asc" ? cmp : -cmp;
     }
 
     av = av.toString().toLowerCase();
@@ -182,12 +181,12 @@ function getStatusClassName(statusValue) {
   return "status-healthy";
 }
 
-/* ─────────────────── Durum Hücresi İç HTML ─────────────────── */
+/* ─────────────────── Durum Hücresi HTML ─────────────────── */
 function buildStatusCellInnerHTML(item) {
   const statusClass = getStatusClassName(item.status);
   const safeId = escAttr(item.id);
   const safeStatus = escHtml(item.status);
-  return `<div class="status-cell-inner">
+  return `<td class="status-cell"><div class="status-cell-inner">
     <div class="status-menu">
       <span class="status-label ${statusClass}">${safeStatus}</span>
       <div class="status-options">
@@ -201,12 +200,7 @@ function buildStatusCellInnerHTML(item) {
       <button class="action-btn edit-btn" data-action="edit-item" data-id="${safeId}" title="Düzenle">✎</button>
       <button class="action-btn delete-btn" data-action="delete-item" data-id="${safeId}" title="Sil">✕</button>
     </div>
-  </div>`;
-}
-
-/* ─────────────────── Durum Hücresi HTML Sarmalayıcı ─────────────────── */
-function buildStatusCellHTML(item) {
-  return `<td class="status-cell">${buildStatusCellInnerHTML(item)}</td>`;
+  </div></td>`;
 }
 
 /* ─────────────────── URL Simgesi Oluşturma ─────────────────── */
@@ -238,7 +232,7 @@ function buildRowHTML(item) {
     <td class="col-specs">${escHtml(item.specs)}</td>
     <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
     <td class="col-vendor">${escHtml(item.vendor)}</td>
-    ${buildStatusCellHTML(item)}
+    ${buildStatusCellInnerHTML(item)}
   `;
 }
 
@@ -251,7 +245,7 @@ function buildGroupRowHTML(item, dateCell, vendorCell) {
     <td class="col-specs">${escHtml(item.specs)}</td>
     <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
     ${vendorCell}
-    ${buildStatusCellHTML(item)}
+    ${buildStatusCellInnerHTML(item)}
   `;
 }
 
@@ -259,30 +253,6 @@ function buildGroupRowHTML(item, dateCell, vendorCell) {
 function createRowEl(item) {
   const tr = document.createElement("tr");
   tr.dataset.id = item.id;
-  tr.addEventListener("dblclick", (e) => {
-    window.getSelection().removeAllRanges();
-    const targetCell = e.target.closest("td");
-    let focusTarget = "component";
-
-    if (targetCell) {
-      if (targetCell.classList.contains("col-date")) focusTarget = "date";
-      else if (targetCell.classList.contains("col-brand"))
-        focusTarget = "brand";
-      else if (targetCell.classList.contains("col-specs"))
-        focusTarget = "specs";
-      else if (targetCell.classList.contains("col-price"))
-        focusTarget = "price";
-      else if (targetCell.classList.contains("col-vendor"))
-        focusTarget = "vendor";
-    }
-
-    if (
-      !e.target.closest(".status-menu") &&
-      !e.target.closest(".row-actions")
-    ) {
-      openEditModal(item.id, focusTarget);
-    }
-  });
   return tr;
 }
 
@@ -308,8 +278,7 @@ function renderTableRows(list) {
     fragment.appendChild(emptyRow);
     unsavedRows.forEach((r) => fragment.appendChild(r));
 
-    tableBody.innerHTML = "";
-    tableBody.appendChild(fragment);
+    tableBody.replaceChildren(fragment);
     return;
   }
 
@@ -392,8 +361,6 @@ function renderAll() {
     updateResultCount(list.length);
     return;
   }
-
-  rebuildStatsCache();
 
   const wrapper = document.querySelector(".table-wrapper");
   const scrollTop = wrapper ? wrapper.scrollTop : 0;
@@ -518,14 +485,12 @@ function updateItemStatus(itemId, newStatus) {
 
   if (normalizeTr(currentItem.status) === normalizeTr(newStatus)) return;
 
-  const prevData = allData;
-  const nextData = {
-    ...allData,
-    [itemId]: { ...currentItem, status: newStatus },
-  };
+  const oldStatus = currentItem.status;
+  const oldStatusNorm = currentItem._statusNorm;
 
-  allData = nextData;
-  syncStatusOnlyChanges(prevData, nextData, [itemId]);
+  currentItem.status = newStatus;
+  currentItem._statusNorm = normalizeTr(newStatus);
+  syncStatusOnlyChanges(allData, allData, [itemId]);
 
   if (typeof updateComponentStatusInFirebase !== "function") {
     showToast("Durum güncelleme fonksiyonu bulunamadı", "error");
@@ -533,8 +498,9 @@ function updateItemStatus(itemId, newStatus) {
   }
 
   updateComponentStatusInFirebase(itemId, newStatus).catch(() => {
-    allData = prevData;
-    syncStatusOnlyChanges(nextData, prevData, [itemId]);
+    currentItem.status = oldStatus;
+    currentItem._statusNorm = oldStatusNorm;
+    syncStatusOnlyChanges(allData, allData, [itemId]);
     showToast("Durum güncellenemedi", "error");
   });
 }
@@ -753,6 +719,28 @@ function initTableBodyEvents() {
     } else if (action === "update-status") {
       updateItemStatus(id, btn.dataset.status);
     }
+  });
+  tableBody.addEventListener("dblclick", function (e) {
+    const tr = e.target.closest("tr[data-id]");
+    if (!tr) return;
+    if (e.target.closest(".status-menu") || e.target.closest(".row-actions"))
+      return;
+    const id = tr.dataset.id;
+    const targetCell = e.target.closest("td");
+    let focusTarget = "component";
+    if (targetCell) {
+      if (targetCell.classList.contains("col-date")) focusTarget = "date";
+      else if (targetCell.classList.contains("col-brand"))
+        focusTarget = "brand";
+      else if (targetCell.classList.contains("col-specs"))
+        focusTarget = "specs";
+      else if (targetCell.classList.contains("col-price"))
+        focusTarget = "price";
+      else if (targetCell.classList.contains("col-vendor"))
+        focusTarget = "vendor";
+    }
+    window.getSelection().removeAllRanges();
+    openEditModal(id, focusTarget);
   });
 }
 
