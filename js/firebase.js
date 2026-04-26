@@ -60,7 +60,7 @@ function initUserDataRef(uid) {
 
   activeBasePath = "users/" + uid + "/components";
   userDataRef = database.ref(activeBasePath);
-  let firstLoad = true;
+let firstLoad = true;
   userDataRef.once("value").then((snap) => {
     const rawData = snap.val() || {};
     allData = Object.keys(rawData).reduce((acc, id) => {
