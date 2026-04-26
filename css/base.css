@@ -154,6 +154,7 @@ body {
 /* ─────────────────── Sayfa Scroll Container ─────────────────── */
 
 .main-scroll {
+  scrollbar-gutter: stable;
   position: fixed;
   top: 36px;
   bottom: 34px;

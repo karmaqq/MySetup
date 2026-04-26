@@ -131,9 +131,18 @@ function updateStats(filteredList) {
   if (statCount) statCount.textContent = _statsCache.count;
   if (statHealthy) statHealthy.textContent = _statsCache.healthy;
 
-  const mostExpItem = allData[_statsCache.mostExpId];
-  if (statExpensive)
-    statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
+  if (statExpensive) {
+    let maxItem = null;
+    let maxPrice = -Infinity;
+    for (const i of Object.values(allData)) {
+      const price = parseFloat(i.price) || 0;
+      if (price > maxPrice) {
+        maxPrice = price;
+        maxItem = i;
+      }
+    }
+    statExpensive.textContent = maxItem ? maxItem.component : "—";
+  }
 
   let filteredTotal = 0;
   for (const i of filteredList) {

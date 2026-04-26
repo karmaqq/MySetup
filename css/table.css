@@ -5,6 +5,7 @@
 /* ─────────────────── Tablo Yapısı ─────────────────── */
 
 .table-wrapper {
+  scrollbar-gutter: stable;
   overflow: visible;
   background: transparent;
   border: none;
