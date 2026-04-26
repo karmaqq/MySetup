@@ -1,9 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* DEĞİŞKENLER VE DURUM KONTROL                        */
+/*                        DEĞİŞKENLER VE DURUM KONTROL                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Render Durum Değişkenleri ─────────────────── */
 let _pendingRender = false;
+
+/* ─────────────────── Virtual Scroll Sabitleri ─────────────────── */
+
+const VSCROLL_INITIAL = 40; /* İlk render'da çizilecek satır sayısı */
+const VSCROLL_REST_MS = 0; /* Kalanlar için gecikme (rAF yeterli) */
 
 /* ─────────────────── Modal Açık Kontrolü ─────────────────── */
 function isAnyModalOpen() {
@@ -11,10 +15,9 @@ function isAnyModalOpen() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* FİLTRELEME VE SIRALAMA                            */
+/*                             FİLTRELEME VE SIRALAMA                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Filtrelenmiş ve Sıralanmış Liste ─────────────────── */
 function getFilteredSortedList() {
   let list = Object.keys(allData).map((id) => ({ id, ...allData[id] }));
 
@@ -60,10 +63,9 @@ function getFilteredSortedList() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* İSTATİSTİKLER VE GÜNCELLEMELER                     */
+/*                          İSTATİSTİKLER VE GÜNCELLEMELER                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── İstatistik Önbelleğini Güncelle (Delta) ─────────────────── */
 function updateStatsCacheOnChange(item, oldItem, isRemove) {
   const newPrice = parseFloat(item.price) || 0;
   const oldPrice = oldItem ? parseFloat(oldItem.price) || 0 : 0;
@@ -87,16 +89,12 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
       }
     } else {
       const priceDiff = newPrice - oldPrice;
-      if (priceDiff !== 0) {
-        _statsCache.total += priceDiff;
-      }
+      if (priceDiff !== 0) _statsCache.total += priceDiff;
+
       const oldHealthy = normalizeTr(oldItem.status).includes("saglikl");
       const newHealthy = normalizeTr(item.status).includes("saglikl");
-      if (!oldHealthy && newHealthy) {
-        _statsCache.healthy++;
-      } else if (oldHealthy && !newHealthy) {
-        _statsCache.healthy--;
-      }
+      if (!oldHealthy && newHealthy) _statsCache.healthy++;
+      else if (oldHealthy && !newHealthy) _statsCache.healthy--;
     }
     if (newPrice > _statsCache.mostExpPrice) {
       _statsCache.mostExpPrice = newPrice;
@@ -107,6 +105,7 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
     }
   }
 }
+
 function rebuildStatsCache() {
   _statsCache.total = 0;
   _statsCache.count = 0;
@@ -127,23 +126,58 @@ function rebuildStatsCache() {
 }
 
 function updateStats(filteredList) {
-  if (statTotal) statTotal.textContent = CURRENCY_FORMAT.format(_statsCache.total) + " ₺";
-  if (statCount) statCount.textContent = _statsCache.count;
-  if (statHealthy) statHealthy.textContent = _statsCache.healthy;
-
-  const mostExpItem = allData[_statsCache.mostExpId];
-  if (statExpensive)
-    statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
-
   let filteredTotal = 0;
+  let filteredHealthy = 0;
+  let mostExpItem = null;
+  let mostExpPrice = -Infinity;
   for (const i of filteredList) {
-    filteredTotal += parseFloat(i.price) || 0;
+    const price = parseFloat(i.price) || 0;
+    filteredTotal += price;
+    if (normalizeTr(i.status).includes("saglikl")) filteredHealthy++;
+    if (price > mostExpPrice) {
+      mostExpPrice = price;
+      mostExpItem = i;
+    }
   }
+
+  if (statTotal)
+    statTotal.textContent = CURRENCY_FORMAT.format(filteredTotal) + " ₺";
+  if (statCount) statCount.textContent = filteredList.length;
+  if (statHealthy) statHealthy.textContent = filteredHealthy;
+
+  if (statExpensive) {
+    statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
+    const statCard = statExpensive.closest(".stat-card");
+    if (statCard) {
+      const statIcon = statCard.querySelector(".stat-icon");
+      if (statIcon) {
+        statIcon.classList.remove(
+          "status-broken",
+          "status-reserve",
+          "status-discarded",
+          "status-healthy",
+        );
+        if (currentStatusFilter === "all") {
+        } else if (mostExpItem) {
+          const statusNorm =
+            mostExpItem._statusNorm || normalizeTr(mostExpItem.status);
+          if (statusNorm.includes("bozuk"))
+            statIcon.classList.add("status-broken");
+          else if (statusNorm.includes("yedek"))
+            statIcon.classList.add("status-reserve");
+          else if (statusNorm.includes("atildi"))
+            statIcon.classList.add("status-discarded");
+          else if (statusNorm.includes("saglikl"))
+            statIcon.classList.add("status-healthy");
+        }
+      }
+    }
+  }
+
   if (totalCostDisplay)
     totalCostDisplay.textContent = CURRENCY_FORMAT.format(filteredTotal) + " ₺";
 }
 
-/* ─────────────────── Sonuç Sayısı Güncelleme ─────────────────── */
 function updateResultCount(filteredCount) {
   const total = Object.keys(allData).length;
   const isFiltered = currentSearch || currentStatusFilter !== "all";
@@ -154,7 +188,6 @@ function updateResultCount(filteredCount) {
   }
 }
 
-/* ─────────────────── Sıralama İkonları Güncelleme ─────────────────── */
 function updateSortIcons() {
   document.querySelectorAll(".sortable").forEach((th) => {
     const icon = th.querySelector(".sort-icon");
@@ -173,10 +206,9 @@ function updateSortIcons() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* SATIR VE HÜCRE OLUŞTURMA                           */
+/*                         SATIR VE HÜCRE OLUŞTURMA                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Durum CSS Sınıfı Eşleme ─────────────────── */
 function getStatusClassName(statusValue) {
   const key = normalizeTr(statusValue);
   for (const [k, v] of Object.entries(STATUS_MAP)) {
@@ -185,7 +217,6 @@ function getStatusClassName(statusValue) {
   return "status-healthy";
 }
 
-/* ─────────────────── Durum Hücresi HTML ─────────────────── */
 function buildStatusCellInnerHTML(item) {
   const statusClass = getStatusClassName(item.status);
   const safeId = escAttr(item.id);
@@ -201,13 +232,12 @@ function buildStatusCellInnerHTML(item) {
       </div>
     </div>
     <div class="row-actions">
-      <button class="action-btn edit-btn" data-action="edit-item" data-id="${safeId}" title="Düzenle">✎</button>
+      <button class="action-btn edit-btn"   data-action="edit-item"   data-id="${safeId}" title="Düzenle">✎</button>
       <button class="action-btn delete-btn" data-action="delete-item" data-id="${safeId}" title="Sil">✕</button>
     </div>
   </div></td>`;
 }
 
-/* ─────────────────── URL Simgesi Oluşturma ─────────────────── */
 function buildBrandCellHTML(item) {
   const brandText = escHtml(item.brand || "-");
   if (item.url) {
@@ -225,8 +255,6 @@ function buildBrandCellHTML(item) {
   return brandText;
 }
 
-/* ─────────────────── Tablo Satırı HTML Şablonu ─────────────────── */
-
 function buildRowHTML(item) {
   const formattedDate = DATE_FORMAT(item.date);
   return `
@@ -240,7 +268,6 @@ function buildRowHTML(item) {
   `;
 }
 
-/* ─────────────────── Gruplamalı Satır HTML ─────────────────── */
 function buildGroupRowHTML(item, dateCell, vendorCell) {
   return `
     ${dateCell}
@@ -253,7 +280,6 @@ function buildGroupRowHTML(item, dateCell, vendorCell) {
   `;
 }
 
-/* ─────────────────── Tablo Satırı Oluştur ─────────────────── */
 function createRowEl(item) {
   const tr = document.createElement("tr");
   tr.dataset.id = item.id;
@@ -261,31 +287,12 @@ function createRowEl(item) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* RENDER MOTORU                                */
+/* FRAGMENT OLUŞTURUCU — Ortak Satır İnşa Mantığı                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Tablo Satırlarını Render Et ─────────────────── */
-function renderTableRows(list) {
-  const unsavedRows = Array.from(tableBody.querySelectorAll(".new-item-row"));
 
+function buildRowsFragment(list) {
   const fragment = document.createDocumentFragment();
-
-  if (!list.length) {
-    const emptyRow = document.createElement("tr");
-    emptyRow.innerHTML = `
-      <td colspan="7" class="empty-cell">
-        <div class="empty-state">
-          <div class="empty-icon">⊘</div>
-          <span>${currentSearch || currentStatusFilter !== "all" ? "Filtreyle eşleşen kayıt bulunamadı" : "Henüz kayıt yok"}</span>
-        </div>
-      </td>`;
-    fragment.appendChild(emptyRow);
-    unsavedRows.forEach((r) => fragment.appendChild(r));
-
-    tableBody.replaceChildren(fragment);
-    return;
-  }
-
   const groupByDate = currentSort.col === "date";
 
   if (groupByDate) {
@@ -350,10 +357,74 @@ function renderTableRows(list) {
     });
   }
 
-  unsavedRows.forEach((r) => fragment.appendChild(r));
+  return fragment;
+}
 
-  tableBody.innerHTML = "";
-  tableBody.appendChild(fragment);
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* RENDER MOTORU + VIRTUAL SCROLL                                             */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+
+let _vsRafId = null;
+
+function renderTableRows(list) {
+  if (_vsRafId) {
+    cancelAnimationFrame(_vsRafId);
+    _vsRafId = null;
+  }
+
+  const unsavedRows = Array.from(tableBody.querySelectorAll(".new-item-row"));
+
+  if (!list.length) {
+    const emptyRow = document.createElement("tr");
+    emptyRow.innerHTML = `
+      <td colspan="7" class="empty-cell">
+        <div class="empty-state">
+          <div class="empty-icon">⊘</div>
+          <span>${
+            currentSearch || currentStatusFilter !== "all"
+              ? "Filtreyle eşleşen kayıt bulunamadı"
+              : "Henüz kayıt yok"
+          }</span>
+        </div>
+      </td>`;
+
+    tableBody.replaceChildren(emptyRow, ...unsavedRows);
+    return;
+  }
+
+  const firstChunk = list.slice(0, VSCROLL_INITIAL);
+  const firstFrag = buildRowsFragment(firstChunk);
+
+  tableBody.replaceChildren(firstFrag, ...unsavedRows);
+
+  if (list.length > VSCROLL_INITIAL) {
+    const restList = list.slice(VSCROLL_INITIAL);
+
+    _vsRafId = requestAnimationFrame(() => {
+      _vsRafId = null;
+
+      if (currentSort.col === "date") {
+        const fullFrag = buildRowsFragment(list);
+        const saved = Array.from(tableBody.querySelectorAll(".new-item-row"));
+        tableBody.replaceChildren(fullFrag, ...saved);
+      } else {
+        const restFrag = document.createDocumentFragment();
+        restList.forEach((item) => {
+          const tr = createRowEl(item);
+          tr.innerHTML = buildRowHTML(item);
+          restFrag.appendChild(tr);
+        });
+
+        const saved = tableBody.querySelectorAll(".new-item-row");
+        if (saved.length) {
+          tableBody.insertBefore(restFrag, saved[0]);
+        } else {
+          tableBody.appendChild(restFrag);
+        }
+      }
+    });
+  }
 }
 
 /* ─────────────────── Tüm Tabloyu Yeniden Çiz ─────────────────── */
@@ -366,26 +437,21 @@ function renderAll() {
     return;
   }
 
-  const wrapper = document.querySelector(".table-wrapper");
-  const scrollTop = wrapper ? wrapper.scrollTop : 0;
-  const scrollLeft = wrapper ? wrapper.scrollLeft : 0;
+  const scrollY = window.scrollY;
 
   const list = getFilteredSortedList();
   updateStats(list);
   renderTableRows(list);
   updateResultCount(list.length);
 
-  if (wrapper) {
-    wrapper.scrollTop = scrollTop;
-    wrapper.scrollLeft = scrollLeft;
-  }
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: scrollY, behavior: "instant" });
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* VERİ YÖNETİMİ VE CRUD İŞLEMLERİ                         */
+/*                     VERİ YÖNETİMİ VE CRUD İŞLEMLER                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Firebase Ekle/Güncelle ─────────────────── */
 
 function addOrUpdateTableRow(id, item) {
   const useFullRender =
@@ -421,8 +487,6 @@ function addOrUpdateTableRow(id, item) {
   }
 }
 
-/* ─────────────────── Firebase Satır Silme ─────────────────── */
-
 function removeTableRow(id) {
   const useFullRender =
     currentSearch ||
@@ -447,7 +511,6 @@ function removeTableRow(id) {
   }
 }
 
-/* ─────────────────── Sadece Durum Değişikliği Senkronu ─────────────────── */
 function syncStatusOnlyChanges(prevData, nextData, changedStatusIds) {
   if (currentStatusFilter !== "all" || currentSearch) {
     renderAll();
@@ -471,7 +534,7 @@ function syncStatusOnlyChanges(prevData, nextData, changedStatusIds) {
       return;
     }
 
-    statusCell.innerHTML = buildStatusCellInnerHTML({ id, ...nextData[id] });
+    statusCell.outerHTML = buildStatusCellInnerHTML({ id, ...nextData[id] });
   });
 
   if (needsFullRender) {
@@ -482,11 +545,9 @@ function syncStatusOnlyChanges(prevData, nextData, changedStatusIds) {
   updateStats(getFilteredSortedList());
 }
 
-/* ─────────────────── Kayıt Durumu Güncelleme ─────────────────── */
 function updateItemStatus(itemId, newStatus) {
   const currentItem = allData[itemId];
   if (!currentItem) return;
-
   if (normalizeTr(currentItem.status) === normalizeTr(newStatus)) return;
 
   const oldStatus = currentItem.status;
@@ -513,13 +574,8 @@ function updateItemStatus(itemId, newStatus) {
     });
 }
 
-/* ─────────────────── Kayıt Silme ─────────────────── */
 function deleteItem(itemId) {
   if (!allData[itemId]) {
-    console.error(
-      "HATA İPTAL EDİLDİ: Bu ID allData içinde bulunamadı! Aranan ID:",
-      itemId,
-    );
     showToast("Hata: Silinecek öğe bulunamadı!", "error");
     return;
   }
@@ -529,13 +585,11 @@ function deleteItem(itemId) {
       showToast("Silme fonksiyonu bulunamadı", "error");
       return;
     }
-
     deleteComponentFromFirebase(itemId)
       .then(() => {
         showToast("Kayıt silindi", "success", 2200);
       })
-      .catch((err) => {
-        console.error("Firebase silme hatası:", err);
+      .catch(() => {
         showToast("Kayıt silinemedi", "error");
       });
   };
@@ -544,7 +598,6 @@ function deleteItem(itemId) {
     showConfirm("Bu kaydı silmek istediğinize emin misiniz?", performDelete);
     return;
   }
-
   performDelete();
 }
 
@@ -651,7 +704,7 @@ function submitNewItem(tr, inputs) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* OLAY DİNLEYİCİLERİ VE BAŞLATMA                        */
+/*                      OLAY DİNLEYİCİLERİ VE BAŞLATMA                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Modal Kapanınca Ertelenen Render ─────────────────── */
@@ -720,22 +773,22 @@ function initTableBodyEvents() {
     const action = btn.dataset.action;
     const id = btn.dataset.id;
 
-    if (action === "delete-item") {
-      deleteItem(id);
-    } else if (action === "edit-item") {
-      openEditModal(id);
-    } else if (action === "update-status") {
+    if (action === "delete-item") deleteItem(id);
+    else if (action === "edit-item") openEditModal(id);
+    else if (action === "update-status")
       updateItemStatus(id, btn.dataset.status);
-    }
   });
+
   tableBody.addEventListener("dblclick", function (e) {
     const tr = e.target.closest("tr[data-id]");
     if (!tr) return;
     if (e.target.closest(".status-menu") || e.target.closest(".row-actions"))
       return;
+
     const id = tr.dataset.id;
     const targetCell = e.target.closest("td");
     let focusTarget = "component";
+
     if (targetCell) {
       if (targetCell.classList.contains("col-date")) focusTarget = "date";
       else if (targetCell.classList.contains("col-brand"))
@@ -747,6 +800,7 @@ function initTableBodyEvents() {
       else if (targetCell.classList.contains("col-vendor"))
         focusTarget = "vendor";
     }
+
     window.getSelection().removeAllRanges();
     openEditModal(id, focusTarget);
   });

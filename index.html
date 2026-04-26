@@ -387,6 +387,16 @@
         <!-- ─────────────────── Veri Tablosu ─────────────────── -->
         <div class="table-wrapper">
           <table id="mainTable">
+            <colgroup>
+              <col class="col-date" />
+              <col class="col-component" />
+              <col class="col-brand" />
+              <col class="col-specs" />
+              <col class="col-price" />
+              <col class="col-vendor" />
+              <col class="col-status" />
+            </colgroup>
+
             <!-- Tablo Başlıkları -->
             <thead>
               <tr>
@@ -762,7 +772,6 @@
             </div>
             <div class="modal-body">
               <form id="changePasswordForm">
-                <!-- Şifre yöneticisi uyumluluğu için gizli kullanıcı adı alanı -->
                 <input
                   type="text"
                   id="changePasswordUsernameHint"
