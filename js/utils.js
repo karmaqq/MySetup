@@ -136,6 +136,16 @@ function normalizeTr(s) {
     .replace(/ç/g, "c");
 }
 
+function normalizeTrSearch(s) {
+  if (!s) return "";
+  const normalized = normalizeTr(s);
+  const hasTurkishChars = /[çğıüşö]/i.test(s);
+  if (hasTurkishChars) {
+    return normalized + "|" + s.toLowerCase();
+  }
+  return normalized;
+}
+
 /* ─────────────────── HTML Karakter Kaçışı ─────────────────── */
 
 function escHtml(str) {

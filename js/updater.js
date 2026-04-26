@@ -65,8 +65,14 @@ function setupUpdater(mainWindow) {
 /* ─────────────────── Güncelleme Kontrolü ─────────────────── */
 
 function checkForUpdates() {
-  if (!app.isPackaged) return;
-  autoUpdater.checkForUpdates();
+  if (!app.isPackaged) {
+    console.log("[Updater] Development modunda, güncelleme kontrolü atlanıyor");
+    return;
+  }
+  console.log("[Updater] GitHub'dan güncelleme kontrol ediliyor...");
+  autoUpdater.checkForUpdates().catch((err) => {
+    console.error("[Updater] Hata:", err.message);
+  });
 }
 
 /* ─────────────────── Dışa Aktarım ─────────────────── */
