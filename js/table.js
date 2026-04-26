@@ -19,7 +19,7 @@ function getFilteredSortedList() {
   let list = Object.keys(allData).map((id) => ({ id, ...allData[id] }));
 
   if (currentSearch) {
-    const q = normalizeTr(currentSearch);
+    const q = normalizeTrSearch(currentSearch);
     list = list.filter((item) => item._searchTag.includes(q));
   }
 
@@ -76,6 +76,7 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
     }
     if (_statsCache.mostExpId === item.id) {
       rebuildStatsCache();
+      updateStats(getFilteredSortedList());
     }
   } else {
     if (!oldItem) {
@@ -100,6 +101,9 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
     if (newPrice > _statsCache.mostExpPrice) {
       _statsCache.mostExpPrice = newPrice;
       _statsCache.mostExpId = item.id;
+      const mostExpItem = allData[_statsCache.mostExpId];
+      if (statExpensive)
+        statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
     }
   }
 }
@@ -497,12 +501,16 @@ function updateItemStatus(itemId, newStatus) {
     return;
   }
 
-  updateComponentStatusInFirebase(itemId, newStatus).catch(() => {
-    currentItem.status = oldStatus;
-    currentItem._statusNorm = oldStatusNorm;
-    syncStatusOnlyChanges(allData, allData, [itemId]);
-    showToast("Durum güncellenemedi", "error");
-  });
+  updateComponentStatusInFirebase(itemId, newStatus)
+    .then(() => {
+      showToast("Kayıt güncellendi", "success");
+    })
+    .catch(() => {
+      currentItem.status = oldStatus;
+      currentItem._statusNorm = oldStatusNorm;
+      syncStatusOnlyChanges(allData, allData, [itemId]);
+      showToast("Durum güncellenemedi", "error");
+    });
 }
 
 /* ─────────────────── Kayıt Silme ─────────────────── */
