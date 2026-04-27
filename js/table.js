@@ -1,21 +1,18 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                        DEĞİŞKENLER VE DURUM KONTROL                         */
+/* DEĞİŞKENLER VE DURUM KONTROL                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 let _pendingRender = false;
 
-/* ─────────────────── Virtual Scroll Sabitleri ─────────────────── */
+const VSCROLL_INITIAL = 40;
+const VSCROLL_REST_MS = 0;
 
-const VSCROLL_INITIAL = 40; /* İlk render'da çizilecek satır sayısı */
-const VSCROLL_REST_MS = 0; /* Kalanlar için gecikme (rAF yeterli) */
-
-/* ─────────────────── Modal Açık Kontrolü ─────────────────── */
 function isAnyModalOpen() {
   return !!document.querySelector(".modal-overlay.active");
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                             FİLTRELEME VE SIRALAMA                         */
+/* FİLTRELEME VE SIRALAMA                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 function getFilteredSortedList() {
@@ -63,7 +60,7 @@ function getFilteredSortedList() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          İSTATİSTİKLER VE GÜNCELLEMELER                     */
+/* İSTATİSTİKLER VE GÜNCELLEMELER                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 function updateStatsCacheOnChange(item, oldItem, isRemove) {
@@ -206,7 +203,7 @@ function updateSortIcons() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                         SATIR VE HÜCRE OLUŞTURMA                            */
+/* SATIR VE HÜCRE OLUŞTURMA                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 function getStatusClassName(statusValue) {
@@ -238,11 +235,25 @@ function buildStatusCellInnerHTML(item) {
   </div></td>`;
 }
 
-function buildBrandCellHTML(item) {
-  const brandText = escHtml(item.brand || "-");
+function buildCombinedSpecsCellHTML(item) {
+  const brandText = item.brand && item.brand !== "-" ? escHtml(item.brand) : "";
+  const specsText = item.specs && item.specs !== "-" ? escHtml(item.specs) : "";
+
+  let contentHtml = `<div class="specs-text-content">`;
+  if (brandText) {
+    contentHtml += `<span class="brand-text">${brandText}</span>`;
+  }
+  if (specsText) {
+    contentHtml += `<span class="specs-text">${specsText}</span>`;
+  }
+  if (!brandText && !specsText) {
+    contentHtml += `<span class="specs-text">-</span>`;
+  }
+  contentHtml += `</div>`;
+
   if (item.url) {
-    return `<div class="brand-cell-inner">
-      <span class="brand-cell-text">${brandText}</span>
+    return `<div class="combined-specs-cell">
+      ${contentHtml}
       <a href="${escAttr(item.url)}" target="_blank" title="Ürün Linkine Git" class="brand-url-icon">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -252,7 +263,7 @@ function buildBrandCellHTML(item) {
       </a>
     </div>`;
   }
-  return brandText;
+  return `<div class="combined-specs-cell">${contentHtml}</div>`;
 }
 
 function buildRowHTML(item) {
@@ -260,8 +271,7 @@ function buildRowHTML(item) {
   return `
     <td class="col-date">${formattedDate}</td>
     <td class="col-component">${escHtml(item.component)}</td>
-    <td class="col-brand">${buildBrandCellHTML(item)}</td>
-    <td class="col-specs">${escHtml(item.specs)}</td>
+    <td class="col-specs">${buildCombinedSpecsCellHTML(item)}</td>
     <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
     <td class="col-vendor">${escHtml(item.vendor)}</td>
     ${buildStatusCellInnerHTML(item)}
@@ -272,8 +282,7 @@ function buildGroupRowHTML(item, dateCell, vendorCell) {
   return `
     ${dateCell}
     <td class="col-component">${escHtml(item.component)}</td>
-    <td class="col-brand">${buildBrandCellHTML(item)}</td>
-    <td class="col-specs">${escHtml(item.specs)}</td>
+    <td class="col-specs">${buildCombinedSpecsCellHTML(item)}</td>
     <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
     ${vendorCell}
     ${buildStatusCellInnerHTML(item)}
@@ -289,7 +298,6 @@ function createRowEl(item) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* FRAGMENT OLUŞTURUCU — Ortak Satır İnşa Mantığı                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-
 
 function buildRowsFragment(list) {
   const fragment = document.createDocumentFragment();
@@ -311,7 +319,7 @@ function buildRowsFragment(list) {
     dateGroups.forEach((group) => {
       const sep = document.createElement("tr");
       sep.className = "group-separator";
-      sep.innerHTML = `<td colspan="7"></td>`;
+      sep.innerHTML = `<td colspan="6"></td>`;
       fragment.appendChild(sep);
 
       const vendorGroups = [];
@@ -347,7 +355,7 @@ function buildRowsFragment(list) {
   } else {
     const topSep = document.createElement("tr");
     topSep.className = "group-separator";
-    topSep.innerHTML = `<td colspan="7"></td>`;
+    topSep.innerHTML = `<td colspan="6"></td>`;
     fragment.appendChild(topSep);
 
     list.forEach((item) => {
@@ -361,9 +369,8 @@ function buildRowsFragment(list) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* RENDER MOTORU + VIRTUAL SCROLL                                             */
+/* RENDER MOTORU + VIRTUAL SCROLL                                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-
 
 let _vsRafId = null;
 
@@ -378,7 +385,7 @@ function renderTableRows(list) {
   if (!list.length) {
     const emptyRow = document.createElement("tr");
     emptyRow.innerHTML = `
-      <td colspan="7" class="empty-cell">
+      <td colspan="6" class="empty-cell">
         <div class="empty-state">
           <div class="empty-icon">⊘</div>
           <span>${
@@ -427,7 +434,6 @@ function renderTableRows(list) {
   }
 }
 
-/* ─────────────────── Tüm Tabloyu Yeniden Çiz ─────────────────── */
 function renderAll() {
   if (isAnyModalOpen()) {
     _pendingRender = true;
@@ -450,7 +456,7 @@ function renderAll() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                     VERİ YÖNETİMİ VE CRUD İŞLEMLER                          */
+/* VERİ YÖNETİMİ VE CRUD İŞLEMLER                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 function addOrUpdateTableRow(id, item) {
@@ -601,7 +607,6 @@ function deleteItem(itemId) {
   performDelete();
 }
 
-/* ─────────────────── Yeni Kayıt Satırı Oluştur ─────────────────── */
 function initiateAddRow() {
   const tr = document.createElement("tr");
   tr.className = "new-item-row";
@@ -614,8 +619,12 @@ function initiateAddRow() {
       </div>
     </td>
     <td><input type="text" class="entry-input component-input" placeholder="Bileşen Adı *"></td>
-    <td><input type="text" class="entry-input brand-input" placeholder="Marka"></td>
-    <td><input type="text" class="entry-input specs-input" placeholder="Özellikler"></td>
+    <td>
+      <div style="display: flex; gap: 6px;">
+        <input type="text" class="entry-input brand-input" placeholder="Marka" style="flex: 1;">
+        <input type="text" class="entry-input specs-input" placeholder="Özellikler" style="flex: 2;">
+      </div>
+    </td>
     <td><input type="text" class="entry-input price-input" placeholder="0,00" inputmode="decimal"></td>
     <td><input type="text" class="entry-input vendor-input" placeholder="Satıcı"></td>
     <td style="text-align: center;">
@@ -662,7 +671,6 @@ function initiateAddRow() {
   return tr;
 }
 
-/* ─────────────────── Yeni Kayıt Gönder ─────────────────── */
 function submitNewItem(tr, inputs) {
   const component = inputs[1].value.trim();
   if (!component) return;
@@ -704,10 +712,9 @@ function submitNewItem(tr, inputs) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                      OLAY DİNLEYİCİLERİ VE BAŞLATMA                         */
+/* OLAY DİNLEYİCİLERİ VE BAŞLATMA                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Modal Kapanınca Ertelenen Render ─────────────────── */
 (function () {
   const observer = new MutationObserver(() => {
     if (_pendingRender && !isAnyModalOpen()) {
@@ -720,7 +727,6 @@ function submitNewItem(tr, inputs) {
   });
 })();
 
-/* ─────────────────── Sıralama Tıklama Dinleyicisi ─────────────────── */
 document.querySelectorAll(".sortable").forEach((th) => {
   th.addEventListener("click", () => {
     const col = th.dataset.sort || th.dataset.col;
@@ -738,7 +744,6 @@ document.querySelectorAll(".sortable").forEach((th) => {
   });
 });
 
-/* ─────────────────── Ürün Ekle Butonu Dinleyicisi ─────────────────── */
 if (addItemBtn) {
   addItemBtn.onclick = () => {
     if (!tableBody) return;
@@ -751,7 +756,6 @@ if (addItemBtn) {
   };
 }
 
-/* ─────────────────── Tablo Klavye Kısayolları ─────────────────── */
 document.addEventListener("keydown", (e) => {
   if (
     e.key === "Escape" &&
@@ -764,7 +768,6 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-/* ─────────────────── Tablo Gövdesi (Event Delegation) ─────────────────── */
 function initTableBodyEvents() {
   if (!tableBody) return;
   tableBody.addEventListener("click", function (e) {
@@ -791,10 +794,8 @@ function initTableBodyEvents() {
 
     if (targetCell) {
       if (targetCell.classList.contains("col-date")) focusTarget = "date";
-      else if (targetCell.classList.contains("col-brand"))
-        focusTarget = "brand";
       else if (targetCell.classList.contains("col-specs"))
-        focusTarget = "specs";
+        focusTarget = "brand";
       else if (targetCell.classList.contains("col-price"))
         focusTarget = "price";
       else if (targetCell.classList.contains("col-vendor"))
@@ -806,7 +807,6 @@ function initTableBodyEvents() {
   });
 }
 
-/* ─────────────────── DOM Yüklendiğinde Başlatma ─────────────────── */
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initTableBodyEvents);
 } else {

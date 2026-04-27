@@ -331,7 +331,7 @@ h1 .accent-text {
 
 .filter-btn.active[data-status="all"] {
   background: var(--accent-dim);
-  border: 1px solid var(--accent-glow);
+
   color: var(--accent);
 }
 

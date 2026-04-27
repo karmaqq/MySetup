@@ -1,19 +1,17 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                               TABLO SİSTEMİ                                 */
+/* TABLO SİSTEMİ                                 */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
   --col-date: 110px;
-  --col-component: 160px;
-  --col-brand: 220px;
-  --col-specs: auto;
+  --col-component: 140px;
   --col-price: 120px;
-  --col-vendor: 130px;
+  --col-vendor: 120px;
   --col-status: 170px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                               TABLO KAPLAYAN KAPSAYICI                      */
+/* TABLO KAPLAYAN KAPSAYICI                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 .table-wrapper {
@@ -24,7 +22,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                               TABLO ANA YAPISI                               */
+/* TABLO ANA YAPISI                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 table {
@@ -42,11 +40,8 @@ col.col-date {
 col.col-component {
   width: var(--col-component);
 }
-col.col-brand {
-  width: var(--col-brand);
-}
 col.col-specs {
-  width: auto;
+  width: 100%;
 }
 col.col-price {
   width: var(--col-price);
@@ -59,7 +54,7 @@ col.col-status {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                               BAŞLIK HÜCRELERİ                               */
+/* BAŞLIK HÜCRELERİ                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 th {
@@ -112,7 +107,7 @@ th.sort-active .sort-icon {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                               VERİ HÜCRELERİ                               */
+/* VERİ HÜCRELERİ                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 td {
@@ -165,7 +160,7 @@ tbody tr:hover .col-price {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                               SÜTUN ÖZEL STİLLERİ                               */
+/* SÜTUN ÖZEL STİLLERİ                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 .col-component {
@@ -189,14 +184,10 @@ tbody tr:hover .col-price {
   white-space: nowrap;
 }
 
-.col-brand,
-.col-specs {
-  text-align: left;
-}
-
 .col-specs {
   color: var(--text-dim);
   font-size: 12.5px;
+  text-align: left;
 }
 
 .col-vendor {
@@ -224,7 +215,40 @@ td[rowspan] {
   border-top: 1px solid var(--border);
 }
 
-/* ─────────────────── Brand URL Icon ─────────────────── */
+/* ─────────────────── Birleştirilmiş Marka ve Özellikler Sütunu ─────────────────── */
+
+.combined-specs-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  width: 100%;
+  overflow: hidden;
+}
+
+.specs-text-content {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.brand-text {
+  font-weight: 600;
+  color: var(--text-bright);
+  flex-shrink: 0;
+}
+
+.specs-text {
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
 
 .brand-url-icon {
   display: flex;
@@ -241,23 +265,8 @@ td[rowspan] {
   color: var(--accent);
 }
 
-.brand-cell-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  overflow: hidden;
-}
-
-.brand-cell-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                            BOŞ HÜCRELER                                     */
+/* BOŞ HÜCRELER                                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 .empty-cell {
@@ -284,7 +293,7 @@ td[rowspan] {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                               DURUM HÜCRESİ                                  */
+/* DURUM HÜCRESİ                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 .status-cell {
@@ -461,7 +470,7 @@ tbody tr:hover .row-actions {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                               TABLO ALT BİLGİ                               */
+/* TABLO ALT BİLGİ                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 tfoot {
@@ -526,7 +535,7 @@ tfoot {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                               GENEL BUTONLAR                               */
+/* GENEL BUTONLAR                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 .btn {
@@ -560,7 +569,7 @@ tfoot {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                               YENİ KAYIT SATIRI                               */
+/* YENİ KAYIT SATIRI                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 .new-item-row td {
