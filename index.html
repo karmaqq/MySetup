@@ -390,7 +390,6 @@
             <colgroup>
               <col class="col-date" />
               <col class="col-component" />
-              <col class="col-brand" />
               <col class="col-specs" />
               <col class="col-price" />
               <col class="col-vendor" />
@@ -400,23 +399,24 @@
             <!-- Tablo Başlıkları -->
             <thead>
               <tr>
-                <th class="sortable" data-sort="date">
+                <th class="sortable" data-col="date">
                   Tarih <span class="sort-icon">↕</span>
                 </th>
-                <th class="sortable" data-sort="component">
+                <th class="sortable" data-col="component">
                   Bileşen <span class="sort-icon">↕</span>
                 </th>
-                <th class="sortable" data-sort="brand">
-                  Marka <span class="sort-icon">↕</span>
+                <th class="sortable" data-col="brand">
+                  Özellikler <span class="sort-icon">↕</span>
                 </th>
-                <th>Özellikler</th>
-                <th class="sortable" data-sort="price">
+                <th class="sortable" data-col="price">
                   Fiyat <span class="sort-icon">↕</span>
                 </th>
-                <th class="sortable" data-sort="vendor">
+                <th class="sortable" data-col="vendor">
                   Satıcı <span class="sort-icon">↕</span>
                 </th>
-                <th>Durum</th>
+                <th class="sortable" data-col="status">
+                  Durum <span class="sort-icon">↕</span>
+                </th>
               </tr>
             </thead>
 
@@ -431,12 +431,12 @@
                     + Ürün Ekle
                   </button>
                 </td>
-                <td colspan="3" class="footer-center">
+                <td colspan="2" class="footer-center">
                   <span class="result-count" id="resultCount"></span>
                 </td>
                 <td colspan="2" class="footer-right">
                   <div class="total-badge">
-                    <span class="total-label">Toplam</span>
+                    <span class="total-label">Toplam:</span>
                     <span class="total-value" id="totalCostDisplay"
                       >0,00 ₺</span
                     >
