@@ -1,62 +1,19 @@
-# AGENTS.md
+# AGENTS.md — MySetup v2.4.2
 
-## Zorunlu Kısıtlamalar
-
-- **Bundler yok.** Renderer tarafında `import`/`export`/`require` yasak. Sadece `main.js`, `preload.js`, `js/updater.js` Node ortamında çalışır.
-- **Script yükleme sırası kesinlikle korunmalı:** `utils.js → firebase.js → table.js → io.js → updater-ui.js → editmodal.js → auth.js → userset.js`
-- **Global değişkenler yalnızca `utils.js`'de tanımlanır.** `allData`, `currentSearch`, `currentStatusFilter`, `currentSort`, `editingId` başka dosyalarda `let`/`const` ile yeniden tanımlanamaz; doğrudan atama yapılır.
-- **Firebase compat SDK v9.22.1** kullanılıyor. Modular SDK sentaksı (`import { initializeApp } from 'firebase/app'`) yasak.
-- **`preload.js`** `contextIsolation: true`, `sandbox: true` ile çalışır. `ipcRenderer` doğrudan renderer'a açılamaz; yalnızca `contextBridge.exposeInMainWorld` üzerinden geçer.
-- **CSP** `main.js → setupCspHeaders()` içinde tanımlı. `'unsafe-eval'` yok. Yeni harici kaynak gerekirse `APP_CSP` dizisine ekle.
-- **Kullanıcı adı benzersizliği** Firebase transaction ile korunur (`userset.js → saveBtn click`). Eski kullanıcı adı silinmeden önce transaction commit edilmeli; bu iki adım hiçbir zaman ayrılmamalı.
+> Bu dosya, MySetup projesine kod müdahalesi yapacak her yapay zeka ajanı, editör eklentisi veya geliştirici için zorunlu okuma belgesidir.
+> Projeyi ilk kez gören bir ajanın hata yapmaması için gereken tüm yapısal bilgi burada tanımlanmıştır.
 
 ---
 
-## Bitirmeden Önce Doğrulama
+## 1. Altın Kural: Yorum Stili
 
-```bash
-electron .
-```
+**Bu kural ihlal edilemez. Kod değişikliği yapmadan önce mutlaka okunmalıdır.**
 
-Otomatik test altyapısı yok. Her değişiklik sonrası el ile kontrol:
+Projedeki her `.js` ve `.css` dosyası aynı yorum diline sahiptir. Ajan kendi yorum stilini dayatamaz, standart dışı yorum ekleyemez, mevcut yorum bloklarını değiştiremez.
 
-- Auth overlay → giriş → ana tablo render
-- Kayıt ekleme, düzenleme, silme
-- Görsel yükleme (Firebase Storage)
-- CSV içe/dışa aktarma
+### 1.1 Bölüm Başlığı
 
----
-
-## Proje Haritası
-
-| Dosya               | Sorumluluk                                                       |
-| ------------------- | ---------------------------------------------------------------- |
-| `js/utils.js`       | Tüm global değişkenler, DOM referansları, yardımcı fonksiyonlar  |
-| `js/firebase.js`    | Firebase init, `allData` CRUD, listener yönetimi, `enrichItem()` |
-| `js/table.js`       | Render motoru, filtre/sıralama, CRUD UI, istatistik cache        |
-| `js/io.js`          | Toast, confirm dialog, arama debounce, CSV işleme                |
-| `js/updater-ui.js`  | Güncelleme butonu ve IPC olayları (renderer tarafı)              |
-| `js/editmodal.js`   | Düzenleme modali, görsel yükleme/önizleme                        |
-| `js/auth.js`        | Firebase Auth, oturum yönetimi, form validasyonu                 |
-| `js/userset.js`     | Hesap ayarları, kullanıcı adı/şifre değiştirme, hesap silme      |
-| `js/updater.js`     | `electron-updater` kurulumu (Node/main process)                  |
-| `main.js`           | Electron pencere, CSP başlıkları, uygulama yaşam döngüsü         |
-| `preload.js`        | IPC köprüsü — sadece buradan API aç                              |
-| `css/base.css`      | CSS değişkenleri, reset, yerel font yükleme, toast               |
-| `css/header.css`    | Header, stat kartlar, toolbar, filtreler                         |
-| `css/table.css`     | Tablo, satır, durum menüsü, yeni kayıt satırı                    |
-| `css/editmodal.css` | Düzenleme modali, floating önizleme                              |
-| `css/auth.css`      | Auth overlay, giriş/kayıt panelleri                              |
-| `css/userset.css`   | Ayarlar modalleri, premium modal                                 |
-| `cors.json`         | Firebase Storage CORS — `gsutil cors set` ile uygulanır          |
-
----
-
-## Kod Yazım Kuralları
-
-### Yorum Başlıkları
-
-**Bölüm başlığı** (dosyada yeni bir grup açarken):
+Dosyada mantıksal olarak yeni bir ana grup açılıyorsa kullanılır. İki satır çerçeve, ortada başlık:
 
 ```js
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -64,13 +21,19 @@ Otomatik test altyapısı yok. Her değişiklik sonrası el ile kontrol:
 /* ═══════════════════════════════════════════════════════════════════════════ */
 ```
 
-**Alt grup başlığı:**
+CSS dosyalarında aynı kural geçerlidir.
+
+### 1.2 Alt Grup Başlığı
+
+Bir bölüm içinde tematik olarak gruplanmış kod bloğu başlamadan önce kullanılır:
 
 ```js
 /* ─────────────────── Başlık ─────────────────── */
 ```
 
-**Fonksiyon içi yorum:** Satır içi `//` veya `/* */` **yasak**. Birden fazla adım varsa numaralandır:
+### 1.3 Fonksiyon İçi Yorum
+
+Bir fonksiyon birden fazla adım içeriyorsa, yalnızca adım başları numaralandırılır. Satır içi `//` veya gövdeye gömülü `/* */` kesinlikle yasaktır:
 
 ```js
 function submitNewItem(tr, inputs) {
@@ -80,69 +43,246 @@ function submitNewItem(tr, inputs) {
 }
 ```
 
-→ Yalnızca adım başlarında tek satır; kodun gövdesine yorum gömülmez.
+Tek adımlı fonksiyonlara yorum eklenmez.
 
-### Girinti
+### 1.4 Yasak Yorum Kalıpları
 
-- 2 boşluk; iç içe her blok +2 boşluk.
+Aşağıdakilerin hiçbiri projede yer alamaz:
 
----
-
-## Repo'ya Özgü Kurallar
-
-- **`enrichItem()`** her Firebase okuma/yazma sonrası çağrılmalı. `_searchTag` ve `_statusNorm` bu fonksiyon tarafından eklenir. Ham Firebase verisi bu alanlar olmadan `allData`'ya yazılamaz.
-- **`userDataRef.off()`** `initUserDataRef()` başında çağrılır. Bu çağrıyı kaldırma; listener birikir.
-- **`renderAll()`** herhangi bir modal açıkken tam render yapmaz; `_pendingRender = true` set eder. Modal kapanınca `MutationObserver` tetikler. Bu akışı bypass etme.
-- **`normalizeTr()`** tüm arama ve durum karşılaştırmalarında kullanılmalı. Ham string karşılaştırması yapılmamalı. Filtre değerleri (`_statusNorm`) `enrichItem()` tarafından önceden hesaplanmış; tekrar `normalizeTr()` çağrısı gereksiz.
-- **`deleteAllInFolder`** (`userset.js`) Storage'daki tüm kullanıcı dosyalarını siler. Yalnızca hesap silme akışında kullanılabilir.
-- **`package.json → build.publish`** `owner`/`repo` değiştirilirse auto-updater bozulur.
-- **`autoUpdater.autoDownload = false`** kasıtlı; kullanıcı onayı olmadan indirme başlatılmaz.
-- **Firebase Storage CORS** yalnızca `mysetup-8dcd5.firebaseapp.com` için tanımlı. Electron `file://` üzerinden çalışır; Storage istekleri main process CSP override'ı ile geçer.
+```js
+// Bu fonksiyon X'i yapıyor                   ← YASAK: açıklayıcı satır içi yorum
+const x = a + b; // toplam                    ← YASAK: satır sonu yorumu
+/* Burada şunu yaptık çünkü... */             ← YASAK: gövde içi blok yorum
+// TODO: ileride düzelt                        ← YASAK: işaretleyici yorum
+```
 
 ---
 
-## Değişiklik Güvenliği
+## 2. Proje Mimarisi
 
-- Firebase Realtime Database kuralları bu repoda yok; Firebase Console'dan ayrıca yönetilir.
-- CSS değişkenleri yalnızca `css/base.css → :root` içinde tanımlanır; başka dosyalara ekleme.
-- Yeni harici font/script kaynağı eklenecekse hem `APP_CSP` hem ilgili CSP directive güncellenmeli.
-- `font-src 'self' data:` direktifi Google Fonts gibi harici font CDN'lerini engeller; yeni font assets'e yerel olarak eklenmelidir.
+MySetup, **Electron** çatısı üzerine kurulu bir masaüstü envanter uygulamasıdır. İki bağımsız süreç vardır:
 
----
+**Main Process (Node.js):** `main.js`, `preload.js`, `js/updater.js`
+**Renderer Process (Tarayıcı):** `index.html` ve tüm `js/` + `css/` dosyaları
 
-## Bilinen Tuzaklar
-
-- **`openEditModal` içindeki `requestAnimationFrame` (çift rAF):** Görsel event bağlama için kritik timing. `imageFileInput._eventsBound` flag'i sonraki açılışlarda `onchange` kapanımındaki `id`'yi güncellemez; her açılışta `onchange` yeniden atanmalıdır (`imageUploadBtn.onclick` için flag korunabilir).
-- **`escAttr` → içerik `escHtml`'den geçirilmişse** çift tırnak iki kez escape edilir (`&quot;` → `&amp;quot;`). Bir string her iki fonksiyondan ardışık geçirilmemeli.
-- **`addOrUpdateTableRow`** tarih sıralaması (`currentSort.col === "date"`) aktifken her zaman `renderAll()`'a düşer; büyük veri setlerinde bu beklenen davranıştır.
-- **`openModalCount`** (`userset.js`) ölü değişken; hiçbir yerde okunmuyor. Referans alma, silme güvenlidir.
-- Firebase compat SDK'da `firebase.apps.length` kontrolü `firebase.js`'de yapılıyor; ikinci `initializeApp` çağrısı hata verir.
-- **`connect.js`** hem realtime `.info/connected` listener hem 30 saniyelik polling ile aynı path'i izliyor (biri fazla — bkz. OPTIMIZASYON.md BULGU-02).
+Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bundler yoktur. Tüm paylaşılan değişkenler global scope üzerinden erişilir.
 
 ---
 
-## OPTIMIZASYON.md Bulguları (Bekleyen / Uygulanabilir)
+## 3. Dosya Haritası
 
-> Aşağıdaki düzeltmeler `OPTIMIZASYON.md`'de belgelenmiştir. Kod değişikliği yapılmadan önce ilgili bulgu gözden geçirilmeli, `electron .` ile doğrulanmalıdır.
+### Main Process
 
-| Bulgu                                                          | Dosya                          | Durum          |
-| -------------------------------------------------------------- | ------------------------------ | -------------- |
-| BULGU-01 — `renderAll()` içinde koşulsuz `rebuildStatsCache()` | `js/table.js`                  | ⏳ Uygulanmadı |
-| BULGU-02 — `connect.js` çift bağlantı izleme                   | `js/connect.js`                | ⏳ Uygulanmadı |
-| BULGU-03 — `normalizeTr()` fallback tekrarı                    | `js/table.js`                  | ⏳ Uygulanmadı |
-| BULGU-04 — Google Fonts ağ bağımlılığı                         | `index.html`, `css/header.css` | ⏳ Uygulanmadı |
-| BULGU-05 — `renderAll()` rAF debounce                          | `js/table.js`, `js/io.js`      | ⏳ Uygulanmadı |
-| BULGU-06 — `firebase.js` listener sırası (race condition)      | `js/firebase.js`               | ⏳ Uygulanmadı |
-| BULGU-07 — `openModalCount` ölü değişken                       | `js/userset.js`                | ⏳ Uygulanmadı |
-| BULGU-08 — `connect.js` gereksiz `typeof` kontrolü             | `js/connect.js`                | ⏳ Uygulanmadı |
-| BULGU-09 — `editmodal.js` image event binding (`id` kapanımı)  | `js/editmodal.js`              | ⏳ Uygulanmadı |
-| BULGU-10 — `_dateCache` eviction stratejisi                    | `js/utils.js`                  | ⏳ Uygulanmadı |
-| BULGU-11 — `updateItemStatus()` shallow copy                   | `js/table.js`                  | ⏳ Uygulanmadı |
-| BULGU-12 — `buildStatusCellHTML` wrapper gereksiz              | `js/table.js`                  | ⏳ Uygulanmadı |
-| BULGU-13 — `auth.js` SVG tekrarı                               | `js/auth.js`                   | ⏳ Uygulanmadı |
-| BULGU-14 — `deleteAllInFolder` inline tanım                    | `js/userset.js`                | ⏳ Uygulanmadı |
-| BULGU-15 — CSP `'unsafe-inline'` script                        | `main.js`                      | ⏳ Uygulanmadı |
-| BULGU-16 — CSV karakter-karakter parse döngüsü                 | `js/io.js`                     | ⏳ Uygulanmadı |
-| BULGU-17 — `escAttr`/`escHtml` çift escape                     | `js/utils.js`, `js/table.js`   | ⏳ Uygulanmadı |
+| Dosya           | Sorumluluk                                                                      |
+| --------------- | ------------------------------------------------------------------------------- |
+| `main.js`       | Electron penceresi, CSP başlıkları, uygulama yaşam döngüsü, güncelleme başlatma |
+| `preload.js`    | IPC köprüsü; yalnızca bu dosyadan `contextBridge.exposeInMainWorld` çağrılır    |
+| `js/updater.js` | `electron-updater` kurulumu; `autoDownload: false` kasıtlı                      |
 
-Bir bulgu uygulandıktan sonra bu tabloda durumu **✅ Uygulandı** olarak güncelle.
+### Renderer Process — JavaScript (yükleme sırası bu şekilde korunmalı)
+
+| Dosya              | Sorumluluk                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `js/utils.js`      | **Tüm global değişkenler**, DOM referansları, yardımcı fonksiyonlar, `scheduleRender` |
+| `js/firebase.js`   | Firebase init, `allData` CRUD, realtime listener yönetimi, `enrichItem()`             |
+| `js/table.js`      | Render motoru, filtre/sıralama, istatistik önbelleği, CRUD UI eylemleri               |
+| `js/io.js`         | Toast/confirm sistemi, arama debounce, CSV içe/dışa aktarma                           |
+| `js/updater-ui.js` | Güncelleme butonu ve IPC olayları (renderer tarafı)                                   |
+| `js/editmodal.js`  | Düzenleme modali, görsel yükleme/önizleme, yıldız derecelendirme                      |
+| `js/auth.js`       | Firebase Auth, oturum durumu, giriş/kayıt formları                                    |
+| `js/userset.js`    | Hesap ayarları, kullanıcı adı/şifre değiştirme, hesap silme                           |
+
+### Renderer Process — CSS
+
+| Dosya               | Sorumluluk                                                         |
+| ------------------- | ------------------------------------------------------------------ |
+| `css/base.css`      | CSS değişkenleri (`:root`), reset, toast, genel layout, responsive |
+| `css/header.css`    | Üst bar, istatistik kartları, araç çubuğu, filtreler               |
+| `css/table.css`     | Tablo, satır stilleri, durum menüsü, yeni kayıt satırı             |
+| `css/editmodal.css` | Düzenleme modali, floating görsel önizleme, yıldız sistemi         |
+| `css/auth.css`      | Auth overlay, giriş/kayıt panelleri                                |
+| `css/userset.css`   | Ayarlar modalleri, kullanıcı adı düzenleme, tehlike alanı          |
+
+### Diğer
+
+| Dosya          | Sorumluluk                                                                   |
+| -------------- | ---------------------------------------------------------------------------- |
+| `index.html`   | Tek sayfa; tüm HTML yapısı, script yükleme sırası, SVG template'ler          |
+| `cors.json`    | Firebase Storage CORS; `gsutil cors set` ile uygulanır, doğrudan düzenlenmez |
+| `package.json` | Bağımlılıklar ve `electron-builder` yapılandırması                           |
+
+---
+
+## 4. Bağımlılık Zinciri
+
+```
+utils.js        → Hiçbir şeye bağımlı değil; diğer her dosya buna bağımlıdır
+firebase.js     → utils.js'e bağımlı (allData, normalizeTr, _statsCache)
+table.js        → utils.js + firebase.js'e bağımlı
+io.js           → utils.js + table.js + firebase.js'e bağımlı
+updater-ui.js   → utils.js'e bağımlı (window.electronAPI)
+editmodal.js    → utils.js + firebase.js + io.js'e bağımlı
+auth.js         → utils.js + firebase.js + editmodal.js + userset.js'e bağımlı
+userset.js      → utils.js + firebase.js + auth.js'e bağımlı
+```
+
+Bu sıra `index.html` içindeki `<script>` etiketlerinde sabittir. **Asla değiştirilemez.**
+
+---
+
+## 5. Kritik Fonksiyonlar ve Kuralları
+
+### `enrichItem(item)` — `js/firebase.js`
+
+Firebase'den gelen ham veriyi `allData`'ya yazmadan önce bu fonksiyondan geçirmek **zorunludur**. `_searchTag` ve `_statusNorm` alanlarını ekler. Bu alanlar olmadan arama ve filtreleme çalışmaz.
+
+### `initUserDataRef(uid)` — `js/firebase.js`
+
+Başında `userDataRef.off()` çağrısı vardır; bu satır kaldırılamaz. Kaldırılırsa listener'lar birikir ve aynı event birden fazla kez tetiklenir.
+
+### `renderAll()` — `js/table.js`
+
+Herhangi bir `.modal-overlay.active` varken tam render yapmaz; `_pendingRender = true` set eder. Modal kapanınca `MutationObserver` tetikler ve render başlar. Bu akış bypass edilemez.
+
+### `scheduleRender()` — `js/utils.js`
+
+`renderAll`'ı doğrudan çağırmak yerine her zaman bu fonksiyon kullanılır. `requestAnimationFrame` üzerinden debounce sağlar; aynı frame'de birden fazla çağrıyı birleştirir.
+
+### `normalizeTr(s)` — `js/utils.js`
+
+Tüm arama ve durum karşılaştırmaları bu fonksiyondan geçer. Ham string karşılaştırması yapılamaz. `_statusNorm` zaten `enrichItem` tarafından set edilmiştir; üzerine tekrar `normalizeTr` çağırmak gereksizdir.
+
+### `updateStatsCacheOnChange` + `rebuildStatsCache` — `js/table.js`
+
+İstatistik önbelleği (`_statsCache`) tüm hesaplamalar için temel referanstır. Firebase listener'larında her kayıt değişiminde `updateStatsCacheOnChange` çağrılır; tüm liste sıfırlanıp hesaplanması gereken durumlarda `rebuildStatsCache` kullanılır.
+
+### `deleteAllInFolder(ref)` — `js/firebase.js`
+
+Storage'daki kullanıcı dosyalarını özyinelemeli siler. **Yalnızca hesap silme akışında** çağrılabilir.
+
+---
+
+## 6. Global Değişkenler
+
+Aşağıdaki değişkenler yalnızca `js/utils.js` içinde `let` veya `const` ile tanımlanır. Başka hiçbir dosyada yeniden tanımlanamaz; yalnızca doğrudan atama yapılabilir:
+
+| Değişken              | Tip            | Açıklama                                            |
+| --------------------- | -------------- | --------------------------------------------------- |
+| `allData`             | `{}`           | Tüm Firebase verisinin anlık görüntüsü              |
+| `currentSearch`       | `string`       | Aktif arama sorgusu                                 |
+| `currentStatusFilter` | `string`       | Aktif durum filtresi (`"all"` veya normalize değer) |
+| `currentSort`         | `{ col, dir }` | Aktif sıralama sütunu ve yönü                       |
+| `editingId`           | `string\|null` | Açık edit modalının kayıt ID'si                     |
+| `_statsCache`         | `{}`           | İstatistik önbelleği                                |
+
+---
+
+## 7. Yapamayacakları (Yasak İşlemler)
+
+**Aşağıdakiler hiçbir koşulda yapılamaz:**
+
+- Renderer tarafında `import`, `export`, `require` kullanmak
+- `utils.js` dışında global değişken (`allData`, `currentSearch` vb.) tanımlamak
+- Script yükleme sırasını değiştirmek
+- `userDataRef.off()` çağrısını `initUserDataRef` başından kaldırmak
+- `enrichItem()` çağrısını atlayarak ham veri `allData`'ya yazmak
+- `renderAll()` içindeki modal kontrolünü bypass etmek
+- CSS değişkenlerini `base.css/:root` dışında bir yerde tanımlamak
+- `'unsafe-eval'` direktifini CSP'ye eklemek
+- `autoUpdater.autoDownload`'ı `true` yapmak
+- `preload.js` dışında `ipcRenderer`'ı renderer'a açmak
+- `package.json → build.publish` içindeki `owner`/`repo` değerlerini değiştirmek
+- Firebase modular SDK sentaksı (`import { initializeApp }`) kullanmak
+- `escAttr` ve `escHtml`'i aynı string'e ardışık uygulamak (çift escape)
+
+---
+
+## 8. Yapabilecekleri (İzin Verilen İşlemler)
+
+- `js/utils.js`'deki yardımcı fonksiyon listesine yeni fonksiyon eklemek
+- Yeni harici kaynak gerekiyorsa hem `APP_CSP` hem ilgili directive güncellenmek şartıyla CDN eklemek
+- `css/base.css → :root` içine yeni CSS değişkeni eklemek
+- `addComponentToFirebase`, `updateComponentInFirebase` gibi mevcut Firebase yazma fonksiyonlarını kullanmak
+- `showToast`, `showConfirm` fonksiyonlarını her dosyadan çağırmak
+- Yeni modal eklemek; eklenen her yeni `.modal-overlay` için `MutationObserver`'ın gözlemleyeceği listeye dahil etmek (`table.js` başındaki IIFE)
+- `preload.js`'e yeni IPC kanalı eklemek — her kanal için `onceListener` pattern'i kullanmak
+- `cors.json`'ı yalnızca Firebase Console'dan Storage CORS ayarı için güncellemek
+
+---
+
+## 9. Firebase SDK
+
+**Compat SDK v9.22.1** — CDN üzerinden yüklenir (`index.html`). Modular SDK sentaksı yasaktır.
+
+```html
+<!-- Doğru -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+
+<!-- Yasak -->
+import { initializeApp } from 'firebase/app';
+```
+
+`firebase.apps.length` kontrolü `firebase.js`'de yapılıyor; ikinci `initializeApp` çağrısı hata üretir.
+
+---
+
+## 10. CSP Yapısı
+
+CSP, `main.js → setupCspHeaders()` içinde tanımlı `APP_CSP` dizisiyle yönetilir.
+
+Kritik kısıtlamalar:
+
+- `'unsafe-eval'` **yoktur** ve eklenemez
+- `font-src 'self' data:'` — harici font CDN'i için bu direktif güncellenmeli
+- Yeni bir harici kaynak gerektiğinde yalnızca `APP_CSP` dizisine eklenir; başka bir yere yazılmaz
+
+---
+
+## 11. Kullanıcı Adı Benzersizliği
+
+Kullanıcı adı değiştirme (`userset.js → saveBtn`) Firebase transaction ile korunur:
+
+- Transaction commit edilmeden eski kullanıcı adı silinemez
+- Bu iki adım hiçbir zaman ayrılmamalı veya sırası değiştirilmemelidir
+
+Kayıt akışında (`auth.js`) ise `once("value")` kontrolü + `set` yazımı non-atomiktir; TOCTOU riski mevcuttur (OPTIMIZATIONS.md BULGU-06).
+
+---
+
+## 12. Doğrulama Prosedürü
+
+Otomatik test altyapısı yoktur. Her değişiklik sonrası manuel kontrol:
+
+```bash
+electron .
+```
+
+Kontrol listesi:
+
+- Auth overlay → giriş → ana tablo render
+- Kayıt ekleme (inline satır), düzenleme (modal), silme (confirm toast)
+- Görsel yükleme — Firebase Storage
+- CSV içe aktarma ve dışa aktarma
+- Arama (Latin ve Türkçe karakterle)
+- Durum filtresi ve sıralama
+- Kullanıcı adı ve şifre değiştirme
+- Hesap silme akışı
+
+---
+
+## 13. Bilinen Tuzaklar
+
+| Konu                                  | Açıklama                                                                                                                     |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `normalizeTrSearch`                   | Türkçe karakter girildiğinde arama çalışmaz (OPTIMIZATIONS.md BULGU-01). Düzeltilmeden kullanılmamalı                        |
+| `imageUploadBtn._eventsBound`         | `onclick`'i sadece bir kez bağlar; farklı kayıtlar arasında modal geçişinde `imagePreview` kapanımı kayabilir (BULGU-08)     |
+| `escAttr` + `escHtml` ardışık         | Aynı string ikisinden geçirilirse `&quot;` → `&amp;quot;` olur                                                               |
+| `addOrUpdateTableRow`                 | Tarih sıralaması aktifken her zaman `renderAll()`'a düşer; beklenen davranıştır                                              |
+| Firebase çift `getFilteredSortedList` | `child_added/changed/removed` listener'larında `scheduleRender` + `updateResultCount` birlikte çağrılıyor (BULGU-02)         |
+| `@font-face` blokları                 | `base.css`'deki yerel font tanımları artık ölü kod; fontlar CDN üzerinden geliyor (BULGU-05 + BULGU-10 birlikte uygulanmalı) |
+
+---
+
+## 14. OPTIMIZATIONS.md ile İlişki
+
+Bekleyen optimizasyon bulguları `OPTIMIZATIONS.md` dosyasında belgelenmiştir. Kod değişikliği yapmadan önce ilgili bulgu okunmalı, değişiklik sonrası tablodaki durum `✅ Uygulandı` olarak güncellenmelidir.
