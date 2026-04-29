@@ -1,17 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                       FIREBASE VERİTABANI YÖNETİMİ                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── İtem Zenginleştirme ─────────────────── */
-
-function enrichItem(item) {
-  const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
-  return {
-    ...item,
-    _searchTag: normalizeTr(searchRaw),
-    _statusNorm: normalizeTr(item.status),
-  };
-}
 
 /* ─────────────────── Firebase Yapılandırma ─────────────────── */
 
@@ -25,6 +14,8 @@ const firebaseConfig = {
   appId: "1:888468129237:web:9374ae62de891d7013295c",
 };
 
+/* ─────────────────── Firebase Başlatma ─────────────────── */
+
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
@@ -32,6 +23,21 @@ const database = firebase.database();
 
 let userDataRef = null;
 let activeBasePath = null;
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          VERİ ZENGİNLEŞTİRME                            */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Arama ve Durum Etiketleri Ekle ─────────────────── */
+
+function enrichItem(item) {
+  const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
+  return {
+    ...item,
+    _searchTag: normalizeTr(searchRaw),
+    _statusNorm: normalizeTr(item.status),
+  };
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          VERİ OKUMA                                      */
@@ -60,7 +66,9 @@ function initUserDataRef(uid) {
 
   activeBasePath = "users/" + uid + "/components";
   userDataRef = database.ref(activeBasePath);
-let firstLoad = true;
+
+  let firstLoad = true;
+
   userDataRef.once("value").then((snap) => {
     const rawData = snap.val() || {};
     allData = Object.keys(rawData).reduce((acc, id) => {
@@ -84,13 +92,12 @@ let firstLoad = true;
       if (typeof addOrUpdateTableRow === "function")
         addOrUpdateTableRow(id, allData[id]);
       if (typeof scheduleRender === "function") scheduleRender();
-      if (typeof updateResultCount === "function") {
-        const filteredList = getFilteredSortedList();
-        updateResultCount(filteredList.length);
-      }
+      if (typeof updateResultCount === "function")
+        updateResultCount(getFilteredSortedList().length);
     },
     (err) => console.error("child_added hata:", err),
   );
+
   userDataRef.on(
     "child_changed",
     (snap) => {
@@ -102,13 +109,12 @@ let firstLoad = true;
       if (typeof addOrUpdateTableRow === "function")
         addOrUpdateTableRow(id, allData[id]);
       if (typeof scheduleRender === "function") scheduleRender();
-      if (typeof updateResultCount === "function") {
-        const filteredList = getFilteredSortedList();
-        updateResultCount(filteredList.length);
-      }
+      if (typeof updateResultCount === "function")
+        updateResultCount(getFilteredSortedList().length);
     },
     (err) => console.error("child_changed hata:", err),
   );
+
   userDataRef.on(
     "child_removed",
     (snap) => {
@@ -118,10 +124,8 @@ let firstLoad = true;
       if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
       if (typeof removeTableRow === "function") removeTableRow(id);
       if (typeof scheduleRender === "function") scheduleRender();
-      if (typeof updateResultCount === "function") {
-        const filteredList = getFilteredSortedList();
-        updateResultCount(filteredList.length);
-      }
+      if (typeof updateResultCount === "function")
+        updateResultCount(getFilteredSortedList().length);
     },
     (err) => console.error("child_removed hata:", err),
   );
@@ -161,6 +165,10 @@ function deleteComponentFromFirebase(id) {
   return database.ref(activeBasePath + "/" + id).remove();
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          DEPOLAMA YÖNETİMİ                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 /* ─────────────────── Görsel Yükle ─────────────────── */
 
 function uploadImageToFirebase(file, itemId) {
@@ -183,7 +191,7 @@ function uploadImageToFirebase(file, itemId) {
   });
 }
 
-/* ─────────────────── Storage Klasör Silme ─────────────────── */
+/* ─────────────────── Storage Klasör Sil ─────────────────── */
 
 async function deleteAllInFolder(ref) {
   const list = await ref.listAll();

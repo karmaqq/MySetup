@@ -1,19 +1,26 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* DEĞİŞKENLER VE DURUM KONTROL                         */
+/*                     DURUM DEĞİŞKENLERİ VE KONTROL                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Render Durumu ─────────────────── */
 
 let _pendingRender = false;
 
+/* ─────────────────── Sabitler ─────────────────── */
+
 const VSCROLL_INITIAL = 40;
-const VSCROLL_REST_MS = 0;
+
+/* ─────────────────── Modal Açık Kontrolü ─────────────────── */
 
 function isAnyModalOpen() {
   return !!document.querySelector(".modal-overlay.active");
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* FİLTRELEME VE SIRALAMA                          */
+/*                          FİLTRELEME VE SIRALAMA                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Filtrelenmiş ve Sıralanmış Liste ─────────────────── */
 
 function getFilteredSortedList() {
   let list = Object.keys(allData).map((id) => ({ id, ...allData[id] }));
@@ -60,48 +67,10 @@ function getFilteredSortedList() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* İSTATİSTİKLER VE GÜNCELLEMELER                     */
+/*                       İSTATİSTİK HESAPLAMA                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-function updateStatsCacheOnChange(item, oldItem, isRemove) {
-  const newPrice = parseFloat(item.price) || 0;
-  const oldPrice = oldItem ? parseFloat(oldItem.price) || 0 : 0;
-
-  if (isRemove) {
-    _statsCache.total -= oldPrice;
-    _statsCache.count--;
-    if (oldItem && normalizeTr(oldItem.status).includes("saglikl")) {
-      _statsCache.healthy--;
-    }
-    if (_statsCache.mostExpId === item.id) {
-      rebuildStatsCache();
-      updateStats(getFilteredSortedList());
-    }
-  } else {
-    if (!oldItem) {
-      _statsCache.total += newPrice;
-      _statsCache.count++;
-      if (normalizeTr(item.status).includes("saglikl")) {
-        _statsCache.healthy++;
-      }
-    } else {
-      const priceDiff = newPrice - oldPrice;
-      if (priceDiff !== 0) _statsCache.total += priceDiff;
-
-      const oldHealthy = normalizeTr(oldItem.status).includes("saglikl");
-      const newHealthy = normalizeTr(item.status).includes("saglikl");
-      if (!oldHealthy && newHealthy) _statsCache.healthy++;
-      else if (oldHealthy && !newHealthy) _statsCache.healthy--;
-    }
-    if (newPrice > _statsCache.mostExpPrice) {
-      _statsCache.mostExpPrice = newPrice;
-      _statsCache.mostExpId = item.id;
-      const mostExpItem = allData[_statsCache.mostExpId];
-      if (statExpensive)
-        statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
-    }
-  }
-}
+/* ─────────────────── Tüm Veriyi Tarayarak Önbelleği Yeniden Kur ─────────────────── */
 
 function rebuildStatsCache() {
   _statsCache.total = 0;
@@ -122,11 +91,54 @@ function rebuildStatsCache() {
   }
 }
 
+/* ─────────────────── Tek Kayıt Değişiminde Önbelleği Güncelle ─────────────────── */
+
+function updateStatsCacheOnChange(item, oldItem, isRemove) {
+  const newPrice = parseFloat(item.price) || 0;
+  const oldPrice = oldItem ? parseFloat(oldItem.price) || 0 : 0;
+
+  if (isRemove) {
+    _statsCache.total -= oldPrice;
+    _statsCache.count--;
+    if (oldItem && normalizeTr(oldItem.status).includes("saglikl")) {
+      _statsCache.healthy--;
+    }
+    if (_statsCache.mostExpId === item.id) {
+      rebuildStatsCache();
+      updateStats(getFilteredSortedList());
+    }
+  } else {
+    if (!oldItem) {
+      _statsCache.total += newPrice;
+      _statsCache.count++;
+      if (normalizeTr(item.status).includes("saglikl")) _statsCache.healthy++;
+    } else {
+      const priceDiff = newPrice - oldPrice;
+      if (priceDiff !== 0) _statsCache.total += priceDiff;
+
+      const oldHealthy = normalizeTr(oldItem.status).includes("saglikl");
+      const newHealthy = normalizeTr(item.status).includes("saglikl");
+      if (!oldHealthy && newHealthy) _statsCache.healthy++;
+      else if (oldHealthy && !newHealthy) _statsCache.healthy--;
+    }
+    if (newPrice > _statsCache.mostExpPrice) {
+      _statsCache.mostExpPrice = newPrice;
+      _statsCache.mostExpId = item.id;
+      const mostExpItem = allData[_statsCache.mostExpId];
+      if (statExpensive)
+        statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
+    }
+  }
+}
+
+/* ─────────────────── İstatistik Kartlarını Güncelle ─────────────────── */
+
 function updateStats(filteredList) {
   let filteredTotal = 0;
   let filteredHealthy = 0;
   let mostExpItem = null;
   let mostExpPrice = -Infinity;
+
   for (const i of filteredList) {
     const price = parseFloat(i.price) || 0;
     filteredTotal += price;
@@ -154,8 +166,7 @@ function updateStats(filteredList) {
           "status-discarded",
           "status-healthy",
         );
-        if (currentStatusFilter === "all") {
-        } else if (mostExpItem) {
+        if (currentStatusFilter !== "all" && mostExpItem) {
           const statusNorm =
             mostExpItem._statusNorm || normalizeTr(mostExpItem.status);
           if (statusNorm.includes("bozuk"))
@@ -175,6 +186,8 @@ function updateStats(filteredList) {
     totalCostDisplay.textContent = CURRENCY_FORMAT.format(filteredTotal) + " ₺";
 }
 
+/* ─────────────────── Sonuç Sayısını Güncelle ─────────────────── */
+
 function updateResultCount(filteredCount) {
   const total = Object.keys(allData).length;
   const isFiltered = currentSearch || currentStatusFilter !== "all";
@@ -184,6 +197,8 @@ function updateResultCount(filteredCount) {
       : "";
   }
 }
+
+/* ─────────────────── Sıralama İkonlarını Güncelle ─────────────────── */
 
 function updateSortIcons() {
   document.querySelectorAll(".sortable").forEach((th) => {
@@ -203,8 +218,10 @@ function updateSortIcons() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* SATIR VE HÜCRE OLUŞTURMA                            */
+/*                          SATIR VE HÜCRE OLUŞTURMA                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Durum CSS Sınıfı ─────────────────── */
 
 function getStatusClassName(statusValue) {
   const key = normalizeTr(statusValue);
@@ -213,6 +230,8 @@ function getStatusClassName(statusValue) {
   }
   return "status-healthy";
 }
+
+/* ─────────────────── Durum Hücresi HTML ─────────────────── */
 
 function buildStatusCellInnerHTML(item) {
   const statusClass = getStatusClassName(item.status);
@@ -235,20 +254,17 @@ function buildStatusCellInnerHTML(item) {
   </div></td>`;
 }
 
+/* ─────────────────── Birleşik Marka/Özellik Hücresi HTML ─────────────────── */
+
 function buildCombinedSpecsCellHTML(item) {
   const brandText = item.brand && item.brand !== "-" ? escHtml(item.brand) : "";
   const specsText = item.specs && item.specs !== "-" ? escHtml(item.specs) : "";
 
   let contentHtml = `<div class="specs-text-content">`;
-  if (brandText) {
-    contentHtml += `<span class="brand-text">${brandText}</span>`;
-  }
-  if (specsText) {
-    contentHtml += `<span class="specs-text">${specsText}</span>`;
-  }
-  if (!brandText && !specsText) {
+  if (brandText) contentHtml += `<span class="brand-text">${brandText}</span>`;
+  if (specsText) contentHtml += `<span class="specs-text">${specsText}</span>`;
+  if (!brandText && !specsText)
     contentHtml += `<span class="specs-text">-</span>`;
-  }
   contentHtml += `</div>`;
 
   if (item.url) {
@@ -266,10 +282,11 @@ function buildCombinedSpecsCellHTML(item) {
   return `<div class="combined-specs-cell">${contentHtml}</div>`;
 }
 
+/* ─────────────────── Standart Satır HTML ─────────────────── */
+
 function buildRowHTML(item) {
-  const formattedDate = DATE_FORMAT(item.date);
   return `
-    <td class="col-date">${formattedDate}</td>
+    <td class="col-date">${DATE_FORMAT(item.date)}</td>
     <td class="col-component">${escHtml(item.component)}</td>
     <td class="col-specs">${buildCombinedSpecsCellHTML(item)}</td>
     <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
@@ -277,6 +294,8 @@ function buildRowHTML(item) {
     ${buildStatusCellInnerHTML(item)}
   `;
 }
+
+/* ─────────────────── Gruplama Modunda Satır HTML ─────────────────── */
 
 function buildGroupRowHTML(item, dateCell, vendorCell) {
   return `
@@ -289,6 +308,8 @@ function buildGroupRowHTML(item, dateCell, vendorCell) {
   `;
 }
 
+/* ─────────────────── Satır DOM Elemanı Oluştur ─────────────────── */
+
 function createRowEl(item) {
   const tr = document.createElement("tr");
   tr.dataset.id = item.id;
@@ -296,8 +317,10 @@ function createRowEl(item) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* FRAGMENT OLUŞTURUCU — Ortak Satır İnşa Mantığı                           */
+/*                       FRAGMENT OLUŞTURUCU                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Satır Listesinden Fragment Derle ─────────────────── */
 
 function buildRowsFragment(list) {
   const fragment = document.createDocumentFragment();
@@ -345,7 +368,6 @@ function buildRowsFragment(list) {
             itemIdx === 0
               ? `<td class="col-vendor" rowspan="${vGroup.items.length}">${escHtml(vGroup.name)}</td>`
               : "";
-
           tr.innerHTML = buildGroupRowHTML(item, dateCell, vendorCell);
           fragment.appendChild(tr);
           dateRowSpanIndex++;
@@ -369,8 +391,10 @@ function buildRowsFragment(list) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* RENDER MOTORU + VIRTUAL SCROLL                                            */
+/*                       RENDER MOTORU + VIRTUAL SCROLL                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Tablo Satırlarını Render Et ─────────────────── */
 
 let _vsRafId = null;
 
@@ -395,15 +419,12 @@ function renderTableRows(list) {
           }</span>
         </div>
       </td>`;
-
     tableBody.replaceChildren(emptyRow, ...unsavedRows);
     return;
   }
 
   const firstChunk = list.slice(0, VSCROLL_INITIAL);
-  const firstFrag = buildRowsFragment(firstChunk);
-
-  tableBody.replaceChildren(firstFrag, ...unsavedRows);
+  tableBody.replaceChildren(buildRowsFragment(firstChunk), ...unsavedRows);
 
   if (list.length > VSCROLL_INITIAL) {
     const restList = list.slice(VSCROLL_INITIAL);
@@ -412,9 +433,8 @@ function renderTableRows(list) {
       _vsRafId = null;
 
       if (currentSort.col === "date") {
-        const fullFrag = buildRowsFragment(list);
         const saved = Array.from(tableBody.querySelectorAll(".new-item-row"));
-        tableBody.replaceChildren(fullFrag, ...saved);
+        tableBody.replaceChildren(buildRowsFragment(list), ...saved);
       } else {
         const restFrag = document.createDocumentFragment();
         restList.forEach((item) => {
@@ -422,7 +442,6 @@ function renderTableRows(list) {
           tr.innerHTML = buildRowHTML(item);
           restFrag.appendChild(tr);
         });
-
         const saved = tableBody.querySelectorAll(".new-item-row");
         if (saved.length) {
           tableBody.insertBefore(restFrag, saved[0]);
@@ -434,6 +453,8 @@ function renderTableRows(list) {
   }
 }
 
+/* ─────────────────── Tam Render (Filtre + Tablo + İstatistik) ─────────────────── */
+
 function renderAll() {
   if (isAnyModalOpen()) {
     _pendingRender = true;
@@ -444,7 +465,6 @@ function renderAll() {
   }
 
   const scrollY = window.scrollY;
-
   const list = getFilteredSortedList();
   updateStats(list);
   renderTableRows(list);
@@ -456,8 +476,10 @@ function renderAll() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* VERİ YÖNETİMİ VE CRUD İŞLEMLER                          */
+/*                      CRUD VE VERİ GÜNCELLEMELERİ                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Satır Ekle veya Güncelle ─────────────────── */
 
 function addOrUpdateTableRow(id, item) {
   const useFullRender =
@@ -488,10 +510,10 @@ function addOrUpdateTableRow(id, item) {
     }
   }
 
-  if (typeof updateResultCount === "function") {
-    updateResultCount(Object.keys(allData).length);
-  }
+  updateResultCount(Object.keys(allData).length);
 }
+
+/* ─────────────────── Satır Kaldır ─────────────────── */
 
 function removeTableRow(id) {
   const useFullRender =
@@ -512,44 +534,10 @@ function removeTableRow(id) {
     return;
   }
 
-  if (typeof updateResultCount === "function") {
-    updateResultCount(Object.keys(allData).length);
-  }
+  updateResultCount(Object.keys(allData).length);
 }
 
-function syncStatusOnlyChanges(prevData, nextData, changedStatusIds) {
-  if (currentStatusFilter !== "all" || currentSearch) {
-    renderAll();
-    return;
-  }
-
-  let needsFullRender = false;
-
-  changedStatusIds.forEach((id) => {
-    const row = tableBody.querySelector(`tr[data-id="${id}"]`);
-    const statusCell = row?.querySelector(".status-cell");
-
-    if (!statusCell || !nextData[id]) {
-      needsFullRender = true;
-      return;
-    }
-
-    if (
-      normalizeTr(prevData[id]?.status) === normalizeTr(nextData[id]?.status)
-    ) {
-      return;
-    }
-
-    statusCell.outerHTML = buildStatusCellInnerHTML({ id, ...nextData[id] });
-  });
-
-  if (needsFullRender) {
-    renderAll();
-    return;
-  }
-
-  updateStats(getFilteredSortedList());
-}
+/* ─────────────────── Kayıt Durumunu Güncelle (Optimistic) ─────────────────── */
 
 function updateItemStatus(itemId, newStatus) {
   const currentItem = allData[itemId];
@@ -561,12 +549,16 @@ function updateItemStatus(itemId, newStatus) {
 
   currentItem.status = newStatus;
   currentItem._statusNorm = normalizeTr(newStatus);
-  syncStatusOnlyChanges(allData, allData, [itemId]);
 
-  if (typeof updateComponentStatusInFirebase !== "function") {
-    showToast("Durum güncelleme fonksiyonu bulunamadı", "error");
-    return;
-  }
+  const applyToDOM = () => {
+    const row = tableBody?.querySelector(`tr[data-id="${itemId}"]`);
+    const cell = row?.querySelector(".status-cell");
+    if (cell)
+      cell.outerHTML = buildStatusCellInnerHTML({ id: itemId, ...currentItem });
+    updateStats(getFilteredSortedList());
+  };
+
+  applyToDOM();
 
   updateComponentStatusInFirebase(itemId, newStatus)
     .then(() => {
@@ -575,10 +567,12 @@ function updateItemStatus(itemId, newStatus) {
     .catch(() => {
       currentItem.status = oldStatus;
       currentItem._statusNorm = oldStatusNorm;
-      syncStatusOnlyChanges(allData, allData, [itemId]);
+      applyToDOM();
       showToast("Durum güncellenemedi", "error");
     });
 }
+
+/* ─────────────────── Kaydı Sil ─────────────────── */
 
 function deleteItem(itemId) {
   if (!allData[itemId]) {
@@ -606,6 +600,12 @@ function deleteItem(itemId) {
   }
   performDelete();
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                        YENİ KAYIT EKLEME                                 */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Satır İçi Yeni Kayıt Satırı Oluştur ─────────────────── */
 
 function initiateAddRow() {
   const tr = document.createElement("tr");
@@ -635,9 +635,12 @@ function initiateAddRow() {
   const dateInput = tr.querySelector(".date-input");
   const hiddenPicker = tr.querySelector(".hidden-picker");
   const calendarIcon = tr.querySelector(".calendar-icon");
-  const inputs = tr.querySelectorAll(".entry-input");
-  const saveBtn = tr.querySelector(".save-btn");
+  const componentInput = tr.querySelector(".component-input");
+  const brandInput = tr.querySelector(".brand-input");
+  const specsInput = tr.querySelector(".specs-input");
   const priceInput = tr.querySelector(".price-input");
+  const vendorInput = tr.querySelector(".vendor-input");
+  const saveBtn = tr.querySelector(".save-btn");
 
   calendarIcon.onclick = () => hiddenPicker.showPicker();
 
@@ -650,32 +653,41 @@ function initiateAddRow() {
     if (typeof applyPriceFormat === "function") applyPriceFormat(this);
   });
 
-  inputs[1].addEventListener("input", () => {
-    saveBtn.classList.toggle("visible", !!inputs[1].value.trim());
+  componentInput.addEventListener("input", () => {
+    saveBtn.classList.toggle("visible", !!componentInput.value.trim());
   });
 
-  inputs[inputs.length - 1].addEventListener("keydown", (e) => {
-    if (e.key === "Tab" && !e.shiftKey && inputs[1].value.trim()) {
+  vendorInput.addEventListener("keydown", (e) => {
+    if (e.key === "Tab" && !e.shiftKey && componentInput.value.trim()) {
       e.preventDefault();
-      submitNewItem(tr, inputs);
+      submitNewItem(tr);
     }
   });
 
   tr.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && inputs[1].value.trim()) submitNewItem(tr, inputs);
+    if (e.key === "Enter" && componentInput.value.trim()) submitNewItem(tr);
   });
 
-  saveBtn.onclick = () => submitNewItem(tr, inputs);
+  saveBtn.onclick = () => submitNewItem(tr);
 
-  setTimeout(() => inputs[1].focus(), 30);
+  setTimeout(() => componentInput.focus(), 30);
   return tr;
 }
 
-function submitNewItem(tr, inputs) {
-  const component = inputs[1].value.trim();
+/* ─────────────────── Yeni Kayıt Satırını Firebase'e Gönder ─────────────────── */
+
+function submitNewItem(tr) {
+  const dateInput = tr.querySelector(".date-input");
+  const componentInput = tr.querySelector(".component-input");
+  const brandInput = tr.querySelector(".brand-input");
+  const specsInput = tr.querySelector(".specs-input");
+  const priceInput = tr.querySelector(".price-input");
+  const vendorInput = tr.querySelector(".vendor-input");
+
+  const component = componentInput.value.trim();
   if (!component) return;
 
-  const rawDate = inputs[0].value.trim();
+  const rawDate = dateInput.value.trim();
   const parts = rawDate.split(/[./-]/);
   let finalDate;
   if (parts.length === 3) {
@@ -688,15 +700,15 @@ function submitNewItem(tr, inputs) {
     finalDate = new Date().toISOString().split("T")[0];
   }
 
-  const rawPrice = inputs[4].value.replace(/\./g, "").replace(",", ".");
+  const rawPrice = priceInput.value.replace(/\./g, "").replace(",", ".");
 
   const newItemData = {
     date: finalDate,
     component,
-    brand: inputs[2].value.trim() || "-",
-    specs: inputs[3].value.trim() || "-",
+    brand: brandInput.value.trim() || "-",
+    specs: specsInput.value.trim() || "-",
     price: parseFloat(rawPrice) || 0,
-    vendor: inputs[5].value.trim() || "-",
+    vendor: vendorInput.value.trim() || "-",
     status: "sağlıklı",
     url: "",
   };
@@ -712,8 +724,10 @@ function submitNewItem(tr, inputs) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* OLAY DİNLEYİCİLERİ VE BAŞLATMA                        */
+/*                     OLAY DİNLEYİCİLERİ VE BAŞLATMA                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Modal Kapanınca Bekleyen Render'ı Tetikle ─────────────────── */
 
 (function () {
   const observer = new MutationObserver(() => {
@@ -726,6 +740,8 @@ function submitNewItem(tr, inputs) {
     observer.observe(el, { attributes: true, attributeFilter: ["class"] });
   });
 })();
+
+/* ─────────────────── Sıralama Başlıkları ─────────────────── */
 
 document.querySelectorAll(".sortable").forEach((th) => {
   th.addEventListener("click", () => {
@@ -744,6 +760,8 @@ document.querySelectorAll(".sortable").forEach((th) => {
   });
 });
 
+/* ─────────────────── Kayıt Ekle Butonu ─────────────────── */
+
 if (addItemBtn) {
   addItemBtn.onclick = () => {
     if (!tableBody) return;
@@ -755,6 +773,8 @@ if (addItemBtn) {
     tableBody.appendChild(initiateAddRow());
   };
 }
+
+/* ─────────────────── Escape ile Yeni Satırı Kapat ─────────────────── */
 
 document.addEventListener("keydown", (e) => {
   if (
@@ -768,8 +788,11 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+/* ─────────────────── Tablo Gövdesi Olay Delegasyonu ─────────────────── */
+
 function initTableBodyEvents() {
   if (!tableBody) return;
+
   tableBody.addEventListener("click", function (e) {
     const btn = e.target.closest("[data-action]");
     if (!btn) return;
@@ -806,6 +829,8 @@ function initTableBodyEvents() {
     openEditModal(id, focusTarget);
   });
 }
+
+/* ─────────────────── DOM Hazır Kontrolü ve Başlatma ─────────────────── */
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initTableBodyEvents);

@@ -2,8 +2,10 @@
 /*                          GENEL YARDIMCI ARAÇLAR                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Render Schedule (rAF Debounce) ─────────────────── */
+/* ─────────────────── Render Zamanlaması (rAF Debounce) ─────────────────── */
+
 let _renderRafId = null;
+
 function scheduleRender() {
   if (_renderRafId) cancelAnimationFrame(_renderRafId);
   _renderRafId = requestAnimationFrame(() => {
@@ -27,6 +29,7 @@ const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
 
 const _dateCache = new Map();
 const _DATECACHE_MAX = 500;
+
 const DATE_FORMAT = (dateString) => {
   if (!dateString) return "-";
   if (_dateCache.has(dateString)) return _dateCache.get(dateString);
@@ -56,8 +59,10 @@ const STATUS_MAP = {
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          GLOBAL DEĞİŞKENLER                              */
+/*                          GLOBAL DURUM DEĞİŞKENLERİ                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Uygulama Durumu ─────────────────── */
 
 let allData = {};
 let currentSearch = "";
@@ -66,6 +71,7 @@ let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
 
 /* ─────────────────── İstatistik Önbelleği ─────────────────── */
+
 let _statsCache = {
   total: 0,
   count: 0,
@@ -78,13 +84,13 @@ let _statsCache = {
 /*                          DOM REFERANSLARI                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Sürüm ve Güncelleme ─────────────────── */
-
-const versionDisplay = document.getElementById("versionDisplay");
-
 /* ─────────────────── Bildirim ─────────────────── */
 
 const toastContainer = document.getElementById("toastContainer");
+
+/* ─────────────────── Sürüm ve Güncelleme ─────────────────── */
+
+const versionDisplay = document.getElementById("versionDisplay");
 
 /* ─────────────────── Arama ─────────────────── */
 
@@ -135,6 +141,8 @@ function normalizeTr(s) {
     .replace(/ö/g, "o")
     .replace(/ç/g, "c");
 }
+
+/* ─────────────────── Arama İçin Türkçe Normalizasyon ─────────────────── */
 
 function normalizeTrSearch(s) {
   if (!s) return "";
@@ -188,7 +196,7 @@ function safeExternalUrl(value) {
       return "";
     }
     return parsed.toString();
-  } catch (_error) {
+  } catch (_) {
     return "";
   }
 }

@@ -39,7 +39,7 @@ window.showConfirm = function (message, onConfirm) {
   if (!toastContainer) return;
   const toast = document.createElement("div");
   toast.className = "toast toast-confirm";
-  const text = document.createElement("span");
+  const text = document.createElement("div");
   const actions = document.createElement("div");
   const yesBtn = document.createElement("button");
   const noBtn = document.createElement("button");
@@ -82,6 +82,7 @@ window.showConfirm = function (message, onConfirm) {
 
 if (searchInput && clearSearch) {
   let _searchDebounce = null;
+
   searchInput.addEventListener("input", () => {
     currentSearch = searchInput.value;
     clearSearch.classList.toggle("visible", !!currentSearch);
@@ -101,9 +102,7 @@ if (searchInput && clearSearch) {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* ARAMA KLAVYE KISAYOLLARI                           */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Arama Klavye Kısayolu ─────────────────── */
 
 document.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === "f") {
@@ -141,6 +140,19 @@ const importCsvBtn = document.getElementById("importCsvBtn");
 const exportCsvBtn = document.getElementById("exportCsvBtn");
 const importCsvInput = document.getElementById("importCsvInput");
 
+/* ─────────────────── CSV Satır Ayrıştırıcı ─────────────────── */
+
+function parseCsvLine(line) {
+  const row = [];
+  const re = /("(?:[^"]|"")*"|[^,]*)(,|$)/g;
+  let m;
+  while ((m = re.exec(line)) !== null) {
+    row.push(m[1].replace(/^"|"$/g, "").replace(/""/g, '"').trim());
+    if (m[2] === "") break;
+  }
+  return row;
+}
+
 /* ─────────────────── CSV İşleme ─────────────────── */
 
 function processCsv(csvText) {
@@ -161,20 +173,8 @@ function processCsv(csvText) {
   const dataLines = lines.slice(1);
   const importPayload = {};
 
-  function parseCsvLine(line) {
-    const row = [];
-    const re = /("(?:[^"]|"")*"|[^,]*)(,|$)/g;
-    let m;
-    while ((m = re.exec(line)) !== null) {
-      row.push(m[1].replace(/^"|"$/g, "").replace(/""/g, '"').trim());
-      if (m[2] === "") break;
-    }
-    return row;
-  }
-
   dataLines.forEach((line) => {
     const row = parseCsvLine(line);
-
     if (row.length < 2 || !row[1]) return;
 
     const entryId = getNewKey();
@@ -212,7 +212,7 @@ function processCsv(csvText) {
         await replaceUserDataInFirebase(importPayload);
         showToast(`${importCount} kayıt sıfırdan yüklendi.`, "success");
         if (typeof renderAll === "function") renderAll();
-      } catch (_error) {
+      } catch (_) {
         showToast("CSV aktarımı tamamlanamadı", "error");
       }
     },
@@ -236,6 +236,8 @@ if (importCsvBtn && importCsvInput) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          CSV DIŞA AKTARMA                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Dışa Aktarma Dinleyicisi ─────────────────── */
 
 if (exportCsvBtn) {
   exportCsvBtn.addEventListener("click", () => {
@@ -261,6 +263,7 @@ if (exportCsvBtn) {
       "Puan",
       "Görüş",
     ];
+
     const csvContent = [
       headers.join(","),
       ...list.map((item) =>

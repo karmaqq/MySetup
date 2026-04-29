@@ -57,9 +57,7 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          GİRİŞ YAPILDIĞINDA                              */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Giriş Yapıldığında ─────────────────── */
 
 async function onUserLoggedIn(user) {
   const authOverlay = document.getElementById("authOverlay");
@@ -80,9 +78,7 @@ async function onUserLoggedIn(user) {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          ÇIKIŞ YAPILDIĞINDA                              */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Çıkış Yapıldığında ─────────────────── */
 
 function onUserLoggedOut() {
   const mainScroll = document.getElementById("mainScroll");
@@ -135,7 +131,6 @@ function onUserLoggedOut() {
     input.type = "password";
   });
 
-  const eyeOffTmpl = document.getElementById("svg-eye-off");
   document.querySelectorAll(".toggle-password").forEach((btn) => {
     btn.innerHTML = "";
     const eyeTmpl = document.getElementById("svg-eye");
@@ -172,8 +167,8 @@ document.querySelectorAll(".toggle-password").forEach((btn) => {
     } else {
       input.type = "password";
       this.innerHTML = "";
-      const eyeTmpl = document.getElementById("svg-eye");
-      if (eyeTmpl) this.appendChild(eyeTmpl.content.cloneNode(true));
+      const eyeTmpl2 = document.getElementById("svg-eye");
+      if (eyeTmpl2) this.appendChild(eyeTmpl2.content.cloneNode(true));
     }
   });
 });
@@ -221,7 +216,10 @@ document.getElementById("goToLogin")?.addEventListener("click", () => {
 /*                             GİRİŞ FORMU                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Giriş Formu Submit ─────────────────── */
+
 const loginForm = document.getElementById("loginForm");
+
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -316,6 +314,7 @@ if (regUsernameInput) {
 /* ─────────────────── Kayıt Formu Submit ─────────────────── */
 
 const registerForm = document.getElementById("registerForm");
+
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();

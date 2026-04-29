@@ -1,13 +1,17 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                       DÜZENLEME MODALI YÖNETİMİ                       */
+/*                       DÜZENLEME MODALI YÖNETİMİ                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Global Değişkenler ─────────────────── */
+/* ─────────────────── Global Durum Değişkenleri ─────────────────── */
 
 let _resetRafId = null;
 let currentRating = 0;
 
-/* ─────────────────── Görsel Boyutlandırma ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          GÖRSEL YÖNETİMİ                                 */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Görsele Uyarlanabilir Boyut Uygula ─────────────────── */
 
 function applyAdaptiveSize(imgEl, imagePreview) {
   const MIN_W = 180,
@@ -18,6 +22,7 @@ function applyAdaptiveSize(imgEl, imagePreview) {
   const nh = imgEl.naturalHeight || 1;
   const ratio = nw / nh;
   let w, h;
+
   if (ratio >= 1) {
     w = MAX_W;
     h = Math.round(w / ratio);
@@ -41,11 +46,14 @@ function applyAdaptiveSize(imgEl, imagePreview) {
       w = Math.round(h * ratio);
     }
   }
+
   w = Math.max(MIN_W, Math.min(MAX_W, w));
   h = Math.max(MIN_H, Math.min(MAX_H, h));
   imagePreview.style.width = w + "px";
   imagePreview.style.height = h + "px";
 }
+
+/* ─────────────────── Görsel Önizlemeyi Güncelle ─────────────────── */
 
 function refreshPreview(url, imagePreview, imageUploadBtn) {
   if (url) {
@@ -54,11 +62,13 @@ function refreshPreview(url, imagePreview, imageUploadBtn) {
       <button class="preview-delete-btn" id="previewDeleteBtn" title="Görseli sil">✕</button>`;
     imagePreview.classList.remove("hidden");
     if (imageUploadBtn) imageUploadBtn.classList.add("has-image");
+
     const imgEl = document.getElementById("editImagePreviewImg");
     if (imgEl) {
       imgEl.onload = () => applyAdaptiveSize(imgEl, imagePreview);
       if (imgEl.complete) applyAdaptiveSize(imgEl, imagePreview);
     }
+
     document.getElementById("previewDeleteBtn").onclick = () => {
       const idToDelete = editingId;
       if (!idToDelete) return;
@@ -89,6 +99,8 @@ function refreshPreview(url, imagePreview, imageUploadBtn) {
   }
 }
 
+/* ─────────────────── Görsel Dosyası İşle ve Yükle ─────────────────── */
+
 function handleImageFile(file, imagePreview, id, imageUploadBtn) {
   if (!file || !file.type.startsWith("image/")) return;
   imagePreview.classList.remove("hidden");
@@ -99,6 +111,7 @@ function handleImageFile(file, imagePreview, id, imageUploadBtn) {
       <p class="preview-loading-brand">My<span class="accent-text">SETUP</span></p>
       <div class="preview-spinner"></div>
     </div>`;
+
   uploadImageToFirebase(file, id)
     .then((url) => {
       updateComponentInFirebase(id, { imageUrl: url }).then(() => {
@@ -115,7 +128,7 @@ function handleImageFile(file, imagePreview, id, imageUploadBtn) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* YARDIMCI FONKSİYONLAR                           */
+/*                          ARAYÜZ YARDIMCILARI                             */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Önizlemeyi Anında Sıfırla ─────────────────── */
@@ -154,7 +167,7 @@ function updateStars(rating) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* MODAL YÖNETİMİ                                  */
+/*                          MODAL YÖNETİMİ                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Düzenleme Modalını Aç ─────────────────── */
@@ -164,7 +177,6 @@ window.openEditModal = function (id, focusTarget = "component") {
   if (!item) return;
 
   _resetPreviewInstant();
-
   editingId = id;
 
   const parts = (item.date || "").split("-");
@@ -173,7 +185,6 @@ window.openEditModal = function (id, focusTarget = "component") {
       parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : "";
   }
   if (editDatePicker) editDatePicker.value = item.date || "";
-
   if (editComponent) editComponent.value = item.component || "";
   if (editBrand) editBrand.value = item.brand === "-" ? "" : item.brand || "";
   if (editSpecs) editSpecs.value = item.specs === "-" ? "" : item.specs || "";
@@ -196,9 +207,7 @@ window.openEditModal = function (id, focusTarget = "component") {
   const opinionInput = document.getElementById("editOpinionText");
   if (opinionInput) opinionInput.value = item.opinion || "";
 
-  if (editModal) {
-    editModal.classList.add("active");
-  }
+  if (editModal) editModal.classList.add("active");
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -216,7 +225,8 @@ window.openEditModal = function (id, focusTarget = "component") {
         imageFileInput.value = "";
         imageFileInput.onchange = (e) => {
           const file = e.target.files[0];
-          if (file) handleImageFile(file, imagePreview, editingId, imageUploadBtn);
+          if (file)
+            handleImageFile(file, imagePreview, editingId, imageUploadBtn);
         };
       }
 
@@ -238,6 +248,7 @@ window.openEditModal = function (id, focusTarget = "component") {
           break;
         default:
           if (editComponent) editComponent.focus();
+          break;
       }
     });
   });
@@ -246,9 +257,7 @@ window.openEditModal = function (id, focusTarget = "component") {
 /* ─────────────────── Düzenleme Modalını Kapat ─────────────────── */
 
 window.closeEditModal = function () {
-  if (editModal) {
-    editModal.classList.remove("active");
-  }
+  if (editModal) editModal.classList.remove("active");
   editingId = null;
 };
 
@@ -288,7 +297,7 @@ window.saveEditModal = function () {
     price: parseFloat(rawEditPrice) || 0,
     vendor: editVendor.value.trim() || "-",
     status: editStatus.value,
-    url: editUrl.value.trim(),
+    url: safeExternalUrl(editUrl.value.trim()),
     star: currentRating,
     opinion: opinionInput ? opinionInput.value.trim() : "",
   };
@@ -302,7 +311,7 @@ window.saveEditModal = function () {
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* MODAL OLAY DİNLEYİCİLERİ                       */
+/*                          MODAL OLAY DİNLEYİCİLERİ                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Modal Kapat / Kaydet Butonları ─────────────────── */
@@ -351,8 +360,10 @@ if (editStarRating) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* MODAL KLAVYE KISAYOLLARI                           */
+/*                          MODAL KLAVYE KISAYOLLARI                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Escape / Ctrl+Enter / Shift+Ok Tuşları ─────────────────── */
 
 document.addEventListener("keydown", (e) => {
   if (!editModal || !editModal.classList.contains("active")) return;
@@ -371,11 +382,9 @@ document.addEventListener("keydown", (e) => {
   if (e.shiftKey) {
     const isNext = e.key === "ArrowRight" || e.key === "ArrowUp";
     const isPrev = e.key === "ArrowLeft" || e.key === "ArrowDown";
-
     if (!isNext && !isPrev) return;
 
     e.preventDefault();
-
     if (!editingId || typeof getFilteredSortedList !== "function") return;
 
     const list = getFilteredSortedList();
@@ -397,7 +406,7 @@ document.addEventListener("keydown", (e) => {
     const targetItem = list[targetIdx];
     if (!targetItem) return;
 
-    if (typeof _resetPreviewInstant === "function") _resetPreviewInstant();
+    _resetPreviewInstant();
     openEditModal(targetItem.id);
   }
 });
