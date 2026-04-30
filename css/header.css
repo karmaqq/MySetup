@@ -401,3 +401,18 @@ h1 .accent-text {
   box-shadow: 0 4px 12px rgba(74, 158, 255, 0.1);
   transform: translateY(-1px);
 }
+
+/* ─────────────────── Tüm Listeyi Sil Butonu ─────────────────── */
+
+.btn-delete-all {
+  color: var(--red);
+  border-color: rgba(245, 96, 96, 0.3);
+}
+
+.btn-delete-all:hover {
+  background: rgba(245, 96, 96, 0.1);
+  border-color: var(--red);
+  color: var(--red);
+  box-shadow: 0 4px 12px rgba(245, 96, 96, 0.1);
+  transform: translateY(-1px);
+}

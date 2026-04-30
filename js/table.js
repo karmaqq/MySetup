@@ -630,7 +630,7 @@ function initiateAddRow() {
     <td>
       <div style="display: flex; gap: 6px;">
         <input type="text" class="entry-input brand-input" placeholder="Marka" style="flex: 1;">
-        <input type="text" class="entry-input specs-input" placeholder="Özellikler" style="flex: 2;">
+        <input type="text" class="entry-input specs-input" placeholder="Özellikler" style="flex: 1;">
       </div>
     </td>
     <td><input type="text" class="entry-input price-input" placeholder="0,00" inputmode="decimal"></td>
