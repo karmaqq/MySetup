@@ -72,7 +72,9 @@ function initUserDataRef(uid) {
   userDataRef.once("value").then((snap) => {
     const rawData = snap.val() || {};
     allData = Object.keys(rawData).reduce((acc, id) => {
-      acc[id] = enrichItem(rawData[id]);
+      const item = enrichItem(rawData[id]);
+      item.id = id;
+      acc[id] = item;
       return acc;
     }, {});
     if (typeof rebuildStatsCache === "function") rebuildStatsCache();
@@ -86,14 +88,13 @@ function initUserDataRef(uid) {
       if (firstLoad) return;
       const id = snap.key;
       const item = enrichItem(snap.val());
+      item.id = id;
       const oldItem = allData[id];
       allData[id] = item;
       updateStatsCacheOnChange(item, oldItem, false);
       if (typeof addOrUpdateTableRow === "function")
         addOrUpdateTableRow(id, allData[id]);
       if (typeof scheduleRender === "function") scheduleRender();
-      if (typeof updateResultCount === "function")
-        updateResultCount(getFilteredSortedList().length);
     },
     (err) => console.error("child_added hata:", err),
   );
@@ -103,14 +104,13 @@ function initUserDataRef(uid) {
     (snap) => {
       const id = snap.key;
       const item = enrichItem(snap.val());
+      item.id = id;
       const oldItem = allData[id];
       allData[id] = item;
       updateStatsCacheOnChange(item, oldItem, false);
       if (typeof addOrUpdateTableRow === "function")
         addOrUpdateTableRow(id, allData[id]);
       if (typeof scheduleRender === "function") scheduleRender();
-      if (typeof updateResultCount === "function")
-        updateResultCount(getFilteredSortedList().length);
     },
     (err) => console.error("child_changed hata:", err),
   );
@@ -124,8 +124,6 @@ function initUserDataRef(uid) {
       if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
       if (typeof removeTableRow === "function") removeTableRow(id);
       if (typeof scheduleRender === "function") scheduleRender();
-      if (typeof updateResultCount === "function")
-        updateResultCount(getFilteredSortedList().length);
     },
     (err) => console.error("child_removed hata:", err),
   );

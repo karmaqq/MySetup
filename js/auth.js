@@ -347,18 +347,24 @@ if (registerForm) {
 
     try {
       const usernameKey = username.toLowerCase();
-      const snap = await database.ref("usernames/" + usernameKey).once("value");
-      if (snap.exists()) {
-        errEl.textContent = "Bu kullanıcı adı zaten alınmış.";
-        btn.textContent = "Kayıt Ol";
-        btn.disabled = false;
-        return;
-      }
 
       const cred = await auth.createUserWithEmailAndPassword(email, password);
 
       try {
-        await database.ref("usernames/" + usernameKey).set(cred.user.uid);
+        const usernameRef = database.ref("usernames/" + usernameKey);
+        const txnResult = await usernameRef.transaction((current) => {
+          if (current === null) return cred.user.uid;
+          return;
+        });
+
+        if (!txnResult.committed) {
+          await cred.user.delete();
+          errEl.textContent = "Bu kullanıcı adı zaten alınmış.";
+          btn.textContent = "Kayıt Ol";
+          btn.disabled = false;
+          return;
+        }
+
         await cred.user.updateProfile({ displayName: username });
       } catch (claimErr) {
         try {

@@ -26,7 +26,7 @@ function getFilteredSortedList() {
   let list = Object.keys(allData).map((id) => ({ id, ...allData[id] }));
 
   if (currentSearch) {
-    const q = normalizeTrSearch(currentSearch);
+    const q = normalizeTr(currentSearch);
     list = list.filter((item) => item._searchTag.includes(q));
   }
 
@@ -79,14 +79,14 @@ function rebuildStatsCache() {
   _statsCache.mostExpId = null;
   _statsCache.mostExpPrice = 0;
 
-  for (const i of Object.values(allData)) {
+  for (const [id, i] of Object.entries(allData)) {
     const price = parseFloat(i.price) || 0;
     _statsCache.total += price;
     _statsCache.count++;
-    if (normalizeTr(i.status).includes("saglikl")) _statsCache.healthy++;
+    if ((i._statusNorm || normalizeTr(i.status)).includes("saglikl")) _statsCache.healthy++;
     if (price > _statsCache.mostExpPrice) {
       _statsCache.mostExpPrice = price;
-      _statsCache.mostExpId = i.id;
+      _statsCache.mostExpId = id;
     }
   }
 }
@@ -100,9 +100,9 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
   if (isRemove) {
     _statsCache.total -= oldPrice;
     _statsCache.count--;
-    if (oldItem && normalizeTr(oldItem.status).includes("saglikl")) {
-      _statsCache.healthy--;
-    }
+      if (oldItem && (oldItem._statusNorm || "").includes("saglikl")) {
+        _statsCache.healthy--;
+      }
     if (_statsCache.mostExpId === item.id) {
       rebuildStatsCache();
       updateStats(getFilteredSortedList());
@@ -111,13 +111,13 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
     if (!oldItem) {
       _statsCache.total += newPrice;
       _statsCache.count++;
-      if (normalizeTr(item.status).includes("saglikl")) _statsCache.healthy++;
+      if ((item._statusNorm || "").includes("saglikl")) _statsCache.healthy++;
     } else {
       const priceDiff = newPrice - oldPrice;
       if (priceDiff !== 0) _statsCache.total += priceDiff;
 
-      const oldHealthy = normalizeTr(oldItem.status).includes("saglikl");
-      const newHealthy = normalizeTr(item.status).includes("saglikl");
+      const oldHealthy = (oldItem._statusNorm || "").includes("saglikl");
+      const newHealthy = (item._statusNorm || "").includes("saglikl");
       if (!oldHealthy && newHealthy) _statsCache.healthy++;
       else if (oldHealthy && !newHealthy) _statsCache.healthy--;
     }
@@ -134,18 +134,26 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
 /* ─────────────────── İstatistik Kartlarını Güncelle ─────────────────── */
 
 function updateStats(filteredList) {
-  let filteredTotal = 0;
-  let filteredHealthy = 0;
-  let mostExpItem = null;
-  let mostExpPrice = -Infinity;
+  const isFiltered = currentSearch || currentStatusFilter !== "all";
+  let filteredTotal, filteredHealthy, mostExpItem;
 
-  for (const i of filteredList) {
-    const price = parseFloat(i.price) || 0;
-    filteredTotal += price;
-    if (normalizeTr(i.status).includes("saglikl")) filteredHealthy++;
-    if (price > mostExpPrice) {
-      mostExpPrice = price;
-      mostExpItem = i;
+  if (!isFiltered) {
+    filteredTotal = _statsCache.total;
+    filteredHealthy = _statsCache.healthy;
+    mostExpItem = allData[_statsCache.mostExpId] || null;
+  } else {
+    let mostExpPrice = -Infinity;
+    filteredTotal = 0;
+    filteredHealthy = 0;
+
+    for (const i of filteredList) {
+      const price = parseFloat(i.price) || 0;
+      filteredTotal += price;
+      if ((i._statusNorm || "").includes("saglikl")) filteredHealthy++;
+      if (price > mostExpPrice) {
+        mostExpPrice = price;
+        mostExpItem = i;
+      }
     }
   }
 

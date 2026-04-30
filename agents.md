@@ -1,7 +1,23 @@
-# AGENTS.md — MySetup v2.4.2
+# AGENTS.md — MySetup v2.4.1
 
 > Bu dosya, MySetup projesine kod müdahalesi yapacak her yapay zeka ajanı, editör eklentisi veya geliştirici için zorunlu okuma belgesidir.
 > Projeyi ilk kez gören bir ajanın hata yapmaması için gereken tüm yapısal bilgi burada tanımlanmıştır.
+
+---
+
+## 0. Ajanın Çalışma Prensipleri
+
+Bu dosya ve `OPTIMIZATIONS.md`, ajanın her işlemindeki mutlak referansıdır:
+
+1. **AGENTS.md** → Mutlak kural kitabıdır; projeye dair tüm teknik ve yazımsal kurallar buradadır.
+2. **OPTIMIZATIONS.md** → Görev ve bulgu listesidir; yapılacak işler buradan takip edilir.
+3. **Kullanıcı talimatı** → Her zaman 1. önceliktir. Kullanıcı "yapma" derse yapılmaz, "yap" derse yapılır.
+4. **Güncel veri kullanımı** → Ajan, kendi önceki deneyimlerinden hatırladığı kuralları değil, her zaman bu iki dosyadaki en güncel hali referans alır.
+5. **İşlem öncesi ve sonrası kontrol** → Her kod değişikliği öncesi ve sonrası bu iki dosya okunur ve kurallara uygun hareket edilir.
+6. **Kendi yöntemini dayatma** → Kod değişikliği yaparken kendi bildiği yöntemi değil, bu dosyalardaki yönergeleri uygular.
+7. **Gelişime açık tasarım** → Proje daima gelişmeye uygun şekilde dizayn edilmeli; yenilikçi ve gelişime açık fonksiyonlar kullanılmalıdır.
+8. **Modüler yapı ve harita sistemi** → Dosya yapısı ne kadar çok olursa olsun her zaman modüler olmalıdır. Her dosya ve fonksiyon birbiri ile bağlantılı bir harita sistemi kullanmalıdır (bu harita AGENTS.md içinde bulunur; bkz. Bölüm 3 ve 4).
+9. **Temiz kod zorunluluğu** → İşlemi bitmiş, üzerinde uğraşılmayan bir fonksiyon daima temiz ve çalışır vaziyette bırakılmalıdır.
 
 ---
 
@@ -152,9 +168,20 @@ Herhangi bir `.modal-overlay.active` varken tam render yapmaz; `_pendingRender =
 
 Tüm arama ve durum karşılaştırmaları bu fonksiyondan geçer. Ham string karşılaştırması yapılamaz. `_statusNorm` zaten `enrichItem` tarafından set edilmiştir; üzerine tekrar `normalizeTr` çağırmak gereksizdir.
 
+/* ─────────────────── Kullanım Örneği ─────────────────── */
+
+/* Arama: getFilteredSortedList içinde */
+const q = normalizeTr(currentSearch);
+list = list.filter((item) => item._searchTag.includes(q));
+
+/* Durum kontrolü: _statusNorm kullanımı */
+const healthy = (item._statusNorm || "").includes("saglikl");
+
 ### `updateStatsCacheOnChange` + `rebuildStatsCache` — `js/table.js`
 
 İstatistik önbelleği (`_statsCache`) tüm hesaplamalar için temel referanstır. Firebase listener'larında her kayıt değişiminde `updateStatsCacheOnChange` çağrılır; tüm liste sıfırlanıp hesaplanması gereken durumlarda `rebuildStatsCache` kullanılır.
+
+**Önemli:** `updateStatsCacheOnChange` içinde `normalizeTr(item.status)` YERİNE `item._statusNorm` kullanılmalıdır (BULGU-03 düzeltmesi). `rebuildStatsCache` içinde de aynı kural geçerlidir.
 
 ### `deleteAllInFolder(ref)` — `js/firebase.js`
 
@@ -274,12 +301,16 @@ Kontrol listesi:
 
 | Konu                                  | Açıklama                                                                                                                     |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `normalizeTrSearch`                   | Türkçe karakter girildiğinde arama çalışmaz (OPTIMIZATIONS.md BULGU-01). Düzeltilmeden kullanılmamalı                        |
-| `imageUploadBtn._eventsBound`         | `onclick`'i sadece bir kez bağlar; farklı kayıtlar arasında modal geçişinde `imagePreview` kapanımı kayabilir (BULGU-08)     |
+| `normalizeTrSearch`                   | **KALDIRILDI** (BULGU-09). Arama için `normalizeTr` kullanılmalı. `normalizeTrSearch`'ü çağırmak arama hatasına neden olur   |
+| `imageUploadBtn._eventsBound`         | **KALDIRILDI** (BULGU-08). `onclick`'i her modal açılışında yeniden ata; `_eventsBound` flag'i kullanma                   |
 | `escAttr` + `escHtml` ardışık         | Aynı string ikisinden geçirilirse `&quot;` → `&amp;quot;` olur                                                               |
 | `addOrUpdateTableRow`                 | Tarih sıralaması aktifken her zaman `renderAll()`'a düşer; beklenen davranıştır                                              |
-| Firebase çift `getFilteredSortedList` | `child_added/changed/removed` listener'larında `scheduleRender` + `updateResultCount` birlikte çağrılıyor (BULGU-02)         |
-| `@font-face` blokları                 | `base.css`'deki yerel font tanımları artık ölü kod; fontlar CDN üzerinden geliyor (BULGU-05 + BULGU-10 birlikte uygulanmalı) |
+| Firebase çift `getFilteredSortedList` | **DÜZELTİLDİ** (BULGU-02). Listener'larda `updateResultCount(getFilteredSortedList())` kaldırıldı; `scheduleRender` yeterli |
+| `@font-face` blokları                 | **KALDIRILDI** (BULGU-05). Fontlar CDN'den yükleniyor; `base.css`'de yerel `@font-face` tanımı bırakma             |
+| `updateStatsCacheOnChange` + `normalizeTr` | **DÜZELTİLDİ** (BULGU-03). `normalizeTr(item.status)` yerine `item._statusNorm` kullanılmalı                     |
+| CSP `'unsafe-inline'`                 | **KALDIRILDI** (BULGU-04). `script-src` ve `style-src` direktiflerinden `'unsafe-inline'` çıkarılmalı              |
+| Kayıt akışı TOCTOU                    | **DÜZELTİLDİ** (BULGU-06). `once("value")` + `set()` yerine `transaction()` kullanılmalı                           |
+| `updateStats` filtresiz iken          | **DÜZELTİLDİ** (BULGU-07). Filtre yoksa `_statsCache` önbelleği kullanılmalı (O(n) → O(1))                     |
 
 ---
 

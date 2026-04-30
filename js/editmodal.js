@@ -217,9 +217,8 @@ window.openEditModal = function (id, focusTarget = "component") {
 
       refreshPreview(item.imageUrl || "", imagePreview, imageUploadBtn);
 
-      if (imageUploadBtn && !imageUploadBtn._eventsBound) {
+      if (imageUploadBtn) {
         imageUploadBtn.onclick = () => imageFileInput && imageFileInput.click();
-        imageUploadBtn._eventsBound = true;
       }
       if (imageFileInput) {
         imageFileInput.value = "";

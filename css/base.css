@@ -27,9 +27,9 @@
   --purple-dim: rgba(181, 122, 255, 0.12);
 
   /* ─── YENİ FONT SİSTEMİ (CDN) ─── */
-  --font-ui: "Open Sans", sans-serif;
-  --font-data: "Source Code Pro", monospace;
-  --font-display: "Call of Ops Duty II", sans-serif;
+  --font-ui: "Inter", sans-serif;
+  --font-data: "JetBrains Mono", monospace;
+  --font-display: "Rajdhani", sans-serif;
 
   --radius: 8px;
   --radius-sm: 5px;
