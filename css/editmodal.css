@@ -403,7 +403,6 @@
   width: 100%;
 }
 
-/* Modal içindeki diğer başlıklarla (.field-group label) BİREBİR aynı stil */
 .opinion-title {
   font-size: 11px;
   font-weight: 600;
@@ -418,7 +417,7 @@
 }
 
 .star {
-  font-size: 26px; /* İsteğine uygun olarak büyütüldü */
+  font-size: 26px;
   color: var(--border2);
   cursor: pointer;
   transition:
@@ -435,7 +434,6 @@
   color: var(--accent);
 }
 
-/* Diğer inputlarla (.modal-input) BİREBİR uyumlu arkaplan ve metin stili */
 .opinion-textarea {
   width: 100%;
   background: var(--surface2);
@@ -447,10 +445,6 @@
   padding: 9px 12px;
   line-height: 1.5;
   resize: none;
-
-  /* Yükseklik Hesabı: (14px font * 1.5 satır) = 21px satır boyu. 
-     Alt/Üst padding = 18px. 
-     2 Satır = ~60px / 4 Satır = ~102px */
   min-height: 102px;
   max-height: 102px;
   overflow-y: auto;

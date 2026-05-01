@@ -54,7 +54,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                                  BODY                                       */
+/*                                BODY                                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 body {
@@ -82,6 +82,15 @@ body {
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+/* ─────────────────── CSS Custom Property (Header & Title Bar Height) ─────────────────── */
+
+:root {
+  --title-bar-height: 35px;
+  --header-height: 70px;
+  --content-start: 110px;
+  --footer-height: 35px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -116,13 +125,12 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 36px;
+  height: var(--title-bar-height);
   -webkit-app-region: drag;
-  z-index: 10000;
   background: rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  pointer-events: auto;
+  z-index: 10000;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -131,8 +139,8 @@ body {
 
 .main-scroll {
   position: fixed;
-  top: 36px;
-  bottom: 34px;
+  top: 110px;
+  bottom: 35px;
   left: 0;
   right: 0;
   overflow-y: auto;
@@ -141,20 +149,52 @@ body {
   scrollbar-gutter: stable;
 }
 
-/* ─────────────────── Sayfa Sarmalayıcısı ─────────────────── */
+/* ─────────────────── Pages Container (SPA) ─────────────────── */
 
-.page-wrapper {
-  width: min(100%, 1300px);
+.pages-container {
+  width: 100%;
+  max-width: 1300px;
   margin: 0 auto;
-  padding: 20px 40px 30px;
+  padding: 0 0 30px;
 }
+
+/* ─────────────────── Sayfa İçerik Bölümleri (Animasyonlu) ─────────────────── */
+
+.page-content {
+  display: none;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+  margin: 0 auto;
+}
+
+.page-content.active {
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-700 {
+  max-width: 700px;
+}
+
+.page-1300 {
+  max-width: 1300px;
+}
+
+
 
 /* ─────────────────── Yükleme Ekranı (Global) ─────────────────── */
 
 .auth-loading {
   position: fixed;
-  inset: 0;
-  z-index: 9000;
+  top: var(--title-bar-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9500;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -343,7 +383,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 34px;
+  height: var(--footer-height);
   padding: 0 20px;
   background: rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(10px);
@@ -365,13 +405,7 @@ body {
   color: #daa924;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                                YARDIMCI SINIFLAR                            */
-/* ═══════════════════════════════════════════════════════════════════════════ */
 
-.hidden {
-  display: none !important;
-}
 
 input,
 textarea,
@@ -387,44 +421,4 @@ td * {
   user-select: text;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                                DUYARLI TASARIM                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 900px) {
-  .page-wrapper {
-    padding: 20px 16px 40px;
-  }
-
-  .stats-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  h1 {
-    font-size: 26px;
-  }
-}
-
-@media (max-width: 600px) {
-  .stats-row {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .toolbar {
-    flex-wrap: wrap;
-  }
-
-  .filter-group {
-    overflow-x: auto;
-    padding-bottom: 4px;
-  }
-
-  .modal-body {
-    grid-template-columns: 1fr;
-  }
-
-  .field-full {
-    grid-column: 1;
-  }
-}

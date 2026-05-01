@@ -7,7 +7,6 @@
 const settingsModal = document.getElementById("userSettingsModal");
 const changePasswordModal = document.getElementById("changePasswordModal");
 const deleteAccountModal = document.getElementById("deleteAccountModal");
-const settingsTrigger = document.querySelector("#userInfo .settings-icon");
 
 /* ─────────────────── Modal Kapatma Fonksiyonları ─────────────────── */
 
@@ -30,10 +29,9 @@ function closeDeleteModal() {
   }
 }
 
-/* ─────────────────── Ayarlar Modalını Aç ─────────────────── */
+/* ─────────────────── Ayarlar Modalını Aç (Ortak Fonksiyon) ─────────────────── */
 
-settingsTrigger?.addEventListener("click", (e) => {
-  if (e.target?.closest("#logoutBtn")) return;
+function openSettingsModal() {
   const user = auth.currentUser;
   if (!user) return;
 
@@ -52,6 +50,12 @@ settingsTrigger?.addEventListener("click", (e) => {
   if (settingsModal) {
     settingsModal.classList.add("active");
   }
+}
+
+/* ─────────────────── Profil Sayfası Ayarlar Butonu ─────────────────── */
+
+document.getElementById("profileSettingsBtn")?.addEventListener("click", () => {
+  if (typeof openSettingsModal === "function") openSettingsModal();
 });
 
 /* ─────────────────── Modal Kapatma Olayları ─────────────────── */

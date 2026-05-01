@@ -2,10 +2,6 @@
 /*                     DURUM DEĞİŞKENLERİ VE KONTROL                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Render Durumu ─────────────────── */
-
-let _pendingRender = false;
-
 /* ─────────────────── Sabitler ─────────────────── */
 
 const VSCROLL_INITIAL = 40;
@@ -83,7 +79,7 @@ function rebuildStatsCache() {
     const price = parseFloat(i.price) || 0;
     _statsCache.total += price;
     _statsCache.count++;
-    if ((i._statusNorm || normalizeTr(i.status)).includes("saglikl")) _statsCache.healthy++;
+    if ((i._statusNorm || "").includes("saglikl")) _statsCache.healthy++;
     if (price > _statsCache.mostExpPrice) {
       _statsCache.mostExpPrice = price;
       _statsCache.mostExpId = id;
@@ -135,13 +131,14 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
 
 function updateStats(filteredList) {
   const isFiltered = currentSearch || currentStatusFilter !== "all";
-  let filteredTotal, filteredHealthy, mostExpItem;
+  let filteredTotal, filteredHealthy, mostExpItem, filteredLength;
 
   if (!isFiltered) {
     filteredTotal = _statsCache.total;
     filteredHealthy = _statsCache.healthy;
     mostExpItem = allData[_statsCache.mostExpId] || null;
-  } else {
+    filteredLength = Object.keys(allData).length;
+  } else if (filteredList) {
     let mostExpPrice = -Infinity;
     filteredTotal = 0;
     filteredHealthy = 0;
@@ -155,11 +152,14 @@ function updateStats(filteredList) {
         mostExpItem = i;
       }
     }
+    filteredLength = filteredList.length;
+  } else {
+    return;
   }
 
   if (statTotal)
     statTotal.textContent = CURRENCY_FORMAT.format(filteredTotal) + " ₺";
-  if (statCount) statCount.textContent = filteredList.length;
+  if (statCount) statCount.textContent = filteredLength;
   if (statHealthy) statHealthy.textContent = filteredHealthy;
 
   if (statExpensive) {
@@ -464,14 +464,6 @@ function renderTableRows(list) {
 /* ─────────────────── Tam Render (Filtre + Tablo + İstatistik) ─────────────────── */
 
 function renderAll() {
-  if (isAnyModalOpen()) {
-    _pendingRender = true;
-    const list = getFilteredSortedList();
-    updateStats(list);
-    updateResultCount(list.length);
-    return;
-  }
-
   const scrollY = window.scrollY;
   const list = getFilteredSortedList();
   updateStats(list);
@@ -487,30 +479,43 @@ function renderAll() {
 /*                      CRUD VE VERİ GÜNCELLEMELERİ                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Öğe Filtre Kriterlerine Uyuyor Mu ─────────────────── */
+
+function isItemVisible(item) {
+  if (currentSearch) {
+    const q = normalizeTr(currentSearch);
+    if (!item._searchTag || !item._searchTag.includes(q)) return false;
+  }
+  if (currentStatusFilter !== "all") {
+    const norm = item._statusNorm || "";
+    if (currentStatusFilter === "saglikli" && !norm.includes("saglikli")) return false;
+    if (currentStatusFilter === "bozuk" && !norm.includes("bozuk")) return false;
+    if (currentStatusFilter === "yedek" && !norm.includes("yedek")) return false;
+    if (currentStatusFilter === "atildi" && !norm.includes("atildi")) return false;
+  }
+  return true;
+}
+
 /* ─────────────────── Satır Ekle veya Güncelle ─────────────────── */
 
 function addOrUpdateTableRow(id, item) {
-  const useFullRender =
-    currentSearch ||
-    currentStatusFilter !== "all" ||
-    currentSort.col === "date";
-
-  if (useFullRender) {
-    renderAll();
-    return;
-  }
-
+  const visible = isItemVisible(item);
   const row = tableBody.querySelector(`tr[data-id="${id}"]`);
   const newItem = { ...item, id };
 
+  if (!visible) {
+    if (row) row.remove();
+    updateResultCount(getFilteredSortedList().length);
+    return;
+  }
+
+  const newRow = createRowEl(newItem);
+  newRow.innerHTML = buildRowHTML(newItem);
+
   if (row) {
-    const newRow = createRowEl(newItem);
-    newRow.innerHTML = buildRowHTML(newItem);
     row.replaceWith(newRow);
   } else {
     const topSep = tableBody.querySelector(".group-separator");
-    const newRow = createRowEl(newItem);
-    newRow.innerHTML = buildRowHTML(newItem);
     if (topSep && topSep.nextSibling) {
       tableBody.insertBefore(newRow, topSep.nextSibling);
     } else {
@@ -518,22 +523,12 @@ function addOrUpdateTableRow(id, item) {
     }
   }
 
-  updateResultCount(Object.keys(allData).length);
+  updateResultCount(getFilteredSortedList().length);
 }
 
 /* ─────────────────── Satır Kaldır ─────────────────── */
 
 function removeTableRow(id) {
-  const useFullRender =
-    currentSearch ||
-    currentStatusFilter !== "all" ||
-    currentSort.col === "date";
-
-  if (useFullRender) {
-    renderAll();
-    return;
-  }
-
   const row = tableBody.querySelector(`tr[data-id="${id}"]`);
   if (row) row.remove();
 
@@ -542,7 +537,7 @@ function removeTableRow(id) {
     return;
   }
 
-  updateResultCount(Object.keys(allData).length);
+  updateResultCount(getFilteredSortedList().length);
 }
 
 /* ─────────────────── Kayıt Durumunu Güncelle (Optimistic) ─────────────────── */
@@ -552,18 +547,20 @@ function updateItemStatus(itemId, newStatus) {
   if (!currentItem) return;
   if (normalizeTr(currentItem.status) === normalizeTr(newStatus)) return;
 
+  const oldItem = { ...currentItem };
   const oldStatus = currentItem.status;
   const oldStatusNorm = currentItem._statusNorm;
 
   currentItem.status = newStatus;
   currentItem._statusNorm = normalizeTr(newStatus);
 
+  updateStatsCacheOnChange(currentItem, oldItem, false);
+
   const applyToDOM = () => {
     const row = tableBody?.querySelector(`tr[data-id="${itemId}"]`);
     const cell = row?.querySelector(".status-cell");
     if (cell)
-      cell.outerHTML = buildStatusCellInnerHTML({ id: itemId, ...currentItem });
-    updateStats(getFilteredSortedList());
+      cell.outerHTML = buildStatusCellInnerHTML(Object.assign({ id: itemId }, currentItem));
   };
 
   applyToDOM();
@@ -575,6 +572,7 @@ function updateItemStatus(itemId, newStatus) {
     .catch(() => {
       currentItem.status = oldStatus;
       currentItem._statusNorm = oldStatusNorm;
+      rebuildStatsCache();
       applyToDOM();
       showToast("Durum güncellenemedi", "error");
     });
@@ -734,20 +732,6 @@ function submitNewItem(tr) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                     OLAY DİNLEYİCİLERİ VE BAŞLATMA                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Modal Kapanınca Bekleyen Render'ı Tetikle ─────────────────── */
-
-(function () {
-  const observer = new MutationObserver(() => {
-    if (_pendingRender && !isAnyModalOpen()) {
-      _pendingRender = false;
-      renderAll();
-    }
-  });
-  document.querySelectorAll(".modal-overlay").forEach((el) => {
-    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
-  });
-})();
 
 /* ─────────────────── Sıralama Başlıkları ─────────────────── */
 

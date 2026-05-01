@@ -6,6 +6,37 @@
 
 const auth = firebase.auth();
 
+/* ─────────────────── Navigasyon ve Sayfa Başlatma ─────────────────── */
+
+function initNavigation() {
+  const navBtns = document.querySelectorAll(".nav-btn");
+  navBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const page = btn.dataset.page;
+      if (page && typeof showPage === "function") {
+        showPage(page);
+      }
+    });
+  });
+
+  function updateHeaderHeight() {
+    const header = document.getElementById("mainHeader");
+    if (header) {
+      const height = header.offsetHeight;
+      document.documentElement.style.setProperty("--header-height", height + "px");
+    }
+  }
+
+  updateHeaderHeight();
+  window.addEventListener("resize", updateHeaderHeight);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initNavigation);
+} else {
+  initNavigation();
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                         YARDIMCI FONKSİYONLAR                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -17,7 +48,19 @@ function hideLoading() {
   if (!el) return;
   el.style.opacity = "0";
   el.style.transition = "opacity 0.25s ease";
-  setTimeout(() => (el.style.display = "none"), 260);
+  setTimeout(() => {
+    el.style.display = "none";
+    const header = document.getElementById("mainHeader");
+    const footer = document.getElementById("appFooter");
+    if (header) {
+      header.classList.remove("hidden");
+      requestAnimationFrame(() => {
+        const height = header.offsetHeight;
+        document.documentElement.style.setProperty("--header-height", height + "px");
+      });
+    }
+    if (footer) footer.classList.remove("hidden");
+  }, 260);
 }
 
 /* ─────────────────── Auth Hata Mesajları ─────────────────── */
@@ -70,11 +113,22 @@ async function onUserLoggedIn(user) {
 
   const userInfo = document.getElementById("userInfo");
   const userEmailEl = document.getElementById("userEmail");
+  const welcomeUsername = document.getElementById("welcomeUsername");
+  const profileUsername = document.getElementById("profileUsername");
+  const profileEmail = document.getElementById("profileEmail");
+
   if (userInfo) userInfo.classList.remove("hidden");
   if (userEmailEl) userEmailEl.textContent = user.displayName || "Kullanıcı";
+  if (welcomeUsername) welcomeUsername.textContent = user.displayName || "Kullanıcı";
+  if (profileUsername) profileUsername.textContent = user.displayName || "Kullanıcı";
+  if (profileEmail) profileEmail.textContent = user.email || "E-posta yok";
 
   if (typeof initUserDataRef === "function") {
     initUserDataRef(user.uid);
+  }
+
+  if (typeof showPage === "function") {
+    showPage(localStorage.getItem("mySetupLastPage") || "home");
   }
 }
 

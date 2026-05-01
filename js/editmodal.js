@@ -85,7 +85,6 @@ function refreshPreview(url, imagePreview, imageUploadBtn) {
           if (allData[idToDelete]) allData[idToDelete].imageUrl = "";
           if (editingId === idToDelete)
             refreshPreview("", imagePreview, imageUploadBtn);
-          if (typeof scheduleRender === "function") scheduleRender();
           showToast("Görsel silindi", "success");
         } catch (_) {
           showToast("Görsel silinemedi", "error");
@@ -117,7 +116,6 @@ function handleImageFile(file, imagePreview, id, imageUploadBtn) {
       updateComponentInFirebase(id, { imageUrl: url }).then(() => {
         if (allData[id]) allData[id].imageUrl = url;
         refreshPreview(url, imagePreview, imageUploadBtn);
-        if (typeof scheduleRender === "function") scheduleRender();
       });
     })
     .catch(() => {

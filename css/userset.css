@@ -2,41 +2,7 @@
 /*                     KULLANICI AYARLARI STİLLERİ                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Kullanıcı Bilgi Çubuğu ─────────────────── */
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px 6px 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 24px;
-  transition: border-color 0.2s;
-  margin-left: auto;
-}
-
-.user-info:hover {
-  border-color: var(--accent-dim);
-}
-
-.user-displayname {
-  font-family: var(--font-ui);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--text-bright);
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.label-hint {
-  color: var(--text-dim);
-  font-weight: 400;
-}
-
-/* ─────────────────── Ayarlar İkonu ─────────────────── */
+/* ─────────────────── Ayarlar İkonu (Artık kullanılmıyor, header'da yok) ─────────────────── */
 
 .settings-icon {
   color: var(--text-dim);
@@ -49,28 +15,9 @@
   color: var(--accent);
 }
 
-/* ─────────────────── Çıkış Butonu ─────────────────── */
-
-.logout-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  background: none;
-  border: 1px solid var(--border2);
-  border-radius: 50%;
+.label-hint {
   color: var(--text-dim);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.2s;
-}
-
-.logout-btn:hover {
-  background: var(--red-dim);
-  border-color: var(--red);
-  color: var(--red);
+  font-weight: 400;
 }
 
 /* ─────────────────── Modal Input Hata Stili ─────────────────── */

@@ -1,0 +1,31 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                                ANA SAYFA (700px)                             */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Welcome Screen (Home) ─────────────────── */
+
+.welcome-screen {
+  padding: 0 20px 60px;
+  text-align: center;
+  margin-top: 0;
+}
+
+.welcome-screen h2 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 16px;
+}
+
+.welcome-screen h2 span {
+  color: var(--accent);
+}
+
+.welcome-screen p {
+  font-size: 16px;
+  color: var(--text-dim);
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.6;
+}

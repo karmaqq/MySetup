@@ -112,9 +112,11 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 
 | Dosya               | Sorumluluk                                                         |
 | ------------------- | ------------------------------------------------------------------ |
-| `css/base.css`      | CSS değişkenleri (`:root`), reset, toast, genel layout, responsive |
-| `css/header.css`    | Üst bar, istatistik kartları, araç çubuğu, filtreler               |
-| `css/table.css`     | Tablo, satır stilleri, durum menüsü, yeni kayıt satırı             |
+| `css/base.css`      | CSS değişkenleri (`:root`), reset, toast, loading, scroll, genel layout, responsive, sayfa düzeni |
+| `css/header.css`    | Logo, versiyon, nav menü, update butonu, user info, logout         |
+| `css/home.css`      | 700px akış içeriği, karşılama ekranı                               |
+| `css/profile.css`   | 700px profil içeriği, card, avatar, hesap ayarları butonu          |
+| `css/inventory.css` | İstatistik kartları, arama, filtre, import/export, tablo, durum menüsü |
 | `css/editmodal.css` | Düzenleme modali, floating görsel önizleme, yıldız sistemi         |
 | `css/auth.css`      | Auth overlay, giriş/kayıt panelleri                                |
 | `css/userset.css`   | Ayarlar modalleri, kullanıcı adı düzenleme, tehlike alanı          |

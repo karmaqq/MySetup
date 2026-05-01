@@ -2,16 +2,61 @@
 /*                          GENEL YARDIMCI ARAÇLAR                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Render Zamanlaması (rAF Debounce) ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          SPA SAYFA YÖNETİMİ                            */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
-let _renderRafId = null;
+/* ─────────────────── Sayfa Geçişi (Animasyonlu) ─────────────────── */
 
-function scheduleRender() {
-  if (_renderRafId) cancelAnimationFrame(_renderRafId);
-  _renderRafId = requestAnimationFrame(() => {
-    _renderRafId = null;
-    if (typeof renderAll === "function") renderAll();
+let _currentPage = null;
+let _isAnimating = false;
+
+function showPage(pageName) {
+  if (_isAnimating) return;
+  _isAnimating = true;
+
+  const pages = document.querySelectorAll(".page-content");
+  const navBtns = document.querySelectorAll(".nav-btn");
+  const mainScroll = document.getElementById("mainScroll");
+
+  const oldPage = document.querySelector(".page-content.active");
+  const newPage = document.getElementById(pageName + "Page");
+
+  if (!newPage || oldPage === newPage) {
+    _isAnimating = false;
+    return;
+  }
+
+  navBtns.forEach((b) => b.classList.remove("active"));
+  const activeNavBtn = document.querySelector(`.nav-btn[data-page="${pageName}"]`);
+  if (activeNavBtn) activeNavBtn.classList.add("active");
+
+  if (oldPage) {
+    oldPage.style.opacity = "0";
+    oldPage.style.transform = "translateY(10px)";
+    oldPage.style.visibility = "hidden";
+    oldPage.classList.remove("active");
+  }
+
+  newPage.style.visibility = "visible";
+  newPage.style.opacity = "0";
+  newPage.style.transform = "translateY(10px)";
+  newPage.classList.add("active");
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      newPage.style.opacity = "1";
+      newPage.style.transform = "translateY(0)";
+    });
   });
+
+  if (mainScroll) mainScroll.scrollTop = 0;
+
+  setTimeout(() => {
+    _isAnimating = false;
+    _currentPage = pageName;
+    localStorage.setItem("mySetupLastPage", pageName);
+  }, 320);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

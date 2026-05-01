@@ -126,7 +126,7 @@ document.querySelectorAll(".filter-btn").forEach((btn) => {
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentStatusFilter = btn.dataset.status;
-    if (typeof scheduleRender === "function") scheduleRender();
+    if (typeof renderAll === "function") renderAll();
   });
 });
 

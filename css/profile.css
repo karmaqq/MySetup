@@ -1,0 +1,79 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                                PROFİL SAYFASI                                */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Profile Card ─────────────────── */
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 30px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-top: 0;
+}
+
+.profile-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-info h3 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin: 0;
+}
+
+.profile-info p {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.profile-right {
+  flex-shrink: 0;
+}
+
+.btn-settings {
+  padding: 10px 24px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-glow);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-settings:hover {
+  background: var(--accent);
+  color: #000;
+  transform: translateY(-1px);
+}

@@ -94,7 +94,6 @@ function initUserDataRef(uid) {
       updateStatsCacheOnChange(item, oldItem, false);
       if (typeof addOrUpdateTableRow === "function")
         addOrUpdateTableRow(id, allData[id]);
-      if (typeof scheduleRender === "function") scheduleRender();
     },
     (err) => console.error("child_added hata:", err),
   );
@@ -110,7 +109,6 @@ function initUserDataRef(uid) {
       updateStatsCacheOnChange(item, oldItem, false);
       if (typeof addOrUpdateTableRow === "function")
         addOrUpdateTableRow(id, allData[id]);
-      if (typeof scheduleRender === "function") scheduleRender();
     },
     (err) => console.error("child_changed hata:", err),
   );
@@ -123,7 +121,6 @@ function initUserDataRef(uid) {
       delete allData[id];
       if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
       if (typeof removeTableRow === "function") removeTableRow(id);
-      if (typeof scheduleRender === "function") scheduleRender();
     },
     (err) => console.error("child_removed hata:", err),
   );

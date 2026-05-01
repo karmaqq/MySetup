@@ -19,7 +19,6 @@ if (window.electronAPI) {
   window.electronAPI.onUpdateAvailable?.((version) => {
     if (!updateBtn) return;
     updateBtn.classList.add("visible");
-    updateBtn.style.display = "flex";
     updateBtn.innerText = `Güncelleme Mevcut v${version}`;
   });
 
@@ -31,7 +30,7 @@ if (window.electronAPI) {
     if (p < 100) {
       updateBtn.innerText = `İndiriliyor: %${p}`;
     } else {
-      updateBtn.innerText = `Kuruluyor...`;
+      updateBtn.innerText = "Kuruluyor...";
       updateBtn.style.background = "var(--green, #10b981)";
       updateBtn.style.borderColor = "var(--green, #10b981)";
       updateBtn.style.color = "#fff";
@@ -57,6 +56,7 @@ if (window.electronAPI) {
     updateBtn.style.borderColor = "var(--red, #ef4444)";
     updateBtn.style.color = "#fff";
     updateBtn.style.pointerEvents = "auto";
+    document.getElementById("userInfo")?.classList.remove("has-update");
 
     if (typeof showToast === "function") {
       showToast(
