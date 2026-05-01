@@ -5,9 +5,12 @@
 /* ─────────────────── Welcome Screen (Home) ─────────────────── */
 
 .welcome-screen {
-  padding: 0 20px 60px;
+  padding: 20px;
   text-align: center;
   margin-top: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
 .welcome-screen h2 {

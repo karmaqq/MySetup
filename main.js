@@ -42,7 +42,7 @@ function setupCspHeaders() {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1300,
+    width: 1250,
     height: 900,
     minWidth: 950,
     title: "MySetup Inventory",

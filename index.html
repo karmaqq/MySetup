@@ -18,7 +18,7 @@
     />
 
     <link rel="stylesheet" href="css/base.css" />
-    <link rel="stylesheet" href="css/header.css" />
+    <link rel="stylesheet" href="css/sidebar.css" />
     <link rel="stylesheet" href="css/home.css" />
     <link rel="stylesheet" href="css/profile.css" />
     <link rel="stylesheet" href="css/inventory.css" />
@@ -73,48 +73,50 @@
     <div class="title-bar-drag"></div>
 
     <!-- ═════════════════════════════════════════════════════════════════ -->
-    <!--                          ANA SABİT BAŞLIK                           -->
+    <!--                             SIDEBAR                                 -->
     <!-- ═════════════════════════════════════════════════════════════════ -->
-    <header class="main-header hidden" id="mainHeader">
-      <div class="header-inner">
-        <!-- Sol: Marka ve Versiyon -->
-        <div class="brand-area">
-          <h1>My<span class="accent-text">SETUP</span></h1>
-          <span id="versionDisplay" class="version-tag">v0.0.0</span>
-        </div>
-
-        <!-- Orta: Navigasyon Menüsü -->
-        <nav class="main-nav">
-          <button class="nav-btn active" data-page="home">Akış</button>
-          <button class="nav-btn" data-page="profile">Profil</button>
-          <button class="nav-btn" data-page="inventory">Envanterim</button>
-        </nav>
-
-        <!-- Sağ: Kullanıcı Bilgisi (Güncelleme Dahil) -->
-        <div class="header-right">
-        <div class="user-info hidden" id="userInfo">
-          <button id="updateBtn" class="update-icon-btn" title="Güncelleme Mevcut"></button>
-          <span class="user-displayname" id="userEmail"></span>
-          <button class="logout-btn" id="logoutBtn" title="Çıkış Yap">
-            <svg
-              viewBox="0 0 24 24"
-              width="16"
-              height="16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </button>
-        </div>
-        </div>
+    <aside class="sidebar hidden" id="sidebar">
+      <!-- Logo ve Versiyon -->
+      <div class="sidebar-brand">
+        <h1>My<span class="accent-text">SETUP</span></h1>
+        <span id="versionDisplay" class="sidebar-version">v0.0.0</span>
       </div>
-    </header>
+
+      <!-- Divider -->
+      <div class="sidebar-divider"></div>
+
+      <!-- Navigasyon Menüsü -->
+      <nav class="sidebar-nav">
+        <button class="sidebar-nav-btn active" data-page="home">Akış</button>
+        <button class="sidebar-nav-btn" data-page="profile">Profil</button>
+        <button class="sidebar-nav-btn" data-page="inventory">Envanterim</button>
+      </nav>
+
+      <!-- Alt Kısım: Kullanıcı ve Çıkış -->
+      <div class="sidebar-footer">
+        <div class="sidebar-user-info hidden" id="userInfo">
+          <span class="sidebar-user-displayname" id="userEmail"></span>
+        </div>
+        <button id="updateBtn" class="sidebar-update-btn" title="Güncelleme Mevcut"></button>
+        <button class="sidebar-logout-btn" id="logoutBtn" title="Çıkış Yap">
+          <svg
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Çıkış Yap
+        </button>
+      </div>
+    </aside>
 
     <!-- ═══════════════════════════════════════════════════════════════════ -->
     <!--                      KİMLİK DOĞRULAMA YÜKLENİYOR                 -->
@@ -267,8 +269,8 @@
     <!-- ═══════════════════════════════════════════════════════════════════ -->
     <div class="main-scroll hidden" id="mainScroll">
       <div class="pages-container" id="pagesContainer">
-        <!-- ─────────────────── Ana Sayfa (700px) ─────────────────── -->
-        <section class="page-content page-700 active" id="homePage">
+<!-- ─────────────────── Ana Sayfa (650px) ─────────────────── -->
+         <section class="page-content page-650 active" id="homePage">
           <div class="welcome-screen">
             <h2>Hoşgeldiniz, <span id="welcomeUsername"></span>!</h2>
             <p>MySetup kişisel envanter yönetim sistemine hoş geldiniz. Sol menüden farklı sayfalara geçiş yapabilirsiniz.</p>
@@ -276,7 +278,7 @@
         </section>
 
         <!-- ─────────────────── Profil Sayfası (700px) ─────────────────── -->
-        <section class="page-content page-700" id="profilePage">
+        <section class="page-content page-650" id="profilePage">
           <div class="profile-card">
             <div class="profile-left">
               <div class="profile-avatar">
@@ -296,8 +298,8 @@
           </div>
         </section>
 
-        <!-- ─────────────────── Envanter Sayfası (1300px) ─────────────────── -->
-        <section class="page-content page-1300" id="inventoryPage">
+        <!-- ─────────────────── Envanter Sayfası (1250px) ─────────────────── -->
+        <section class="page-content page-1250" id="inventoryPage">
           <!-- ─────────────────── İstatistik Kartları ─────────────────── -->
           <div class="stats-row" id="statsRow">
             <div class="stat-card">

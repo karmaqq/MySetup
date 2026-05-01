@@ -16,7 +16,7 @@ function showPage(pageName) {
   _isAnimating = true;
 
   const pages = document.querySelectorAll(".page-content");
-  const navBtns = document.querySelectorAll(".nav-btn");
+  const navBtns = document.querySelectorAll(".sidebar-nav-btn");
   const mainScroll = document.getElementById("mainScroll");
 
   const oldPage = document.querySelector(".page-content.active");
@@ -28,7 +28,7 @@ function showPage(pageName) {
   }
 
   navBtns.forEach((b) => b.classList.remove("active"));
-  const activeNavBtn = document.querySelector(`.nav-btn[data-page="${pageName}"]`);
+  const activeNavBtn = document.querySelector(`.sidebar-nav-btn[data-page="${pageName}"]`);
   if (activeNavBtn) activeNavBtn.classList.add("active");
 
   if (oldPage) {

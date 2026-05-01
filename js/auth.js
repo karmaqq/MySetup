@@ -9,7 +9,7 @@ const auth = firebase.auth();
 /* ─────────────────── Navigasyon ve Sayfa Başlatma ─────────────────── */
 
 function initNavigation() {
-  const navBtns = document.querySelectorAll(".nav-btn");
+  const navBtns = document.querySelectorAll(".sidebar-nav-btn");
   navBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       const page = btn.dataset.page;
@@ -18,17 +18,6 @@ function initNavigation() {
       }
     });
   });
-
-  function updateHeaderHeight() {
-    const header = document.getElementById("mainHeader");
-    if (header) {
-      const height = header.offsetHeight;
-      document.documentElement.style.setProperty("--header-height", height + "px");
-    }
-  }
-
-  updateHeaderHeight();
-  window.addEventListener("resize", updateHeaderHeight);
 }
 
 if (document.readyState === "loading") {
@@ -50,16 +39,6 @@ function hideLoading() {
   el.style.transition = "opacity 0.25s ease";
   setTimeout(() => {
     el.style.display = "none";
-    const header = document.getElementById("mainHeader");
-    const footer = document.getElementById("appFooter");
-    if (header) {
-      header.classList.remove("hidden");
-      requestAnimationFrame(() => {
-        const height = header.offsetHeight;
-        document.documentElement.style.setProperty("--header-height", height + "px");
-      });
-    }
-    if (footer) footer.classList.remove("hidden");
   }, 260);
 }
 
@@ -106,8 +85,10 @@ async function onUserLoggedIn(user) {
   const authOverlay = document.getElementById("authOverlay");
   if (authOverlay) authOverlay.classList.remove("active");
 
+  const sidebar = document.getElementById("sidebar");
   const mainScroll = document.getElementById("mainScroll");
   const appFooter = document.getElementById("appFooter");
+  if (sidebar) sidebar.classList.remove("hidden");
   if (mainScroll) mainScroll.classList.remove("hidden");
   if (appFooter) appFooter.classList.remove("hidden");
 
@@ -135,11 +116,13 @@ async function onUserLoggedIn(user) {
 /* ─────────────────── Çıkış Yapıldığında ─────────────────── */
 
 function onUserLoggedOut() {
+  const sidebar = document.getElementById("sidebar");
   const mainScroll = document.getElementById("mainScroll");
   const appFooter = document.getElementById("appFooter");
   const userInfo = document.getElementById("userInfo");
   const authOverlay = document.getElementById("authOverlay");
 
+  if (sidebar) sidebar.classList.add("hidden");
   if (mainScroll) mainScroll.classList.add("hidden");
   if (appFooter) appFooter.classList.add("hidden");
   if (userInfo) userInfo.classList.add("hidden");

@@ -88,8 +88,9 @@ body {
 
 :root {
   --title-bar-height: 35px;
-  --header-height: 70px;
-  --content-start: 110px;
+  --sidebar-width: 250px;
+  --sidebar-gap: 10px;
+  --content-margin: 10px;
   --footer-height: 35px;
 }
 
@@ -133,15 +134,37 @@ body {
   z-index: 10000;
 }
 
+/* ─────────────────── Alt Bilgi (Tüm Sayfa Genişliğinde) ─────────────────── */
+
+.app-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--footer-height);
+  padding: 0 20px;
+  background: rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                                SAYFA DÜZENİ                                 */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 .main-scroll {
   position: fixed;
-  top: 110px;
-  bottom: 35px;
-  left: 0;
+  top: calc(var(--title-bar-height) + var(--content-margin));
+  bottom: var(--footer-height);
+  left: calc(var(--sidebar-width) + var(--sidebar-gap));
   right: 0;
   overflow-y: auto;
   overflow-x: hidden;
@@ -155,7 +178,7 @@ body {
   width: 100%;
   max-width: 1300px;
   margin: 0 auto;
-  padding: 0 0 30px;
+  padding: var(--content-margin) 0 var(--content-margin);
 }
 
 /* ─────────────────── Sayfa İçerik Bölümleri (Animasyonlu) ─────────────────── */
@@ -165,7 +188,10 @@ body {
   visibility: hidden;
   opacity: 0;
   transform: translateY(10px);
-  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease,
+    visibility 0.3s;
   margin: 0 auto;
 }
 
@@ -176,15 +202,13 @@ body {
   transform: translateY(0);
 }
 
-.page-700 {
-  max-width: 700px;
+.page-650 {
+  max-width: 650px;
 }
 
-.page-1300 {
-  max-width: 1300px;
+.page-1250 {
+  max-width: 1250px;
 }
-
-
 
 /* ─────────────────── Yükleme Ekranı (Global) ─────────────────── */
 
@@ -372,28 +396,6 @@ body {
   border-color: var(--text-dim);
 }
 
-/* ─────────────────── Alt Bilgi ─────────────────── */
-
-.app-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--footer-height);
-  padding: 0 20px;
-  background: rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
-  letter-spacing: 0.5px;
-  pointer-events: none;
-}
-
 .footer-status {
   display: flex;
   align-items: center;
@@ -405,7 +407,13 @@ body {
   color: #daa924;
 }
 
+.hidden {
+  display: none;
+}
 
+body .hidden {
+  display: none;
+}
 
 input,
 textarea,
@@ -420,5 +428,3 @@ td * {
   -webkit-user-select: text;
   user-select: text;
 }
-
-

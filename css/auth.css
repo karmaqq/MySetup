@@ -7,12 +7,11 @@
 .auth-overlay {
   position: fixed;
   inset: 0;
-  z-index: 5000;
+  z-index: 9997;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(9, 11, 16, 0.85);
-  backdrop-filter: blur(12px);
+  background: var(--bg);
   opacity: 0;
   visibility: hidden;
   transition:

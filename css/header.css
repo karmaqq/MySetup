@@ -10,23 +10,23 @@
   left: 0;
   right: 0;
   height: 70px;
-  z-index: 9999;
+  z-index: 9998;
   display: flex;
   align-items: center;
   padding: 0;
   gap: 0;
+  background: transparent;
 }
 
-/* ─────────────────── Header İçerik Konteyneri (1300px Sayfa İçeriği ile Aynı Hizada) ─────────────────── */
+/* ─────────────────── Header İçerik Konteyneri (1250px Sayfa İçeriği ile Aynı Hizada) ─────────────────── */
 
 .header-inner {
   width: 100%;
   max-width: 1300px;
   margin: 0 auto;
-  padding: 0;
+  padding: 0 25px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   height: 100%;
   position: relative;
 }
@@ -112,7 +112,8 @@ h1 .accent-text {
   display: flex;
   align-items: center;
   gap: 12px;
-  justify-self: end;
+  margin-left: auto;
+  margin-right: end;
 }
 
 /* ─────────────────── Kullanıcı Bilgisi (Header Sağında) ─────────────────── */
