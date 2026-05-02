@@ -177,28 +177,33 @@ async function deleteAllInFolder(ref) {
 
 /* --- POST SYSTEM --- */
 
+postsRef = database.ref("posts");
+
 function addPostToFirebase(postData) {
-  if (!postsRef) postsRef = database.ref("posts");
   return postsRef.push(postData);
 }
 
 function deletePostFromFirebase(postId) {
-  if (!postsRef) postsRef = database.ref("posts");
-  return postsRef.child(postId).once("value").then(function (snapshot) {
-    var postData = snapshot.val();
-    var deletePromise = Promise.resolve();
-    if (postData && postData.imageUrl) {
-      var imageRef = firebase.storage().refFromURL(postData.imageUrl);
-      deletePromise = imageRef.delete().catch(function () {});
-    }
-    return deletePromise.then(function () {
-      return postsRef.child(postId).remove();
-    });
+  var postData = allPosts[postId];
+  var imageUrl = postData ? postData.imageUrl : null;
+
+  var deletePromise = Promise.resolve();
+  if (imageUrl) {
+    deletePromise = firebase
+      .storage()
+      .refFromURL(imageUrl)
+      .delete()
+      .catch(function (e) {
+        console.warn("Görsel silinemedi:", e);
+      });
+  }
+
+  return deletePromise.then(function () {
+    return postsRef.child(postId).remove();
   });
 }
 
 function togglePostLike(postId, userId) {
-  if (!postsRef) postsRef = database.ref("posts");
   var likeRef = postsRef.child(postId).child("likes").child(userId);
   return likeRef.once("value").then(function (snapshot) {
     if (snapshot.exists()) {
@@ -210,14 +215,14 @@ function togglePostLike(postId, userId) {
 }
 
 function initPostsListener(callback) {
-  if (!postsRef) postsRef = database.ref("posts");
-  postsRef.orderByChild("createdAt").on("child_added", function (snapshot) {
-    callback(snapshot.key, snapshot.val(), "added");
+  var query = postsRef.orderByChild("createdAt");
+  query.on("child_added", function (s) {
+    callback(s.key, s.val(), "added");
   });
-  postsRef.orderByChild("createdAt").on("child_changed", function (snapshot) {
-    callback(snapshot.key, snapshot.val(), "changed");
+  query.on("child_changed", function (s) {
+    callback(s.key, s.val(), "changed");
   });
-  postsRef.orderByChild("createdAt").on("child_removed", function (snapshot) {
-    callback(snapshot.key, null, "removed");
+  query.on("child_removed", function (s) {
+    callback(s.key, null, "removed");
   });
 }

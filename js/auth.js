@@ -108,6 +108,10 @@ async function onUserLoggedIn(user) {
     initUserDataRef(user.uid);
   }
 
+  if (typeof initPosts === "function") {
+    initPosts();
+  }
+
   if (typeof showPage === "function") {
     showPage(localStorage.getItem("mySetupLastPage") || "home");
   }

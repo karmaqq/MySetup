@@ -129,11 +129,84 @@ function removePostImage() {
   if (postImageInput) postImageInput.value = "";
 }
 
+/* POST HELPER FONKSIYONLARI */
+
+function _createPostElement(postId, postData) {
+  var wrapper = document.createElement("div");
+  wrapper.innerHTML = renderPost(postId, postData);
+  return wrapper.firstElementChild;
+}
+
+function _prependPostToFeed(postId, postData) {
+  var feed = document.getElementById("postsFeed");
+  if (!feed) return;
+  var empty = feed.querySelector(".posts-empty");
+  if (empty) empty.remove();
+  var el = _createPostElement(postId, postData);
+  el.style.opacity = "0";
+  el.style.transform = "translateY(-8px)";
+  el.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+  feed.insertBefore(el, feed.firstChild);
+  requestAnimationFrame(function () {
+    el.style.opacity = "1";
+    el.style.transform = "translateY(0)";
+  });
+}
+
+function _patchPostCard(postId, postData) {
+  var existing = document.querySelector('[data-post-id="' + postId + '"]');
+  if (!existing) return;
+  var newEl = _createPostElement(postId, postData);
+  existing.replaceWith(newEl);
+}
+
+function _softRemovePost(postId) {
+  document
+    .querySelectorAll('[data-post-id="' + postId + '"]')
+    .forEach(function (el) {
+      el.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+      el.style.opacity = "0";
+      el.style.transform = "translateY(4px)";
+      setTimeout(function () {
+        el.remove();
+      }, 320);
+    });
+}
+
+function _onlyLikesChanged(oldPost, newPost) {
+  var fields = ["content", "imageUrl", "username", "uid", "createdAt"];
+  for (var i = 0; i < fields.length; i++) {
+    if (oldPost[fields[i]] !== newPost[fields[i]]) return false;
+  }
+  return true;
+}
+
+function _patchPostLikes(postId, likes) {
+  var currentUser = firebase.auth().currentUser;
+  var likeCount = likes ? Object.keys(likes).length : 0;
+  var liked = currentUser && likes && likes[currentUser.uid];
+
+  document.querySelectorAll('[data-post-id="' + postId + '"]').forEach(function (card) {
+    var btn = card.querySelector(".post-action-btn");
+    if (!btn) return;
+    btn.classList.toggle("liked", !!liked);
+    var svg = btn.querySelector("svg");
+    if (svg) svg.setAttribute("fill", liked ? "currentColor" : "none");
+    var textNodes = Array.from(btn.childNodes).filter(function (n) {
+      return n.nodeType === 3;
+    });
+    if (textNodes.length) {
+      textNodes[textNodes.length - 1].textContent =
+        " " + likeCount + " Beğeni";
+    }
+  });
+}
+
 /* POST RENDER ETME */
 
 function renderPost(postId, postData) {
   if (!postData) {
-    var el = document.getElementById("post-" + postId);
+    var el = document.querySelector('[data-post-id="' + postId + '"]');
     if (el) el.remove();
     return "";
   }
@@ -153,7 +226,7 @@ function renderPost(postId, postData) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  var html = '<div class="post-card" id="post-' + escapedId + '">';
+  var html = '<div class="post-card" data-post-id="' + escapedId + '">';
   html += '<div class="post-header">';
   html += '<div class="post-avatar">';
   if (avatarUrl) {
@@ -234,27 +307,40 @@ function renderPost(postId, postData) {
 /* POST AKISINI GUNCELLE */
 
 function updatePostsFeed() {
-  if (!postsFeed) return;
+  var feed = document.getElementById("postsFeed");
+  if (!feed) return;
 
-  var postsArray = Object.keys(allPosts)
-    .map(function (id) {
-      return { id: id, data: allPosts[id] };
-    })
-    .sort(function (a, b) {
-      return (b.data.createdAt || 0) - (a.data.createdAt || 0);
-    });
+  var targetOrder = Object.keys(allPosts).sort(function (a, b) {
+    return (allPosts[b].createdAt || 0) - (allPosts[a].createdAt || 0);
+  });
 
-  if (postsArray.length === 0) {
-    postsFeed.innerHTML =
-      '<div class="posts-empty">Henüz hiç gönderin yok.<br>Akış sayfasından ilk gönderini yayınla.</div>';
+  if (!targetOrder.length) {
+    feed.innerHTML = '<div class="posts-empty">Henüz hiç gönderin yok.<br>Akış sayfasından ilk gönderini yayınla.</div>';
     return;
   }
 
-  var html = "";
-  postsArray.forEach(function (p) {
-    html += renderPost(p.id, p.data);
+  // Silinmiş kartları kaldır
+  feed.querySelectorAll("[data-post-id]").forEach(function (card) {
+    var id = card.dataset.postId;
+    if (!allPosts[id]) _softRemovePost(id);
   });
-  postsFeed.innerHTML = html;
+
+  // Eksik kartları ekle (scroll bozmadan)
+  var prev = null;
+  targetOrder.forEach(function (postId) {
+    var existing = feed.querySelector('[data-post-id="' + postId + '"]');
+    if (!existing) {
+      var el = _createPostElement(postId, allPosts[postId]);
+      if (prev) {
+        prev.after(el);
+      } else {
+        feed.insertBefore(el, feed.firstChild);
+      }
+      prev = el;
+    } else {
+      prev = existing;
+    }
+  });
 }
 
 /* POST BEGENI */
@@ -262,14 +348,30 @@ function updatePostsFeed() {
 function toggleLike(postId) {
   var user = firebase.auth().currentUser;
   if (!user) return;
-  togglePostLike(postId, user.uid)
-    .then(function () {
-      updatePostsFeed();
-      updateProfilePosts();
-    })
-    .catch(function () {
-      if (window.showToast) showToast("İşlem başarısız.");
-    });
+  var post = allPosts[postId];
+  if (!post) return;
+
+  // 1. Optimistik: hafızayı ve DOM'u anında güncelle
+  var alreadyLiked = post.likes && post.likes[user.uid];
+  if (!post.likes) post.likes = {};
+  if (alreadyLiked) {
+    delete post.likes[user.uid];
+  } else {
+    post.likes[user.uid] = true;
+  }
+  _patchPostLikes(postId, post.likes);
+
+  // 2. Firebase'e yaz — .then() YOK
+  togglePostLike(postId, user.uid).catch(function () {
+    // Başarısız: optimistiği geri al
+    if (alreadyLiked) {
+      post.likes[user.uid] = true;
+    } else {
+      delete post.likes[user.uid];
+    }
+    _patchPostLikes(postId, post.likes);
+    if (window.showToast) showToast("Beğeni kaydedilemedi.", "error");
+  });
 }
 
 /* POST MENU */
@@ -308,20 +410,61 @@ function confirmDeletePost(postId) {
 
   if (window.showConfirm) {
     showConfirm("Gönderi silinsin mi?", function () {
-      deletePostFromFirebase(postId).then(function () {
-        if (window.showToast) showToast("Gönderi silindi.");
-      });
+      deletePostFromFirebase(postId)
+        .then(function () {
+          // Firebase confirm gelince DOM'dan kaldır
+          var el = document.querySelector('[data-post-id="' + postId + '"]');
+          if (el) el.remove();
+          delete allPosts[postId];
+          if (window.showToast) showToast("Gönderi silindi.");
+        })
+        .catch(function () {
+          if (window.showToast) showToast("Gönderi silinemedi.", "error");
+        });
     });
   } else {
     if (confirm("Gönderi silinsin mi?")) {
-      deletePostFromFirebase(postId).then(function () {
-        if (window.showToast) showToast("Gönderi silindi.");
-      });
+      deletePostFromFirebase(postId)
+        .then(function () {
+          var el = document.querySelector('[data-post-id="' + postId + '"]');
+          if (el) el.remove();
+          delete allPosts[postId];
+          if (window.showToast) showToast("Gönderi silindi.");
+        })
+        .catch(function () {
+          if (window.showToast) showToast("Gönderi silinemedi.", "error");
+        });
     }
   }
 }
 
 /* POST DINLEYICISI */
+
+var _pendingNewPosts = {};
+var _bannerEl = null;
+
+function _showPendingBanner() {
+  var count = Object.keys(_pendingNewPosts).length;
+  if (!count) return;
+  if (!_bannerEl) {
+    _bannerEl = document.createElement("div");
+    _bannerEl.className = "pending-posts-banner";
+    _bannerEl.onclick = _flushPendingPosts;
+    var feed = document.getElementById("postsFeed");
+    if (feed && feed.parentNode) {
+      feed.parentNode.insertBefore(_bannerEl, feed);
+    }
+  }
+  _bannerEl.textContent = count + " yeni gönderi — görmek için tıkla";
+  _bannerEl.style.display = "block";
+}
+
+function _flushPendingPosts() {
+  Object.assign(allPosts, _pendingNewPosts);
+  _pendingNewPosts = {};
+  if (_bannerEl) _bannerEl.style.display = "none";
+  updatePostsFeed();
+}
 
 function initPosts() {
   if (typeof initPostsListener !== "function") {
@@ -329,17 +472,41 @@ function initPosts() {
     return;
   }
   initPostsListener(function (postId, postData, type) {
+    var currentUser = firebase.auth().currentUser;
+    var isOwnAction =
+      postData && currentUser && postData.uid === currentUser.uid;
+
     if (type === "removed") {
       delete allPosts[postId];
-    } else {
+      if (document.querySelector('[data-post-id="' + postId + '"]')) {
+        _softRemovePost(postId);
+      }
+      return;
+    }
+
+    if (type === "added") {
+      if (isOwnAction) {
+        allPosts[postId] = postData;
+        if (postData && currentUser) {
+          allPosts[postId].avatarUrl = currentUser.photoURL || "";
+        }
+        _prependPostToFeed(postId, postData);
+      } else {
+        _pendingNewPosts[postId] = postData;
+        _showPendingBanner();
+      }
+      return;
+    }
+
+    if (type === "changed") {
+      var oldPost = allPosts[postId];
       allPosts[postId] = postData;
-      if (postData && postData.uid === firebase.auth().currentUser?.uid) {
-        allPosts[postId].avatarUrl =
-          firebase.auth().currentUser?.photoURL || "";
+      if (oldPost && _onlyLikesChanged(oldPost, postData)) {
+        _patchPostLikes(postId, postData.likes);
+      } else if (document.querySelector('[data-post-id="' + postId + '"]')) {
+        _patchPostCard(postId, postData);
       }
     }
-    updatePostsFeed();
-    updateProfilePosts();
   });
 }
 
@@ -363,10 +530,10 @@ if (postImageInput) {
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", function () {
-    setTimeout(initPosts, 500);
+    // initPosts artık auth.js tarafından çağrılıyor
   });
 } else {
-  setTimeout(initPosts, 500);
+  // initPosts artık auth.js tarafından çağrılıyor
 }
 
 /* PROFIL POST YONETIMI */
@@ -396,10 +563,16 @@ function updateProfilePosts() {
   var currentUser = firebase.auth().currentUser;
   if (!currentUser) return;
 
+  // Guard 1: Profil sayfası aktif mi?
+  if (typeof _currentPage !== "undefined" && _currentPage !== "profile")
+    return;
+
   var userTab = document.getElementById("userPostsTab");
   var likedTab = document.getElementById("likedPostsTab");
 
+  // Guard 2 + 3: Sadece aktif ve görünür sekmeyi güncelle
   if (currentProfileTab === "user-posts" && userTab) {
+    if (!userTab.classList.contains("active")) return;
     var userPosts = Object.keys(allPosts)
       .filter(function (id) {
         return allPosts[id].uid === currentUser.uid;
@@ -424,6 +597,7 @@ function updateProfilePosts() {
   }
 
   if (currentProfileTab === "liked-posts" && likedTab) {
+    if (!likedTab.classList.contains("active")) return;
     var likedPosts = Object.keys(allPosts)
       .filter(function (id) {
         var post = allPosts[id];
@@ -440,11 +614,11 @@ function updateProfilePosts() {
       likedTab.innerHTML =
         '<div class="posts-empty">Henüz beğendiğin gönderi yok.</div>';
     } else {
-      var html = "";
+      var html2 = "";
       likedPosts.forEach(function (p) {
-        html += renderPost(p.id, p.data);
+        html2 += renderPost(p.id, p.data);
       });
-      likedTab.innerHTML = html;
+      likedTab.innerHTML = html2;
     }
   }
 }
@@ -454,13 +628,3 @@ profileTabs.forEach(function (btn) {
     switchProfileTab(btn.dataset.tab);
   });
 });
-
-var _origShowPage = window.showPage;
-if (typeof _origShowPage === "function") {
-  window.showPage = function (pageName) {
-    _origShowPage(pageName);
-    if (pageName === "profile") {
-      setTimeout(updateProfilePosts, 300);
-    }
-  };
-}

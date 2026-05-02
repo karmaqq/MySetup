@@ -237,13 +237,3 @@
 .sidebar-logout-btn svg {
   flex-shrink: 0;
 }
-
-@keyframes update-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(245, 200, 66, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(245, 200, 66, 0);
-  }
-}

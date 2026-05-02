@@ -304,8 +304,10 @@ if (exportCsvBtn) {
 
 /* ─────────────────── Silme Onay Diyaloğu ─────────────────── */
 
-window.showDeleteConfirm = function (message, onConfirm) {
+window.showConfirm = function (message, onConfirm, opts) {
   if (!toastContainer) return;
+  var yesText = (opts && opts.yesText) || "Evet, Devam Et";
+  var noText = (opts && opts.noText) || "İptal";
   const toast = document.createElement("div");
   toast.className = "toast toast-confirm";
   const text = document.createElement("div");
@@ -319,8 +321,8 @@ window.showDeleteConfirm = function (message, onConfirm) {
   noBtn.className = "toast-no";
   yesBtn.type = "button";
   noBtn.type = "button";
-  yesBtn.textContent = "Onay";
-  noBtn.textContent = "İptal";
+  yesBtn.textContent = yesText;
+  noBtn.textContent = noText;
   actions.append(yesBtn, noBtn);
   toast.append(text, actions);
   toastContainer.appendChild(toast);
@@ -343,8 +345,6 @@ window.showDeleteConfirm = function (message, onConfirm) {
   noBtn.onclick = dismiss;
 };
 
-/* ─────────────────── Tüm Listeyi Sil Butonu Dinleyicisi ─────────────────── */
-
 const deleteAllBtn = document.getElementById("deleteAllBtn");
 
 if (deleteAllBtn) {
@@ -355,8 +355,8 @@ if (deleteAllBtn) {
       return;
     }
 
-    showDeleteConfirm(
-      `"Tüm verileri gerçekten silmek istiyor musunuz?"`,
+    showConfirm(
+      "Tüm verileri gerçekten silmek istiyor musunuz?",
       () => {
         if (typeof replaceUserDataInFirebase !== "function") {
           showToast("İşlem yapılamadı", "error");
@@ -370,6 +370,7 @@ if (deleteAllBtn) {
             showToast("Silme işlemi tamamlanamadı", "error");
           });
       },
+      { yesText: "Onay" }
     );
   });
 }

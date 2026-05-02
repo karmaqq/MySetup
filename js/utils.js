@@ -28,7 +28,9 @@ function showPage(pageName) {
   }
 
   navBtns.forEach((b) => b.classList.remove("active"));
-  const activeNavBtn = document.querySelector(`.sidebar-nav-btn[data-page="${pageName}"]`);
+  const activeNavBtn = document.querySelector(
+    `.sidebar-nav-btn[data-page="${pageName}"]`,
+  );
   if (activeNavBtn) activeNavBtn.classList.add("active");
 
   if (oldPage) {
@@ -56,6 +58,10 @@ function showPage(pageName) {
     _isAnimating = false;
     _currentPage = pageName;
     localStorage.setItem("mySetupLastPage", pageName);
+    // Sayfa geçiş hook (P06 guard'ı zaten _currentPage'i kontrol ediyor)
+    if (pageName === "profile" && typeof updateProfilePosts === "function") {
+      updateProfilePosts();
+    }
   }, 320);
 }
 
@@ -114,6 +120,23 @@ let currentSearch = "";
 let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
+
+/* ─────────────────── Render Yönetimi ─────────────────── */
+
+var _renderRafId = null;
+var _pendingRender = false;
+
+function scheduleRender() {
+  if (isAnyModalOpen()) {
+    _pendingRender = true;
+    return;
+  }
+  if (_renderRafId) cancelAnimationFrame(_renderRafId);
+  _renderRafId = requestAnimationFrame(function () {
+    _renderRafId = null;
+    if (typeof renderAll === "function") renderAll();
+  });
+}
 
 /* ─────────────────── İstatistik Önbelleği ─────────────────── */
 
@@ -273,7 +296,7 @@ const POST_PHRASES = [
   "bunu söylerken hiç utanmadı.",
   "bir an bile düşünmeden şunu dedi;",
   "şöyle buyurdu;",
-  "fikrini beyan etti;"
+  "fikrini beyan etti;",
 ];
 
 function formatTimeAgo(timestamp, phraseIndex) {
@@ -287,10 +310,13 @@ function formatTimeAgo(timestamp, phraseIndex) {
   if (minutes < 60) timeText = minutes + " dakika önce";
   else if (hours < 24) timeText = hours + " saat önce";
   else if (days < 7) timeText = days + " gün önce";
-  else if (days < 365) timeText = Math.floor(days/7) + " hafta önce";
-  else timeText = Math.floor(days/365) + " yıl önce";
+  else if (days < 365) timeText = Math.floor(days / 7) + " hafta önce";
+  else timeText = Math.floor(days / 365) + " yıl önce";
 
-  var idx = (phraseIndex !== undefined && phraseIndex !== null) ? phraseIndex : Math.floor(Math.random() * POST_PHRASES.length);
+  var idx =
+    phraseIndex !== undefined && phraseIndex !== null
+      ? phraseIndex
+      : Math.floor(Math.random() * POST_PHRASES.length);
   return timeText + " " + POST_PHRASES[idx];
 }
 

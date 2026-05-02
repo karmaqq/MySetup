@@ -29,7 +29,7 @@ function getFilteredSortedList() {
   if (currentStatusFilter !== "all") {
     list = list.filter((item) => {
       const norm = item._statusNorm;
-      if (currentStatusFilter === "saglikli") return norm.includes("saglikli");
+      if (currentStatusFilter === "saglikli") return norm.includes("saglikl");
       if (currentStatusFilter === "bozuk") return norm.includes("bozuk");
       if (currentStatusFilter === "yedek") return norm.includes("yedek");
       if (currentStatusFilter === "atildi") return norm.includes("atildi");
@@ -175,8 +175,7 @@ function updateStats(filteredList) {
           "status-healthy",
         );
         if (currentStatusFilter !== "all" && mostExpItem) {
-          const statusNorm =
-            mostExpItem._statusNorm || normalizeTr(mostExpItem.status);
+          const statusNorm = mostExpItem._statusNorm || "";
           if (statusNorm.includes("bozuk"))
             statIcon.classList.add("status-broken");
           else if (statusNorm.includes("yedek"))
@@ -479,6 +478,12 @@ function renderAll() {
 /*                      CRUD VE VERİ GÜNCELLEMELERİ                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Görünür Öğe Sayısını Hesapla ─────────────────── */
+
+function _countVisibleItems() {
+  return Object.values(allData).filter(isItemVisible).length;
+}
+
 /* ─────────────────── Öğe Filtre Kriterlerine Uyuyor Mu ─────────────────── */
 
 function isItemVisible(item) {
@@ -488,7 +493,7 @@ function isItemVisible(item) {
   }
   if (currentStatusFilter !== "all") {
     const norm = item._statusNorm || "";
-    if (currentStatusFilter === "saglikli" && !norm.includes("saglikli")) return false;
+    if (currentStatusFilter === "saglikli" && !norm.includes("saglikl")) return false;
     if (currentStatusFilter === "bozuk" && !norm.includes("bozuk")) return false;
     if (currentStatusFilter === "yedek" && !norm.includes("yedek")) return false;
     if (currentStatusFilter === "atildi" && !norm.includes("atildi")) return false;
@@ -505,7 +510,7 @@ function addOrUpdateTableRow(id, item) {
 
   if (!visible) {
     if (row) row.remove();
-    updateResultCount(getFilteredSortedList().length);
+    updateResultCount(_countVisibleItems());
     return;
   }
 
@@ -523,7 +528,7 @@ function addOrUpdateTableRow(id, item) {
     }
   }
 
-  updateResultCount(getFilteredSortedList().length);
+  updateResultCount(_countVisibleItems());
 }
 
 /* ─────────────────── Satır Kaldır ─────────────────── */
@@ -537,7 +542,7 @@ function removeTableRow(id) {
     return;
   }
 
-  updateResultCount(getFilteredSortedList().length);
+  updateResultCount(_countVisibleItems());
 }
 
 /* ─────────────────── Kayıt Durumunu Güncelle (Optimistic) ─────────────────── */
@@ -545,7 +550,7 @@ function removeTableRow(id) {
 function updateItemStatus(itemId, newStatus) {
   const currentItem = allData[itemId];
   if (!currentItem) return;
-  if (normalizeTr(currentItem.status) === normalizeTr(newStatus)) return;
+  if (currentItem._statusNorm === normalizeTr(newStatus)) return;
 
   const oldItem = { ...currentItem };
   const oldStatus = currentItem.status;
