@@ -7,7 +7,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>MySetup</title>
+    <title>Karma Q</title>
     <link rel="icon" type="image/x-icon" href="assets/icon.ico" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -79,7 +79,7 @@
     <aside class="sidebar hidden" id="sidebar">
       <!-- Logo ve Versiyon -->
       <div class="sidebar-brand">
-        <h1>My<span class="accent-text">SETUP</span></h1>
+        <h1>Karma<span class="accent-text">Q</span></h1>
         <span id="versionDisplay" class="sidebar-version">v0.0.0</span>
       </div>
 
@@ -90,11 +90,19 @@
       <nav class="sidebar-nav">
         <button class="sidebar-nav-btn active" data-page="home">Akış</button>
         <button class="sidebar-nav-btn" data-page="profile">Profil</button>
-        <button class="sidebar-nav-btn" data-page="inventory">Envanterim</button>
+        <button class="sidebar-nav-btn" data-page="inventory">
+          Envanterim
+        </button>
       </nav>
 
       <!-- Güncelleme Butonu -->
-      <button id="updateBtn" class="sidebar-update-btn" title="Güncelleme Mevcut"><span></span></button>
+      <button
+        id="updateBtn"
+        class="sidebar-update-btn"
+        title="Güncelleme Mevcut"
+      >
+        <span></span>
+      </button>
 
       <!-- Alt Kısım: Kullanıcı ve Çıkış -->
       <div class="sidebar-footer">
@@ -272,15 +280,33 @@
     <!-- ═══════════════════════════════════════════════════════════════════ -->
     <div class="main-scroll hidden" id="mainScroll">
       <div class="pages-container" id="pagesContainer">
-<!-- ─────────────────── Ana Sayfa (650px) ─────────────────── -->
+        <!-- ─────────────────── Ana Sayfa (650px) ─────────────────── -->
         <section class="page-content page-650 active" id="homePage">
           <!-- Post Oluşturma -->
           <div class="create-post">
-            <textarea id="postText" class="post-textarea" placeholder="Bir şeyler yayınla..." rows="4"></textarea>
+            <textarea
+              id="postText"
+              class="post-textarea"
+              placeholder="Bir şeyler yayınla..."
+              rows="4"
+            ></textarea>
             <div class="create-post-actions">
               <input type="file" id="postImageInput" accept="image/*" hidden />
-              <button class="post-img-btn" id="postImageBtn" title="Görsel Ekle">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <button
+                class="post-img-btn"
+                id="postImageBtn"
+                title="Görsel Ekle"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                   <circle cx="8.5" cy="8.5" r="1.5"></circle>
                   <polyline points="21 15 16 10 5 21"></polyline>
@@ -299,7 +325,16 @@
           <div class="profile-card">
             <div class="profile-left">
               <div class="profile-avatar">
-                <svg viewBox="0 0 24 24" width="80" height="80" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="80"
+                  height="80"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
@@ -310,13 +345,17 @@
               </div>
             </div>
             <div class="profile-right">
-              <button class="btn-settings" id="profileSettingsBtn">Hesap Ayarları</button>
+              <button class="btn-settings" id="profileSettingsBtn">
+                Hesap Ayarları
+              </button>
             </div>
           </div>
 
           <!-- Profil Sekmeleri -->
           <div class="profile-tabs">
-            <button class="tab-btn active" data-tab="user-posts">Gönderilerim</button>
+            <button class="tab-btn active" data-tab="user-posts">
+              Gönderilerim
+            </button>
             <button class="tab-btn" data-tab="liked-posts">Beğenilenler</button>
           </div>
 
@@ -378,7 +417,9 @@
             <!-- Durum Filtreleri -->
             <div class="filter-group">
               <button class="filter-btn active" data-status="all">Tümü</button>
-              <button class="filter-btn" data-status="saglikli">Sağlıklı</button>
+              <button class="filter-btn" data-status="saglikli">
+                Sağlıklı
+              </button>
               <button class="filter-btn" data-status="bozuk">Bozuk</button>
               <button class="filter-btn" data-status="yedek">Yedek</button>
               <button class="filter-btn" data-status="atildi">Atıldı</button>
@@ -433,7 +474,9 @@
                   stroke-linejoin="round"
                 >
                   <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <path
+                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                  ></path>
                 </svg>
                 Temizle
               </button>
@@ -548,14 +591,7 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                   >
-                    <rect
-                      x="3"
-                      y="4"
-                      width="18"
-                      height="18"
-                      rx="2"
-                      ry="2"
-                    />
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                     <line x1="16" y1="2" x2="16" y2="6" />
                     <line x1="8" y1="2" x2="8" y2="6" />
                     <line x1="3" y1="10" x2="21" y2="10" />
@@ -645,23 +681,12 @@
                       stroke-linecap="round"
                       stroke-linejoin="round"
                     >
-                      <rect
-                        x="3"
-                        y="3"
-                        width="18"
-                        height="18"
-                        rx="2"
-                        ry="2"
-                      />
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                       <circle cx="8.5" cy="8.5" r="1.5" />
                       <polyline points="21 15 16 10 5 21" />
                     </svg>
                   </button>
-                  <input
-                    type="file"
-                    id="imageFileInput"
-                    accept="image/*"
-                  />
+                  <input type="file" id="imageFileInput" accept="image/*" />
                 </div>
               </div>
             </div>
@@ -778,15 +803,8 @@
               </button>
             </div>
           </div>
-          <p
-            id="usernameError"
-            class="auth-error"
-            style="min-height: 20px"
-          ></p>
-          <button
-            id="openChangePassBtn"
-            class="setting-row setting-row-btn"
-          >
+          <p id="usernameError" class="auth-error" style="min-height: 20px"></p>
+          <button id="openChangePassBtn" class="setting-row setting-row-btn">
             Şifre Değiştir
           </button>
           <button
@@ -926,8 +944,8 @@
         </div>
         <div class="modal-body">
           <div class="warning-box">
-            <b>Dikkat:</b> Bu işlem geri alınamaz. Tüm envanter kayıtlarınız
-            ve kişisel verileriniz kalıcı olarak silinecektir.
+            <b>Dikkat:</b> Bu işlem geri alınamaz. Tüm envanter kayıtlarınız ve
+            kişisel verileriniz kalıcı olarak silinecektir.
           </div>
           <form id="deleteAccountForm">
             <div class="form-grid">
@@ -979,7 +997,7 @@
     <!--                           ALT BİLGİ                              -->
     <!-- ═══════════════════════════════════════════════════════════════════ -->
     <footer class="app-footer hidden" id="appFooter">
-      <span>© 2026 MySetup | <b>Karma</b> tarafından oluşturuldu.</span>
+      <span>© 2026 | <b>Karma Q</b> tarafından oluşturuldu.</span>
     </footer>
 
     <!-- ═══════════════════════════════════════════════════════════════════ -->

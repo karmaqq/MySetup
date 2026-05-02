@@ -299,7 +299,7 @@ const POST_PHRASES = [
   "fikrini beyan etti;",
 ];
 
-function formatTimeAgo(timestamp, phraseIndex) {
+function formatTimeAgo(timestamp, phraseIndex, skipPhrase) {
   if (!timestamp) return "";
   const diff = Date.now() - timestamp;
   const minutes = Math.floor(diff / 60000);
@@ -313,6 +313,7 @@ function formatTimeAgo(timestamp, phraseIndex) {
   else if (days < 365) timeText = Math.floor(days / 7) + " hafta önce";
   else timeText = Math.floor(days / 365) + " yıl önce";
 
+  if (skipPhrase) return timeText;
   var idx =
     phraseIndex !== undefined && phraseIndex !== null
       ? phraseIndex

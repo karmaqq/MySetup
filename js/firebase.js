@@ -226,3 +226,81 @@ function initPostsListener(callback) {
     callback(s.key, null, "removed");
   });
 }
+
+/* --- COMMENT SYSTEM --- */
+
+function addCommentToFirebase(postId, commentData) {
+  return postsRef.child(postId).child("comments").push(commentData);
+}
+
+function deleteCommentFromFirebase(postId, commentId) {
+  return postsRef.child(postId).child("comments").child(commentId).remove();
+}
+
+function toggleCommentLike(postId, commentId, userId) {
+  var likeRef = postsRef
+    .child(postId)
+    .child("comments")
+    .child(commentId)
+    .child("likes")
+    .child(userId);
+  return likeRef.once("value").then(function (snapshot) {
+    if (snapshot.exists()) {
+      return likeRef.remove();
+    } else {
+      return likeRef.set(true);
+    }
+  });
+}
+
+function addReplyToFirebase(postId, commentId, replyData) {
+  return postsRef
+    .child(postId)
+    .child("comments")
+    .child(commentId)
+    .child("replies")
+    .push(replyData);
+}
+
+function deleteReplyFromFirebase(postId, commentId, replyId) {
+  return postsRef
+    .child(postId)
+    .child("comments")
+    .child(commentId)
+    .child("replies")
+    .child(replyId)
+    .remove();
+}
+
+function toggleReplyLike(postId, commentId, replyId, userId) {
+  var likeRef = postsRef
+    .child(postId)
+    .child("comments")
+    .child(commentId)
+    .child("replies")
+    .child(replyId)
+    .child("likes")
+    .child(userId);
+  return likeRef.once("value").then(function (snapshot) {
+    if (snapshot.exists()) {
+      return likeRef.remove();
+    } else {
+      return likeRef.set(true);
+    }
+  });
+}
+
+function initCommentsListener(postId, callback) {
+  var ref = postsRef.child(postId).child("comments");
+  var query = ref.orderByChild("createdAt");
+
+  query.on("child_added", function (s) {
+    callback(s.key, s.val(), "added");
+  });
+  query.on("child_changed", function (s) {
+    callback(s.key, s.val(), "changed");
+  });
+  query.on("child_removed", function (s) {
+    callback(s.key, null, "removed");
+  });
+}
