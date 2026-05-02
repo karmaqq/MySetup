@@ -1,26 +1,26 @@
 /* POST SISTEMI */
 
-var postText = document.getElementById("postText");
-var postImageInput = document.getElementById("postImageInput");
-var postImageBtn = document.getElementById("postImageBtn");
-var publishPostBtn = document.getElementById("publishPostBtn");
-var postImagePreview = document.getElementById("postImagePreview");
-var postsFeed = document.getElementById("postsFeed");
+const postText = document.getElementById("postText");
+const postImageInput = document.getElementById("postImageInput");
+const postImageBtn = document.getElementById("postImageBtn");
+const publishPostBtn = document.getElementById("publishPostBtn");
+const postImagePreview = document.getElementById("postImagePreview");
+const postsFeed = document.getElementById("postsFeed");
 
-var allPosts = {};
-var selectedPostImage = null;
+let allPosts = {};
+let selectedPostImage = null;
 
 /* POST OLUSTURMA */
 
 function createPost() {
-  var text = (postText ? postText.value : "").trim();
+  const text = (postText ? postText.value : "").trim();
   if (!text && !selectedPostImage) {
     if (window.showToast)
       showToast("Lütfen bir metin yazın veya görsel seçin.");
     return;
   }
 
-  var user = firebase.auth().currentUser;
+  const user = firebase.auth().currentUser;
   if (!user) return;
 
   if (publishPostBtn) {
@@ -28,7 +28,7 @@ function createPost() {
     publishPostBtn.textContent = "Yayınlanıyor...";
   }
 
-  var postData = {
+  const postData = {
     uid: user.uid,
     username: user.displayName || "Kullanici",
     content: text,
@@ -39,11 +39,11 @@ function createPost() {
   };
 
   if (selectedPostImage) {
-    var storageRef = firebase.storage().ref();
-    var imageRef = storageRef.child(
+    const storageRef = firebase.storage().ref();
+    const imageRef = storageRef.child(
       "users/" + user.uid + "/posts/" + Date.now(),
     );
-    var uploadTask = imageRef.put(selectedPostImage);
+    const uploadTask = imageRef.put(selectedPostImage);
 
     uploadTask.on(
       "state_changed",
@@ -78,14 +78,14 @@ function savePost(postData) {
       }
       if (publishPostBtn) {
         publishPostBtn.disabled = false;
-        publishPostBtn.textContent = "Yayinla";
+        publishPostBtn.textContent = "Yayınla";
       }
        if (window.showToast) showToast("Gönderi yayınlandı!");
     })
     .catch(function () {
       if (publishPostBtn) {
         publishPostBtn.disabled = false;
-        publishPostBtn.textContent = "Yayinla";
+        publishPostBtn.textContent = "Yayınla";
       }
        if (window.showToast) showToast("Gönderi yayınlanamadı.");
     });
@@ -94,7 +94,7 @@ function savePost(postData) {
 /* GORSEL YUKLEME */
 
 function handlePostImageUpload(e) {
-  var file = e.target.files[0];
+  const file = e.target.files[0];
   if (!file) return;
 
   if (!file.type.startsWith("image/")) {
@@ -104,7 +104,7 @@ function handlePostImageUpload(e) {
 
   selectedPostImage = file;
 
-  var reader = new FileReader();
+  const reader = new FileReader();
   reader.onload = function (ev) {
     if (postImagePreview) {
       postImagePreview.innerHTML =
@@ -132,17 +132,17 @@ function removePostImage() {
 /* POST HELPER FONKSIYONLARI */
 
 function _createPostElement(postId, postData) {
-  var wrapper = document.createElement("div");
+  const wrapper = document.createElement("div");
   wrapper.innerHTML = renderPost(postId, postData);
   return wrapper.firstElementChild;
 }
 
 function _prependPostToFeed(postId, postData) {
-  var feed = document.getElementById("postsFeed");
+  const feed = document.getElementById("postsFeed");
   if (!feed) return;
-  var empty = feed.querySelector(".posts-empty");
+  const empty = feed.querySelector(".posts-empty");
   if (empty) empty.remove();
-  var el = _createPostElement(postId, postData);
+  const el = _createPostElement(postId, postData);
   el.style.opacity = "0";
   el.style.transform = "translateY(-8px)";
   el.style.transition = "opacity 0.25s ease, transform 0.25s ease";
@@ -154,9 +154,9 @@ function _prependPostToFeed(postId, postData) {
 }
 
 function _patchPostCard(postId, postData) {
-  var existing = document.querySelector('[data-post-id="' + postId + '"]');
+  const existing = document.querySelector('[data-post-id="' + postId + '"]');
   if (!existing) return;
-  var newEl = _createPostElement(postId, postData);
+  const newEl = _createPostElement(postId, postData);
   existing.replaceWith(newEl);
 }
 
@@ -174,25 +174,25 @@ function _softRemovePost(postId) {
 }
 
 function _onlyLikesChanged(oldPost, newPost) {
-  var fields = ["content", "imageUrl", "username", "uid", "createdAt"];
-  for (var i = 0; i < fields.length; i++) {
+  const fields = ["content", "imageUrl", "username", "uid", "createdAt"];
+  for (let i = 0; i < fields.length; i++) {
     if (oldPost[fields[i]] !== newPost[fields[i]]) return false;
   }
   return true;
 }
 
 function _patchPostLikes(postId, likes) {
-  var currentUser = firebase.auth().currentUser;
-  var likeCount = likes ? Object.keys(likes).length : 0;
-  var liked = currentUser && likes && likes[currentUser.uid];
+  const currentUser = firebase.auth().currentUser;
+  const likeCount = likes ? Object.keys(likes).length : 0;
+  const liked = currentUser && likes && likes[currentUser.uid];
 
   document.querySelectorAll('[data-post-id="' + postId + '"]').forEach(function (card) {
-    var btn = card.querySelector(".post-action-btn");
+    const btn = card.querySelector(".post-action-btn");
     if (!btn) return;
     btn.classList.toggle("liked", !!liked);
-    var svg = btn.querySelector("svg");
+    const svg = btn.querySelector("svg");
     if (svg) svg.setAttribute("fill", liked ? "currentColor" : "none");
-    var textNodes = Array.from(btn.childNodes).filter(function (n) {
+    const textNodes = Array.from(btn.childNodes).filter(function (n) {
       return n.nodeType === 3;
     });
     if (textNodes.length) {
@@ -206,27 +206,23 @@ function _patchPostLikes(postId, likes) {
 
 function renderPost(postId, postData) {
   if (!postData) {
-    var el = document.querySelector('[data-post-id="' + postId + '"]');
+    const el = document.querySelector('[data-post-id="' + postId + '"]');
     if (el) el.remove();
     return "";
   }
 
-  var currentUser = firebase.auth().currentUser;
-  var isOwnPost = currentUser && currentUser.uid === postData.uid;
-  var liked =
+  const currentUser = firebase.auth().currentUser;
+  const isOwnPost = currentUser && currentUser.uid === postData.uid;
+  const liked =
     postData.likes && postData.likes[currentUser ? currentUser.uid : ""];
 
-  var timeText = formatTimeAgo(postData.createdAt, postData.phraseIndex);
-  var avatarUrl = postData.avatarUrl || "";
-  var username = postData.username || "Kullanici";
+  const timeText = formatTimeAgo(postData.createdAt, postData.phraseIndex);
+  const avatarUrl = postData.avatarUrl || "";
+  const username = postData.username || "Kullanici";
 
-  var escapedId = (postId + "")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  const escapedId = escAttr(postId + "");
 
-  var html = '<div class="post-card" data-post-id="' + escapedId + '">';
+  let html = '<div class="post-card" data-post-id="' + escapedId + '">';
   html += '<div class="post-header">';
   html += '<div class="post-avatar">';
   if (avatarUrl) {
@@ -301,10 +297,10 @@ function renderPost(postId, postData) {
 /* POST AKISINI GUNCELLE */
 
 function updatePostsFeed() {
-  var feed = document.getElementById("postsFeed");
+  const feed = document.getElementById("postsFeed");
   if (!feed) return;
 
-  var targetOrder = Object.keys(allPosts).sort(function (a, b) {
+  const targetOrder = Object.keys(allPosts).sort(function (a, b) {
     return (allPosts[b].createdAt || 0) - (allPosts[a].createdAt || 0);
   });
 
@@ -315,16 +311,16 @@ function updatePostsFeed() {
 
   // Silinmiş kartları kaldır
   feed.querySelectorAll("[data-post-id]").forEach(function (card) {
-    var id = card.dataset.postId;
+    const id = card.dataset.postId;
     if (!allPosts[id]) _softRemovePost(id);
   });
 
   // Eksik kartları ekle (scroll bozmadan)
-  var prev = null;
+  let prev = null;
   targetOrder.forEach(function (postId) {
-    var existing = feed.querySelector('[data-post-id="' + postId + '"]');
+    const existing = feed.querySelector('[data-post-id="' + postId + '"]');
     if (!existing) {
-      var el = _createPostElement(postId, allPosts[postId]);
+      const el = _createPostElement(postId, allPosts[postId]);
       if (prev) {
         prev.after(el);
       } else {
@@ -340,13 +336,13 @@ function updatePostsFeed() {
 /* POST BEGENI */
 
 function toggleLike(postId) {
-  var user = firebase.auth().currentUser;
+  const user = firebase.auth().currentUser;
   if (!user) return;
-  var post = allPosts[postId];
+  const post = allPosts[postId];
   if (!post) return;
 
   // 1. Optimistik: hafızayı ve DOM'u anında güncelle
-  var alreadyLiked = post.likes && post.likes[user.uid];
+  const alreadyLiked = post.likes && post.likes[user.uid];
   if (!post.likes) post.likes = {};
   if (alreadyLiked) {
     delete post.likes[user.uid];
@@ -371,7 +367,7 @@ function toggleLike(postId) {
 /* POST MENU */
 
 function togglePostMenu(postId) {
-  var dropdown = document.getElementById("postDropdown-" + postId);
+  const dropdown = document.getElementById("postDropdown-" + postId);
   if (!dropdown) return;
 
   document.querySelectorAll(".post-dropdown.active").forEach(function (el) {
@@ -382,7 +378,7 @@ function togglePostMenu(postId) {
 
   if (dropdown.classList.contains("active")) {
     setTimeout(function () {
-      var close = function (e) {
+      const close = function (e) {
         if (
           !dropdown.contains(e.target) &&
           !e.target.classList.contains("post-menu-btn")
@@ -399,7 +395,7 @@ function togglePostMenu(postId) {
 /* POST SILME */
 
 function confirmDeletePost(postId) {
-  var dropdown = document.getElementById("postDropdown-" + postId);
+  const dropdown = document.getElementById("postDropdown-" + postId);
   if (dropdown) dropdown.classList.remove("active");
 
   if (window.showConfirm) {
@@ -407,7 +403,7 @@ function confirmDeletePost(postId) {
       deletePostFromFirebase(postId)
         .then(function () {
           // Firebase confirm gelince DOM'dan kaldır
-          var el = document.querySelector('[data-post-id="' + postId + '"]');
+          const el = document.querySelector('[data-post-id="' + postId + '"]');
           if (el) el.remove();
           delete allPosts[postId];
           if (window.showToast) showToast("Gönderi silindi.");
@@ -420,7 +416,7 @@ function confirmDeletePost(postId) {
     if (confirm("Gönderi silinsin mi?")) {
       deletePostFromFirebase(postId)
         .then(function () {
-          var el = document.querySelector('[data-post-id="' + postId + '"]');
+          const el = document.querySelector('[data-post-id="' + postId + '"]');
           if (el) el.remove();
           delete allPosts[postId];
           if (window.showToast) showToast("Gönderi silindi.");
@@ -434,17 +430,17 @@ function confirmDeletePost(postId) {
 
 /* POST DINLEYICISI */
 
-var _pendingNewPosts = {};
-var _bannerEl = null;
+let _pendingNewPosts = {};
+let _bannerEl = null;
 
 function _showPendingBanner() {
-  var count = Object.keys(_pendingNewPosts).length;
+  const count = Object.keys(_pendingNewPosts).length;
   if (!count) return;
   if (!_bannerEl) {
     _bannerEl = document.createElement("div");
     _bannerEl.className = "pending-posts-banner";
     _bannerEl.onclick = _flushPendingPosts;
-    var feed = document.getElementById("postsFeed");
+    const feed = document.getElementById("postsFeed");
     if (feed && feed.parentNode) {
       feed.parentNode.insertBefore(_bannerEl, feed);
     }
@@ -461,13 +457,9 @@ function _flushPendingPosts() {
 }
 
 function initPosts() {
-  if (typeof initPostsListener !== "function") {
-    setTimeout(initPosts, 500);
-    return;
-  }
   initPostsListener(function (postId, postData, type) {
-    var currentUser = firebase.auth().currentUser;
-    var isOwnAction =
+    const currentUser = firebase.auth().currentUser;
+    const isOwnAction =
       postData && currentUser && postData.uid === currentUser.uid;
 
     if (type === "removed") {
@@ -493,7 +485,7 @@ function initPosts() {
     }
 
     if (type === "changed") {
-      var oldPost = allPosts[postId];
+      const oldPost = allPosts[postId];
       allPosts[postId] = postData;
       if (oldPost && _onlyLikesChanged(oldPost, postData)) {
         _patchPostLikes(postId, postData.likes);
@@ -532,10 +524,10 @@ if (document.readyState === "loading") {
 
 /* PROFIL POST YONETIMI */
 
-var userPostsTab = document.getElementById("userPostsTab");
-var likedPostsTab = document.getElementById("likedPostsTab");
-var profileTabs = document.querySelectorAll(".profile-tabs .tab-btn");
-var currentProfileTab = "user-posts";
+const userPostsTab = document.getElementById("userPostsTab");
+const likedPostsTab = document.getElementById("likedPostsTab");
+const profileTabs = document.querySelectorAll(".profile-tabs .tab-btn");
+let currentProfileTab = "user-posts";
 
 function switchProfileTab(tabName) {
   currentProfileTab = tabName;
@@ -544,8 +536,8 @@ function switchProfileTab(tabName) {
     btn.classList.toggle("active", btn.dataset.tab === tabName);
   });
 
-  var userTab = document.getElementById("userPostsTab");
-  var likedTab = document.getElementById("likedPostsTab");
+  const userTab = document.getElementById("userPostsTab");
+  const likedTab = document.getElementById("likedPostsTab");
 
   if (userTab) userTab.classList.toggle("active", tabName === "user-posts");
   if (likedTab) likedTab.classList.toggle("active", tabName === "liked-posts");
@@ -554,20 +546,20 @@ function switchProfileTab(tabName) {
 }
 
 function updateProfilePosts() {
-  var currentUser = firebase.auth().currentUser;
+  const currentUser = firebase.auth().currentUser;
   if (!currentUser) return;
 
   // Guard 1: Profil sayfası aktif mi?
   if (typeof _currentPage !== "undefined" && _currentPage !== "profile")
     return;
 
-  var userTab = document.getElementById("userPostsTab");
-  var likedTab = document.getElementById("likedPostsTab");
+  const userTab = document.getElementById("userPostsTab");
+  const likedTab = document.getElementById("likedPostsTab");
 
   // Guard 2 + 3: Sadece aktif ve görünür sekmeyi güncelle
   if (currentProfileTab === "user-posts" && userTab) {
     if (!userTab.classList.contains("active")) return;
-    var userPosts = Object.keys(allPosts)
+    const userPosts = Object.keys(allPosts)
       .filter(function (id) {
         return allPosts[id].uid === currentUser.uid;
       })
@@ -582,7 +574,7 @@ function updateProfilePosts() {
       userTab.innerHTML =
         '<div class="posts-empty">Henüz hiç gönderin yok.<br>Akış sayfasından ilk gönderini yayınla.</div>';
     } else {
-      var html = "";
+      let html = "";
       userPosts.forEach(function (p) {
         html += renderPost(p.id, p.data);
       });
@@ -592,9 +584,9 @@ function updateProfilePosts() {
 
   if (currentProfileTab === "liked-posts" && likedTab) {
     if (!likedTab.classList.contains("active")) return;
-    var likedPosts = Object.keys(allPosts)
+    const likedPosts = Object.keys(allPosts)
       .filter(function (id) {
-        var post = allPosts[id];
+        const post = allPosts[id];
         return post.likes && post.likes[currentUser.uid];
       })
       .map(function (id) {
@@ -608,7 +600,7 @@ function updateProfilePosts() {
       likedTab.innerHTML =
         '<div class="posts-empty">Henüz beğendiğin gönderi yok.</div>';
     } else {
-      var html2 = "";
+      let html2 = "";
       likedPosts.forEach(function (p) {
         html2 += renderPost(p.id, p.data);
       });
@@ -627,32 +619,44 @@ profileTabs.forEach(function (btn) {
 
 document.addEventListener("click", function (e) {
   // Like butonu
-  var likeBtn = e.target.closest(".post-action-btn.like-btn");
+  const likeBtn = e.target.closest(".post-action-btn.like-btn");
   if (likeBtn) {
-    var postCard = likeBtn.closest("[data-post-id]");
+    const postCard = likeBtn.closest("[data-post-id]");
     if (postCard) toggleLike(postCard.dataset.postId);
     return;
   }
 
   // Menu butonu
-  var menuBtn = e.target.closest(".post-menu-btn");
+  const menuBtn = e.target.closest(".post-menu-btn");
   if (menuBtn) {
-    var postCard2 = menuBtn.closest("[data-post-id]");
+    const postCard2 = menuBtn.closest("[data-post-id]");
     if (postCard2) togglePostMenu(postCard2.dataset.postId);
     return;
   }
 
   // Delete butonu
-  var deleteBtn = e.target.closest(".post-dropdown-item.delete");
+  const deleteBtn = e.target.closest(".post-dropdown-item.delete");
   if (deleteBtn) {
-    var postCard3 = deleteBtn.closest("[data-post-id]");
+    const postCard3 = deleteBtn.closest("[data-post-id]");
     if (postCard3) confirmDeletePost(postCard3.dataset.postId);
     return;
   }
 
-  // Remove post image butonu
+   // Remove post image butonu
   if (e.target.closest(".remove-post-image-btn")) {
     removePostImage();
     return;
   }
 });
+
+/* POST ZAMAN GUNCELLEME */
+setInterval(function () {
+  document.querySelectorAll(".post-time").forEach(function (el) {
+    const card = el.closest("[data-post-id]");
+    if (!card) return;
+    const postId = card.dataset.postId;
+    const post = allPosts[postId];
+    if (!post) return;
+    el.textContent = " " + formatTimeAgo(post.createdAt, post.phraseIndex);
+  });
+}, 60 * 1000);

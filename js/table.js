@@ -12,6 +12,18 @@ function isAnyModalOpen() {
   return !!document.querySelector(".modal-overlay.active");
 }
 
+(function () {
+  const observer = new MutationObserver(function () {
+    if (!isAnyModalOpen() && _pendingRender) {
+      _pendingRender = false;
+      if (typeof renderAll === "function") renderAll();
+    }
+  });
+  document.querySelectorAll(".modal-overlay").forEach(function (el) {
+    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
+  });
+})();
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          FİLTRELEME VE SIRALAMA                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -19,23 +31,9 @@ function isAnyModalOpen() {
 /* ─────────────────── Filtrelenmiş ve Sıralanmış Liste ─────────────────── */
 
 function getFilteredSortedList() {
-  let list = Object.keys(allData).map((id) => ({ id, ...allData[id] }));
-
-  if (currentSearch) {
-    const q = normalizeTr(currentSearch);
-    list = list.filter((item) => item._searchTag.includes(q));
-  }
-
-  if (currentStatusFilter !== "all") {
-    list = list.filter((item) => {
-      const norm = item._statusNorm;
-      if (currentStatusFilter === "saglikli") return norm.includes("saglikl");
-      if (currentStatusFilter === "bozuk") return norm.includes("bozuk");
-      if (currentStatusFilter === "yedek") return norm.includes("yedek");
-      if (currentStatusFilter === "atildi") return norm.includes("atildi");
-      return true;
-    });
-  }
+  let list = Object.keys(allData)
+    .map((id) => ({ id, ...allData[id] }))
+    .filter(isItemVisible);
 
   list.sort((a, b) => {
     let av = a[currentSort.col] ?? "";
@@ -79,7 +77,7 @@ function rebuildStatsCache() {
     const price = parseFloat(i.price) || 0;
     _statsCache.total += price;
     _statsCache.count++;
-    if ((i._statusNorm || "").includes("saglikl")) _statsCache.healthy++;
+    if ((i._statusNorm || "").includes("saglikli")) _statsCache.healthy++;
     if (price > _statsCache.mostExpPrice) {
       _statsCache.mostExpPrice = price;
       _statsCache.mostExpId = id;
@@ -96,9 +94,9 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
   if (isRemove) {
     _statsCache.total -= oldPrice;
     _statsCache.count--;
-      if (oldItem && (oldItem._statusNorm || "").includes("saglikl")) {
-        _statsCache.healthy--;
-      }
+    if (oldItem && (oldItem._statusNorm || "").includes("saglikli")) {
+      _statsCache.healthy--;
+    }
     if (_statsCache.mostExpId === item.id) {
       rebuildStatsCache();
       updateStats(getFilteredSortedList());
@@ -107,13 +105,13 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
     if (!oldItem) {
       _statsCache.total += newPrice;
       _statsCache.count++;
-      if ((item._statusNorm || "").includes("saglikl")) _statsCache.healthy++;
+      if ((item._statusNorm || "").includes("saglikli")) _statsCache.healthy++;
     } else {
       const priceDiff = newPrice - oldPrice;
       if (priceDiff !== 0) _statsCache.total += priceDiff;
 
-      const oldHealthy = (oldItem._statusNorm || "").includes("saglikl");
-      const newHealthy = (item._statusNorm || "").includes("saglikl");
+      const oldHealthy = (oldItem._statusNorm || "").includes("saglikli");
+      const newHealthy = (item._statusNorm || "").includes("saglikli");
       if (!oldHealthy && newHealthy) _statsCache.healthy++;
       else if (oldHealthy && !newHealthy) _statsCache.healthy--;
     }
@@ -146,7 +144,7 @@ function updateStats(filteredList) {
     for (const i of filteredList) {
       const price = parseFloat(i.price) || 0;
       filteredTotal += price;
-      if ((i._statusNorm || "").includes("saglikl")) filteredHealthy++;
+      if ((i._statusNorm || "").includes("saglikli")) filteredHealthy++;
       if (price > mostExpPrice) {
         mostExpPrice = price;
         mostExpItem = i;
@@ -182,7 +180,7 @@ function updateStats(filteredList) {
             statIcon.classList.add("status-reserve");
           else if (statusNorm.includes("atildi"))
             statIcon.classList.add("status-discarded");
-          else if (statusNorm.includes("saglikl"))
+          else if (statusNorm.includes("saglikli"))
             statIcon.classList.add("status-healthy");
         }
       }
@@ -430,34 +428,32 @@ function renderTableRows(list) {
     return;
   }
 
+  if (currentSort.col === "date" || list.length <= VSCROLL_INITIAL) {
+    tableBody.replaceChildren(buildRowsFragment(list), ...unsavedRows);
+    return;
+  }
+
   const firstChunk = list.slice(0, VSCROLL_INITIAL);
   tableBody.replaceChildren(buildRowsFragment(firstChunk), ...unsavedRows);
 
-  if (list.length > VSCROLL_INITIAL) {
-    const restList = list.slice(VSCROLL_INITIAL);
+  const restList = list.slice(VSCROLL_INITIAL);
 
-    _vsRafId = requestAnimationFrame(() => {
-      _vsRafId = null;
+  _vsRafId = requestAnimationFrame(() => {
+    _vsRafId = null;
 
-      if (currentSort.col === "date") {
-        const saved = Array.from(tableBody.querySelectorAll(".new-item-row"));
-        tableBody.replaceChildren(buildRowsFragment(list), ...saved);
-      } else {
-        const restFrag = document.createDocumentFragment();
-        restList.forEach((item) => {
-          const tr = createRowEl(item);
-          tr.innerHTML = buildRowHTML(item);
-          restFrag.appendChild(tr);
-        });
-        const saved = tableBody.querySelectorAll(".new-item-row");
-        if (saved.length) {
-          tableBody.insertBefore(restFrag, saved[0]);
-        } else {
-          tableBody.appendChild(restFrag);
-        }
-      }
+    const restFrag = document.createDocumentFragment();
+    restList.forEach((item) => {
+      const tr = createRowEl(item);
+      tr.innerHTML = buildRowHTML(item);
+      restFrag.appendChild(tr);
     });
-  }
+    const saved = tableBody.querySelectorAll(".new-item-row");
+    if (saved.length) {
+      tableBody.insertBefore(restFrag, saved[0]);
+    } else {
+      tableBody.appendChild(restFrag);
+    }
+  });
 }
 
 /* ─────────────────── Tam Render (Filtre + Tablo + İstatistik) ─────────────────── */
@@ -493,10 +489,14 @@ function isItemVisible(item) {
   }
   if (currentStatusFilter !== "all") {
     const norm = item._statusNorm || "";
-    if (currentStatusFilter === "saglikli" && !norm.includes("saglikl")) return false;
-    if (currentStatusFilter === "bozuk" && !norm.includes("bozuk")) return false;
-    if (currentStatusFilter === "yedek" && !norm.includes("yedek")) return false;
-    if (currentStatusFilter === "atildi" && !norm.includes("atildi")) return false;
+    if (currentStatusFilter === "saglikli" && !norm.includes("saglikli"))
+      return false;
+    if (currentStatusFilter === "bozuk" && !norm.includes("bozuk"))
+      return false;
+    if (currentStatusFilter === "yedek" && !norm.includes("yedek"))
+      return false;
+    if (currentStatusFilter === "atildi" && !norm.includes("atildi"))
+      return false;
   }
   return true;
 }
@@ -504,13 +504,17 @@ function isItemVisible(item) {
 /* ─────────────────── Satır Ekle veya Güncelle ─────────────────── */
 
 function addOrUpdateTableRow(id, item) {
+  if (currentSort.col === "date") {
+    scheduleRender();
+    return;
+  }
+
   const visible = isItemVisible(item);
   const row = tableBody.querySelector(`tr[data-id="${id}"]`);
   const newItem = { ...item, id };
 
   if (!visible) {
     if (row) row.remove();
-    updateResultCount(_countVisibleItems());
     return;
   }
 
@@ -527,8 +531,6 @@ function addOrUpdateTableRow(id, item) {
       tableBody.appendChild(newRow);
     }
   }
-
-  updateResultCount(_countVisibleItems());
 }
 
 /* ─────────────────── Satır Kaldır ─────────────────── */
@@ -541,8 +543,6 @@ function removeTableRow(id) {
     renderAll();
     return;
   }
-
-  updateResultCount(_countVisibleItems());
 }
 
 /* ─────────────────── Kayıt Durumunu Güncelle (Optimistic) ─────────────────── */
@@ -565,7 +565,9 @@ function updateItemStatus(itemId, newStatus) {
     const row = tableBody?.querySelector(`tr[data-id="${itemId}"]`);
     const cell = row?.querySelector(".status-cell");
     if (cell)
-      cell.outerHTML = buildStatusCellInnerHTML(Object.assign({ id: itemId }, currentItem));
+      cell.outerHTML = buildStatusCellInnerHTML(
+        Object.assign({ id: itemId }, currentItem),
+      );
   };
 
   applyToDOM();

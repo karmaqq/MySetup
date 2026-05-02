@@ -33,47 +33,6 @@ window.showToast = function (message, type = "info", duration = 3200) {
   }, duration);
 };
 
-/* ─────────────────── Onay Diyalogu Göster ─────────────────── */
-
-window.showConfirm = function (message, onConfirm) {
-  if (!toastContainer) return;
-  const toast = document.createElement("div");
-  toast.className = "toast toast-confirm";
-  const text = document.createElement("div");
-  const actions = document.createElement("div");
-  const yesBtn = document.createElement("button");
-  const noBtn = document.createElement("button");
-
-  text.textContent = message;
-  actions.className = "toast-actions";
-  yesBtn.className = "toast-yes";
-  noBtn.className = "toast-no";
-  yesBtn.type = "button";
-  noBtn.type = "button";
-  yesBtn.textContent = "Evet, Devam Et";
-  noBtn.textContent = "İptal";
-  actions.append(yesBtn, noBtn);
-  toast.append(text, actions);
-  toastContainer.appendChild(toast);
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => toast.classList.add("visible"));
-  });
-
-  const dismiss = () => {
-    toast.classList.remove("visible");
-    toast.addEventListener("transitionend", () => toast.remove(), {
-      once: true,
-    });
-  };
-
-  yesBtn.onclick = () => {
-    dismiss();
-    onConfirm();
-  };
-  noBtn.onclick = dismiss;
-};
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          ARAMA VE FİLTRELEME                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */

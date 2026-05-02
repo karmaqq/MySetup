@@ -1,7 +1,7 @@
 .env.bat
 update.bat
-optimizasyon.md
 OPTIMIZATIONS.md
 VIZYON.md
+PLAN.MD
 dist/
 node_modules/

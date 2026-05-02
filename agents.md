@@ -97,30 +97,30 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 
 ### Renderer Process — JavaScript (yükleme sırası bu şekilde korunmalı)
 
-| Dosya              | Sorumluluk                                                                            |
-| ------------------ | ------------------------------------------------------------------------------------- |
+| Dosya              | Sorumluluk                                                                                                             |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
 | `js/utils.js`      | **Tüm global değişkenler**, DOM referansları, yardımcı fonksiyonlar, `scheduleRender`, `formatTimeAgo`, `POST_PHRASES` |
-| `js/firebase.js`   | Firebase init, `allData` CRUD, realtime listener yönetimi, `enrichItem()`, **post CRUD**, `initPostsListener` |
-| `js/table.js`      | Render motoru, filtre/sıralama, istatistik önbelleği, CRUD UI eylemleri               |
-| `js/io.js`         | Toast/confirm sistemi, arama debounce, CSV içe/dışa aktarma, tüm listeyi sil         |
-| `js/updater-ui.js` | Güncelleme butonu ve IPC olayları (renderer tarafı)                                   |
-| `js/editmodal.js`   | Düzenleme modali, görsel yükleme/önizleme, yıldız derecelendirme                      |
-| `js/auth.js`       | Firebase Auth, oturum durumu, giriş/kayıt formları                                    |
-| `js/userset.js`    | Hesap ayarları, kullanıcı adı/şifre değiştirme, hesap silme                           |
-| `js/posts.js`      | **Post sistemi**, oluşturma, silme, beğeni, akış yönetimi, profil sekmeleri         |
+| `js/firebase.js`   | Firebase init, `allData` CRUD, realtime listener yönetimi, `enrichItem()`, **post CRUD**, `initPostsListener`          |
+| `js/table.js`      | Render motoru, filtre/sıralama, istatistik önbelleği, CRUD UI eylemleri                                                |
+| `js/io.js`         | Toast/confirm sistemi, arama debounce, CSV içe/dışa aktarma, tüm listeyi sil                                           |
+| `js/updater-ui.js` | Güncelleme butonu ve IPC olayları (renderer tarafı)                                                                    |
+| `js/editmodal.js`  | Düzenleme modali, görsel yükleme/önizleme, yıldız derecelendirme                                                       |
+| `js/auth.js`       | Firebase Auth, oturum durumu, giriş/kayıt formları                                                                     |
+| `js/userset.js`    | Hesap ayarları, kullanıcı adı/şifre değiştirme, hesap silme                                                            |
+| `js/posts.js`      | **Post sistemi**, oluşturma, silme, beğeni, akış yönetimi, profil sekmeleri                                            |
 
 ### Renderer Process — CSS
 
-| Dosya               | Sorumluluk                                                         |
-| ------------------- | ------------------------------------------------------------------ |
+| Dosya               | Sorumluluk                                                                                        |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
 | `css/base.css`      | CSS değişkenleri (`:root`), reset, toast, loading, scroll, genel layout, responsive, sayfa düzeni |
-| `css/sidebar.css`    | Logo, versiyon, nav menü, update butonu, user info, logout         |
-| `css/home.css`      | 700px akış içeriği, karşılama ekranı                               |
-| `css/profile.css`   | 700px profil içeriği, card, avatar, hesap ayarları butonu          |
-| `css/inventory.css` | İstatistik kartları, arama, filtre, import/export, tablo, durum menüsü |
-| `css/editmodal.css` | Düzenleme modali, floating görsel önizleme, yıldız sistemi         |
-| `css/auth.css`      | Auth overlay, giriş/kayıt panelleri                                |
-| `css/userset.css`   | Ayarlar modalleri, kullanıcı adı düzenleme, tehlike alanı          |
+| `css/sidebar.css`   | Logo, versiyon, nav menü, update butonu, user info, logout                                        |
+| `css/home.css`      | 700px akış içeriği, karşılama ekranı                                                              |
+| `css/profile.css`   | 700px profil içeriği, card, avatar, hesap ayarları butonu                                         |
+| `css/inventory.css` | İstatistik kartları, arama, filtre, import/export, tablo, durum menüsü                            |
+| `css/editmodal.css` | Düzenleme modali, floating görsel önizleme, yıldız sistemi                                        |
+| `css/auth.css`      | Auth overlay, giriş/kayıt panelleri                                                               |
+| `css/userset.css`   | Ayarlar modalleri, kullanıcı adı düzenleme, tehlike alanı                                         |
 
 ### Diğer
 
@@ -171,14 +171,14 @@ Herhangi bir `.modal-overlay.active` varken tam render yapmaz; `_pendingRender =
 
 Tüm arama ve durum karşılaştırmaları bu fonksiyondan geçer. Ham string karşılaştırması yapılamaz. `_statusNorm` zaten `enrichItem` tarafından set edilmiştir; üzerine tekrar `normalizeTr` çağırmak gereksizdir.
 
-/* ─────────────────── Kullanım Örneği ─────────────────── */
+/_ ─────────────────── Kullanım Örneği ─────────────────── _/
 
-/* Arama: getFilteredSortedList içinde */
+/_ Arama: getFilteredSortedList içinde _/
 const q = normalizeTr(currentSearch);
-list = list.filter((item) => item._searchTag.includes(q));
+list = list.filter((item) => item.\_searchTag.includes(q));
 
-/* Durum kontrolü: _statusNorm kullanımı */
-const healthy = (item._statusNorm || "").includes("saglikl");
+/_ Durum kontrolü: \_statusNorm kullanımı _/
+const healthy = (item.\_statusNorm || "").includes("saglikl");
 
 ### `updateStatsCacheOnChange` + `rebuildStatsCache` — `js/table.js`
 
@@ -300,23 +300,6 @@ Kontrol listesi:
 
 ---
 
-## 13. Bilinen Tuzaklar
-
-| Konu                                  | Açıklama                                                                                                                     |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `normalizeTrSearch`                   | **KALDIRILDI** (BULGU-09). Arama için `normalizeTr` kullanılmalı. `normalizeTrSearch`'ü çağırmak arama hatasına neden olur   |
-| `imageUploadBtn._eventsBound`         | **KALDIRILDI** (BULGU-08). `onclick`'i her modal açılışında yeniden ata; `_eventsBound` flag'i kullanma                   |
-| `escAttr` + `escHtml` ardışık         | Aynı string ikisinden geçirilirse `&quot;` → `&amp;quot;` olur                                                               |
-| `addOrUpdateTableRow`                 | Tarih sıralaması aktifken her zaman `renderAll()`'a düşer; beklenen davranıştır                                              |
-| Firebase çift `getFilteredSortedList` | **DÜZELTİLDİ** (BULGU-02). Listener'larda `updateResultCount(getFilteredSortedList())` kaldırıldı; `scheduleRender` yeterli |
-| `@font-face` blokları                 | **KALDIRILDI** (BULGU-05). Fontlar CDN'den yükleniyor; `base.css`'de yerel `@font-face` tanımı bırakma             |
-| `updateStatsCacheOnChange` + `normalizeTr` | **DÜZELTİLDİ** (BULGU-03). `normalizeTr(item.status)` yerine `item._statusNorm` kullanılmalı                     |
-| CSP `'unsafe-inline'`                 | **KALDIRILDI** (BULGU-04). `script-src` ve `style-src` direktiflerinden `'unsafe-inline'` çıkarılmalı              |
-| Kayıt akışı TOCTOU                    | **DÜZELTİLDİ** (BULGU-06). `once("value")` + `set()` yerine `transaction()` kullanılmalı                           |
-| `updateStats` filtresiz iken          | **DÜZELTİLDİ** (BULGU-07). Filtre yoksa `_statsCache` önbelleği kullanılmalı (O(n) → O(1))                     |
-
----
-
-## 14. OPTIMIZATIONS.md ile İlişki
+## 13. OPTIMIZATIONS.md ile İlişki
 
 Bekleyen optimizasyon bulguları `OPTIMIZATIONS.md` dosyasında belgelenmiştir. Kod değişikliği yapmadan önce ilgili bulgu okunmalı, değişiklik sonrası tablodaki durum `✅ Uygulandı` olarak güncellenmelidir.
