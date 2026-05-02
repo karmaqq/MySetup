@@ -146,11 +146,13 @@
 }
 
 .sidebar-update-btn {
+  position: relative;
   display: none;
   align-items: center;
   justify-content: center;
   gap: 6px;
   width: 100%;
+  height: 36px;
   padding: 8px 14px;
   background: var(--yellow-dim);
   border: 1px solid var(--yellow);
@@ -162,16 +164,50 @@
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-sizing: border-box;
+  overflow: hidden;
+  margin-bottom: 12px;
 }
 
 .sidebar-update-btn.visible {
   display: flex;
-  animation: update-pulse 2s ease-in-out infinite;
+  animation: update-pulse 3s ease-in-out infinite;
 }
 
-.sidebar-update-btn:hover {
-  background: rgba(245, 200, 66, 0.25);
-  transform: scale(1.02);
+.sidebar-update-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: var(--progress, 0%);
+  background: var(--green, #10b981);
+  z-index: 0;
+  transition: width 0.3s ease;
+}
+
+.sidebar-update-btn > span {
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar-update-btn.downloading {
+  background: rgba(107, 114, 128, 0.2);
+  border-color: var(--border2);
+  color: var(--text);
+  animation: none;
+}
+
+.sidebar-update-btn.ready {
+  background: var(--green, #10b981);
+  border-color: var(--green, #10b981);
+  color: #fff;
+  animation: none;
+}
+
+@keyframes update-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
 }
 
 .sidebar-logout-btn {

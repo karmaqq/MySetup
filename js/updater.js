@@ -46,7 +46,7 @@ function setupUpdater(mainWindow) {
 
     setTimeout(() => {
       autoUpdater.quitAndInstall(true, true);
-    }, 2000);
+    }, 2500);
   });
 
   /* ─────────────────── Güncelleme Hatası ─────────────────── */

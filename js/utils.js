@@ -252,3 +252,55 @@ function applyPriceFormat(inputEl) {
     inputEl.value = "";
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          POST SİSTEMİ YARDIMCILARI                      */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+const POST_PHRASES = [
+  "dedi ki;",
+  "şöyle düşündü;",
+  "demişti ki;",
+  "fikrini paylaştı.",
+  "artık içinde tutamadı ve şöyle dedi;",
+  "böyle düşünmekteydi;",
+  "tam olarak şundan bahsetti;",
+  "bir düşünce geliştirmiş;",
+  "bunu sadece kendisin bildiğini sanıyordu;",
+  "tuvalette aklına bu düşünce geldi;",
+  "bunun sadece düşüncede kalmamasını istedi.",
+  "kediler yardımı ile şu fikre ulaştı;",
+  "bunu söylerken hiç utanmadı.",
+  "bir an bile düşünmeden şunu dedi;",
+  "şöyle buyurdu;",
+  "fikrini beyan etti;"
+];
+
+function formatTimeAgo(timestamp, phraseIndex) {
+  if (!timestamp) return "";
+  const diff = Date.now() - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  let timeText = "az önce";
+  if (minutes < 60) timeText = minutes + " dakika önce";
+  else if (hours < 24) timeText = hours + " saat önce";
+  else if (days < 7) timeText = days + " gün önce";
+  else if (days < 365) timeText = Math.floor(days/7) + " hafta önce";
+  else timeText = Math.floor(days/365) + " yıl önce";
+
+  var idx = (phraseIndex !== undefined && phraseIndex !== null) ? phraseIndex : Math.floor(Math.random() * POST_PHRASES.length);
+  return timeText + " " + POST_PHRASES[idx];
+}
+
+function formatDateTime(timestamp) {
+  if (!timestamp) return "";
+  var date = new Date(timestamp);
+  var day = String(date.getDate()).padStart(2, "0");
+  var month = String(date.getMonth() + 1).padStart(2, "0");
+  var year = date.getFullYear();
+  var hours = String(date.getHours()).padStart(2, "0");
+  var minutes = String(date.getMinutes()).padStart(2, "0");
+  return day + "." + month + "." + year + " " + hours + ":" + minutes;
+}

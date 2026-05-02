@@ -1,9 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                       FIREBASE VERİTABANI YÖNETİMİ                      */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Firebase Yapılandırma ─────────────────── */
-
+/* Firebase Config */
 const firebaseConfig = {
   apiKey: "AIzaSyDINeXkzy4JCwt9cSjII5Icm-x_NpmtmK4",
   authDomain: "mysetup-8dcd5.firebaseapp.com",
@@ -14,38 +9,32 @@ const firebaseConfig = {
   appId: "1:888468129237:web:9374ae62de891d7013295c",
 };
 
-/* ─────────────────── Firebase Başlatma ─────────────────── */
-
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-/* ─────────────────── Bağlantı Durumu Değişkenleri ─────────────────── */
-
 let userDataRef = null;
 let activeBasePath = null;
+let postsRef = null;
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          VERİ ZENGİNLEŞTİRME                            */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Arama ve Durum Etiketleri Ekle ─────────────────── */
-
+/* Enrich Item */
 function enrichItem(item) {
-  const searchRaw = `${item.component} ${item.brand} ${item.specs} ${item.vendor}`;
-  return {
-    ...item,
+  var searchRaw = (
+    item.component +
+    " " +
+    item.brand +
+    " " +
+    item.specs +
+    " " +
+    item.vendor
+  ).toLowerCase();
+  return Object.assign({}, item, {
     _searchTag: normalizeTr(searchRaw),
     _statusNorm: normalizeTr(item.status),
-  };
+  });
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          VERİ OKUMA                                      */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Kullanıcı Verisi Dinleyici Başlat ─────────────────── */
-
-function initUserDataRef(uid) {
+/* Init User Data */
+function initUserDataRef(userId) {
   if (userDataRef) {
     userDataRef.off();
     userDataRef = null;
@@ -57,26 +46,26 @@ function initUserDataRef(uid) {
   _statsCache.mostExpId = null;
   _statsCache.mostExpPrice = 0;
 
-  if (!uid) {
+  if (!userId) {
     activeBasePath = null;
     allData = {};
     if (typeof renderAll === "function") renderAll();
     return;
   }
 
-  activeBasePath = "users/" + uid + "/components";
+  activeBasePath = "users/" + userId + "/components";
   userDataRef = database.ref(activeBasePath);
 
-  let firstLoad = true;
+  var firstLoad = true;
 
-  userDataRef.once("value").then((snap) => {
-    const rawData = snap.val() || {};
-    allData = Object.keys(rawData).reduce((acc, id) => {
-      const item = enrichItem(rawData[id]);
+  userDataRef.once("value").then(function (snapshot) {
+    var rawData = snapshot.val() || {};
+    allData = {};
+    Object.keys(rawData).forEach(function (id) {
+      var item = enrichItem(rawData[id]);
       item.id = id;
-      acc[id] = item;
-      return acc;
-    }, {});
+      allData[id] = item;
+    });
     if (typeof rebuildStatsCache === "function") rebuildStatsCache();
     if (typeof renderAll === "function") renderAll();
     firstLoad = false;
@@ -84,112 +73,151 @@ function initUserDataRef(uid) {
 
   userDataRef.on(
     "child_added",
-    (snap) => {
+    function (snapshot) {
       if (firstLoad) return;
-      const id = snap.key;
-      const item = enrichItem(snap.val());
+      var id = snapshot.key;
+      var item = enrichItem(snapshot.val());
       item.id = id;
-      const oldItem = allData[id];
+      var oldItem = allData[id];
       allData[id] = item;
       updateStatsCacheOnChange(item, oldItem, false);
       if (typeof addOrUpdateTableRow === "function")
-        addOrUpdateTableRow(id, allData[id]);
+        addOrUpdateTableRow(id, item);
     },
-    (err) => console.error("child_added hata:", err),
+    function (err) {
+      console.error("child_added error:", err);
+    },
   );
 
   userDataRef.on(
     "child_changed",
-    (snap) => {
-      const id = snap.key;
-      const item = enrichItem(snap.val());
+    function (snapshot) {
+      var id = snapshot.key;
+      var item = enrichItem(snapshot.val());
       item.id = id;
-      const oldItem = allData[id];
+      var oldItem = allData[id];
       allData[id] = item;
       updateStatsCacheOnChange(item, oldItem, false);
       if (typeof addOrUpdateTableRow === "function")
-        addOrUpdateTableRow(id, allData[id]);
+        addOrUpdateTableRow(id, item);
     },
-    (err) => console.error("child_changed hata:", err),
+    function (err) {
+      console.error("child_changed error:", err);
+    },
   );
 
   userDataRef.on(
     "child_removed",
-    (snap) => {
-      const id = snap.key;
-      const oldItem = allData[id];
+    function (snapshot) {
+      var id = snapshot.key;
+      var oldItem = allData[id];
       delete allData[id];
       if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
       if (typeof removeTableRow === "function") removeTableRow(id);
     },
-    (err) => console.error("child_removed hata:", err),
+    function (err) {
+      console.error("child_removed error:", err);
+    },
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          VERİ YAZMA                                      */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Kayıt Ekle ─────────────────── */
-
+/* Component CRUD */
 function addComponentToFirebase(itemData) {
   return userDataRef.push(itemData);
 }
-
-/* ─────────────────── Tüm Veriyi Değiştir ─────────────────── */
 
 function replaceUserDataInFirebase(itemsMap) {
   return userDataRef.set(itemsMap || {});
 }
 
-/* ─────────────────── Kayıt Güncelle ─────────────────── */
-
 function updateComponentInFirebase(id, itemData) {
   return database.ref(activeBasePath + "/" + id).update(itemData);
 }
-
-/* ─────────────────── Kayıt Durumu Güncelle ─────────────────── */
 
 function updateComponentStatusInFirebase(id, newStatus) {
   return database.ref(activeBasePath + "/" + id).update({ status: newStatus });
 }
 
-/* ─────────────────── Kayıt Sil ─────────────────── */
-
 function deleteComponentFromFirebase(id) {
   return database.ref(activeBasePath + "/" + id).remove();
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          DEPOLAMA YÖNETİMİ                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Görsel Yükle ─────────────────── */
-
+/* Storage */
 function uploadImageToFirebase(file, itemId) {
-  return new Promise((resolve, reject) => {
-    const user = firebase.auth().currentUser;
+  return new Promise(function (resolve, reject) {
+    var user = firebase.auth().currentUser;
     if (!user) return reject("Kullanıcı yok");
-    const storageRef = firebase.storage().ref();
-    const imageRef = storageRef.child(
-      `users/${user.uid}/components/${itemId}/image`,
+    var storageRef = firebase.storage().ref();
+    var imageRef = storageRef.child(
+      "users/" + user.uid + "/components/" + itemId + "/image",
     );
-    const uploadTask = imageRef.put(file);
+    var uploadTask = imageRef.put(file);
     uploadTask.on(
       "state_changed",
       null,
-      (error) => reject(error),
-      () => {
+      function (error) {
+        reject(error);
+      },
+      function () {
         uploadTask.snapshot.ref.getDownloadURL().then(resolve).catch(reject);
       },
     );
   });
 }
 
-/* ─────────────────── Storage Klasör Sil ─────────────────── */
-
 async function deleteAllInFolder(ref) {
-  const list = await ref.listAll();
-  await Promise.all(list.items.map((item) => item.delete()));
+  var list = await ref.listAll();
+  await Promise.all(
+    list.items.map(function (item) {
+      return item.delete();
+    }),
+  );
   await Promise.all(list.prefixes.map(deleteAllInFolder));
+}
+
+/* --- POST SYSTEM --- */
+
+function addPostToFirebase(postData) {
+  if (!postsRef) postsRef = database.ref("posts");
+  return postsRef.push(postData);
+}
+
+function deletePostFromFirebase(postId) {
+  if (!postsRef) postsRef = database.ref("posts");
+  return postsRef.child(postId).once("value").then(function (snapshot) {
+    var postData = snapshot.val();
+    var deletePromise = Promise.resolve();
+    if (postData && postData.imageUrl) {
+      var imageRef = firebase.storage().refFromURL(postData.imageUrl);
+      deletePromise = imageRef.delete().catch(function () {});
+    }
+    return deletePromise.then(function () {
+      return postsRef.child(postId).remove();
+    });
+  });
+}
+
+function togglePostLike(postId, userId) {
+  if (!postsRef) postsRef = database.ref("posts");
+  var likeRef = postsRef.child(postId).child("likes").child(userId);
+  return likeRef.once("value").then(function (snapshot) {
+    if (snapshot.exists()) {
+      return likeRef.remove();
+    } else {
+      return likeRef.set(true);
+    }
+  });
+}
+
+function initPostsListener(callback) {
+  if (!postsRef) postsRef = database.ref("posts");
+  postsRef.orderByChild("createdAt").on("child_added", function (snapshot) {
+    callback(snapshot.key, snapshot.val(), "added");
+  });
+  postsRef.orderByChild("createdAt").on("child_changed", function (snapshot) {
+    callback(snapshot.key, snapshot.val(), "changed");
+  });
+  postsRef.orderByChild("createdAt").on("child_removed", function (snapshot) {
+    callback(snapshot.key, null, "removed");
+  });
 }

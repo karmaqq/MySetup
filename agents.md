@@ -99,14 +99,15 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 
 | Dosya              | Sorumluluk                                                                            |
 | ------------------ | ------------------------------------------------------------------------------------- |
-| `js/utils.js`      | **Tüm global değişkenler**, DOM referansları, yardımcı fonksiyonlar, `scheduleRender` |
-| `js/firebase.js`   | Firebase init, `allData` CRUD, realtime listener yönetimi, `enrichItem()`             |
+| `js/utils.js`      | **Tüm global değişkenler**, DOM referansları, yardımcı fonksiyonlar, `scheduleRender`, `formatTimeAgo`, `POST_PHRASES` |
+| `js/firebase.js`   | Firebase init, `allData` CRUD, realtime listener yönetimi, `enrichItem()`, **post CRUD**, `initPostsListener` |
 | `js/table.js`      | Render motoru, filtre/sıralama, istatistik önbelleği, CRUD UI eylemleri               |
 | `js/io.js`         | Toast/confirm sistemi, arama debounce, CSV içe/dışa aktarma, tüm listeyi sil         |
 | `js/updater-ui.js` | Güncelleme butonu ve IPC olayları (renderer tarafı)                                   |
-| `js/editmodal.js`  | Düzenleme modali, görsel yükleme/önizleme, yıldız derecelendirme                      |
+| `js/editmodal.js`   | Düzenleme modali, görsel yükleme/önizleme, yıldız derecelendirme                      |
 | `js/auth.js`       | Firebase Auth, oturum durumu, giriş/kayıt formları                                    |
 | `js/userset.js`    | Hesap ayarları, kullanıcı adı/şifre değiştirme, hesap silme                           |
+| `js/posts.js`      | **Post sistemi**, oluşturma, silme, beğeni, akış yönetimi, profil sekmeleri         |
 
 ### Renderer Process — CSS
 
