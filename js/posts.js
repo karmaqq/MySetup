@@ -112,7 +112,7 @@ function handlePostImageUpload(e) {
         '<img src="' +
         ev.target.result +
         '" style="max-width:100%; max-height:200px; border-radius:8px;" />' +
-        '<button onclick="removePostImage()" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.7); color:#fff; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;">✕</button>' +
+        '<button class="remove-post-image-btn" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.7); color:#fff; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;">✕</button>' +
         "</div>";
       postImagePreview.classList.remove("hidden");
     }
@@ -246,14 +246,10 @@ function renderPost(postId, postData) {
 
   if (isOwnPost) {
     html +=
-      '<button class="post-menu-btn" onclick="togglePostMenu(\'' +
-      escapedId +
-      "')\">⋮</button>";
+      '<button class="post-menu-btn">⋮</button>';
     html += '<div class="post-dropdown" id="postDropdown-' + escapedId + '">';
     html +=
-      '<button class="post-dropdown-item delete" onclick="confirmDeletePost(\'' +
-      escapedId +
-      "')\">";
+      '<button class="post-dropdown-item delete">';
     html +=
       '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">' +
       '<polyline points="3 6 5 6 21 6"></polyline>' +
@@ -277,11 +273,9 @@ function renderPost(postId, postData) {
 
   html += '<div class="post-actions">';
   html +=
-    '<button class="post-action-btn ' +
+    '<button class="post-action-btn like-btn ' +
     (liked ? "liked" : "") +
-    '" onclick="toggleLike(\'' +
-    escapedId +
-    "')\">";
+    '">';
   html +=
     '<svg viewBox="0 0 24 24" width="16" height="16" fill="' +
     (liked ? "currentColor" : "none") +
@@ -627,4 +621,38 @@ profileTabs.forEach(function (btn) {
   btn.addEventListener("click", function () {
     switchProfileTab(btn.dataset.tab);
   });
+});
+
+/* POST EVENT DELEGATION */
+
+document.addEventListener("click", function (e) {
+  // Like butonu
+  var likeBtn = e.target.closest(".post-action-btn.like-btn");
+  if (likeBtn) {
+    var postCard = likeBtn.closest("[data-post-id]");
+    if (postCard) toggleLike(postCard.dataset.postId);
+    return;
+  }
+
+  // Menu butonu
+  var menuBtn = e.target.closest(".post-menu-btn");
+  if (menuBtn) {
+    var postCard2 = menuBtn.closest("[data-post-id]");
+    if (postCard2) togglePostMenu(postCard2.dataset.postId);
+    return;
+  }
+
+  // Delete butonu
+  var deleteBtn = e.target.closest(".post-dropdown-item.delete");
+  if (deleteBtn) {
+    var postCard3 = deleteBtn.closest("[data-post-id]");
+    if (postCard3) confirmDeletePost(postCard3.dataset.postId);
+    return;
+  }
+
+  // Remove post image butonu
+  if (e.target.closest(".remove-post-image-btn")) {
+    removePostImage();
+    return;
+  }
 });
