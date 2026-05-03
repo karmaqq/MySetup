@@ -1,3 +1,5 @@
+/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                                PROFİL SAYFASI                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -164,4 +166,29 @@
   font-size: 11px;
   color: var(--text-dim);
   border-top: 1px solid var(--border);
+}
+
+/* ─────────────────── Profil Sekmeleri İçin Post Feed ─────────────────── */
+
+#userPostsTab,
+#likedPostsTab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+#userPostsTab .post-card,
+#likedPostsTab .post-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+#userPostsTab .posts-empty,
+#likedPostsTab .posts-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+  font-size: 14px;
 }

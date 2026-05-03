@@ -1,3 +1,5 @@
+/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+
 const { contextBridge, ipcRenderer } = require("electron");
 
 function onceListener(channel, handler) {

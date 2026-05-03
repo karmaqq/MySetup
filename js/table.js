@@ -1,3 +1,5 @@
+/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                     DURUM DEĞİŞKENLERİ VE KONTROL                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -5,12 +7,6 @@
 /* ─────────────────── Sabitler ─────────────────── */
 
 const VSCROLL_INITIAL = 40;
-
-/* ─────────────────── Modal Açık Kontrolü ─────────────────── */
-
-function isAnyModalOpen() {
-  return !!document.querySelector(".modal-overlay.active");
-}
 
 (function () {
   const observer = new MutationObserver(function () {
@@ -459,14 +455,15 @@ function renderTableRows(list) {
 /* ─────────────────── Tam Render (Filtre + Tablo + İstatistik) ─────────────────── */
 
 function renderAll() {
-  const scrollY = window.scrollY;
+  const container = document.getElementById("mainScroll");
+  const scrollY = container ? container.scrollTop : 0;
   const list = getFilteredSortedList();
   updateStats(list);
   renderTableRows(list);
   updateResultCount(list.length);
 
   requestAnimationFrame(() => {
-    window.scrollTo({ top: scrollY, behavior: "instant" });
+    if (container) container.scrollTop = scrollY;
   });
 }
 

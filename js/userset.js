@@ -1,3 +1,5 @@
+/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                       KULLANICI AYARLARI YÖNETİMİ                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -84,6 +86,9 @@ deleteAccountModal?.addEventListener("click", (e) => {
 
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
   closeSettingsModal();
+  if (typeof initUserDataRef === "function") {
+    initUserDataRef(null);
+  }
   auth.signOut();
 });
 
@@ -241,6 +246,8 @@ saveBtn?.addEventListener("click", async () => {
 
     await user.updateProfile({ displayName: newName });
     document.getElementById("userEmail").textContent = newName;
+    const profileUsernameEl = document.getElementById("profileUsername");
+    if (profileUsernameEl) profileUsernameEl.textContent = newName;
     if (usernameErrEl) usernameErrEl.textContent = "";
     if (typeof showToast === "function")
       showToast("Kullanıcı adı güncellendi", "success");

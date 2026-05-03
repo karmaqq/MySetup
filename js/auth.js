@@ -1,3 +1,5 @@
+/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                  KİMLİK DOĞRULAMA VE OTURUM YÖNETİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -100,8 +102,10 @@ async function onUserLoggedIn(user) {
 
   if (userInfo) userInfo.classList.remove("hidden");
   if (userEmailEl) userEmailEl.textContent = user.displayName || "Kullanıcı";
-  if (welcomeUsername) welcomeUsername.textContent = user.displayName || "Kullanıcı";
-  if (profileUsername) profileUsername.textContent = user.displayName || "Kullanıcı";
+  if (welcomeUsername)
+    welcomeUsername.textContent = user.displayName || "Kullanıcı";
+  if (profileUsername)
+    profileUsername.textContent = user.displayName || "Kullanıcı";
   if (profileEmail) profileEmail.textContent = user.email || "E-posta yok";
 
   if (typeof initUserDataRef === "function") {
@@ -178,6 +182,7 @@ function onUserLoggedOut() {
     if (eyeTmpl) btn.appendChild(eyeTmpl.content.cloneNode(true));
   });
 
+  if (typeof _teardownPosts === "function") _teardownPosts();
   if (typeof closeSettingsModal === "function") closeSettingsModal();
   if (typeof closeChangePassModal === "function") closeChangePassModal();
   if (typeof closeDeleteModal === "function") closeDeleteModal();

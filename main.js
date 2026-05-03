@@ -1,3 +1,5 @@
+/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          ELECTRON ANA SÜREÇ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -16,7 +18,7 @@ const APP_CSP = [
   "connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.googleapis.com https://*.gstatic.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://www.googleapis.com https://firebasestorage.googleapis.com",
   "style-src 'self' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com https://fonts.cdnfonts.com",
-  "img-src 'self' data: https://firebasestorage.googleapis.com",
+  "img-src 'self' data: https://firebasestorage.googleapis.com https://lh3.googleusercontent.com",
   "object-src 'none'",
   "base-uri 'self'",
 ].join("; ");

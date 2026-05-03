@@ -1,3 +1,5 @@
+﻿/*--- zorunlu - agents.md yorum kurallarina uy ---*/
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          GENEL YARDIMCI ARAÇLAR                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -58,9 +60,14 @@ function showPage(pageName) {
     _isAnimating = false;
     _currentPage = pageName;
     localStorage.setItem("mySetupLastPage", pageName);
-    // Sayfa geçiş hook (P06 guard'ı zaten _currentPage'i kontrol ediyor)
     if (pageName === "profile" && typeof updateProfilePosts === "function") {
       updateProfilePosts();
+    }
+    if (pageName !== "home" && typeof clearPostDraft === "function") {
+      clearPostDraft();
+    }
+    if (typeof _onPageChange === "function") {
+      _onPageChange(pageName);
     }
   }, 320);
 }
@@ -122,6 +129,10 @@ let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
 
 /* ─────────────────── Render Yönetimi ─────────────────── */
+
+function isAnyModalOpen() {
+  return !!document.querySelector(".modal-overlay.active");
+}
 
 var _renderRafId = null;
 var _pendingRender = false;
@@ -213,7 +224,7 @@ function normalizeTr(s) {
 /* ─────────────────── HTML Karakter Kaçışı ─────────────────── */
 
 function escHtml(str) {
-  return (str || "").replace(/[&<>"']/g, (c) => {
+  return (str || "").replace(/[&<>"'']/g, (c) => {
     switch (c) {
       case "&":
         return "&amp;";

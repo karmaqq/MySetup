@@ -1,3 +1,9 @@
+﻿/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+
+/* ═════════════════════════════════════════════════════════════════════════ */
+/*                          FIREBASE AYARLARI                              */
+/* ═════════════════════════════════════════════════════════════════════════ */
+
 /* Firebase Config */
 const firebaseConfig = {
   apiKey: "AIzaSyDINeXkzy4JCwt9cSjII5Icm-x_NpmtmK4",
@@ -15,6 +21,7 @@ const database = firebase.database();
 let userDataRef = null;
 let activeBasePath = null;
 let postsRef = null;
+window._isLoggingOut = false;
 
 /* Enrich Item */
 function enrichItem(item) {
@@ -38,6 +45,7 @@ function initUserDataRef(userId) {
   if (userDataRef) {
     userDataRef.off();
     userDataRef = null;
+    _isLoggingOut = true;
   }
 
   _statsCache.total = 0;
@@ -49,16 +57,19 @@ function initUserDataRef(userId) {
   if (!userId) {
     activeBasePath = null;
     allData = {};
+    _isLoggingOut = false;
     if (typeof renderAll === "function") renderAll();
     return;
   }
 
+  _isLoggingOut = false;
   activeBasePath = "users/" + userId + "/components";
   userDataRef = database.ref(activeBasePath);
 
   var firstLoad = true;
 
   userDataRef.once("value").then(function (snapshot) {
+    if (_isLoggingOut) return;
     var rawData = snapshot.val() || {};
     allData = {};
     Object.keys(rawData).forEach(function (id) {
@@ -74,7 +85,7 @@ function initUserDataRef(userId) {
   userDataRef.on(
     "child_added",
     function (snapshot) {
-      if (firstLoad) return;
+      if (firstLoad || _isLoggingOut) return;
       var id = snapshot.key;
       var item = enrichItem(snapshot.val());
       item.id = id;
@@ -85,6 +96,9 @@ function initUserDataRef(userId) {
         addOrUpdateTableRow(id, item);
     },
     function (err) {
+      if (_isLoggingOut) return;
+      if (!userDataRef) return;
+      if (err && err.toString().includes("permission_denied")) return;
       console.error("child_added error:", err);
     },
   );
@@ -92,6 +106,7 @@ function initUserDataRef(userId) {
   userDataRef.on(
     "child_changed",
     function (snapshot) {
+      if (_isLoggingOut) return;
       var id = snapshot.key;
       var item = enrichItem(snapshot.val());
       item.id = id;
@@ -102,6 +117,9 @@ function initUserDataRef(userId) {
         addOrUpdateTableRow(id, item);
     },
     function (err) {
+      if (_isLoggingOut) return;
+      if (!userDataRef) return;
+      if (err && err.toString().includes("permission_denied")) return;
       console.error("child_changed error:", err);
     },
   );
@@ -109,6 +127,7 @@ function initUserDataRef(userId) {
   userDataRef.on(
     "child_removed",
     function (snapshot) {
+      if (_isLoggingOut) return;
       var id = snapshot.key;
       var oldItem = allData[id];
       delete allData[id];
@@ -116,6 +135,9 @@ function initUserDataRef(userId) {
       if (typeof removeTableRow === "function") removeTableRow(id);
     },
     function (err) {
+      if (_isLoggingOut) return;
+      if (!userDataRef) return;
+      if (err && err.toString().includes("permission_denied")) return;
       console.error("child_removed error:", err);
     },
   );
@@ -175,17 +197,28 @@ async function deleteAllInFolder(ref) {
   await Promise.all(list.prefixes.map(deleteAllInFolder));
 }
 
-/* --- POST SYSTEM --- */
+/* ═════════════════════════════════════════════════════════════════════════ */
+/*                          POST SİSTEMİ                                   */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 postsRef = database.ref("posts");
+const userPostsRef = database.ref("userPosts");
+const userLikesRef = database.ref("userLikes");
 
 function addPostToFirebase(postData) {
-  return postsRef.push(postData);
+  var newRef = postsRef.push();
+  return newRef.set(postData).then(function () {
+    if (postData.uid) {
+      userPostsRef.child(postData.uid).child(newRef.key).set(postData.createdAt);
+    }
+    return newRef;
+  });
 }
 
 function deletePostFromFirebase(postId) {
   var postData = allPosts[postId];
   var imageUrl = postData ? postData.imageUrl : null;
+  var uid = postData ? postData.uid : null;
 
   var deletePromise = Promise.resolve();
   if (imageUrl) {
@@ -198,36 +231,93 @@ function deletePostFromFirebase(postId) {
       });
   }
 
+  var cleanupPromises = [];
+  if (uid) {
+    cleanupPromises.push(userPostsRef.child(uid).child(postId).remove());
+  }
+  if (postData && postData.likes) {
+    Object.keys(postData.likes).forEach(function (userId) {
+      cleanupPromises.push(
+        userLikesRef.child(userId).child(postId).remove()
+      );
+    });
+  }
+
   return deletePromise.then(function () {
-    return postsRef.child(postId).remove();
+    return Promise.all([
+      postsRef.child(postId).remove(),
+      Promise.all(cleanupPromises),
+    ]);
   });
 }
 
 function togglePostLike(postId, userId) {
   var likeRef = postsRef.child(postId).child("likes").child(userId);
+  var userLikeRef = userLikesRef.child(userId).child(postId);
   return likeRef.once("value").then(function (snapshot) {
     if (snapshot.exists()) {
-      return likeRef.remove();
+      return Promise.all([
+        likeRef.remove(),
+        userLikeRef.remove(),
+      ]);
     } else {
-      return likeRef.set(true);
+      return Promise.all([
+        likeRef.set(true),
+        userLikeRef.set(firebase.database.ServerValue.TIMESTAMP),
+      ]);
     }
   });
 }
 
-function initPostsListener(callback) {
-  var query = postsRef.orderByChild("createdAt");
-  query.on("child_added", function (s) {
-    callback(s.key, s.val(), "added");
-  });
-  query.on("child_changed", function (s) {
-    callback(s.key, s.val(), "changed");
-  });
-  query.on("child_removed", function (s) {
-    callback(s.key, null, "removed");
+function getUserPostsOnce(userId, limit, endAt) {
+  var ref = userPostsRef.child(userId).orderByValue().limitToLast(limit || 20);
+  if (endAt !== undefined && endAt !== null) {
+    ref = ref.endAt(endAt);
+  }
+  return ref.once("value").then(function (snap) {
+    return snap.val() || {};
   });
 }
 
-/* --- COMMENT SYSTEM --- */
+function getUserLikesOnce(userId, limit, endAt) {
+  var ref = userLikesRef.child(userId).orderByValue().limitToLast(limit || 20);
+  if (endAt !== undefined && endAt !== null) {
+    ref = ref.endAt(endAt);
+  }
+  return ref.once("value").then(function (snap) {
+    return snap.val() || {};
+  });
+}
+
+function getPostsByIds(postIds) {
+  if (!postIds || !postIds.length) return Promise.resolve({});
+  var promises = postIds.map(function (id) {
+    return postsRef.child(id).once("value").then(function (s) {
+      var val = s.val();
+      if (val) val._id = s.key;
+      return val;
+    });
+  });
+  return Promise.all(promises).then(function (results) {
+    var map = {};
+    results.forEach(function (r) {
+      if (r && r._id) map[r._id] = r;
+    });
+    return map;
+  });
+}
+
+function getPostById(postId) {
+  return postsRef.child(postId).once("value").then(function (s) {
+    var val = s.val();
+    if (val) val._id = s.key;
+    return val;
+  });
+}
+
+/* ═════════════════════════════════════════════════════════════════════════ */
+/*                          YORUM SİSTEMİ                                  */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 function addCommentToFirebase(postId, commentData) {
   return postsRef.child(postId).child("comments").push(commentData);
