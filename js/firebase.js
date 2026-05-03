@@ -26,9 +26,12 @@ window._isLoggingOut = false;
 /* Enrich Item */
 function enrichItem(item) {
   var searchRaw = (
-    (item.component || "") + " " +
-    (item.brand || "") + " " +
-    (item.specs || "") + " " +
+    (item.component || "") +
+    " " +
+    (item.brand || "") +
+    " " +
+    (item.specs || "") +
+    " " +
     (item.vendor || "")
   ).toLowerCase();
   return Object.assign({}, item, {
@@ -211,9 +214,12 @@ function addPostToFirebase(postData) {
     updates["userPosts/" + postData.uid + "/" + newKey] =
       firebase.database.ServerValue.TIMESTAMP;
   }
-  return database.ref().update(updates).then(function () {
-    return newRef;
-  });
+  return database
+    .ref()
+    .update(updates)
+    .then(function () {
+      return newRef;
+    });
 }
 
 function deletePostFromFirebase(postId, postData) {
@@ -237,9 +243,7 @@ function deletePostFromFirebase(postId, postData) {
   }
   if (postData && postData.likes) {
     Object.keys(postData.likes).forEach(function (userId) {
-      cleanupPromises.push(
-        userLikesRef.child(userId).child(postId).remove()
-      );
+      cleanupPromises.push(userLikesRef.child(userId).child(postId).remove());
     });
   }
 
@@ -256,10 +260,7 @@ function togglePostLike(postId, userId) {
   var userLikeRef = userLikesRef.child(userId).child(postId);
   return likeRef.once("value").then(function (snapshot) {
     if (snapshot.exists()) {
-      return Promise.all([
-        likeRef.remove(),
-        userLikeRef.remove(),
-      ]);
+      return Promise.all([likeRef.remove(), userLikeRef.remove()]);
     } else {
       return Promise.all([
         likeRef.set(true),
@@ -270,30 +271,23 @@ function togglePostLike(postId, userId) {
 }
 
 function getUserPostsOnce(userId, limit, endAt) {
-  var ref = userPostsRef.child(userId).orderByValue().limitToLast(limit || 20);
+  var ref = userPostsRef
+    .child(userId)
+    .orderByValue()
+    .limitToLast(limit || 20);
   if (endAt !== undefined && endAt !== null) {
     ref = ref.endAt(endAt);
   }
   return ref.once("value").then(function (snap) {
-    var result = snap.val() || {};
-    if (Object.keys(result).length > 0) return result;
-    return postsRef
-      .orderByChild("uid")
-      .equalTo(userId)
-      .once("value")
-      .then(function (snap2) {
-        var posts = snap2.val() || {};
-        var map = {};
-        Object.keys(posts).forEach(function (id) {
-          map[id] = posts[id].createdAt || 0;
-        });
-        return map;
-      });
+    return snap.val() || {};
   });
 }
 
 function getUserLikesOnce(userId, limit, endAt) {
-  var ref = userLikesRef.child(userId).orderByValue().limitToLast(limit || 20);
+  var ref = userLikesRef
+    .child(userId)
+    .orderByValue()
+    .limitToLast(limit || 20);
   if (endAt !== undefined && endAt !== null) {
     ref = ref.endAt(endAt);
   }
@@ -305,11 +299,14 @@ function getUserLikesOnce(userId, limit, endAt) {
 function getPostsByIds(postIds) {
   if (!postIds || !postIds.length) return Promise.resolve({});
   var promises = postIds.map(function (id) {
-    return postsRef.child(id).once("value").then(function (s) {
-      var val = s.val();
-      if (val) val._id = s.key;
-      return val;
-    });
+    return postsRef
+      .child(id)
+      .once("value")
+      .then(function (s) {
+        var val = s.val();
+        if (val) val._id = s.key;
+        return val;
+      });
   });
   return Promise.all(promises).then(function (results) {
     var map = {};
@@ -317,14 +314,6 @@ function getPostsByIds(postIds) {
       if (r && r._id) map[r._id] = r;
     });
     return map;
-  });
-}
-
-function getPostById(postId) {
-  return postsRef.child(postId).once("value").then(function (s) {
-    var val = s.val();
-    if (val) val._id = s.key;
-    return val;
   });
 }
 
@@ -390,21 +379,6 @@ function toggleReplyLike(postId, commentId, replyId, userId) {
     } else {
       return likeRef.set(true);
     }
-  });
-}
-
-function initCommentsListener(postId, callback) {
-  var ref = postsRef.child(postId).child("comments");
-  var query = ref.orderByChild("createdAt");
-
-  query.on("child_added", function (s) {
-    callback(s.key, s.val(), "added");
-  });
-  query.on("child_changed", function (s) {
-    callback(s.key, s.val(), "changed");
-  });
-  query.on("child_removed", function (s) {
-    callback(s.key, null, "removed");
   });
 }
 

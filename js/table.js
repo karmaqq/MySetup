@@ -697,20 +697,9 @@ function submitNewItem(tr) {
   const component = componentInput.value.trim();
   if (!component) return;
 
-  const rawDate = dateInput.value.trim();
-  const parts = rawDate.split(/[./-]/);
-  let finalDate;
-  if (parts.length === 3) {
-    finalDate =
-      parts[0].length <= 2
-        ? `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`
-        : rawDate;
-  }
-  if (!finalDate || isNaN(new Date(finalDate).getTime())) {
-    finalDate = new Date().toISOString().split("T")[0];
-  }
+  const finalDate = parseDateInput(dateInput.value);
 
-  const rawPrice = priceInput.value.replace(/\./g, "").replace(",", ".");
+  const rawPrice = parsePriceInput(priceInput.value);
 
   const newItemData = {
     date: finalDate,

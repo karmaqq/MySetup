@@ -4,19 +4,6 @@
 /*                     KULLANICI AYARLARI STİLLERİ                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Ayarlar İkonu (Artık kullanılmıyor, header'da yok) ─────────────────── */
-
-.settings-icon {
-  color: var(--text-dim);
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.settings-icon:hover {
-  color: var(--accent);
-}
-
 .label-hint {
   color: var(--text-dim);
   font-weight: 400;

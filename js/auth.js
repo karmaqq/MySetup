@@ -96,14 +96,11 @@ async function onUserLoggedIn(user) {
 
   const userInfo = document.getElementById("userInfo");
   const userEmailEl = document.getElementById("userEmail");
-  const welcomeUsername = document.getElementById("welcomeUsername");
   const profileUsername = document.getElementById("profileUsername");
   const profileEmail = document.getElementById("profileEmail");
 
   if (userInfo) userInfo.classList.remove("hidden");
   if (userEmailEl) userEmailEl.textContent = user.displayName || "Kullanıcı";
-  if (welcomeUsername)
-    welcomeUsername.textContent = user.displayName || "Kullanıcı";
   if (profileUsername)
     profileUsername.textContent = user.displayName || "Kullanıcı";
   if (profileEmail) profileEmail.textContent = user.email || "E-posta yok";

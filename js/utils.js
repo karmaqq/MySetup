@@ -12,6 +12,7 @@
 
 let _currentPage = null;
 let _isAnimating = false;
+let _commentListenerRefs = {};
 
 function showPage(pageName) {
   if (_isAnimating) return;
@@ -285,6 +286,29 @@ function applyPriceFormat(inputEl) {
   } else {
     inputEl.value = "";
   }
+}
+
+/* ─────────────────── Tarih Giriş Parse ─────────────────── */
+
+function parseDateInput(raw) {
+  const parts = (raw || "").trim().split(/[./-]/);
+  let result;
+  if (parts.length === 3) {
+    result =
+      parts[0].length <= 2
+        ? `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`
+        : raw.trim();
+  }
+  if (!result || isNaN(new Date(result).getTime())) {
+    result = new Date().toISOString().split("T")[0];
+  }
+  return result;
+}
+
+/* ─────────────────── Fiyat Giriş Parse ─────────────────── */
+
+function parsePriceInput(value) {
+  return parseFloat((value || "").replace(/\./g, "").replace(",", ".")) || 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

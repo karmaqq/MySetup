@@ -204,7 +204,7 @@ Aşağıdaki değişkenler yalnızca `js/utils.js` içinde `let` veya `const` il
 | `currentSort`         | `{ col, dir }` | Aktif sıralama sütunu ve yönü                       |
 | `editingId`           | `string\|null` | Açık edit modalının kayıt ID'si                     |
 | `_statsCache`         | `{}`           | İstatistik önbelleği                                |
-| `_commentListenerRefs` | `{}`           | Açık yorum listener referansları (posts.js)          |
+| `_commentListenerRefs` | `{}`           | Açık yorum listener referansları (utils.js)          |
 
 ---
 
