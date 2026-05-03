@@ -737,61 +737,6 @@
   display: block;
 }
 
-.reply-meta {
-  position: relative;
-}
-
-.comment-menu-btn:hover {
-  background: var(--surface2);
-  border-color: var(--border);
-  color: var(--text);
-}
-
-.comment-dropdown {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  min-width: 120px;
-  z-index: 100;
-  display: none;
-  margin-top: 4px;
-}
-
-.comment-dropdown.active {
-  display: block;
-}
-
-.comment-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.15s;
-  text-align: left;
-}
-
-.comment-dropdown-item:hover {
-  background: var(--surface3);
-}
-
-.comment-dropdown-item.delete {
-  color: var(--red);
-}
-
-.comment-dropdown-item.delete:hover {
-  background: var(--red-dim);
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                                      YANIT ALANI                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */

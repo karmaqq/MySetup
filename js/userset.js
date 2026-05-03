@@ -462,6 +462,31 @@ document
           const snap = await ref.once("value");
           if (snap.val() === user.uid) await ref.remove();
         }
+
+        /* Kullanıcının postlarını ve indexlerini temizle */
+        try {
+          const userPostsSnap = await database
+            .ref("userPosts/" + user.uid)
+            .once("value");
+          const postIds = userPostsSnap.val()
+            ? Object.keys(userPostsSnap.val())
+            : [];
+          await Promise.all(
+            postIds.map(function (id) {
+              return database.ref("posts/" + id).remove();
+            }),
+          );
+          await database.ref("userPosts/" + user.uid).remove();
+        } catch (e) {
+          console.warn("Post silme hatası:", e);
+        }
+
+        /* Beğeni indexini temizle */
+        try {
+          await database.ref("userLikes/" + user.uid).remove();
+        } catch (e) {
+          console.warn("Like index silme hatası:", e);
+        }
       }
 
       if (typeof database !== "undefined" && user.uid) {

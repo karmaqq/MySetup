@@ -197,13 +197,14 @@ Storage'daki kullanıcı dosyalarını özyinelemeli siler. **Yalnızca hesap si
 Aşağıdaki değişkenler yalnızca `js/utils.js` içinde `let` veya `const` ile tanımlanır. Başka hiçbir dosyada yeniden tanımlanamaz; yalnızca doğrudan atama yapılabilir:
 
 | Değişken              | Tip            | Açıklama                                            |
-| --------------------- | -------------- | --------------------------------------------------- |
+| --------------------- | -------------- | -------------------------------------------------- |
 | `allData`             | `{}`           | Tüm Firebase verisinin anlık görüntüsü              |
 | `currentSearch`       | `string`       | Aktif arama sorgusu                                 |
 | `currentStatusFilter` | `string`       | Aktif durum filtresi (`"all"` veya normalize değer) |
 | `currentSort`         | `{ col, dir }` | Aktif sıralama sütunu ve yönü                       |
 | `editingId`           | `string\|null` | Açık edit modalının kayıt ID'si                     |
 | `_statsCache`         | `{}`           | İstatistik önbelleği                                |
+| `_commentListenerRefs` | `{}`           | Açık yorum listener referansları (posts.js)          |
 
 ---
 

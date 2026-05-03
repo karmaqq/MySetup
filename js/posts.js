@@ -46,6 +46,10 @@ let _composerTargetPostId = null;
 let _composerReplyCommentId = null;
 let _composerReplyUsername = null;
 
+/* ─────────────────── Açık Yorum Listener Referansları ─────────────────── */
+
+const _commentListenerRefs = {};
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                         POST SİSTEMİ BAŞLATMA                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -65,6 +69,11 @@ function initPosts() {
   if (postsFeed) postsFeed.innerHTML = "";
   _removeLoadMoreBtn();
   _startPostsListener();
+
+  const user = firebase.auth().currentUser;
+  if (user) {
+    initUserLikesListener(user.uid, _onUserLikesChanged);
+  }
 }
 
 /* ─────────────────── Çıkış yapıldığında çağrılır ─────────────────── */
@@ -79,6 +88,20 @@ function _teardownPosts() {
   allPosts = {};
   if (postsFeed) postsFeed.innerHTML = "";
   _removeLoadMoreBtn();
+
+  Object.values(_commentListenerRefs).forEach(function (ref) { ref.off(); });
+  for (var k in _commentListenerRefs) delete _commentListenerRefs[k];
+
+  removeUserLikesListener();
+
+  _loadingMoreUserPosts = false;
+  _loadingMoreLikedPosts = false;
+  _userPostsVisible = [];
+  _likedPostsVisible = [];
+  _userPostsOldestTs = null;
+  _likedPostsOldestTs = null;
+  _hasMoreUserPosts = false;
+  _hasMoreLikedPosts = false;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -90,7 +113,6 @@ function _teardownPosts() {
 function _startPostsListener() {
   const ref = postsRef.orderByChild("createdAt");
 
-  // 1. Önce ilk PAGE_SIZE postu çek (en yeniler)
   ref.limitToLast(PAGE_SIZE).once("value", function (snap) {
     if (window._isLoggingOut) return;
 
@@ -103,12 +125,10 @@ function _startPostsListener() {
       allPosts[id] = raw[id];
     });
 
-    // En eski yüklenenin anahtarı sayfalama için
     if (keys.length > 0) {
       _oldestLoadedKey = keys[keys.length - 1];
     }
 
-    // Feed'i en yeniden eskiye doğru çiz
     if (postsFeed) postsFeed.innerHTML = "";
     keys.forEach(function (id) {
       _appendPostToFeed(id, raw[id]);
@@ -118,12 +138,10 @@ function _startPostsListener() {
       _renderEmptyFeed();
     }
 
-    // 2. Toplam post sayısını kontrol et — daha fazlası var mı?
     _checkHasMorePosts(
       raw[_oldestLoadedKey] ? raw[_oldestLoadedKey].createdAt : null,
     );
 
-    // 3. Gerçek zamanlı listener — sadece yeni gelenleri dinle
     _listenForNewPosts(ref);
   });
 }
@@ -157,7 +175,6 @@ function _listenForNewPosts(ref) {
   if (_postsListenerActive) return;
   _postsListenerActive = true;
 
-  // child_added: sadece sayfadan sonra gelen yeniler
   const newestTs = _getNewestTimestamp();
   const liveQuery = ref.startAt(newestTs + 1, "createdAt");
   _postsQuery = liveQuery;
@@ -172,7 +189,6 @@ function _listenForNewPosts(ref) {
     _prependPostToFeed(id, data);
   });
 
-  // child_changed: beğeni ve yorum sayısı güncellemeleri
   postsRef.on("child_changed", function (s) {
     if (window._isLoggingOut) return;
     const id = s.key;
@@ -186,7 +202,6 @@ function _listenForNewPosts(ref) {
     }
   });
 
-  // child_removed: silinen postları kaldır
   postsRef.on("child_removed", function (s) {
     if (window._isLoggingOut) return;
     const id = s.key;
@@ -405,6 +420,18 @@ function _removePostImage() {
   if (postImageInput) postImageInput.value = "";
 }
 
+/* ─────────────────── Post taslağını temizle ─────────────────── */
+
+function clearPostDraft() {
+  if (postText) postText.value = "";
+  selectedPostImage = null;
+  if (postImagePreviewEl) {
+    postImagePreviewEl.classList.add("hidden");
+    postImagePreviewEl.innerHTML = "";
+  }
+  if (postImageInput) postImageInput.value = "";
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                            POST RENDER                                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -460,7 +487,7 @@ function _renderPostHTML(postId, postData) {
     html +=
       '<div class="post-image"><img src="' +
       escAttr(postData.imageUrl) +
-      "\" alt=\"\" onload=\"var r=this.naturalWidth/this.naturalHeight;var p=this.parentElement;p.classList.toggle('landscape',r>1.2);p.classList.toggle('portrait',r<0.8);p.classList.toggle('square',r>=0.8&&r<=1.2)\" /></div>";
+      '" alt="" onload="var r=this.naturalWidth/this.naturalHeight;var p=this.parentElement;p.classList.toggle(\'landscape\',r>1.2);p.classList.toggle(\'portrait\',r<0.8);p.classList.toggle(\'square\',r>=0.8&&r<=1.2)"></div>';
   }
   html += "</div>";
 
@@ -601,11 +628,7 @@ function _renderCommentThreadHTML(postId, commentId, commentData) {
       cid +
       '">⋮</button>';
     html +=
-      '<div class="comment-dropdown" id="commentDropdown-' +
-      pid +
-      "-" +
-      cid +
-      '">';
+      '<div class="comment-dropdown">';
     html +=
       '<button class="comment-dropdown-item delete" data-action="delete-comment" data-post-id="' +
       pid +
@@ -666,7 +689,11 @@ function _renderCommentThreadHTML(postId, commentId, commentData) {
   html += "</div></div>";
 
   html +=
-    '<div class="replies-section hidden" id="replies-' + pid + "-" + cid + '">';
+    '<div class="replies-section hidden" id="replies-' +
+    pid +
+    "-" +
+    cid +
+    '">';
   if (commentData.replies) {
     const sortedReplies = Object.keys(commentData.replies).sort(
       function (a, b) {
@@ -727,7 +754,7 @@ function _renderReplyHTML(postId, commentId, replyId, replyData) {
       rid +
       '">⋮</button>';
     html +=
-      '<div class="comment-dropdown" id="replyDropdown-' + pid + "-" + cid + "-" + rid + '">';
+      '<div class="comment-dropdown">';
     html +=
       '<button class="comment-dropdown-item delete" data-action="delete-reply" data-post-id="' +
       pid +
@@ -886,8 +913,11 @@ function _renderEmptyFeed() {
 
 /* ─────────────────── Composer'daki mesajı gönderir ─────────────────── */
 
-function _submitComposer(postId) {
-  const input = document.getElementById("commentInput-" + postId);
+function _submitComposer(btn) {
+  const postCard = btn.closest(".post-card");
+  if (!postCard) return;
+  const postId = postCard.dataset.postId;
+  const input = postCard.querySelector(".comment-input-field");
   if (!input) return;
   const text = input.value.trim();
   if (!text) return;
@@ -912,7 +942,6 @@ function _submitComposer(postId) {
         input.value = "";
         _cancelReplyMode(postId);
         showToast("Yanıt eklendi", "success");
-        /* Yanıtlar açık değilse aç */
         _openRepliesSection(postId, _composerReplyCommentId);
       })
       .catch(function () {
@@ -967,7 +996,7 @@ function _cancelReplyMode(postId) {
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                         YORUM BÖLÜMÜ AÇ / KAPAT                          */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Yorum bölümünü toggle eder ─────────────────── */
 
@@ -1016,15 +1045,17 @@ function _openRepliesSection(postId, commentId) {
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                    GERÇEK ZAMANLI YORUM LİSTENER                          */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Yorum bölümü açıldığında Firebase'i dinler ─────────────────── */
 
 function _initCommentListener(postId) {
+  if (_commentListenerRefs[postId]) return;
   const ref = postsRef
     .child(postId)
     .child("comments")
     .orderByChild("createdAt");
+  _commentListenerRefs[postId] = ref;
 
   ref.on("child_added", function (s) {
     if (window._isLoggingOut) return;
@@ -1052,7 +1083,6 @@ function _initCommentListener(postId) {
     if (!post) return;
     if (!post.comments) post.comments = {};
     post.comments[cid] = data;
-    /* Sadece beğeni değişti mi? */
     const thread = document.getElementById(
       "commentThread-" + postId + "-" + cid,
     );
@@ -1106,7 +1136,7 @@ function _updateCommentCount(postId) {
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                            BEĞENİ İŞLEMLERİ                              */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Post beğeni toggle ─────────────────── */
 
@@ -1138,7 +1168,6 @@ function _toggleCommentLike(postId, commentId) {
   _patchCommentLikeBtn(postId, commentId, comment.likes);
 
   toggleCommentLike(postId, commentId, user.uid).catch(function () {
-    /* Geri al */
     if (had) {
       comment.likes[user.uid] = true;
     } else {
@@ -1227,13 +1256,14 @@ function _patchReplyLikeBtn(postId, commentId, replyId, likes) {
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                           SİLME İŞLEMLERİ                                */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Post silme onayı ─────────────────── */
 
 function _confirmDeletePost(postId) {
+  var postData = allPosts[postId];
   showConfirm("Bu gönderiyi silmek istediğine emin misin?", function () {
-    deletePostFromFirebase(postId)
+    deletePostFromFirebase(postId, postData)
       .then(function () {
         showToast("Gönderi silindi.", "success");
       })
@@ -1247,12 +1277,27 @@ function _confirmDeletePost(postId) {
 
 function _confirmDeleteComment(postId, commentId) {
   showConfirm("Yorum silinsin mi?", function () {
+    const thread = document.getElementById(
+      "commentThread-" + postId + "-" + commentId,
+    );
+    if (thread) {
+      thread.style.transition = "opacity 0.3s, transform 0.3s";
+      thread.style.opacity = "0";
+      thread.style.transform = "translateY(4px)";
+      setTimeout(function () {
+        thread.remove();
+      }, 320);
+    }
     deleteCommentFromFirebase(postId, commentId)
       .then(function () {
         showToast("Yorum silindi.", "success");
       })
       .catch(function () {
         showToast("Yorum silinemedi.", "error");
+        if (thread) {
+          thread.style.opacity = "1";
+          thread.style.transform = "translateY(0)";
+        }
       });
   });
 }
@@ -1261,19 +1306,34 @@ function _confirmDeleteComment(postId, commentId) {
 
 function _confirmDeleteReply(postId, commentId, replyId) {
   showConfirm("Yanıt silinsin mi?", function () {
+    const replyEl = document.querySelector(
+      '[data-reply-id="' + replyId + '"]',
+    );
+    if (replyEl) {
+      replyEl.style.transition = "opacity 0.3s, transform 0.3s";
+      replyEl.style.opacity = "0";
+      replyEl.style.transform = "translateY(4px)";
+      setTimeout(function () {
+        replyEl.remove();
+      }, 320);
+    }
     deleteReplyFromFirebase(postId, commentId, replyId)
       .then(function () {
         showToast("Yanıt silindi.", "success");
       })
       .catch(function () {
         showToast("Yanıt silinemedi.", "error");
+        if (replyEl) {
+          replyEl.style.opacity = "1";
+          replyEl.style.transform = "translateY(0)";
+        }
       });
   });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                      SADECE BEĞENİ DEĞERLENDIRME                          */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── İçerik değişmeden sadece beğeni farkı var mı ─────────────────── */
 
@@ -1297,7 +1357,7 @@ function _onlyLikesChanged(oldPost, newPost) {
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                         OLAY DİNLEYİCİLERİ KURULUMU                      */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Post oluşturma butonları ─────────────────── */
 
@@ -1313,7 +1373,6 @@ if (postImageInput)
 
 document.addEventListener("click", function (e) {
   const btn = e.target.closest("[data-action]");
-
   const action = btn ? btn.dataset.action : null;
 
   if (btn && e.target.closest(".remove-post-image-btn")) {
@@ -1321,7 +1380,6 @@ document.addEventListener("click", function (e) {
     return;
   }
 
-  /* Hiçbir aksiyon butonu yoksa tüm dropdownları kapat */
   if (!btn) {
     document.querySelectorAll(".post-dropdown.active").forEach(function (d) {
       d.classList.remove("active");
@@ -1332,7 +1390,6 @@ document.addEventListener("click", function (e) {
     return;
   }
 
-  /* Menü butonları dışındaki tıklamalarda dropdownları kapat */
   if (
     !btn.closest(".post-dropdown") &&
     !btn.closest(".post-menu-btn") &&
@@ -1348,57 +1405,49 @@ document.addEventListener("click", function (e) {
   }
 
   if (action === "post-menu") {
-    const id = btn.dataset.id;
-    const dd = document.getElementById("postDropdown-" + id);
-    const wasActive = dd && dd.classList.contains("active");
     document.querySelectorAll(".post-dropdown.active").forEach(function (d) {
       d.classList.remove("active");
     });
-    document.querySelectorAll(".comment-dropdown.active").forEach(function (d) {
-      d.classList.remove("active");
-    });
-    if (dd && !wasActive) dd.classList.add("active");
+    const dd = btn.nextElementSibling;
+    if (dd && dd.classList.contains("post-dropdown")) {
+      dd.classList.toggle("active");
+    }
     return;
   }
 
   if (action === "comment-menu") {
-    const pid = btn.dataset.postId;
-    const cid = btn.dataset.commentId;
-    const dd = document.getElementById("commentDropdown-" + pid + "-" + cid);
-    const wasActive = dd && dd.classList.contains("active");
-    document.querySelectorAll(".post-dropdown.active").forEach(function (d) {
-      d.classList.remove("active");
-    });
     document.querySelectorAll(".comment-dropdown.active").forEach(function (d) {
       d.classList.remove("active");
     });
-    if (dd && !wasActive) dd.classList.add("active");
+    const commentItem = btn.closest(".comment-item");
+    const dd = commentItem ? commentItem.querySelector(".comment-dropdown") : null;
+    if (dd) {
+      dd.classList.toggle("active");
+    }
     return;
   }
 
   if (action === "reply-menu") {
-    const pid = btn.dataset.postId;
-    const cid = btn.dataset.commentId;
-    const rid = btn.dataset.replyId;
-    const dd = document.getElementById("replyDropdown-" + pid + "-" + cid + "-" + rid);
-    const wasActive = dd && dd.classList.contains("active");
-    document.querySelectorAll(".post-dropdown.active").forEach(function (d) {
-      d.classList.remove("active");
-    });
     document.querySelectorAll(".comment-dropdown.active").forEach(function (d) {
       d.classList.remove("active");
     });
-    if (dd && !wasActive) dd.classList.add("active");
+    const replyItem = btn.closest(".reply-item");
+    const dd = replyItem ? replyItem.querySelector(".comment-dropdown") : null;
+    if (dd) {
+      dd.classList.toggle("active");
+    }
     return;
   }
 
   if (action === "delete-post") {
-    _confirmDeletePost(btn.dataset.id);
+    const postCard = btn.closest(".post-card");
+    if (postCard) _confirmDeletePost(postCard.dataset.postId);
     return;
   }
 
   if (action === "like-post") {
-    _togglePostLike(btn.dataset.id);
+    const postCard = btn.closest(".post-card");
+    if (postCard) _togglePostLike(postCard.dataset.postId);
     return;
   }
 
@@ -1408,12 +1457,17 @@ document.addEventListener("click", function (e) {
   }
 
   if (action === "submit-comment") {
-    _submitComposer(btn.dataset.id);
+    _submitComposer(btn);
     return;
   }
 
   if (action === "cancel-reply") {
-    _cancelReplyMode(btn.dataset.id);
+    const postCard = btn.closest(".post-card");
+    if (postCard) {
+      _cancelReplyMode(postCard.dataset.postId);
+      const input = postCard.querySelector(".comment-input-field");
+      if (input) input.value = "";
+    }
     return;
   }
 
@@ -1432,30 +1486,48 @@ document.addEventListener("click", function (e) {
   }
 
   if (action === "like-comment") {
-    _toggleCommentLike(btn.dataset.postId, btn.dataset.commentId);
-    return;
-  }
-
-  if (action === "delete-comment") {
-    _confirmDeleteComment(btn.dataset.postId, btn.dataset.commentId);
+    const commentItem = btn.closest(".comment-item");
+    if (commentItem) {
+      const cid = commentItem.dataset.commentId;
+      const postCard = btn.closest(".post-card");
+      if (postCard) _toggleCommentLike(postCard.dataset.postId, cid);
+    }
     return;
   }
 
   if (action === "like-reply") {
-    _toggleReplyLike(
-      btn.dataset.postId,
-      btn.dataset.commentId,
-      btn.dataset.replyId,
-    );
+    const replyItem = btn.closest(".reply-item");
+    if (replyItem) {
+      const rid = replyItem.dataset.replyId;
+      const commentItem = btn.closest(".comment-item");
+      const postCard = btn.closest(".post-card");
+      if (commentItem && postCard) {
+        _toggleReplyLike(postCard.dataset.postId, commentItem.dataset.commentId, rid);
+      }
+    }
+    return;
+  }
+
+  if (action === "delete-comment") {
+    const commentItem = btn.closest(".comment-item");
+    if (commentItem) {
+      const cid = commentItem.dataset.commentId;
+      const postCard = btn.closest(".post-card");
+      if (postCard) _confirmDeleteComment(postCard.dataset.postId, cid);
+    }
     return;
   }
 
   if (action === "delete-reply") {
-    _confirmDeleteReply(
-      btn.dataset.postId,
-      btn.dataset.commentId,
-      btn.dataset.replyId,
-    );
+    const replyItem = btn.closest(".reply-item");
+    if (replyItem) {
+      const rid = replyItem.dataset.replyId;
+      const commentItem = btn.closest(".comment-item");
+      const postCard = btn.closest(".post-card");
+      if (commentItem && postCard) {
+        _confirmDeleteReply(postCard.dataset.postId, commentItem.dataset.commentId, rid);
+      }
+    }
     return;
   }
 });
@@ -1466,19 +1538,27 @@ document.addEventListener("keydown", function (e) {
   if (e.key !== "Enter" || e.shiftKey) return;
   const target = e.target;
   if (!target.classList.contains("comment-input-field")) return;
-  const postId = target.id.replace("commentInput-", "");
-  if (!postId) return;
+  const postCard = target.closest(".post-card");
+  if (!postCard) return;
   e.preventDefault();
-  _submitComposer(postId);
+  const btn = postCard.querySelector(".comment-send-btn");
+  if (btn) _submitComposer(btn);
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                           ZAMAN GÜNCELLEMESİ                             */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Her dakika zaman etiketlerini günceller ─────────────────── */
 
 setInterval(function () {
+  if (
+    typeof _currentPage !== "undefined" &&
+    _currentPage !== "home" &&
+    _currentPage !== "profile"
+  )
+    return;
+
   document.querySelectorAll(".post-time").forEach(function (el) {
     const card = el.closest("[data-post-id]");
     if (!card) return;
@@ -1518,7 +1598,7 @@ setInterval(function () {
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                      PROFİL SEKMESİ YÜKLEME                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Profil sekmesi değiştiğinde çağrılır ─────────────────── */
 
@@ -1547,7 +1627,7 @@ function _initUserPostsTab() {
   const tab = document.getElementById("userPostsTab");
   if (!tab) return;
 
-  tab.innerHTML = "";
+  tab.innerHTML = '<div class="posts-empty">Yükleniyor...</div>';
   _userPostsVisible = [];
   _userPostsOldestTs = null;
   _hasMoreUserPosts = false;
@@ -1566,7 +1646,7 @@ function _initLikedPostsTab() {
   const tab = document.getElementById("likedPostsTab");
   if (!tab) return;
 
-  tab.innerHTML = "";
+  tab.innerHTML = '<div class="posts-empty">Yükleniyor...</div>';
   _likedPostsVisible = [];
   _likedPostsOldestTs = null;
   _hasMoreLikedPosts = false;
@@ -1611,11 +1691,12 @@ function _loadUserPostsChunk() {
 
       const postIds = ids
         .filter(function (id) {
-          return !_userPostsVisible.includes(id);
+          return _userPostsVisible.indexOf(id) === -1;
         })
         .slice(0, PAGE_SIZE);
 
       return getPostsByIds(postIds).then(function (posts) {
+        if (tab) tab.innerHTML = "";
         postIds.forEach(function (id) {
           if (posts[id]) {
             allPosts[id] = posts[id];
@@ -1650,6 +1731,8 @@ function _loadUserPostsChunk() {
         btn.disabled = false;
         btn.textContent = "Daha Fazla Göster";
       }
+      if (typeof showToast === "function")
+        showToast("Gönderiler yüklenemedi, lütfen tekrar deneyin.", "error");
     });
 }
 
@@ -1688,11 +1771,12 @@ function _loadLikedPostsChunk() {
 
       const postIds = ids
         .filter(function (id) {
-          return !_likedPostsVisible.includes(id);
+          return _likedPostsVisible.indexOf(id) === -1;
         })
         .slice(0, PAGE_SIZE);
 
       return getPostsByIds(postIds).then(function (posts) {
+        if (tab) tab.innerHTML = "";
         postIds.forEach(function (id) {
           if (posts[id]) {
             allPosts[id] = posts[id];
@@ -1727,7 +1811,25 @@ function _loadLikedPostsChunk() {
         btn.disabled = false;
         btn.textContent = "Daha Fazla Göster";
       }
+      if (typeof showToast === "function")
+        showToast("Beğeniler yüklenemedi, lütfen tekrar deneyin.", "error");
     });
+}
+
+/* ─────────────────── UserLikes Değişikliği Callback ─────────────────── */
+
+function _onUserLikesChanged(postId, value, type) {
+  if (type === "added") {
+    if (_likedPostsVisible.indexOf(postId) === -1) {
+      _likedPostsVisible.push(postId);
+    }
+  } else if (type === "removed") {
+    const idx = _likedPostsVisible.indexOf(postId);
+    if (idx !== -1) _likedPostsVisible.splice(idx, 1);
+  }
+  if (_profileTab === "liked-posts") {
+    _initLikedPostsTab();
+  }
 }
 
 /* ─────────────────── Profil sekmesi için "Daha Fazla" butonu ─────────────────── */
@@ -1760,102 +1862,6 @@ function _removeProfileLoadMoreBtn(tabId) {
   if (btn) btn.remove();
 }
 
-/* ─────────────────── Profil sekmelerine event delegation ─────────────────── */
-
-document.addEventListener("click", function (e) {
-  const target = e.target.closest("[data-action]");
-  if (!target) return;
-
-  const action = target.dataset.action;
-  const postId = target.dataset.id || target.dataset.postId;
-  const commentId = target.dataset.commentId;
-  const replyId = target.dataset.replyId;
-
-  const userPostsTab = document.getElementById("userPostsTab");
-  const likedPostsTab = document.getElementById("likedPostsTab");
-  const inUserPosts = userPostsTab && userPostsTab.contains(target);
-  const inLikedPosts = likedPostsTab && likedPostsTab.contains(target);
-
-  if (!inUserPosts && !inLikedPosts) return;
-
-  if (action === "like-post") {
-    _togglePostLike(postId);
-    return;
-  }
-
-  if (action === "toggle-comments") {
-    _toggleCommentSection(postId);
-    return;
-  }
-
-  if (action === "submit-comment") {
-    _submitComposer(postId);
-    return;
-  }
-
-  if (action === "start-reply") {
-    _startReplyMode(postId, commentId, target.dataset.username);
-    return;
-  }
-
-  if (action === "cancel-reply") {
-    _cancelReplyMode(postId);
-    return;
-  }
-
-  if (action === "like-comment") {
-    _toggleCommentLike(postId, commentId);
-    return;
-  }
-
-  if (action === "like-reply") {
-    _toggleReplyLike(postId, commentId, replyId);
-    return;
-  }
-
-  if (action === "delete-post") {
-    _confirmDeletePost(postId);
-    return;
-  }
-
-  if (action === "delete-comment") {
-    _confirmDeleteComment(postId, commentId);
-    return;
-  }
-
-  if (action === "delete-reply") {
-    _confirmDeleteReply(postId, commentId, replyId);
-    return;
-  }
-
-  if (action === "post-menu") {
-    const dd = document.getElementById("postDropdown-" + postId);
-    if (dd) dd.classList.toggle("active");
-    return;
-  }
-
-  if (action === "comment-menu") {
-    const dd = document.getElementById(
-      "commentDropdown-" + postId + "-" + commentId,
-    );
-    if (dd) dd.classList.toggle("active");
-    return;
-  }
-
-  if (action === "reply-menu") {
-    const dd = document.getElementById(
-      "replyDropdown-" + postId + "-" + commentId + "-" + replyId,
-    );
-    if (dd) dd.classList.toggle("active");
-    return;
-  }
-
-  if (action === "toggle-replies") {
-    _openRepliesSection(postId, commentId);
-    return;
-  }
-});
-
 /* ─────────────────── Sayfa değiştiğinde profil sekmelerini temizle ─────────────────── */
 
 function _onPageChange(pageName) {
@@ -1869,6 +1875,7 @@ function _onPageChange(pageName) {
     if (likedPostsTab) likedPostsTab.innerHTML = "";
     _removeProfileLoadMoreBtn("userPostsTab");
     _removeProfileLoadMoreBtn("likedPostsTab");
+    removeUserLikesListener();
   }
 }
 

@@ -1,8 +1,8 @@
-﻿/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+/*--- zorunlu - agents.md yorum kurallarına uy ---*/
 
-/* ═════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          FIREBASE AYARLARI                              */
-/* ═════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Firebase Config */
 const firebaseConfig = {
@@ -26,17 +26,14 @@ window._isLoggingOut = false;
 /* Enrich Item */
 function enrichItem(item) {
   var searchRaw = (
-    item.component +
-    " " +
-    item.brand +
-    " " +
-    item.specs +
-    " " +
-    item.vendor
+    (item.component || "") + " " +
+    (item.brand || "") + " " +
+    (item.specs || "") + " " +
+    (item.vendor || "")
   ).toLowerCase();
   return Object.assign({}, item, {
     _searchTag: normalizeTr(searchRaw),
-    _statusNorm: normalizeTr(item.status),
+    _statusNorm: normalizeTr(item.status || ""),
   });
 }
 
@@ -197,9 +194,9 @@ async function deleteAllInFolder(ref) {
   await Promise.all(list.prefixes.map(deleteAllInFolder));
 }
 
-/* ═════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          POST SİSTEMİ                                   */
-/* ═════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 postsRef = database.ref("posts");
 const userPostsRef = database.ref("userPosts");
@@ -207,16 +204,19 @@ const userLikesRef = database.ref("userLikes");
 
 function addPostToFirebase(postData) {
   var newRef = postsRef.push();
-  return newRef.set(postData).then(function () {
-    if (postData.uid) {
-      userPostsRef.child(postData.uid).child(newRef.key).set(postData.createdAt);
-    }
+  var updates = {};
+  var newKey = newRef.key;
+  updates["posts/" + newKey] = postData;
+  if (postData.uid) {
+    updates["userPosts/" + postData.uid + "/" + newKey] =
+      firebase.database.ServerValue.TIMESTAMP;
+  }
+  return database.ref().update(updates).then(function () {
     return newRef;
   });
 }
 
-function deletePostFromFirebase(postId) {
-  var postData = allPosts[postId];
+function deletePostFromFirebase(postId, postData) {
   var imageUrl = postData ? postData.imageUrl : null;
   var uid = postData ? postData.uid : null;
 
@@ -275,7 +275,20 @@ function getUserPostsOnce(userId, limit, endAt) {
     ref = ref.endAt(endAt);
   }
   return ref.once("value").then(function (snap) {
-    return snap.val() || {};
+    var result = snap.val() || {};
+    if (Object.keys(result).length > 0) return result;
+    return postsRef
+      .orderByChild("uid")
+      .equalTo(userId)
+      .once("value")
+      .then(function (snap2) {
+        var posts = snap2.val() || {};
+        var map = {};
+        Object.keys(posts).forEach(function (id) {
+          map[id] = posts[id].createdAt || 0;
+        });
+        return map;
+      });
   });
 }
 
@@ -315,9 +328,9 @@ function getPostById(postId) {
   });
 }
 
-/* ═════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          YORUM SİSTEMİ                                  */
-/* ═════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 function addCommentToFirebase(postId, commentData) {
   return postsRef.child(postId).child("comments").push(commentData);
@@ -393,4 +406,30 @@ function initCommentsListener(postId, callback) {
   query.on("child_removed", function (s) {
     callback(s.key, null, "removed");
   });
+}
+
+/* UserLikes değişikliklerini dinle */
+
+let _userLikesListener = null;
+
+function initUserLikesListener(userId, onLikesChanged) {
+  if (_userLikesListener) {
+    _userLikesListener.off();
+  }
+  _userLikesListener = userLikesRef.child(userId);
+  _userLikesListener.on("child_added", function (s) {
+    if (window._isLoggingOut) return;
+    onLikesChanged(s.key, s.val(), "added");
+  });
+  _userLikesListener.on("child_removed", function (s) {
+    if (window._isLoggingOut) return;
+    onLikesChanged(s.key, null, "removed");
+  });
+}
+
+function removeUserLikesListener() {
+  if (_userLikesListener) {
+    _userLikesListener.off();
+    _userLikesListener = null;
+  }
 }
