@@ -311,7 +311,6 @@ function createPost() {
   const postData = {
     uid: user.uid,
     username: user.displayName || "Kullanici",
-    avatarUrl: window.currentUserAvatarUrl || null,
     content: text,
     imageUrl: null,
     createdAt: firebase.database.ServerValue.TIMESTAMP,

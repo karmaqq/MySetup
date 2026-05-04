@@ -250,6 +250,13 @@ saveBtn?.addEventListener("click", async () => {
     document.getElementById("userEmail").textContent = newName;
     const profileUsernameEl = document.getElementById("profileUsername");
     if (profileUsernameEl) profileUsernameEl.textContent = newName;
+
+    // Avatar harflerini güncelle
+    var profileAvatarLetter = document.getElementById("profileAvatarLetter");
+    if (profileAvatarLetter) profileAvatarLetter.textContent = newName.charAt(0).toUpperCase();
+    var sidebarAvatar = document.getElementById("sidebarAvatar");
+    if (sidebarAvatar) sidebarAvatar.textContent = newName.charAt(0).toUpperCase();
+
     if (usernameErrEl) usernameErrEl.textContent = "";
     if (typeof showToast === "function")
       showToast("Kullanıcı adı güncellendi", "success");

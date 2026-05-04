@@ -21,7 +21,7 @@
 .profile-left {
   display: flex;
   align-items: center;
-  gap:20px;
+  gap: 20px;
 }
 
 .profile-left .profile-avatar-wrapper {
@@ -87,41 +87,11 @@
   justify-content: center;
   color: var(--text-dim);
   flex-shrink: 0;
-  overflow: hidden;
-}
-
-.profile-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-avatar svg {
-  width: 80px;
-  height: 80px;
-}
-
-.profile-avatar-edit {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--surface);
-  color: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 0;
-}
-
-.profile-avatar-edit:hover {
-  background: #f5b030;
-  transform: scale(1.1);
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
 /* ─────────── Profil Sekmeleri ─────────── */
@@ -228,12 +198,33 @@
   border-radius: var(--radius-lg);
 }
 
-#userPostsTab .posts-empty,
-#likedPostsTab .posts-empty {
-  text-align: center;
-  padding: 40px 20px;
+#userPostsTab .empty-state,
+#likedPostsTab .empty-state,
+.profile-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
   color: var(--text-dim);
-  font-size: 14px;
+  padding: 56px 20px 48px 20px;
+  min-height: 220px;
 }
 
+#userPostsTab .empty-icon,
+#likedPostsTab .empty-icon,
+.profile-empty-state .empty-icon {
+  font-size: 48px;
+  opacity: 0.22;
+  margin-bottom: 2px;
+}
 
+#userPostsTab .empty-text,
+#likedPostsTab .empty-text,
+.profile-empty-state .empty-text {
+  font-size: 17px;
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-weight: 500;
+  margin-top: 2px;
+}

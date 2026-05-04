@@ -66,20 +66,22 @@ function onUserLoggedIn(user) {
     profileUsername.textContent = user.displayName || "Kullanıcı";
   if (profileEmail) profileEmail.textContent = user.email || "E-posta yok";
 
+  // Profil avatar harfini güncelle
+  var profileAvatarLetter = document.getElementById("profileAvatarLetter");
+  if (profileAvatarLetter)
+    profileAvatarLetter.textContent = (user.displayName || "?").charAt(0).toUpperCase();
+
+  // Sidebar avatar harfini güncelle
+  var sidebarAvatar = document.getElementById("sidebarAvatar");
+  if (sidebarAvatar)
+    sidebarAvatar.textContent = (user.displayName || "?").charAt(0).toUpperCase();
+
   if (typeof initUserDataRef === "function") {
     initUserDataRef(user.uid);
   }
 
-  // Avatar bilgisini bir kez çek
-  if (typeof loadUserAvatarOnLogin === "function") {
-    loadUserAvatarOnLogin(user.uid);
-  }
-
   if (typeof initPosts === "function") {
     initPosts();
-  }
-  if (typeof initAvatarSystem === "function") {
-    initAvatarSystem();
   }
 }
 

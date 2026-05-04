@@ -15,39 +15,23 @@ function _renderPostHTML(postId, postData) {
     ? Object.keys(postData.comments).length
     : 0;
 
-  // Avatar postu kontrolü
-  var isAvatarPost = postData.isAvatarPost === true;
-  var timeText;
-
-  if (isAvatarPost) {
-    // Avatar postunda sadece zaman damgasını al, phrase ekleme
-    timeText = formatTimeAgo(postData.createdAt, undefined, true);
-  } else {
-    timeText = formatTimeAgo(postData.createdAt, postData.phraseIndex);
-  }
+  const timeText = formatTimeAgo(postData.createdAt, postData.phraseIndex);
 
   const pid = escAttr(postId);
 
   let html = '<div class="post-card" data-post-id="' + pid + '">';
 
-  var displayTimeText = timeText;
-
-  if (isAvatarPost) {
-    // Avatar postunda timeText + " avatarını güncelledi" göster
-    displayTimeText = timeText + " avatarını güncelledi";
-  }
-
   html += '<div class="post-header">';
   html +=
     '<div class="post-avatar">' +
-    renderAvatarHTML(postData.username, postData.uid, postData.avatarUrl, 40) +
+    (postData.username || "?").charAt(0).toUpperCase() +
     "</div>";
   html += '<div class="post-user-info">';
   html +=
     '<span class="post-username">' +
     escHtml(postData.username || "Kullanici") +
     "</span>";
-  html += '<span class="post-time">' + escHtml(displayTimeText) + "</span>";
+  html += '<span class="post-time">' + escHtml(timeText) + "</span>";
   html += "</div>";
 
   if (isOwn) {
@@ -66,22 +50,14 @@ function _renderPostHTML(postId, postData) {
   }
   html += "</div>";
 
-  html += '<div class="post-content">';
+  html += '<div class="post-body">';
   if (postData.content)
     html += '<div class="post-text">' + escHtml(postData.content) + "</div>";
   if (postData.imageUrl) {
-    if (isAvatarPost) {
-      // Avatar postu: 350x350 daire
-      html +=
-        '<div class="post-avatar-circle-350"><img src="' +
-        escAttr(postData.imageUrl) +
-        '" alt="" /></div>';
-    } else {
-      html +=
-        '<div class="post-image"><img src="' +
-        escAttr(postData.imageUrl) +
-        '" alt="" class="post-img-lazy"></div>';
-    }
+    html +=
+      '<div class="post-image"><img src="' +
+      escAttr(postData.imageUrl) +
+      '" alt="" class="post-img-lazy"></div>';
   }
   html += "</div>";
 
@@ -147,12 +123,7 @@ function _renderCommentComposerHTML(postId) {
 
   let html = '<div class="comment-composer" id="commentComposer-' + pid + '">';
   html += '<div class="comment-composer-avatar">';
-  html += renderAvatarHTML(
-    user ? user.displayName || "" : "",
-    user ? user.uid || "" : "",
-    window.currentUserAvatarUrl || "",
-    32,
-  );
+  html += (user ? (user.displayName || "?").charAt(0).toUpperCase() : "?");
   html += "</div>";
   html += '<div class="comment-composer-right">';
   html += '<div class="comment-reply-target" id="replyTarget-' + pid + '">';
@@ -205,12 +176,7 @@ function _renderCommentThreadHTML(postId, commentId, commentData) {
   html += '<div class="comment-avatar-col">';
   html +=
     '<div class="comment-avatar">' +
-    renderAvatarHTML(
-      commentData.username || "",
-      commentData.uid || "",
-      commentData.avatarUrl || "",
-      32,
-    ) +
+    (commentData.username || "?").charAt(0).toUpperCase() +
     "</div>";
   html += "</div>";
   html += '<div class="comment-body">';
@@ -330,12 +296,7 @@ function _renderReplyHTML(postId, commentId, replyId, replyData) {
   let html = '<div class="reply-item" data-reply-id="' + rid + '">';
   html +=
     '<div class="reply-avatar">' +
-    renderAvatarHTML(
-      replyData.username || "",
-      replyData.uid || "",
-      replyData.avatarUrl || "",
-      26,
-    ) +
+    (replyData.username || "?").charAt(0).toUpperCase() +
     "</div>";
   html += '<div class="reply-body">';
   html += '<div class="reply-meta">';

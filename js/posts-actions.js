@@ -174,7 +174,6 @@ function _submitComposer(btn) {
   const baseData = {
     uid: user.uid,
     username: user.displayName || "Kullanici",
-    avatarUrl: window.currentUserAvatarUrl || user.photoURL || "",
     text: text,
     createdAt: firebase.database.ServerValue.TIMESTAMP,
     likes: {},

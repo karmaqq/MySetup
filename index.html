@@ -26,7 +26,9 @@
     <link rel="stylesheet" href="css/inventory.css" />
     <link rel="stylesheet" href="css/editmodal.css" />
     <link rel="stylesheet" href="css/posts.css" />
-    <link rel="stylesheet" href="css/avatareditmodal.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+
+
     <link rel="stylesheet" href="css/auth.css" />
     <link rel="stylesheet" href="css/userset.css" />
 
@@ -34,6 +36,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <template id="svg-eye">
       <svg
@@ -110,9 +113,7 @@
       <!-- Alt Kısım: Kullanıcı ve Çıkış -->
       <div class="sidebar-footer">
         <div class="sidebar-user-info hidden" id="userInfo">
-          <div class="sidebar-avatar" id="sidebarAvatar">
-            <span class="sidebar-avatar-letter">?</span>
-          </div>
+          <div class="sidebar-avatar" id="sidebarAvatar">?</div>
           <span class="sidebar-user-displayname" id="userEmail"></span>
         </div>
         <button class="sidebar-logout-btn" id="logoutBtn" title="Çıkış Yap">
@@ -282,125 +283,7 @@
     </div>
 
     <!-- ═════════════════════════════════════════════════════════════════ -->
-    <!--                          AVATAR MODALI                              -->
-    <!-- ═════════════════════════════════════════════════════════════════ -->
-
-    <div class="modal-overlay" id="avatarModal">
-      <div class="modal-box avatar-modal-box">
-        <div class="modal-header">
-          <span class="modal-title">Profil Resmi</span>
-          <button class="modal-close" id="closeAvatarModal" title="Kapat">
-            ✕
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="avatar-layout">
-            <div class="avatar-main">
-              <div class="avatar-drop-zone" id="avatarDropArea">
-                <input
-                  type="file"
-                  id="avatarFileInput"
-                  accept="image/*"
-                  hidden
-                />
-                <div class="avatar-placeholder" id="avatarPlaceholder">
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="48"
-                    height="48"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                  >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  <p>
-                    Görsel yüklemek için <strong>tıkla</strong> veya sürükle
-                  </p>
-                  <p
-                    class="avatar-crop-hint"
-                    style="font-size: 11px; opacity: 0.6"
-                  >
-                    Yüklendikten sonra sürükleyerek konumlandırabilirsin
-                  </p>
-                </div>
-                <canvas id="avatarCanvas" width="350" height="350"></canvas>
-              </div>
-              <p id="avatarError" class="auth-error"></p>
-            </div>
-            <div class="avatar-sidebar">
-              <div class="avatar-preview-section">
-                <span class="avatar-section-label">Önizleme</span>
-                <div class="avatar-preview-circle" id="avatarPreview"></div>
-              </div>
-              <div class="avatar-history-section">
-                <span class="avatar-section-label">Son Avatarlar</span>
-                <div id="oldAvatarsContainer" class="avatar-history-list"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="avatar-publish-composer hidden" id="avatarPublishComposer">
-          <div class="avatar-publish-preview">
-            <div class="avatar-publish-circle" id="avatarPublishPreview"></div>
-          </div>
-          <textarea
-            id="avatarPublishText"
-            class="modal-input"
-            placeholder="Düşüncelerini yaz..."
-            rows="3"
-          ></textarea>
-          <div class="avatar-publish-actions">
-            <button id="avatarPublishCancelBtn" class="btn-modal-cancel">
-              İptal
-            </button>
-            <button id="avatarPublishSubmitBtn" class="btn-modal-save">
-              Paylaş
-            </button>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            class="btn-modal-delete"
-            id="deleteAvatarBtn"
-            style="display: none"
-          >
-            Avatarı Sil
-          </button>
-          <span class="modal-footer-spacer"></span>
-          <button class="btn-modal-cancel" id="cancelAvatarBtn">Kapat</button>
-          <button class="btn-modal-save" id="saveAvatarBtn" disabled>
-            Kaydet
-          </button>
-          <button class="btn-modal-save" id="publishAvatarBtn" disabled>
-            Kaydet ve Yayınla
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!--                          AVATAR VIEW MODALI                         -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-
-    <div class="modal-overlay" id="avatarViewModal">
-      <div class="modal-box avatar-view-box">
-        <div class="modal-header">
-          <span class="modal-title">Profil Resmi</span>
-          <button class="modal-close" id="closeAvatarView" title="Kapat">
-            ✕
-          </button>
-        </div>
-        <div class="modal-body avatar-view-body">
-          <img id="avatarViewImg" alt="" />
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!--                          ANA İÇERİK                              -->
+    <!--                           ALT BİLGİ                              -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
 
     <div class="main-scroll hidden" id="mainScroll">
@@ -451,43 +334,8 @@
             <div class="profile-left">
               <div class="profile-avatar-wrapper">
                 <div class="profile-avatar" id="profileAvatarContainer">
-                  <img id="profileAvatarImg" class="hidden" alt="" />
-                  <svg
-                    id="profileAvatarSvg"
-                    viewBox="0 0 24 24"
-                    width="80"
-                    height="80"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
+                  <span id="profileAvatarLetter">?</span>
                 </div>
-                <button
-                  class="profile-avatar-edit"
-                  id="editProfileAvatarBtn"
-                  title="Avatar Değiştir"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="16"
-                    height="16"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                    />
-                    <path
-                      d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                    />
-                  </svg>
-                </button>
               </div>
               <div class="profile-info">
                 <h3 id="profileUsername">Kullanıcı Adı</h3>
@@ -1151,13 +999,12 @@
     </footer>
 
     <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!--        JAVASCRIPT — utils → firebase → avatar → table → io        -->
+    <!--        JAVASCRIPT — utils → firebase → table → io                  -->
     <!--           → posts → posts-render → posts-actions → posts-profile  -->
     <!--                      → editmodal → auth → userset                 -->
     <!-- ═══════════════════════════════════════════════════════════════════ -->
     <script src="js/utils.js"></script>
     <script src="js/firebase.js"></script>
-    <script src="js/avatar.js"></script>
     <script src="js/table.js"></script>
     <script src="js/io.js"></script>
     <script src="js/posts.js"></script>

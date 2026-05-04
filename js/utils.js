@@ -130,8 +130,6 @@ let currentSearch = "";
 let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
-window.currentUserAvatarUrl = null;
-window._avatarHistory = [];
 
 /* ─────────────────── Render Yönetimi ─────────────────── */
 

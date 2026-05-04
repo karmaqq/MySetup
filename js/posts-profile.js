@@ -43,11 +43,17 @@ function _initUserPostsTab() {
     tabId: "userPostsTab",
     btnId: "loadMoreUserPostsBtn",
     getVisible: () => _userPostsVisible,
-    setOldestTs: (ts) => { _userPostsOldestTs = ts; },
+    setOldestTs: (ts) => {
+      _userPostsOldestTs = ts;
+    },
     getOldestTs: () => _userPostsOldestTs,
-    setHasMore: (v) => { _hasMoreUserPosts = v; },
+    setHasMore: (v) => {
+      _hasMoreUserPosts = v;
+    },
     getHasMore: () => _hasMoreUserPosts,
-    setLoading: (v) => { _loadingMoreUserPosts = v; },
+    setLoading: (v) => {
+      _loadingMoreUserPosts = v;
+    },
     getLoading: () => _loadingMoreUserPosts,
   });
 }
@@ -73,11 +79,17 @@ function _initLikedPostsTab() {
     tabId: "likedPostsTab",
     btnId: "loadMoreLikedPostsBtn",
     getVisible: () => _likedPostsVisible,
-    setOldestTs: (ts) => { _likedPostsOldestTs = ts; },
+    setOldestTs: (ts) => {
+      _likedPostsOldestTs = ts;
+    },
     getOldestTs: () => _likedPostsOldestTs,
-    setHasMore: (v) => { _hasMoreLikedPosts = v; },
+    setHasMore: (v) => {
+      _hasMoreLikedPosts = v;
+    },
     getHasMore: () => _hasMoreLikedPosts,
-    setLoading: (v) => { _loadingMoreLikedPosts = v; },
+    setLoading: (v) => {
+      _loadingMoreLikedPosts = v;
+    },
     getLoading: () => _loadingMoreLikedPosts,
   });
 }
@@ -86,7 +98,7 @@ function _initLikedPostsTab() {
 /*                     BİRLEŞTİRİLMİŞ LOAD POSTS CHUNK                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Ortak yükleme fonksiyonu (BULGU-07 çözümü) ─────────────────── */
+/* ─────────────────── Ortak yükleme fonksiyonu  ─────────────────── */
 
 function _loadPostsChunk(cfg) {
   if (cfg.getLoading()) return;
@@ -102,19 +114,27 @@ function _loadPostsChunk(cfg) {
     btn.textContent = "Yükleniyor...";
   }
 
-  cfg.fetcher(user.uid, PAGE_SIZE, cfg.getOldestTs())
+  cfg
+    .fetcher(user.uid, PAGE_SIZE, cfg.getOldestTs())
     .then(function (map) {
       const ids = Object.keys(map).sort(function (a, b) {
         return map[b] - map[a];
       });
 
-        if (ids.length === 0) {
-          if (cfg.getVisible().size === 0 && tab) {
+      if (ids.length === 0) {
+        // 1. Yükleniyor mesajı zaten sekme açılırken atanıyor
+        // 2. Veri geldikten sonra hiç gönderi yoksa boş mesajı göster (ikonlu)
+        if (tab) {
           tab.innerHTML =
-            '<div class="posts-empty">' +
+            '<div class="empty-state profile-empty-state">' +
+            '<div class="empty-icon">' +
+            (cfg.tabId === "userPostsTab" ? "📦" : "⭐") +
+            "</div>" +
+            '<div class="empty-text">' +
             (cfg.tabId === "userPostsTab"
               ? "Henüz gönderin yok."
               : "Henüz beğendiğin gönderi yok.") +
+            "</div>" +
             "</div>";
         }
         cfg.setHasMore(false);
@@ -171,9 +191,9 @@ function _loadPostsChunk(cfg) {
       }
       if (typeof showToast === "function")
         showToast(
-          (cfg.tabId === "userPostsTab"
+          cfg.tabId === "userPostsTab"
             ? "Gönderiler yüklenemedi, lütfen tekrar deneyin."
-            : "Beğeniler yüklenemedi, lütfen tekrar deneyin."),
+            : "Beğeniler yüklenemedi, lütfen tekrar deneyin.",
           "error",
         );
     });
@@ -228,9 +248,7 @@ function _appendOrPrependToProfileTab(tabId, postId) {
 
 function _renderProfileLoadMoreBtn(tabId, onClick) {
   const btnId =
-    tabId === "userPostsTab"
-      ? "loadMoreUserPostsBtn"
-      : "loadMoreLikedPostsBtn";
+    tabId === "userPostsTab" ? "loadMoreUserPostsBtn" : "loadMoreLikedPostsBtn";
   if (document.getElementById(btnId)) return;
 
   const btn = document.createElement("button");
@@ -247,9 +265,7 @@ function _renderProfileLoadMoreBtn(tabId, onClick) {
 
 function _removeProfileLoadMoreBtn(tabId) {
   const btnId =
-    tabId === "userPostsTab"
-      ? "loadMoreUserPostsBtn"
-      : "loadMoreLikedPostsBtn";
+    tabId === "userPostsTab" ? "loadMoreUserPostsBtn" : "loadMoreLikedPostsBtn";
   const btn = document.getElementById(btnId);
   if (btn) btn.remove();
 }
@@ -282,11 +298,9 @@ function _onPageChange(pageName) {
 document.querySelectorAll(".profile-tabs .tab-btn").forEach(function (btn) {
   btn.addEventListener("click", function () {
     const tab = this.dataset.tab;
-    document
-      .querySelectorAll(".profile-tabs .tab-btn")
-      .forEach(function (b) {
-        b.classList.remove("active");
-      });
+    document.querySelectorAll(".profile-tabs .tab-btn").forEach(function (b) {
+      b.classList.remove("active");
+    });
     this.classList.add("active");
     document
       .querySelectorAll("#profilePage .tab-content")

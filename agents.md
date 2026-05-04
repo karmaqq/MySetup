@@ -55,7 +55,7 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 | `js/auth.js`       | Firebase Auth, oturum durumu, giriş/kayıt formları, şifre kontrolü                                     |
 | `js/userset.js`    | Hesap ayarları, kullanıcı adı/şifre değiştirme, hesap silme                                                            |
 | `js/posts.js`      | **Post sistemi ana modül**, oluşturma, silme, akış yönetimi, sayfalama, listener başlatma  |
-| `js/posts-render.js` | Post/yorum/yanıt HTML render, görsel yükleme, avatar, feed DOM işlemleri |
+| `js/posts-render.js` | Post/yorum/yanıt HTML render, görsel yükleme, feed DOM işlemleri |
 | `js/posts-actions.js` | Beğeni & silme aksiyonları, yorum/yanıt gönderimi, gerçek zamanlı yorum listener'ı, event delegation |
 | `js/posts-profile.js` | Profil sekmesi yükleme, `_loadPostsChunk`, beğeni değişikliği, sayfa değişimi |
 
@@ -66,7 +66,7 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 | `css/base.css`      | CSS değişkenleri (`:root`), reset, toast, loading, scroll, genel layout, responsive, sayfa düzeni |
 | `css/sidebar.css`   | Logo, versiyon, nav menü, update butonu, user info, logout                                        |
 | `css/home.css`      | 700px akış içeriği, karşılama ekranı                                                              |
-| `css/profile.css`   | 700px profil içeriği, card, avatar, hesap ayarları butonu                                         |
+| `css/profile.css`   | 700px profil içeriği, card, hesap ayarları butonu                                         |
 | `css/inventory.css` | İstatistik kartları, arama, filtre, import/export, tablo, durum menüsü                            |
 | `css/editmodal.css` | Düzenleme modali, floating görsel önizleme, yıldız sistemi                                        |
 | `css/auth.css`      | Auth overlay, giriş/kayıt panelleri                                                               |
@@ -203,7 +203,7 @@ Post görsellerinin yüklendiğinde aspect ratio kontrolü yapar. CSP uyumlu `ad
 
 ### posts-render.js (~545 satır)
 
-`_renderPostHTML`, `_renderCommentComposerHTML`, `_renderCommentThreadHTML`, `_renderReplyHTML`, `_avatarHTML`, `_initPostImage`, `_handlePostImageLoad`, `_prependPostToFeed`, `_appendPostToFeed`, `_patchPostCard`, `_patchPostLikes`, `_softRemovePost`, `_renderEmptyFeed`, `_patchCommentLikeBtn`, `_patchReplyLikeBtn`
+`_renderPostHTML`, `_renderCommentComposerHTML`, `_renderCommentThreadHTML`, `_renderReplyHTML`, `_initPostImage`, `_handlePostImageLoad`, `_prependPostToFeed`, `_appendPostToFeed`, `_patchPostCard`, `_patchPostLikes`, `_softRemovePost`, `_renderEmptyFeed`, `_patchCommentLikeBtn`, `_patchReplyLikeBtn`
 
 ### posts-actions.js (~628 satır)
 
