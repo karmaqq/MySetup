@@ -21,19 +21,11 @@
 .profile-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap:20px;
 }
 
-.profile-avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: var(--surface2);
-  border: 2px solid var(--border2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-dim);
+.profile-left .profile-avatar-wrapper {
+  position: relative;
   flex-shrink: 0;
 }
 
@@ -41,6 +33,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  justify-content: center;
 }
 
 .profile-info h3 {
@@ -80,7 +73,58 @@
   transform: translateY(-1px);
 }
 
-/* ─────────────────── Profil Sekmeleri ─────────────────── */
+/* ─────────── Profile Avatar ─────────── */
+
+.profile-avatar {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar svg {
+  width: 80px;
+  height: 80px;
+}
+
+.profile-avatar-edit {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.profile-avatar-edit:hover {
+  background: #f5b030;
+  transform: scale(1.1);
+}
+
+/* ─────────── Profil Sekmeleri ─────────── */
 
 .profile-tabs {
   display: flex;
@@ -191,3 +235,5 @@
   color: var(--text-dim);
   font-size: 14px;
 }
+
+

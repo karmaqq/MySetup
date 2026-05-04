@@ -13,6 +13,9 @@
 let _currentPage = null;
 let _isAnimating = false;
 let _commentListenerRefs = {};
+let justRegistered = false;
+
+const PAGE_SIZE = 20;
 
 function showPage(pageName) {
   if (_isAnimating) return;
@@ -128,6 +131,8 @@ let currentSearch = "";
 let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
+window.currentUserAvatarUrl = null;
+window._avatarHistory = [];
 
 /* ─────────────────── Render Yönetimi ─────────────────── */
 
@@ -246,12 +251,17 @@ function escHtml(str) {
 /* ─────────────────── Attribute Karakter Kaçışı ─────────────────── */
 
 function escAttr(str) {
-  return (str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  try {
+    const s = str == null ? "" : String(str);
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  } catch (e) {
+    return "";
+  }
 }
 
 /* ─────────────────── Güvenli Harici URL Doğrulama ─────────────────── */
@@ -332,6 +342,7 @@ const POST_PHRASES = [
   "bir an bile düşünmeden şunu dedi;",
   "şöyle buyurdu;",
   "fikrini beyan etti;",
+  "avatarını güncelledi.",
 ];
 
 function formatTimeAgo(timestamp, phraseIndex, skipPhrase) {

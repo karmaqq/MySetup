@@ -1,4 +1,4 @@
-# AGENTS.md — MySetup v2.4.1
+# AGENTS.md — MySetup v2.5.3
 
 > Bu dosya, MySetup projesine kod müdahalesi yapacak her yapay zeka ajanı, editör eklentisi veya geliştirici için zorunlu okuma belgesidir.
 > Projeyi ilk kez gören bir ajanın hata yapmaması için gereken tüm yapısal bilgi burada tanımlanmıştır.
@@ -10,71 +10,18 @@
 Bu dosya ve `OPTIMIZATIONS.md`, ajanın her işlemindeki mutlak referansıdır:
 
 1. **AGENTS.md** → Mutlak kural kitabıdır; projeye dair tüm teknik ve yazımsal kurallar buradadır.
-2. **OPTIMIZATIONS.md** → Görev ve bulgu listesidir; yapılacak işler buradan takip edilir.
+2. **OPTIMIZATIONS.md** → Proje sağlık durumu referansıdır; tüm bulgular çözülmüştür.
 3. **Kullanıcı talimatı** → Her zaman 1. önceliktir. Kullanıcı "yapma" derse yapılmaz, "yap" derse yapılır.
 4. **Güncel veri kullanımı** → Ajan, kendi önceki deneyimlerinden hatırladığı kuralları değil, her zaman bu iki dosyadaki en güncel hali referans alır.
 5. **İşlem öncesi ve sonrası kontrol** → Her kod değişikliği öncesi ve sonrası bu iki dosya okunur ve kurallara uygun hareket edilir.
-6. **Kendi yöntemini dayatma** → Kod değişikliği yaparken kendi bildiği yöntemi değil, bu dosyalardaki yönergeleri uygular.
+6. **Kendi yöntemini dayatma** → Kod değişikliği yaparken kendi bildiği yöntemi değil, bu dosyadaki yönergeleri uygular.
 7. **Gelişime açık tasarım** → Proje daima gelişmeye uygun şekilde dizayn edilmeli; yenilikçi ve gelişime açık fonksiyonlar kullanılmalıdır.
-8. **Modüler yapı ve harita sistemi** → Dosya yapısı ne kadar çok olursa olsun her zaman modüler olmalıdır. Her dosya ve fonksiyon birbiri ile bağlantılı bir harita sistemi kullanmalıdır (bu harita AGENTS.md içinde bulunur; bkz. Bölüm 3 ve 4).
+8. **Modüler yapı ve harita sistemi** → Dosya yapısı ne kadar çok olursa olsun her zaman modüler olmalıdır. Her dosya ve fonksiyon birbiri ile bağlantılı bir harita sistemi kullanmalıdır (bu harita AGENTS.md içinde bulunur; bkz. Bölüm 3, 4, 5).
 9. **Temiz kod zorunluluğu** → İşlemi bitmiş, üzerinde uğraşılmayan bir fonksiyon daima temiz ve çalışır vaziyette bırakılmalıdır.
 
 ---
 
-## 1. Altın Kural: Yorum Stili
-
-**Bu kural ihlal edilemez. Kod değişikliği yapmadan önce mutlaka okunmalıdır.**
-
-Projedeki her `.js` ve `.css` dosyası aynı yorum diline sahiptir. Ajan kendi yorum stilini dayatamaz, standart dışı yorum ekleyemez, mevcut yorum bloklarını değiştiremez.
-
-### 1.1 Bölüm Başlığı
-
-Dosyada mantıksal olarak yeni bir ana grup açılıyorsa kullanılır. İki satır çerçeve, ortada başlık:
-
-```js
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          BÖLÜM ADI                                       */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-```
-
-CSS dosyalarında aynı kural geçerlidir.
-
-### 1.2 Alt Grup Başlığı
-
-Bir bölüm içinde tematik olarak gruplanmış kod bloğu başlamadan önce kullanılır:
-
-```js
-/* ─────────────────── Başlık ─────────────────── */
-```
-
-### 1.3 Fonksiyon İçi Yorum
-
-Bir fonksiyon birden fazla adım içeriyorsa, yalnızca adım başları numaralandırılır. Satır içi `//` veya gövdeye gömülü `/* */` kesinlikle yasaktır:
-
-```js
-function submitNewItem(tr, inputs) {
-  // 1. Zorunlu alan kontrolü
-  // 2. Tarihi ISO formatına çevir
-  // 3. Firebase'e gönder
-}
-```
-
-Tek adımlı fonksiyonlara yorum eklenmez.
-
-### 1.4 Yasak Yorum Kalıpları
-
-Aşağıdakilerin hiçbiri projede yer alamaz:
-
-```js
-// Bu fonksiyon X'i yapıyor                   ← YASAK: açıklayıcı satır içi yorum
-const x = a + b; // toplam                    ← YASAK: satır sonu yorumu
-/* Burada şunu yaptık çünkü... */             ← YASAK: gövde içi blok yorum
-// TODO: ileride düzelt                        ← YASAK: işaretleyici yorum
-```
-
----
-
-## 2. Proje Mimarisi
+## 1. Proje Mimarisi
 
 MySetup, **Electron** çatısı üzerine kurulu bir masaüstü envanter uygulamasıdır. İki bağımsız süreç vardır:
 
@@ -85,7 +32,7 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 
 ---
 
-## 3. Dosya Haritası
+## 2. Dosya Haritası
 
 ### Main Process
 
@@ -99,15 +46,18 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 
 | Dosya              | Sorumluluk                                                                                                             |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `js/utils.js`      | **Tüm global değişkenler**, DOM referansları, yardımcı fonksiyonlar, `scheduleRender`, `formatTimeAgo`, `POST_PHRASES` |
-| `js/firebase.js`   | Firebase init, `allData` CRUD, realtime listener yönetimi, `enrichItem()`, **post CRUD**, `initPostsListener`          |
-| `js/table.js`      | Render motoru, filtre/sıralama, istatistik önbelleği, CRUD UI eylemleri                                                |
+| `js/utils.js`      | **Tüm global değişkenler**, DOM referansları, yardımcı fonksiyonlar, `scheduleRender`, `formatTimeAgo`, `DATE_FORMAT`, `parseDateInput`, `parsePriceInput` |
+| `js/firebase.js`   | Firebase init, `allData` CRUD, realtime listener yönetimi, `enrichItem()`, **post CRUD**, `initPostsListener`, yorum/yanıt CRUD |
+| `js/table.js`      | Render motoru, filtre/sıralama, istatistik önbelleği, CRUD UI eylemleri, event delegation                                |
 | `js/io.js`         | Toast/confirm sistemi, arama debounce, CSV içe/dışa aktarma, tüm listeyi sil                                           |
 | `js/updater-ui.js` | Güncelleme butonu ve IPC olayları (renderer tarafı)                                                                    |
-| `js/editmodal.js`  | Düzenleme modali, görsel yükleme/önizleme, yıldız derecelendirme                                                       |
-| `js/auth.js`       | Firebase Auth, oturum durumu, giriş/kayıt formları                                                                     |
+| `js/editmodal.js`  | Düzenleme modali, görsel yükleme/önizleme, yıldız derecelendirme, klavye kısayolları                                   |
+| `js/auth.js`       | Firebase Auth, oturum durumu, giriş/kayıt formları, şifre kontrolü                                     |
 | `js/userset.js`    | Hesap ayarları, kullanıcı adı/şifre değiştirme, hesap silme                                                            |
-| `js/posts.js`      | **Post sistemi**, oluşturma, silme, beğeni, akış yönetimi, profil sekmeleri                                            |
+| `js/posts.js`      | **Post sistemi ana modül**, oluşturma, silme, akış yönetimi, sayfalama, listener başlatma  |
+| `js/posts-render.js` | Post/yorum/yanıt HTML render, görsel yükleme, avatar, feed DOM işlemleri |
+| `js/posts-actions.js` | Beğeni & silme aksiyonları, yorum/yanıt gönderimi, gerçek zamanlı yorum listener'ı, event delegation |
+| `js/posts-profile.js` | Profil sekmesi yükleme, `_loadPostsChunk`, beğeni değişikliği, sayfa değişimi |
 
 ### Renderer Process — CSS
 
@@ -132,7 +82,7 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 
 ---
 
-## 4. Bağımlılık Zinciri
+## 3. Bağımlılık Zinciri
 
 ```
 utils.js        → Hiçbir şeye bağımlı değil; diğer her dosya buna bağımlıdır
@@ -143,9 +93,45 @@ updater-ui.js   → utils.js'e bağımlı (window.electronAPI)
 editmodal.js    → utils.js + firebase.js + io.js'e bağımlı
 auth.js         → utils.js + firebase.js + editmodal.js + userset.js'e bağımlı
 userset.js      → utils.js + firebase.js + auth.js'e bağımlı
+posts.js        → utils.js + firebase.js + posts-render.js + posts-actions.js + posts-profile.js'e bağımlı
+posts-render.js → utils.js + firebase.js + posts.js'e bağımlı
+posts-actions.js→ utils.js + firebase.js + posts-render.js + io.js'e bağımlı
+posts-profile.js→ utils.js + firebase.js + posts-render.js + posts-actions.js'e bağımlı
 ```
 
 Bu sıra `index.html` içindeki `<script>` etiketlerinde sabittir. **Asla değiştirilemez.**
+
+---
+
+## 4. Global Değişkenler
+
+Aşağıdaki değişkenler yalnızca `js/utils.js` içinde `let` veya `const` ile tanımlanır. Başka hiçbir dosyada yeniden tanımlanamaz; yalnızca doğrudan atama yapılabilir:
+
+| Değişken              | Tip            | Tanımlandığı Dosya | Açıklama                                            |
+| --------------------- | -------------- | ------------------ | -------------------------------------------------- |
+| `allData`             | `{}`           | utils.js (satır 126) | Tüm Firebase verisinin anlık görüntüsü              |
+| `currentSearch`       | `string`       | utils.js (satır 127) | Aktif arama sorgusu                                 |
+| `currentStatusFilter` | `string`       | utils.js (satır 128) | Aktif durum filtresi (`"all"` veya normalize değer) |
+| `currentSort`         | `{ col, dir }` | utils.js (satır 129) | Aktif sıralama sütunu ve yönü                       |
+| `editingId`           | `string\|null` | utils.js (satır 130) | Açık edit modalının kayıt ID'si                     |
+| `_statsCache`         | `{}`           | utils.js (satır 155) | İstatistik önbelleği                                |
+| `_commentListenerRefs` | `{}`           | utils.js (satır 15)  | Açık yorum listener referansları                     |
+| `_currentPage`        | `null`         | utils.js (satır 13)  | Aktif sayfa adı                                     |
+| `_isAnimating`        | `false`        | utils.js (satır 14)  | Sayfa geçiş animasyonu kontrolü                     |
+
+### posts.js Global Durum Değişkenleri (posts.js içinde tanımlı)
+
+| Değişken              | Tip            | Açıklama                                            |
+| --------------------- | -------------- | -------------------------------------------------- |
+| `allPosts`            | `{}`           | Tüm post verisinin anlık görüntüsü                   |
+| `selectedPostImage`   | `null`         | Seçilen post görseli                                |
+| `_postsListenerActive`| `false`        | Post listener aktif mi                              |
+| `_oldestLoadedKey`    | `null`         | En eski yüklenen post anahtarı                       |
+| `_hasMorePosts`       | `false`        | Daha fazla post var mı                              |
+| `_loadingMore`        | `false`        | Post yükleniyor mu                                   |
+| `_profileTab`         | `null`         | Aktif profil sekmesi                                |
+| `_userPostsVisible`   | `Set`          | Görünür kullanıcı postları (BULGU-14)               |
+| `_likedPostsVisible`  | `Set`          | Görünür beğenilen postlar (BULGU-14)               |
 
 ---
 
@@ -171,44 +157,134 @@ Herhangi bir `.modal-overlay.active` varken tam render yapmaz; `_pendingRender =
 
 Tüm arama ve durum karşılaştırmaları bu fonksiyondan geçer. Ham string karşılaştırması yapılamaz. `_statusNorm` zaten `enrichItem` tarafından set edilmiştir; üzerine tekrar `normalizeTr` çağırmak gereksizdir.
 
-/_ ─────────────────── Kullanım Örneği ─────────────────── _/
-
-/_ Arama: getFilteredSortedList içinde _/
-const q = normalizeTr(currentSearch);
-list = list.filter((item) => item.\_searchTag.includes(q));
-
-/_ Durum kontrolü: \_statusNorm kullanımı _/
-const healthy = (item.\_statusNorm || "").includes("saglikl");
-
 ### `updateStatsCacheOnChange` + `rebuildStatsCache` — `js/table.js`
 
 İstatistik önbelleği (`_statsCache`) tüm hesaplamalar için temel referanstır. Firebase listener'larında her kayıt değişiminde `updateStatsCacheOnChange` çağrılır; tüm liste sıfırlanıp hesaplanması gereken durumlarda `rebuildStatsCache` kullanılır.
 
-**Önemli:** `updateStatsCacheOnChange` içinde `normalizeTr(item.status)` YERİNE `item._statusNorm` kullanılmalıdır (BULGU-03 düzeltmesi). `rebuildStatsCache` içinde de aynı kural geçerlidir.
+**Önemli:** `updateStatsCacheOnChange` içinde `normalizeTr(item.status)` YERİNE `item._statusNorm` kullanılmalıdır. `rebuildStatsCache` içinde de aynı kural geçerlidir.
 
 ### `deleteAllInFolder(ref)` — `js/firebase.js`
 
 Storage'daki kullanıcı dosyalarını özyinelemeli siler. **Yalnızca hesap silme akışında** çağrılabilir.
 
----
+### `_loadPostsChunk(cfg)` — `js/posts-profile.js`
 
-## 6. Global Değişkenler
+Profil sekmesi veri yükleme işlemlerini birleştiren ortak fonksiyondur. `config` nesnesi ile çalışır (BULGU-07 çözümü).
 
-Aşağıdaki değişkenler yalnızca `js/utils.js` içinde `let` veya `const` ile tanımlanır. Başka hiçbir dosyada yeniden tanımlanamaz; yalnızca doğrudan atama yapılabilir:
+### `_initPostImage(img)` — `js/posts-render.js`
 
-| Değişken              | Tip            | Açıklama                                            |
-| --------------------- | -------------- | -------------------------------------------------- |
-| `allData`             | `{}`           | Tüm Firebase verisinin anlık görüntüsü              |
-| `currentSearch`       | `string`       | Aktif arama sorgusu                                 |
-| `currentStatusFilter` | `string`       | Aktif durum filtresi (`"all"` veya normalize değer) |
-| `currentSort`         | `{ col, dir }` | Aktif sıralama sütunu ve yönü                       |
-| `editingId`           | `string\|null` | Açık edit modalının kayıt ID'si                     |
-| `_statsCache`         | `{}`           | İstatistik önbelleği                                |
-| `_commentListenerRefs` | `{}`           | Açık yorum listener referansları (utils.js)          |
+Post görsellerinin yüklendiğinde aspect ratio kontrolü yapar. CSP uyumlu `addEventListener` kullanır (BULGU-12 çözümü).
 
 ---
 
-## 7. Yapamayacakları (Yasak İşlemler)
+## 6. Fonksiyon Haritası
+
+### utils.js (13 fn)
+
+`showPage`, `isAnyModalOpen`, `scheduleRender`, `normalizeTr`, `escHtml`, `escAttr`, `safeExternalUrl`, `applyPriceFormat`, `parseDateInput`, `parsePriceInput`, `formatTimeAgo`, `formatDateTime`, `DATE_FORMAT`
+
+### firebase.js (23 fn)
+
+**Envanter:** `enrichItem`, `initUserDataRef`, `addComponentToFirebase`, `replaceUserDataInFirebase`, `updateComponentInFirebase`, `updateComponentStatusInFirebase`, `deleteComponentFromFirebase`, `uploadImageToFirebase`, `deleteAllInFolder`  
+**Post:** `addPostToFirebase`, `deletePostFromFirebase`, `togglePostLike`, `getUserPostsOnce`, `getUserLikesOnce`, `getPostsByIds`  
+**Yorum:** `addCommentToFirebase`, `deleteCommentFromFirebase`, `toggleCommentLike`, `addReplyToFirebase`, `deleteReplyFromFirebase`, `toggleReplyLike`, `initUserLikesListener`, `removeUserLikesListener`
+
+### table.js (23 fn)
+
+`getFilteredSortedList`, `rebuildStatsCache`, `updateStatsCacheOnChange`, `updateStats`, `updateResultCount`, `updateSortIcons`, `getStatusClassName`, `buildStatusCellInnerHTML`, `buildCombinedSpecsCellHTML`, `buildRowHTML`, `buildGroupRowHTML`, `createRowEl`, `buildRowsFragment`, `renderTableRows`, `renderAll`, `_countVisibleItems`, `isItemVisible`, `addOrUpdateTableRow`, `removeTableRow`, `updateItemStatus`, `deleteItem`, `initiateAddRow`, `submitNewItem`, `initTableBodyEvents`
+
+### io.js (4 fn + event handlers)
+
+`showToast`, `showConfirm`, `parseCsvLine`, `processCsv`
+
+### posts.js (~429 satır)
+
+`initPosts`, `_teardownPosts`, `_startPostsListener`, `_checkHasMorePosts`, `_listenForNewPosts`, `_getNewestTimestamp`, `_loadMorePosts`, `_renderLoadMoreBtn`, `_removeLoadMoreBtn`, `createPost`, `_uploadAndSavePost`, `_savePost`, `_handlePostImageSelect`, `_removePostImage`, `clearPostDraft`
+
+### posts-render.js (~545 satır)
+
+`_renderPostHTML`, `_renderCommentComposerHTML`, `_renderCommentThreadHTML`, `_renderReplyHTML`, `_avatarHTML`, `_initPostImage`, `_handlePostImageLoad`, `_prependPostToFeed`, `_appendPostToFeed`, `_patchPostCard`, `_patchPostLikes`, `_softRemovePost`, `_renderEmptyFeed`, `_patchCommentLikeBtn`, `_patchReplyLikeBtn`
+
+### posts-actions.js (~628 satır)
+
+`_togglePostLike`, `_toggleCommentLike`, `_toggleReplyLike`, `_confirmDeletePost`, `_confirmDeleteComment`, `_confirmDeleteReply`, `_submitComposer`, `_startReplyMode`, `_cancelReplyMode`, `_toggleCommentSection`, `_openRepliesSection`, `_initCommentListener`, `_refreshCommentThread`, `_updateCommentCount`, `_onlyLikesChanged`, click/keydown delegation, zaman güncellemesi
+
+### posts-profile.js (~302 satır)
+
+`updateProfilePosts`, `switchProfileTab`, `_initUserPostsTab`, `_initLikedPostsTab`, `_loadPostsChunk`, `_onUserLikesChanged`, `_appendOrPrependToProfileTab`, `_renderProfileLoadMoreBtn`, `_removeProfileLoadMoreBtn`, `_onPageChange`, profil sekme event listener'ları
+
+### editmodal.js (17 fn)
+
+`applyAdaptiveSize`, `refreshPreview`, `handleImageFile`, `_resetPreviewInstant`, `updateStars`, `openEditModal`, `closeEditModal`, `saveEditModal`, modal event listeners, klavye kısayolları
+
+### auth.js (7 fn)
+
+`initNavigation`, `hideLoading`, `getAuthErrorMessage`, `onUserLoggedIn`, `onUserLoggedOut`, `validatePasswords`, `setHint`
+
+### userset.js (7 fn)
+
+`closeSettingsModal`, `closeChangePassModal`, `closeDeleteModal`, `openSettingsModal`, `goBackToSettings`, `resetUsernameEditState`
+
+### updater-ui.js (2 fn)
+
+`startDotAnimation`, `stopDotAnimation`
+
+---
+
+## 7. Altın Kural: Yorum Stili
+
+**Bu kural ihlal edilemez. Kod değişikliği yapmadan önce mutlaka okunmalıdır.**
+
+Projedeki her `.js` ve `.css` dosyası aynı yorum diline sahiptir. Ajan kendi yorum stilini dayatamaz, standart dışı yorum ekleyemez, mevcut yorum bloklarını değiştiremez.
+
+### 7.1 Bölüm Başlığı
+
+Dosyada mantıksal olarak yeni bir ana grup açılıyorsa kullanılır. İki satır çerçeve, ortada başlık:
+
+```js
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          BÖLÜM ADI                                       */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+```
+
+CSS dosyalarında aynı kural geçerlidir.
+
+### 7.2 Alt Grup Başlığı
+
+Bir bölüm içinde tematik olarak gruplanmış kod bloğu başlamadan önce kullanılır:
+
+```js
+/* ─────────────────── Başlık ─────────────────── */
+```
+
+### 7.3 Fonksiyon İçi Yorum
+
+Bir fonksiyon birden fazla adım içeriyorsa, yalnızca adım başları numaralandırılır. Satır içi `//` veya gövdeye gömülü `/* */` kesinlikle yasaktır:
+
+```js
+function submitNewItem(tr, inputs) {
+  // 1. Zorunlu alan kontrolü
+  // 2. Tarihi ISO formatına çevir
+  // 3. Firebase'e gönder
+}
+```
+
+Tek adımlı fonksiyonlara yorum eklenmez.
+
+### 7.4 Yasak Yorum Kalıpları
+
+Aşağıdakilerin hiçbiri projede yer alamaz:
+
+```js
+// Bu fonksiyon X'i yapıyor                   ← YASAK: açıklayıcı satır içi yorum
+const x = a + b; // toplam                    ← YASAK: satır sonu yorumu
+/* Burada şunu yaptık çünkü... */             ← YASAK: gövde içi blok yorum
+// TODO: ileride düzelt                        ← YASAK: işaretleyici yorum
+```
+
+---
+
+## 8. Yapamayacakları (Yasak İşlemler)
 
 **Aşağıdakiler hiçbir koşulda yapılamaz:**
 
@@ -228,7 +304,7 @@ Aşağıdaki değişkenler yalnızca `js/utils.js` içinde `let` veya `const` il
 
 ---
 
-## 8. Yapabilecekleri (İzin Verilen İşlemler)
+## 9. Yapabilecekleri (İzin Verilen İşlemler)
 
 - `js/utils.js`'deki yardımcı fonksiyon listesine yeni fonksiyon eklemek
 - Yeni harici kaynak gerekiyorsa hem `APP_CSP` hem ilgili directive güncellenmek şartıyla CDN eklemek
@@ -241,7 +317,7 @@ Aşağıdaki değişkenler yalnızca `js/utils.js` içinde `let` veya `const` il
 
 ---
 
-## 9. Firebase SDK
+## 10. Firebase SDK
 
 **Compat SDK v9.22.1** — CDN üzerinden yüklenir (`index.html`). Modular SDK sentaksı yasaktır.
 
@@ -257,7 +333,7 @@ import { initializeApp } from 'firebase/app';
 
 ---
 
-## 10. CSP Yapısı
+## 11. CSP Yapısı
 
 CSP, `main.js → setupCspHeaders()` içinde tanımlı `APP_CSP` dizisiyle yönetilir.
 
@@ -269,18 +345,18 @@ Kritik kısıtlamalar:
 
 ---
 
-## 11. Kullanıcı Adı Benzersizliği
+## 12. Kullanıcı Adı Benzersizliği
 
 Kullanıcı adı değiştirme (`userset.js → saveBtn`) Firebase transaction ile korunur:
 
 - Transaction commit edilmeden eski kullanıcı adı silinemez
 - Bu iki adım hiçbir zaman ayrılmamalı veya sırası değiştirilmemelidir
 
-Kayıt akışında (`auth.js`) ise `once("value")` kontrolü + `set` yazımı non-atomiktir; TOCTOU riski mevcuttur (OPTIMIZATIONS.md BULGU-06).
+Kayıt akışında (`auth.js`) ise `once("value")` kontrolü + `set` yazımı non-atomiktir; TOCTOU riski mevcuttur.
 
 ---
 
-## 12. Doğrulama Prosedürü
+## 13. Doğrulama Prosedürü
 
 Otomatik test altyapısı yoktur. Her değişiklik sonrası manuel kontrol:
 
@@ -298,9 +374,16 @@ Kontrol listesi:
 - Durum filtresi ve sıralama
 - Kullanıcı adı ve şifre değiştirme
 - Hesap silme akışı
+- Post oluşturma, beğenme, yorum/yanıt ekleme
+- Post görsel yükleme ve kaldırma
+- Profil sekmeleri (Gönderilerim / Beğenilenler)
 
 ---
 
-## 13. OPTIMIZATIONS.md ile İlişki
+## 14. OPTIMIZATIONS.md ile İlişki
 
-Bekleyen optimizasyon bulguları `OPTIMIZATIONS.md` dosyasında belgelenmiştir. Kod değişikliği yapmadan önce ilgili bulgu okunmalı, değişiklik sonrası tablodaki durum `✅ Uygulandı` olarak güncellenmelidir.
+Bekleyen optimizasyon bulguları `OPTIMIZATIONS.md` dosyasında belgelenmiştir. Tüm bulgular çözülmüştür ve durumları `✅ Uygulandı` olarak işaretlenmiştir. Kod değişikliği yapmadan önce ilgili bulgu okunmalı, değişiklik sonrası tablodaki durum kontrol edilmelidir.
+
+---
+
+_Son güncelleme: 2026-05-04 — MySetup v2.5.3 — Tüm bulgular çözülmüştür_

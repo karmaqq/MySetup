@@ -32,7 +32,7 @@ function _initUserPostsTab() {
   if (!tab) return;
 
   tab.innerHTML = '<div class="posts-empty">Yükleniyor...</div>';
-  _userPostsVisible = new Set();
+  _userPostsVisible.clear();
   _userPostsOldestTs = null;
   _hasMoreUserPosts = false;
   _loadingMoreUserPosts = false;
@@ -62,7 +62,7 @@ function _initLikedPostsTab() {
   if (!tab) return;
 
   tab.innerHTML = '<div class="posts-empty">Yükleniyor...</div>';
-  _likedPostsVisible = new Set();
+  _likedPostsVisible.clear();
   _likedPostsOldestTs = null;
   _hasMoreLikedPosts = false;
   _loadingMoreLikedPosts = false;

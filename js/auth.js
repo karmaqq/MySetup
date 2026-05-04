@@ -1,12 +1,14 @@
 /*--- zorunlu - agents.md yorum kurallarına uy ---*/
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                  KİMLİK DOĞRULAMA VE OTURUM YÖNETİMİ                    */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  if (window.__authJsInitialized) return;
+  window.__authJsInitialized = true;
 
-/* ─────────────────── Firebase Auth Referansı ─────────────────── */
+  /* ═══════════════════════════════════════════════════════════════════════════ */
+  /*                  KİMLİK DOĞRULAMA VE OTURUM YÖNETİMİ                    */
+  /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const auth = firebase.auth();
+  const auth = firebase.auth();
 
 /* ─────────────────── Navigasyon ve Sayfa Başlatma ─────────────────── */
 
@@ -29,48 +31,8 @@ if (document.readyState === "loading") {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                         YARDIMCI FONKSİYONLAR                           */
+/*                         OTURUM DURUMU YÖNETİMİ                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Yükleme Ekranını Kaldır ─────────────────── */
-
-function hideLoading() {
-  const el = document.getElementById("authLoading");
-  if (!el) return;
-  el.style.opacity = "0";
-  el.style.transition = "opacity 0.25s ease";
-  setTimeout(() => {
-    el.style.display = "none";
-  }, 260);
-}
-
-/* ─────────────────── Auth Hata Mesajları ─────────────────── */
-
-function getAuthErrorMessage(code) {
-  const messages = {
-    "auth/user-not-found": "E-posta veya şifre hatalı.",
-    "auth/wrong-password": "E-posta veya şifre hatalı.",
-    "auth/invalid-credential": "E-posta veya şifre hatalı.",
-    "auth/invalid-login-credentials": "E-posta veya şifre hatalı.",
-    "auth/email-already-in-use": "Bu e-posta adresi zaten kullanımda.",
-    "auth/invalid-email": "Geçersiz e-posta adresi formatı.",
-    "auth/weak-password": "Şifre çok zayıf. En az 6 karakter kullanın.",
-    "auth/too-many-requests": "Çok fazla başarısız deneme. Lütfen bekleyin.",
-    "auth/network-request-failed":
-      "Ağ bağlantısı hatası. İnterneti kontrol edin.",
-    "auth/user-disabled": "Bu hesap devre dışı bırakılmış.",
-    "auth/operation-not-allowed": "Bu giriş yöntemi etkinleştirilmemiş.",
-  };
-  return (
-    messages[code] || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin."
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                         OTURUM DURUM YÖNETİMİ                            */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Oturum Durumu Dinleyicisi ─────────────────── */
 
 auth.onAuthStateChanged((user) => {
   hideLoading();
@@ -83,7 +45,7 @@ auth.onAuthStateChanged((user) => {
 
 /* ─────────────────── Giriş Yapıldığında ─────────────────── */
 
-async function onUserLoggedIn(user) {
+function onUserLoggedIn(user) {
   const authOverlay = document.getElementById("authOverlay");
   if (authOverlay) authOverlay.classList.remove("active");
 
@@ -98,7 +60,6 @@ async function onUserLoggedIn(user) {
   const userEmailEl = document.getElementById("userEmail");
   const profileUsername = document.getElementById("profileUsername");
   const profileEmail = document.getElementById("profileEmail");
-
   if (userInfo) userInfo.classList.remove("hidden");
   if (userEmailEl) userEmailEl.textContent = user.displayName || "Kullanıcı";
   if (profileUsername)
@@ -109,12 +70,16 @@ async function onUserLoggedIn(user) {
     initUserDataRef(user.uid);
   }
 
+  // Avatar bilgisini bir kez çek
+  if (typeof loadUserAvatarOnLogin === "function") {
+    loadUserAvatarOnLogin(user.uid);
+  }
+
   if (typeof initPosts === "function") {
     initPosts();
   }
-
-  if (typeof showPage === "function") {
-    showPage(localStorage.getItem("mySetupLastPage") || "home");
+  if (typeof initAvatarSystem === "function") {
+    initAvatarSystem();
   }
 }
 
@@ -132,18 +97,26 @@ function onUserLoggedOut() {
   if (appFooter) appFooter.classList.add("hidden");
   if (userInfo) userInfo.classList.add("hidden");
 
-  if (loginForm) {
-    loginForm.reset();
-    const btn = loginForm.querySelector(".auth-submit-btn");
+  if (typeof showPage === "function") {
+    showPage("home");
+  }
+
+  // Form sıfırlama ve UI temizliği
+  const loginFormEl = document.getElementById("loginForm");
+  const registerFormEl = document.getElementById("registerForm");
+
+  if (loginFormEl) {
+    loginFormEl.reset();
+    const btn = loginFormEl.querySelector(".auth-submit-btn");
     if (btn) {
       btn.textContent = "Giriş Yap";
       btn.disabled = false;
     }
   }
 
-  if (registerForm) {
-    registerForm.reset();
-    const btn = registerForm.querySelector(".auth-submit-btn");
+  if (registerFormEl) {
+    registerFormEl.reset();
+    const btn = registerFormEl.querySelector(".auth-submit-btn");
     if (btn) {
       btn.textContent = "Kayıt Ol";
       btn.disabled = false;
@@ -189,77 +162,46 @@ function onUserLoggedOut() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          FORM YARDIMCILARI                               */
+/*                         YARDIMCI FONKSİYONLAR                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Şifre Gizle / Göster ─────────────────── */
+/* ─────────────────── Yükleme Ekranını Kaldır ─────────────────── */
 
-document.querySelectorAll(".toggle-password").forEach((btn) => {
-  const eyeTmpl = document.getElementById("svg-eye");
-  if (eyeTmpl && btn.childNodes.length === 0) {
-    btn.appendChild(eyeTmpl.content.cloneNode(true));
-  }
-  btn.addEventListener("click", function () {
-    const input = this.previousElementSibling;
-    if (!input) return;
-    if (input.type === "password") {
-      input.type = "text";
-      this.innerHTML = "";
-      const eyeOffTmpl = document.getElementById("svg-eye-off");
-      if (eyeOffTmpl) this.appendChild(eyeOffTmpl.content.cloneNode(true));
-    } else {
-      input.type = "password";
-      this.innerHTML = "";
-      const eyeTmpl2 = document.getElementById("svg-eye");
-      if (eyeTmpl2) this.appendChild(eyeTmpl2.content.cloneNode(true));
-    }
-  });
-});
-
-/* ─────────────────── Şifre Eşleştirme Kontrolü ─────────────────── */
-
-const regPasswordInput = document.getElementById("regPassword");
-const regPasswordConfirm = document.getElementById("regPasswordConfirm");
-
-function validatePasswords() {
-  const p1 = regPasswordInput?.value || "";
-  const p2 = regPasswordConfirm?.value || "";
-
-  if (!p1 && !p2) {
-    regPasswordInput?.classList.remove("match-success", "match-error");
-    regPasswordConfirm?.classList.remove("match-success", "match-error");
-    return;
-  }
-
-  const isMatch = p1 === p2 && p1.length >= 6;
-  const hasInput = p2.length > 0;
-
-  regPasswordInput?.classList.toggle("match-success", isMatch);
-  regPasswordInput?.classList.toggle("match-error", !isMatch && hasInput);
-  regPasswordConfirm?.classList.toggle("match-success", isMatch);
-  regPasswordConfirm?.classList.toggle("match-error", !isMatch && hasInput);
+function hideLoading() {
+  const el = document.getElementById("authLoading");
+  if (!el) return;
+  el.style.opacity = "0";
+  el.style.transition = "opacity 0.25s ease";
+  setTimeout(() => {
+    el.style.display = "none";
+  }, 260);
 }
 
-regPasswordInput?.addEventListener("input", validatePasswords);
-regPasswordConfirm?.addEventListener("input", validatePasswords);
+/* ─────────────────── Auth Hata Mesajları ─────────────────── */
 
-/* ─────────────────── Panel Geçişi ─────────────────── */
-
-document.getElementById("goToRegister")?.addEventListener("click", () => {
-  document.getElementById("loginPanel")?.classList.add("hidden");
-  document.getElementById("registerPanel")?.classList.remove("hidden");
-});
-
-document.getElementById("goToLogin")?.addEventListener("click", () => {
-  document.getElementById("registerPanel")?.classList.add("hidden");
-  document.getElementById("loginPanel")?.classList.remove("hidden");
-});
+function getAuthErrorMessage(code) {
+  const messages = {
+    "auth/user-not-found": "E-posta veya şifre hatalı.",
+    "auth/wrong-password": "E-posta veya şifre hatalı.",
+    "auth/invalid-credential": "E-posta veya şifre hatalı.",
+    "auth/invalid-login-credentials": "E-posta veya şifre hatalı.",
+    "auth/email-already-in-use": "Bu e-posta adresi zaten kullanımda.",
+    "auth/invalid-email": "Geçersiz e-posta adresi formatı.",
+    "auth/weak-password": "Şifre çok zayıf. En az 6 karakter kullanın.",
+    "auth/too-many-requests": "Çok fazla başarısız deneme. Lütfen bekleyin.",
+    "auth/network-request-failed":
+      "Ağ bağlantısı hatası. İnterneti kontrol edin.",
+    "auth/user-disabled": "Bu hesap devre dışı bırakılmış.",
+    "auth/operation-not-allowed": "Bu giriş yöntemi etkinleştirilmemiş.",
+  };
+  return (
+    messages[code] || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin."
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                             GİRİŞ FORMU                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Giriş Formu Submit ─────────────────── */
 
 const loginForm = document.getElementById("loginForm");
 
@@ -294,69 +236,10 @@ if (loginForm) {
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                             KAYIT FORMU                                  */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Kullanıcı Adı Uygunluk Kontrolü ─────────────────── */
-
-let usernameCheckTimer = null;
-const regUsernameInput = document.getElementById("regUsername");
-const usernameHint = document.getElementById("usernameHint");
-
-function setHint(msg, type) {
-  if (!usernameHint) return;
-  usernameHint.textContent = msg;
-  usernameHint.className = "username-hint" + (type ? " hint-" + type : "");
-}
-
-if (regUsernameInput) {
-  regUsernameInput.addEventListener("input", () => {
-    clearTimeout(usernameCheckTimer);
-    const val = regUsernameInput.value;
-
-    if (!val.trim()) return setHint("", "");
-    if (/\s/.test(val))
-      return setHint("Kullanıcı adında boşluk kullanılamaz", "error");
-    if (/[A-Z]/.test(val))
-      return setHint(
-        "Büyük harf kullanılamaz, sadece küçük harf (a-z)",
-        "error",
-      );
-    if (/[çğıöşüÇĞİÖŞÜ]/.test(val))
-      return setHint(
-        "Türkçe karakter kullanılamaz (ç, ğ, ı, ö, ş, ü)",
-        "error",
-      );
-    if (/[^a-z0-9._-]/.test(val))
-      return setHint(
-        "Sadece a-z, 0-9, nokta, tire, alt çizgi kullanılabilir",
-        "error",
-      );
-    if (val.length < 3) return setHint("En az 3 karakter gerekli", "error");
-    if (val.length > 32)
-      return setHint("En fazla 32 karakter olabilir", "error");
-
-    setHint("Kontrol ediliyor...", "");
-    usernameCheckTimer = setTimeout(async () => {
-      try {
-        const snap = await database
-          .ref("usernames/" + val.toLowerCase())
-          .once("value");
-        setHint(
-          snap.exists()
-            ? "Bu kullanıcı adı alınmış"
-            : "Bu kullanıcı adı kullanılabilir",
-          snap.exists() ? "error" : "ok",
-        );
-      } catch (_) {
-        setHint("", "");
-      }
-    }, 500);
-  });
-}
-
-/* ─────────────────── Kayıt Formu Submit ─────────────────── */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 const registerForm = document.getElementById("registerForm");
+let justRegistered = false;
 
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
@@ -409,6 +292,10 @@ if (registerForm) {
         }
 
         await cred.user.updateProfile({ displayName: username });
+
+        justRegistered = true;
+
+        return;
       } catch (claimErr) {
         try {
           await cred.user.delete();
@@ -428,3 +315,69 @@ if (registerForm) {
     }
   });
 }
+
+/* ─────────────────── Panel Geçişi ─────────────────── */
+
+document.getElementById("goToRegister")?.addEventListener("click", () => {
+  document.getElementById("loginPanel")?.classList.add("hidden");
+  document.getElementById("registerPanel")?.classList.remove("hidden");
+});
+
+document.getElementById("goToLogin")?.addEventListener("click", () => {
+  document.getElementById("registerPanel")?.classList.add("hidden");
+  document.getElementById("loginPanel")?.classList.remove("hidden");
+});
+
+/* ─────────────────── Şifre Eşleştirme Kontrolü ─────────────────── */
+
+const regPasswordInput = document.getElementById("regPassword");
+const regPasswordConfirm = document.getElementById("regPasswordConfirm");
+
+function validatePasswords() {
+  const p1 = regPasswordInput?.value || "";
+  const p2 = regPasswordConfirm?.value || "";
+
+  if (!p1 && !p2) {
+    regPasswordInput?.classList.remove("match-success", "match-error");
+    regPasswordConfirm?.classList.remove("match-success", "match-error");
+    return;
+  }
+
+  const isMatch = p1 === p2 && p1.length >= 6;
+  const hasInput = p2.length > 0;
+
+  regPasswordInput?.classList.toggle("match-success", isMatch);
+  regPasswordInput?.classList.toggle("match-error", !isMatch && hasInput);
+  regPasswordConfirm?.classList.toggle("match-success", isMatch);
+  regPasswordConfirm?.classList.toggle("match-error", !isMatch && hasInput);
+}
+
+regPasswordInput?.addEventListener("input", validatePasswords);
+regPasswordConfirm?.addEventListener("input", validatePasswords);
+
+/* ─────────────────── Şifre Gizle / Göster ─────────────────── */
+
+document.querySelectorAll(".toggle-password").forEach((btn) => {
+  const eyeTmpl = document.getElementById("svg-eye");
+  if (eyeTmpl && btn.childNodes.length === 0) {
+    btn.appendChild(eyeTmpl.content.cloneNode(true));
+  }
+  btn.addEventListener("click", function () {
+    const input = this.previousElementSibling;
+    if (!input) return;
+    if (input.type === "password") {
+      input.type = "text";
+      this.innerHTML = "";
+      const eyeOffTmpl = document.getElementById("svg-eye-off");
+      if (eyeOffTmpl) this.appendChild(eyeOffTmpl.content.cloneNode(true));
+    } else {
+      input.type = "password";
+      this.innerHTML = "";
+      const eyeTmpl2 = document.getElementById("svg-eye");
+      if (eyeTmpl2) this.appendChild(eyeTmpl2.content.cloneNode(true));
+    }
+  });
+});
+
+// Oturum kapatma işlemleri onUserLoggedOut içinde yapılıyor
+})();

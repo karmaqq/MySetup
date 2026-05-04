@@ -22,7 +22,6 @@ let _postsQuery = null;
 
 /* ─────────────────── Sayfalama Durumu ─────────────────── */
 
-const PAGE_SIZE = 20;
 let _oldestLoadedKey = null;
 let _hasMorePosts = false;
 let _loadingMore = false;
@@ -30,12 +29,12 @@ let _loadingMore = false;
 /* ─────────────────── Profil Sekmesi Durumu ─────────────────── */
 
 let _profileTab = null;
-let _userPostsVisible = [];
+let _userPostsVisible = new Set();
 let _userPostsOldestTs = null;
 let _hasMoreUserPosts = false;
 let _loadingMoreUserPosts = false;
 
-let _likedPostsVisible = [];
+let _likedPostsVisible = new Set();
 let _likedPostsOldestTs = null;
 let _hasMoreLikedPosts = false;
 let _loadingMoreLikedPosts = false;
@@ -92,8 +91,8 @@ function _teardownPosts() {
 
   _loadingMoreUserPosts = false;
   _loadingMoreLikedPosts = false;
-  _userPostsVisible = [];
-  _likedPostsVisible = [];
+  _userPostsVisible = new Set();
+  _likedPostsVisible = new Set();
   _userPostsOldestTs = null;
   _likedPostsOldestTs = null;
   _hasMoreUserPosts = false;
@@ -312,6 +311,7 @@ function createPost() {
   const postData = {
     uid: user.uid,
     username: user.displayName || "Kullanici",
+    avatarUrl: window.currentUserAvatarUrl || null,
     content: text,
     imageUrl: null,
     createdAt: firebase.database.ServerValue.TIMESTAMP,

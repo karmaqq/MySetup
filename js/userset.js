@@ -54,12 +54,6 @@ function openSettingsModal() {
   }
 }
 
-/* ─────────────────── Profil Sayfası Ayarlar Butonu ─────────────────── */
-
-document.getElementById("profileSettingsBtn")?.addEventListener("click", () => {
-  if (typeof openSettingsModal === "function") openSettingsModal();
-});
-
 /* ─────────────────── Modal Kapatma Olayları ─────────────────── */
 
 document
@@ -89,7 +83,7 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
   if (typeof initUserDataRef === "function") {
     initUserDataRef(null);
   }
-  auth.signOut();
+  firebase.auth().signOut();
 });
 
 /* ─────────────────── Alt Modallerden Geri Dön ─────────────────── */
@@ -109,8 +103,16 @@ document
   .getElementById("backToSettingsFromDelete")
   ?.addEventListener("click", () => goBackToSettings("deleteAcc"));
 
+/* ─────────────────── Profil Ayarları Butonu ─────────────────── */
+
+document.getElementById("profileSettingsBtn")?.addEventListener("click", () => {
+  if (typeof openSettingsModal === "function") {
+    openSettingsModal();
+  }
+});
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                        KULLANICI ADI DÜZENLEMESİ                        */
+/*                        KULLANICI ADI DÜZENLEMESI                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Düzenleme Alanı Referansları ─────────────────── */
@@ -270,7 +272,7 @@ saveBtn?.addEventListener("click", async () => {
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          ŞİFRE DEĞİŞTİRME                               */
+/*                         ŞIFRE DEĞIŞTIRME                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Şifre Değiştirme Modalını Aç ─────────────────── */
@@ -404,7 +406,7 @@ document
   });
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                            HESAP SİLME                                   */
+/*                            HESAP SILME                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Hesap Silme Modalını Aç ─────────────────── */
@@ -489,6 +491,7 @@ document
         }
       }
 
+      /* Storage'dan tüm dosyaları sil */
       if (typeof database !== "undefined" && user.uid) {
         try {
           const storageRef = firebase.storage().ref();

@@ -197,6 +197,81 @@ async function deleteAllInFolder(ref) {
   await Promise.all(list.prefixes.map(deleteAllInFolder));
 }
 
+/* Avatar Storage - Son 3'ü Sakla (timestamp'li) */
+function uploadAvatarToFirebase(file, uid) {
+  return new Promise(function (resolve, reject) {
+    var newFileName = "avatar_" + Date.now();
+    var storageRef = firebase.storage().ref();
+    var avatarRef = storageRef.child("users/" + uid + "/avatars/" + newFileName);
+
+    avatarRef
+      .put(file)
+      .then(function (snap) {
+        return snap.ref.getDownloadURL();
+      })
+      .then(function (url) {
+        // avatarHistory'yi güncelle
+        return database
+          .ref("users/" + uid + "/avatarHistory")
+          .once("value")
+          .then(function (snap) {
+            var history = snap.val() || [];
+            history.unshift(url); // Başa ekle
+
+            // 4. varsa sil
+            if (history.length > 3) {
+              var oldUrl = history.pop(); // En eski
+              // Storage'dan sil
+              _deleteAvatarFromStorage(oldUrl);
+            }
+
+            // Database'e yaz
+            var updates = {};
+            updates["users/" + uid + "/avatarUrl"] = url;
+            updates["users/" + uid + "/avatarHistory"] = history;
+
+            return database.ref().update(updates).then(function () {
+              resolve({ url: url, history: history });
+            });
+          });
+      })
+      .catch(reject);
+  });
+}
+
+function deleteAvatarFromFirebase(uid) {
+  var storageRef = firebase.storage().ref();
+  var avatarsRef = storageRef.child("users/" + uid + "/avatars");
+
+  return avatarsRef
+    .listAll()
+    .then(function (result) {
+      var deletes = result.items.map(function (itemRef) {
+        return itemRef.delete().catch(function () {});
+      });
+      return Promise.all(deletes);
+    })
+    .then(function () {
+      var updates = {};
+      updates["users/" + uid + "/avatarUrl"] = null;
+      updates["users/" + uid + "/avatarHistory"] = null;
+      return database.ref().update(updates);
+    });
+}
+
+/* Storage'dan avatar sil (URL'den path çıkar) */
+function _deleteAvatarFromStorage(url) {
+  if (!url) return Promise.resolve();
+  try {
+    var match = url.match(/\/o\/(.+)\?/);
+    if (match && match[1]) {
+      var path = decodeURIComponent(match[1]);
+      return firebase.storage().ref(path).delete().catch(function () {});
+    }
+  } catch (e) {}
+  return Promise.resolve();
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          POST SİSTEMİ                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */

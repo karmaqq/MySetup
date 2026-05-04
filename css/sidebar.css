@@ -125,6 +125,36 @@
   border-top: 1px solid var(--border);
 }
 
+.sidebar-avatar {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.sidebar-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sidebar-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .sidebar-user-info {
   display: flex;
   align-items: center;
@@ -137,7 +167,7 @@
 
 .sidebar-user-displayname {
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-bright);
   overflow: hidden;
@@ -177,7 +207,7 @@
 }
 
 .sidebar-update-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -208,8 +238,13 @@
 }
 
 @keyframes update-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.75; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.75;
+  }
 }
 
 .sidebar-logout-btn {
