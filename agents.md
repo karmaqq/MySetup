@@ -217,9 +217,9 @@ Post görsellerinin yüklendiğinde aspect ratio kontrolü yapar. CSP uyumlu `ad
 
 `applyAdaptiveSize`, `refreshPreview`, `handleImageFile`, `_resetPreviewInstant`, `updateStars`, `openEditModal`, `closeEditModal`, `saveEditModal`, modal event listeners, klavye kısayolları
 
-### auth.js (7 fn)
+### auth.js (6 fn)
 
-`initNavigation`, `hideLoading`, `getAuthErrorMessage`, `onUserLoggedIn`, `onUserLoggedOut`, `validatePasswords`, `setHint`
+`initNavigation`, `hideLoading`, `getAuthErrorMessage`, `onUserLoggedIn`, `onUserLoggedOut`, `validatePasswords`
 
 ### userset.js (7 fn)
 

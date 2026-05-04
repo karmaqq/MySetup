@@ -57,34 +57,6 @@
   display: block;
 }
 
-.preview-delete-btn {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(14, 14, 14, 0.78);
-  border: 1.5px solid rgba(245, 96, 96, 0.55);
-  color: var(--red, #ef4444);
-  font-size: 13px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    background 0.15s,
-    transform 0.15s;
-  z-index: 10;
-}
-
-.preview-delete-btn:hover {
-  background: rgba(245, 96, 96, 0.88);
-  color: #fff;
-  transform: scale(1.13);
-}
-
 /* ─────────────────── Durum + Görsel Yükleme Satırı ─────────────────── */
 
 .status-image-row {

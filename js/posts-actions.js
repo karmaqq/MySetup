@@ -246,9 +246,12 @@ function _cancelReplyMode(postId) {
 
 /* ─────────────────── Yorum bölümünü toggle eder ─────────────────── */
 
-function _toggleCommentSection(postId) {
-  const section = document.getElementById("commentSection-" + postId);
-  const btn = document.querySelector(
+function _toggleCommentSection(postId, triggerEl) {
+  const card = triggerEl ? triggerEl.closest(".post-card") : null;
+  const section = card
+    ? card.querySelector(".comment-section")
+    : document.getElementById("commentSection-" + postId);
+  const btn = triggerEl || document.querySelector(
     '[data-action="toggle-comments"][data-id="' + postId + '"]',
   );
   if (!section) return;
@@ -262,7 +265,7 @@ function _toggleCommentSection(postId) {
   }
 
   if (!isOpen) {
-    const input = document.getElementById("commentInput-" + postId);
+    const input = section.querySelector(".comment-input-field");
     if (input)
       setTimeout(function () {
         input.focus();
@@ -313,11 +316,12 @@ function _initCommentListener(postId) {
     if (post.comments[cid]) return;
     post.comments[cid] = data;
 
-    const list = document.getElementById("commentList-" + postId);
-    if (!list) return;
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, data);
-    list.appendChild(wrapper.firstElementChild);
+    const lists = document.querySelectorAll('[id="commentList-' + postId + '"]');
+    lists.forEach(function (list) {
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, data);
+      list.appendChild(wrapper.firstElementChild);
+    });
     _updateCommentCount(postId);
   });
 
@@ -329,11 +333,12 @@ function _initCommentListener(postId) {
     if (!post) return;
     if (!post.comments) post.comments = {};
     post.comments[cid] = data;
-    const thread = document.getElementById(
-      "commentThread-" + postId + "-" + cid,
+    const threads = document.querySelectorAll(
+      '[id="commentThread-' + postId + "-" + cid + '"]',
     );
-    if (!thread) return;
-    _refreshCommentThread(postId, cid, data, thread);
+    threads.forEach(function (thread) {
+      _refreshCommentThread(postId, cid, data, thread);
+    });
   });
 
   ref.on("child_removed", function (s) {
@@ -341,10 +346,12 @@ function _initCommentListener(postId) {
     const cid = s.key;
     const post = allPosts[postId];
     if (post && post.comments) delete post.comments[cid];
-    const thread = document.getElementById(
-      "commentThread-" + postId + "-" + cid,
+    const threads = document.querySelectorAll(
+      '[id="commentThread-' + postId + "-" + cid + '"]',
     );
-    if (thread) thread.remove();
+    threads.forEach(function (thread) {
+      thread.remove();
+    });
     _updateCommentCount(postId);
   });
 }
@@ -373,8 +380,8 @@ function _refreshCommentThread(postId, commentId, commentData, existingEl) {
 
 function _updateCommentCount(postId) {
   const post = allPosts[postId];
-  const count = post && post.comments ? Object.keys(post.comments).length : 0;
-  const spans = document.querySelectorAll(".comment-count-" + postId);
+  const count = post && post.comments ? Object.keys(post.comments).length :0;
+  const spans = document.querySelectorAll('[class*="comment-count-"][class*="' + postId + '"]');
   spans.forEach(function (s) {
     s.textContent = count;
   });
@@ -387,21 +394,20 @@ function _updateCommentCount(postId) {
 /* ─────────────────── Sadece beğeni değişimi mi kontrol et ─────────────────── */
 
 function _onlyLikesChanged(oldPost, newPost) {
-  const fields = [
+  const primitiveFields = [
     "content",
     "imageUrl",
     "username",
     "uid",
     "createdAt",
-    "comments",
   ];
-  for (let i = 0; i < fields.length; i++) {
-    if (
-      JSON.stringify(oldPost[fields[i]]) !== JSON.stringify(newPost[fields[i]])
-    )
+  for (let i = 0; i < primitiveFields.length; i++) {
+    if (oldPost[primitiveFields[i]] !== newPost[primitiveFields[i]])
       return false;
   }
-  return true;
+  const oldCC = oldPost.comments ? Object.keys(oldPost.comments).length : 0;
+  const newCC = newPost.comments ? Object.keys(newPost.comments).length : 0;
+  return oldCC === newCC;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -501,7 +507,7 @@ document.addEventListener("click", function (e) {
   }
 
   if (action === "toggle-comments") {
-    _toggleCommentSection(btn.dataset.id);
+    _toggleCommentSection(btn.dataset.id, btn);
     return;
   }
 

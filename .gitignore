@@ -1,7 +1,7 @@
 .env.bat
 update.bat
-OPTIMIZATIONS.md
-VIZYON.md
-PLAN.MD
+QFIX.md
+QVIS.md
+QPLAN.md
 dist/
 node_modules/

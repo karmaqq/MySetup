@@ -239,7 +239,6 @@ if (loginForm) {
 /* ═════════════════════════════════════════════════════════════════════════ */
 
 const registerForm = document.getElementById("registerForm");
-let justRegistered = false;
 
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
@@ -292,8 +291,6 @@ if (registerForm) {
         }
 
         await cred.user.updateProfile({ displayName: username });
-
-        justRegistered = true;
 
         return;
       } catch (claimErr) {

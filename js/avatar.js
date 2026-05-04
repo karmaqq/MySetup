@@ -21,7 +21,6 @@ let avatarPublishText = null;
 let avatarPublishPreview = null;
 let avatarPublishSubmitBtn = null;
 let avatarPublishCancelBtn = null;
-let avatarPublishFooter = null;
 let avatarErrorEl = null;
 let avatarViewModal = null;
 let avatarViewImg = null;
@@ -32,7 +31,16 @@ let avatarFile = null;
 let _selectedOldAvatarUrl = null;
 let avatarModalInitialized = false;
 
-/* ─────────────────── Son 3 Avatar Cache ─────────────────── */
+/* ─────────────────── Crop State ─────────────────── */
+
+let cropOffsetX = 0;
+let cropOffsetY = 0;
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let currentAvatarImg = null;
+
+/* ─────────────────── Son Avatarlar Cache ─────────────────── */
 
 window._avatarHistory = [];
 
@@ -61,13 +69,11 @@ function initAvatarSystem() {
   avatarPublishPreview = document.getElementById("avatarPublishPreview");
   avatarPublishSubmitBtn = document.getElementById("avatarPublishSubmitBtn");
   avatarPublishCancelBtn = document.getElementById("avatarPublishCancelBtn");
-  avatarPublishFooter = document.getElementById("avatarPublishFooter");
   avatarErrorEl = document.getElementById("avatarError");
   avatarViewModal = document.getElementById("avatarViewModal");
   avatarViewImg = document.getElementById("avatarViewImg");
   avatarViewCloseBtn = document.getElementById("closeAvatarView");
 
-  // Event listeners
   if (avatarFileInput) {
     avatarFileInput.addEventListener("change", function (e) {
       _avatarDragActive = false;
@@ -77,42 +83,25 @@ function initAvatarSystem() {
     });
   }
 
-  if (saveAvatarBtn) {
-    saveAvatarBtn.addEventListener("click", _saveAvatarOnly);
-  }
-
-  if (publishAvatarBtn) {
+  if (saveAvatarBtn) saveAvatarBtn.addEventListener("click", _saveAvatarOnly);
+  if (publishAvatarBtn)
     publishAvatarBtn.addEventListener("click", _showPublishComposer);
-  }
-
-  if (cancelAvatarBtn) {
+  if (cancelAvatarBtn)
     cancelAvatarBtn.addEventListener("click", _closeAvatarModal);
-  }
-
-  if (closeAvatarModalBtn) {
+  if (closeAvatarModalBtn)
     closeAvatarModalBtn.addEventListener("click", _closeAvatarModal);
-  }
-
-  if (deleteAvatarBtn) {
-    deleteAvatarBtn.addEventListener("click", _deleteAvatar);
-  }
-
-  if (avatarPublishSubmitBtn) {
+  if (deleteAvatarBtn) deleteAvatarBtn.addEventListener("click", _deleteAvatar);
+  if (avatarPublishSubmitBtn)
     avatarPublishSubmitBtn.addEventListener("click", _publishAvatarWithPost);
-  }
-
-  if (avatarPublishCancelBtn) {
+  if (avatarPublishCancelBtn)
     avatarPublishCancelBtn.addEventListener("click", _hidePublishComposer);
-  }
 
-  // Avatar view modal close
   if (avatarViewCloseBtn) {
     avatarViewCloseBtn.addEventListener("click", function () {
       if (avatarViewModal) avatarViewModal.classList.remove("active");
     });
   }
 
-  // Profile avatar view
   var profileContainer = document.getElementById("profileAvatarContainer");
   if (profileContainer) {
     profileContainer.addEventListener("click", function () {
@@ -120,27 +109,17 @@ function initAvatarSystem() {
     });
   }
 
-  // Edit profile avatar button
-  var editBtn = document.getElementById("editProfileAvatarBtn");
-  if (editBtn) {
-    editBtn.addEventListener("click", function (e) {
+  var editProfileBtn = document.getElementById("editProfileAvatarBtn");
+  if (editProfileBtn) {
+    editProfileBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       _openAvatarModal();
     });
   }
 
-  // Modal dışı tıklamada kapanmasın
-  if (avatarModalEl) {
-    avatarModalEl.addEventListener("click", function (e) {
-      if (e.target === avatarModalEl) {
-        // Kapanmaz
-      }
-    });
-  }
-
-  // Drop area
   if (avatarDropArea) {
-    avatarDropArea.addEventListener("click", function () {
+    avatarDropArea.addEventListener("click", function (e) {
+      if (e.target.closest("canvas")) return;
       if (_avatarDragActive) {
         _avatarDragActive = false;
         return;
@@ -177,21 +156,21 @@ function initAvatarSystem() {
 function loadUserAvatarOnLogin(uid) {
   var db = firebase.database();
 
-  // avatarUrl'yi çek
-  db.ref("users/" + uid + "/avatarUrl").once("value").then(function (snap) {
-    window.currentUserAvatarUrl = snap.val() || null;
-    if (typeof updateSidebarAvatar === "function") {
-      updateSidebarAvatar(window.currentUserAvatarUrl);
-    }
-    if (typeof updateProfileAvatar === "function") {
-      updateProfileAvatar(window.currentUserAvatarUrl);
-    }
-  });
+  db.ref("users/" + uid + "/avatarUrl")
+    .once("value")
+    .then(function (snap) {
+      window.currentUserAvatarUrl = snap.val() || null;
+      if (typeof updateSidebarAvatar === "function")
+        updateSidebarAvatar(window.currentUserAvatarUrl);
+      if (typeof updateProfileAvatar === "function")
+        updateProfileAvatar(window.currentUserAvatarUrl);
+    });
 
-  // avatarHistory'yi çek
-  db.ref("users/" + uid + "/avatarHistory").once("value").then(function (snap) {
-    window._avatarHistory = snap.val() || [];
-  });
+  db.ref("users/" + uid + "/avatarHistory")
+    .once("value")
+    .then(function (snap) {
+      window._avatarHistory = snap.val() || [];
+    });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -201,7 +180,11 @@ function loadUserAvatarOnLogin(uid) {
 /* ─────────────────── Verilen uid için avatar URL'sini döndürür ─────────────────── */
 
 function getAvatarUrl(uid, fallbackUrl) {
-  if (uid && firebase.auth().currentUser && uid === firebase.auth().currentUser.uid) {
+  if (
+    uid &&
+    firebase.auth().currentUser &&
+    uid === firebase.auth().currentUser.uid
+  ) {
     return window.currentUserAvatarUrl || fallbackUrl || "";
   }
   return fallbackUrl || "";
@@ -222,8 +205,9 @@ function renderAvatarHTML(username, uid, avatarUrl, size) {
       '" />'
     );
   }
-  var nameStr = String(username || "?");
-  var letter = nameStr.charAt(0).toUpperCase();
+  var letter = String(username || "?")
+    .charAt(0)
+    .toUpperCase();
   return escHtml(letter);
 }
 
@@ -235,15 +219,9 @@ function renderAvatarHTML(username, uid, avatarUrl, size) {
 
 function _openAvatarModal() {
   if (!avatarModalEl) return;
-
-  // Reset
   _resetModalState();
   avatarModalEl.classList.add("active");
-
-  // Mevcut avatarı önizle
   _showCurrentInPreview();
-
-  // Eski 3 avatarı göster
   _renderOldAvatars();
 }
 
@@ -260,22 +238,40 @@ function _closeAvatarModal() {
 function _resetModalState() {
   avatarFile = null;
   _selectedOldAvatarUrl = null;
+  currentAvatarImg = null;
+  cropOffsetX = 0;
+  cropOffsetY = 0;
+  isDragging = false;
+
   if (avatarPreview) avatarPreview.innerHTML = "";
   if (avatarFileInput) avatarFileInput.value = "";
-  if (saveAvatarBtn) saveAvatarBtn.disabled = true;
-  if (publishAvatarBtn) publishAvatarBtn.disabled = true;
-  if (deleteAvatarBtn) {
-    deleteAvatarBtn.style.display = window.currentUserAvatarUrl ? "block" : "none";
+  if (saveAvatarBtn) {
+    saveAvatarBtn.disabled = true;
+    saveAvatarBtn.textContent = "Kaydet";
   }
+  if (publishAvatarBtn) {
+    publishAvatarBtn.disabled = true;
+    publishAvatarBtn.textContent = "Kaydet ve Yayınla";
+  }
+  if (deleteAvatarBtn)
+    deleteAvatarBtn.style.display = window.currentUserAvatarUrl
+      ? "inline-flex"
+      : "none";
   if (avatarErrorEl) avatarErrorEl.textContent = "";
   if (avatarPublishComposer) avatarPublishComposer.classList.add("hidden");
-  if (avatarPublishFooter) avatarPublishFooter.classList.add("hidden");
   if (avatarPublishText) avatarPublishText.value = "";
-  if (avatarDropArea) {
-    avatarDropArea.classList.remove("dragover");
-    var placeholder = document.getElementById("avatarPlaceholder");
-    if (placeholder) placeholder.classList.remove("hidden");
+
+  var canvas = document.getElementById("avatarCanvas");
+  if (canvas) {
+    canvas.classList.add("hidden");
+    var ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
+
+  var placeholder = document.getElementById("avatarPlaceholder");
+  if (placeholder) placeholder.classList.remove("hidden");
+
+  if (avatarDropArea) avatarDropArea.classList.remove("dragover");
 }
 
 /* ─────────────────── Büyük avatar görüntüleme ─────────────────── */
@@ -286,40 +282,39 @@ function _openAvatarView() {
   if (url) {
     avatarViewImg.src = url;
     avatarViewImg.style.display = "block";
-  } else {
-    avatarViewImg.style.display = "none";
+    avatarViewModal.classList.add("active");
   }
-  avatarViewModal.classList.add("active");
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                     GÖRSEL YÜKLEME VE ÖNİZLEME                          */
+/*                     GÖRSEL YÜKLEME, KROPRİNG VE ÖNİZLEME               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Yeni görsel yükle ─────────────────── */
 
 function _loadAvatarImage(file) {
   if (!file.type.startsWith("image/")) {
-    if (typeof showToast === "function") {
+    if (typeof showToast === "function")
       showToast("Lütfen geçerli bir görsel seçin.", "warn");
-    }
     return;
   }
 
   avatarFile = file;
-  _selectedOldAvatarUrl = null; // Yeni seçildi, eski seçim temizlenir
+  _selectedOldAvatarUrl = null;
+  cropOffsetX = 0;
+  cropOffsetY = 0;
 
-  // Önizleme
-  if (avatarPreview) {
-    avatarPreview.innerHTML = "";
-    var img = document.createElement("img");
-    img.src = URL.createObjectURL(file);
-    img.style.width = "100%";
-    img.style.height = "100%";
-    img.style.objectFit = "cover";
-    img.style.borderRadius = "50%";
-    avatarPreview.appendChild(img);
-  }
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    var img = new Image();
+    img.onload = function () {
+      currentAvatarImg = img;
+      _showCropUI();
+      _drawCropPreview();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 
   if (saveAvatarBtn) saveAvatarBtn.disabled = false;
   if (publishAvatarBtn) publishAvatarBtn.disabled = false;
@@ -329,48 +324,169 @@ function _loadAvatarImage(file) {
   if (placeholder) placeholder.classList.add("hidden");
 }
 
-/* ─────────────────── Mevcut avatarı önizleme alanında göster ─────────────────── */
+/* ─────────────────── Crop UI göster ─────────────────── */
+
+function _showCropUI() {
+  var canvas = document.getElementById("avatarCanvas");
+  if (canvas) {
+    canvas.classList.remove("hidden");
+    _initCropDrag(canvas);
+  }
+  if (avatarPreview) avatarPreview.innerHTML = "";
+}
+
+/* ─────────────────── Canvas üzerine kırpılmış görseli çiz ─────────────────── */
+
+function _drawCropPreview() {
+  var canvas = document.getElementById("avatarCanvas");
+  if (!canvas || !currentAvatarImg) return;
+
+  var ctx = canvas.getContext("2d");
+  var size = canvas.width;
+
+  ctx.clearRect(0, 0, size, size);
+
+  // Daire kırpma maskesi
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+
+  var img = currentAvatarImg;
+  var imgRatio = img.width / img.height;
+  var drawWidth, drawHeight;
+
+  if (imgRatio > 1) {
+    drawHeight = size;
+    drawWidth = size * imgRatio;
+  } else {
+    drawWidth = size;
+    drawHeight = size / imgRatio;
+  }
+
+  var baseX = (size - drawWidth) / 2;
+  var baseY = (size - drawHeight) / 2;
+
+  ctx.drawImage(
+    img,
+    baseX + cropOffsetX,
+    baseY + cropOffsetY,
+    drawWidth,
+    drawHeight,
+  );
+  ctx.restore();
+
+  _syncPreviewCircle(canvas);
+}
+
+/* ─────────────────── Canvas içeriğini önizleme dairesine aktar ─────────────────── */
+
+function _syncPreviewCircle(canvas) {
+  if (!avatarPreview) return;
+  var dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+  avatarPreview.innerHTML = "";
+  var img = document.createElement("img");
+  img.src = dataUrl;
+  img.style.cssText =
+    "width:100%;height:100%;object-fit:cover;border-radius:50%;";
+  avatarPreview.appendChild(img);
+}
+
+/* ─────────────────── Crop sürükleme olaylarını başlat ─────────────────── */
+
+function _initCropDrag(canvas) {
+  canvas.style.cursor = "grab";
+
+  canvas.onmousedown = function (e) {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    canvas.style.cursor = "grabbing";
+  };
+
+  canvas.onmousemove = function (e) {
+    if (!isDragging) return;
+    cropOffsetX += e.clientX - dragStartX;
+    cropOffsetY += e.clientY - dragStartY;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    _drawCropPreview();
+  };
+
+  canvas.onmouseup = function () {
+    isDragging = false;
+    canvas.style.cursor = "grab";
+  };
+
+  canvas.onmouseleave = function () {
+    isDragging = false;
+    canvas.style.cursor = "grab";
+  };
+
+  // Dokunmatik destek
+  canvas.ontouchstart = function (e) {
+    e.preventDefault();
+    isDragging = true;
+    dragStartX = e.touches[0].clientX;
+    dragStartY = e.touches[0].clientY;
+  };
+
+  canvas.ontouchmove = function (e) {
+    e.preventDefault();
+    if (!isDragging) return;
+    cropOffsetX += e.touches[0].clientX - dragStartX;
+    cropOffsetY += e.touches[0].clientY - dragStartY;
+    dragStartX = e.touches[0].clientX;
+    dragStartY = e.touches[0].clientY;
+    _drawCropPreview();
+  };
+
+  canvas.ontouchend = function () {
+    isDragging = false;
+  };
+}
+
+/* ─────────────────── Mevcut avatarı drop zone önizlemesine göster ─────────────────── */
 
 function _showCurrentInPreview() {
   if (!avatarPreview) return;
   avatarPreview.innerHTML = "";
-
   var url = window.currentUserAvatarUrl;
   if (!url) return;
-
   var img = document.createElement("img");
   img.src = url;
-  img.style.width = "100%";
-  img.style.height = "100%";
-  img.style.objectFit = "cover";
-  img.style.borderRadius = "50%";
+  img.style.cssText =
+    "width:100%;height:100%;object-fit:cover;border-radius:50%;";
   avatarPreview.appendChild(img);
-
   var placeholder = document.getElementById("avatarPlaceholder");
   if (placeholder) placeholder.classList.add("hidden");
 }
 
-/* ─────────────────── Eski 3 avatarı render et ─────────────────── */
+/* ─────────────────── Son avatarları render et ─────────────────── */
 
 function _renderOldAvatars() {
   if (!oldAvatarsContainer) return;
   oldAvatarsContainer.innerHTML = "";
 
   var history = window._avatarHistory || [];
-  history.forEach(function (url, index) {
+  if (history.length === 0) return;
+
+  var recentHistory = history.slice(0, 3);
+
+  recentHistory.forEach(function (url, idx) {
     var item = document.createElement("div");
-    item.className = "avatar-old-item";
-    item.dataset.index = index;
+    item.className = "avatar-history-item";
+    if (url === window.currentUserAvatarUrl) item.classList.add("active");
+    item.dataset.idx = idx;
 
     var img = document.createElement("img");
     img.src = url;
     img.alt = "";
-    img.width = 48;
-    img.height = 48;
     item.appendChild(img);
 
     item.addEventListener("click", function () {
-      _selectOldAvatar(index);
+      _selectOldAvatar(idx);
     });
 
     oldAvatarsContainer.appendChild(item);
@@ -379,22 +495,31 @@ function _renderOldAvatars() {
 
 /* ─────────────────── Eski avatarı seç ─────────────────── */
 
-function _selectOldAvatar(index) {
+function _selectOldAvatar(idx) {
   var history = window._avatarHistory || [];
-  if (!history[index]) return;
+  if (!history[idx]) return;
 
-  _selectedOldAvatarUrl = history[index];
+  _selectedOldAvatarUrl = history[idx];
   avatarFile = null;
+  currentAvatarImg = null;
 
-  // Önizleme
+  // Canvas'ı gizle, placeholder'ı gizle
+  var canvas = document.getElementById("avatarCanvas");
+  if (canvas) {
+    canvas.classList.add("hidden");
+    var ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  var placeholder = document.getElementById("avatarPlaceholder");
+  if (placeholder) placeholder.classList.add("hidden");
+
+  // Önizlemeye göster
   if (avatarPreview) {
     avatarPreview.innerHTML = "";
     var img = document.createElement("img");
     img.src = _selectedOldAvatarUrl;
-    img.style.width = "100%";
-    img.style.height = "100%";
-    img.style.objectFit = "cover";
-    img.style.borderRadius = "50%";
+    img.style.cssText =
+      "width:100%;height:100%;object-fit:cover;border-radius:50%;";
     avatarPreview.appendChild(img);
   }
 
@@ -402,8 +527,34 @@ function _selectOldAvatar(index) {
   if (publishAvatarBtn) publishAvatarBtn.disabled = false;
   if (deleteAvatarBtn) deleteAvatarBtn.style.display = "none";
 
-  var placeholder = document.getElementById("avatarPlaceholder");
-  if (placeholder) placeholder.classList.add("hidden");
+  // Aktif işareti güncelle
+  var items = oldAvatarsContainer
+    ? oldAvatarsContainer.querySelectorAll(".avatar-history-item")
+    : [];
+  items.forEach(function (item) {
+    item.classList.toggle("active", parseInt(item.dataset.idx, 10) === idx);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                     CANVAS → BLOB YARDIMCISI                            */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Canvas içeriğini blob'a çevirir, yükler ─────────────────── */
+
+function _canvasToBlob(callback) {
+  var canvas = document.getElementById("avatarCanvas");
+  if (!canvas || !currentAvatarImg) {
+    callback(null);
+    return;
+  }
+  canvas.toBlob(
+    function (blob) {
+      callback(blob);
+    },
+    "image/jpeg",
+    0.92,
+  );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -417,19 +568,16 @@ function _saveAvatarOnly() {
   }
   if (avatarErrorEl) avatarErrorEl.textContent = "";
 
-  // Eski avatar seçildiyse
   if (_selectedOldAvatarUrl) {
     _selectExistingAvatar(_selectedOldAvatarUrl);
     return;
   }
 
-  // Yeni dosya yüklendiyse
   if (avatarFile) {
-    _uploadAndSaveAvatar(avatarFile);
+    _uploadAndSaveAvatar();
     return;
   }
 
-  // Hiçbir şey seçilmedi
   if (saveAvatarBtn) {
     saveAvatarBtn.disabled = false;
     saveAvatarBtn.textContent = "Kaydet";
@@ -440,8 +588,6 @@ function _saveAvatarOnly() {
 
 function _selectExistingAvatar(url) {
   window.currentUserAvatarUrl = url;
-
-  // Database'i güncelle
   var user = firebase.auth().currentUser;
   if (!user) return;
 
@@ -450,16 +596,11 @@ function _selectExistingAvatar(url) {
     .ref("users/" + user.uid + "/avatarUrl")
     .set(url)
     .then(function () {
-      if (typeof updateSidebarAvatar === "function") {
-        updateSidebarAvatar(url);
-      }
-      if (typeof updateProfileAvatar === "function") {
-        updateProfileAvatar(url);
-      }
+      if (typeof updateSidebarAvatar === "function") updateSidebarAvatar(url);
+      if (typeof updateProfileAvatar === "function") updateProfileAvatar(url);
       _closeAvatarModal();
-      if (typeof showToast === "function") {
+      if (typeof showToast === "function")
         showToast("Avatar güncellendi", "success");
-      }
     })
     .catch(function () {
       if (avatarErrorEl) avatarErrorEl.textContent = "Avatar kaydedilemedi.";
@@ -470,85 +611,87 @@ function _selectExistingAvatar(url) {
     });
 }
 
-/* ─────────────────── Yeni dosyayı yükle ve kaydet ─────────────────── */
+/* ─────────────────── Yeni dosyayı kırp, yükle ve kaydet ─────────────────── */
 
-function _uploadAndSaveAvatar(file) {
+function _uploadAndSaveAvatar() {
   var user = firebase.auth().currentUser;
   if (!user) return;
 
-  var newFileName = "avatar_" + Date.now();
-  var storageRef = firebase.storage().ref();
-  var avatarRef = storageRef.child("users/" + user.uid + "/avatars/" + newFileName);
-
-  avatarRef
-    .put(file)
-    .then(function (snap) {
-      return snap.ref.getDownloadURL();
-    })
-    .then(function (url) {
-      // History'yi güncelle
-      return _updateAvatarHistory(user.uid, url).then(function () {
-        window.currentUserAvatarUrl = url;
-
-        // Database'e yaz
-        var updates = {};
-        updates["users/" + user.uid + "/avatarUrl"] = url;
-        updates["users/" + user.uid + "/avatarHistory"] = window._avatarHistory;
-
-        return firebase.database().ref().update(updates);
-      });
-    })
-    .then(function () {
-      if (typeof updateSidebarAvatar === "function") {
-        updateSidebarAvatar(window.currentUserAvatarUrl);
-      }
-      if (typeof updateProfileAvatar === "function") {
-        updateProfileAvatar(window.currentUserAvatarUrl);
-      }
-      _closeAvatarModal();
-      if (typeof showToast === "function") {
-        showToast("Avatar kaydedildi", "success");
-      }
-    })
-    .catch(function () {
-      if (avatarErrorEl) avatarErrorEl.textContent = "Avatar yüklenemedi.";
+  _canvasToBlob(function (blob) {
+    if (!blob) {
+      if (avatarErrorEl) avatarErrorEl.textContent = "Görsel işlenemedi.";
       if (saveAvatarBtn) {
         saveAvatarBtn.disabled = false;
         saveAvatarBtn.textContent = "Kaydet";
       }
-    });
+      return;
+    }
+
+    var fileName = "avatar_" + Date.now();
+    var ref = firebase
+      .storage()
+      .ref("users/" + user.uid + "/avatars/" + fileName);
+
+    ref
+      .put(blob)
+      .then(function (snap) {
+        return snap.ref.getDownloadURL();
+      })
+      .then(function (url) {
+        return _updateAvatarHistory(user.uid, url).then(function () {
+          window.currentUserAvatarUrl = url;
+          var updates = {};
+          updates["users/" + user.uid + "/avatarUrl"] = url;
+          updates["users/" + user.uid + "/avatarHistory"] =
+            window._avatarHistory;
+          return firebase.database().ref().update(updates);
+        });
+      })
+      .then(function () {
+        if (typeof updateSidebarAvatar === "function")
+          updateSidebarAvatar(window.currentUserAvatarUrl);
+        if (typeof updateProfileAvatar === "function")
+          updateProfileAvatar(window.currentUserAvatarUrl);
+        _closeAvatarModal();
+        if (typeof showToast === "function")
+          showToast("Avatar kaydedildi", "success");
+      })
+      .catch(function () {
+        if (avatarErrorEl) avatarErrorEl.textContent = "Avatar yüklenemedi.";
+        if (saveAvatarBtn) {
+          saveAvatarBtn.disabled = false;
+          saveAvatarBtn.textContent = "Kaydet";
+        }
+      });
+  });
 }
 
-/* ─────────────────── Avatar history'yi güncelle (son 3'ü tut) ─────────────────── */
+/* ─────────────────── Avatar history güncelle (son 3 gösterim, tümü sakla) ─────────────────── */
 
 function _updateAvatarHistory(uid, newUrl) {
   return new Promise(function (resolve) {
     var history = window._avatarHistory || [];
-
-    // Yeni URL'yi başa ekle
+    history = history.filter(function (u) {
+      return u !== newUrl;
+    });
     history.unshift(newUrl);
-
-    // 4. varsa sil
-    if (history.length > 3) {
-      var oldUrl = history.pop(); // En eski
-      // Storage'dan sil
-      _deleteFromStorage(oldUrl);
-    }
-
     window._avatarHistory = history;
     resolve();
   });
 }
 
-/* ─────────────────── Storage'dan sil ─────────────────── */
+/* ─────────────────── Storage'dan URL ile sil ─────────────────── */
 
 function _deleteFromStorage(url) {
   if (!url) return;
   try {
     var match = url.match(/\/o\/(.+)\?/);
     if (match && match[1]) {
-      var path = decodeURIComponent(match[1]);
-      firebase.storage().ref(path).delete().catch(function () {});
+      firebase
+        .storage()
+        .ref(decodeURIComponent(match[1]))
+        .delete()
+        .catch(function () {});
     }
   } catch (e) {}
 }
@@ -560,36 +703,58 @@ function _deleteFromStorage(url) {
 /* ─────────────────── Publish composer'ı göster ─────────────────── */
 
 function _showPublishComposer() {
-  if (!avatarPublishComposer || !avatarPublishFooter) return;
+  if (!avatarPublishComposer) return;
 
-  avatarPublishComposer.classList.remove("hidden");
-  avatarPublishFooter.classList.remove("hidden");
+  // Edit alanını gizle
+  var avatarLayout = document.querySelector(".avatar-layout");
+  if (avatarLayout) avatarLayout.classList.add("hidden");
 
-  // Seçilen görseli 350x350 daire önizlemede göster
+  // Modal footer'ı gizle
+  var modalFooter = document.querySelector(".avatar-modal-box .modal-footer");
+  if (modalFooter) modalFooter.classList.add("hidden");
+
+  // Büyük önizlemeyi doldur
   if (avatarPublishPreview) {
     avatarPublishPreview.innerHTML = "";
-    var url = _selectedOldAvatarUrl || "";
-    if (avatarFile) {
-      url = URL.createObjectURL(avatarFile);
-    }
-    if (url) {
-      var img = document.createElement("img");
-      img.src = url;
-      img.alt = "";
-      img.style.width = "100%";
-      img.style.height = "100%";
-      img.style.objectFit = "cover";
+    var img = document.createElement("img");
+    img.style.cssText = "width:100%;height:100%;object-fit:cover;";
+    if (_selectedOldAvatarUrl) {
+      img.src = _selectedOldAvatarUrl;
+      avatarPublishPreview.appendChild(img);
+    } else if (avatarFile && currentAvatarImg) {
+      // Canvas'tan al
+      var canvas = document.getElementById("avatarCanvas");
+      if (canvas) {
+        img.src = canvas.toDataURL("image/jpeg", 0.92);
+        avatarPublishPreview.appendChild(img);
+      }
+    } else if (window.currentUserAvatarUrl) {
+      img.src = window.currentUserAvatarUrl;
       avatarPublishPreview.appendChild(img);
     }
   }
+
+  avatarPublishComposer.classList.remove("hidden");
+  if (avatarPublishText)
+    setTimeout(function () {
+      avatarPublishText.focus();
+    }, 80);
 }
 
 /* ─────────────────── Publish composer'ı gizle ─────────────────── */
 
 function _hidePublishComposer() {
+  // Publish composer'ı gizle
   if (avatarPublishComposer) avatarPublishComposer.classList.add("hidden");
-  if (avatarPublishFooter) avatarPublishFooter.classList.add("hidden");
   if (avatarPublishText) avatarPublishText.value = "";
+
+  // Edit alanını tekrar göster
+  var avatarLayout = document.querySelector(".avatar-layout");
+  if (avatarLayout) avatarLayout.classList.remove("hidden");
+
+  // Modal footer'ı tekrar göster
+  var modalFooter = document.querySelector(".avatar-modal-box .modal-footer");
+  if (modalFooter) modalFooter.classList.remove("hidden");
 }
 
 /* ─────────────────── Avatarı kaydet ve post oluştur ─────────────────── */
@@ -604,94 +769,104 @@ function _publishAvatarWithPost() {
   var user = firebase.auth().currentUser;
   if (!user) return;
 
-  // 1. Önce avatarı kaydet
-  var avatarPromise;
+  var captionText = avatarPublishText ? avatarPublishText.value.trim() : "";
+
   if (_selectedOldAvatarUrl) {
-    // Eski avatar seçildiyse
+    // Eski avatar seçildi — önce DB'ye yaz, sonra post at
     window.currentUserAvatarUrl = _selectedOldAvatarUrl;
-    avatarPromise = firebase
+    firebase
       .database()
       .ref("users/" + user.uid + "/avatarUrl")
-      .set(_selectedOldAvatarUrl);
-  } else if (avatarFile) {
-    // Yeni dosya
-    avatarPromise = _uploadNewAvatar(user);
-  } else {
-    if (avatarPublishSubmitBtn) {
-      avatarPublishSubmitBtn.disabled = false;
-      avatarPublishSubmitBtn.textContent = "Yayınla";
-    }
+      .set(_selectedOldAvatarUrl)
+      .then(function () {
+        return _createAvatarPost(user, captionText);
+      })
+      .then(function () {
+        if (typeof updateSidebarAvatar === "function")
+          updateSidebarAvatar(window.currentUserAvatarUrl);
+        if (typeof updateProfileAvatar === "function")
+          updateProfileAvatar(window.currentUserAvatarUrl);
+        _closeAvatarModal();
+        if (typeof showToast === "function")
+          showToast("Avatar yayınlandı!", "success");
+      })
+      .catch(function () {
+        _publishError();
+      });
     return;
   }
 
-  avatarPromise
-    .then(function (newUrl) {
-      // 2. Post oluştur
-      var postData = {
-        uid: user.uid,
-        username: user.displayName || "Kullanici",
-        avatarUrl: window.currentUserAvatarUrl,
-        content: avatarPublishText ? avatarPublishText.value.trim() : "",
-        imageUrl: window.currentUserAvatarUrl,
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
-        likes: {},
-        isAvatarPost: true,
-      };
-
-      return addPostToFirebase(postData);
-    })
-    .then(function () {
-      if (typeof updateSidebarAvatar === "function") {
-        updateSidebarAvatar(window.currentUserAvatarUrl);
+  if (avatarFile) {
+    _canvasToBlob(function (blob) {
+      if (!blob) {
+        _publishError();
+        return;
       }
-      if (typeof updateProfileAvatar === "function") {
-        updateProfileAvatar(window.currentUserAvatarUrl);
-      }
-      _closeAvatarModal();
-      if (typeof showToast === "function") {
-        showToast("Avatar yayınlandı!", "success");
-      }
-    })
-    .catch(function () {
-      if (avatarErrorEl) avatarErrorEl.textContent = "Yayınlanamadı.";
-      if (avatarPublishSubmitBtn) {
-        avatarPublishSubmitBtn.disabled = false;
-        avatarPublishSubmitBtn.textContent = "Yayınla";
-      }
+      var fileName = "avatar_" + Date.now();
+      var ref = firebase
+        .storage()
+        .ref("users/" + user.uid + "/avatars/" + fileName);
+      ref
+        .put(blob)
+        .then(function (snap) {
+          return snap.ref.getDownloadURL();
+        })
+        .then(function (url) {
+          return _updateAvatarHistory(user.uid, url).then(function () {
+            window.currentUserAvatarUrl = url;
+            var updates = {};
+            updates["users/" + user.uid + "/avatarUrl"] = url;
+            updates["users/" + user.uid + "/avatarHistory"] =
+              window._avatarHistory;
+            return firebase.database().ref().update(updates);
+          });
+        })
+        .then(function () {
+          return _createAvatarPost(user, captionText);
+        })
+        .then(function () {
+          if (typeof updateSidebarAvatar === "function")
+            updateSidebarAvatar(window.currentUserAvatarUrl);
+          if (typeof updateProfileAvatar === "function")
+            updateProfileAvatar(window.currentUserAvatarUrl);
+          _closeAvatarModal();
+          if (typeof showToast === "function")
+            showToast("Avatar yayınlandı!", "success");
+        })
+        .catch(function () {
+          _publishError();
+        });
     });
+    return;
+  }
+
+  _publishError();
 }
 
-/* ─────────────────── Yeni avatar yükle ve URL'yi döndür ─────────────────── */
+/* ─────────────────── Avatar postunu oluşturur ─────────────────── */
 
-function _uploadNewAvatar(user) {
-  return new Promise(function (resolve, reject) {
-    var newFileName = "avatar_" + Date.now();
-    var storageRef = firebase.storage().ref();
-    var avatarRef = storageRef.child(
-      "users/" + user.uid + "/avatars/" + newFileName
-    );
+function _createAvatarPost(user, captionText) {
+  var postData = {
+    uid: user.uid,
+    username: user.displayName || "Kullanici",
+    avatarUrl: window.currentUserAvatarUrl,
+    content: captionText,
+    imageUrl: window.currentUserAvatarUrl,
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    likes: {},
+    isAvatarPost: true,
+  };
+  return addPostToFirebase(postData);
+}
 
-    avatarRef
-      .put(avatarFile)
-      .then(function (snap) {
-        return snap.ref.getDownloadURL();
-      })
-      .then(function (url) {
-        return _updateAvatarHistory(user.uid, url).then(function () {
-          window.currentUserAvatarUrl = url;
+/* ─────────────────── Publish hata durumu ─────────────────── */
 
-          var updates = {};
-          updates["users/" + user.uid + "/avatarUrl"] = url;
-          updates["users/" + user.uid + "/avatarHistory"] = window._avatarHistory;
-
-          return firebase.database().ref().update(updates);
-        });
-      })
-      .then(function () {
-        resolve(window.currentUserAvatarUrl);
-      })
-      .catch(reject);
-  });
+function _publishError() {
+  if (avatarErrorEl) avatarErrorEl.textContent = "Yayınlanamadı.";
+  if (avatarPublishSubmitBtn) {
+    avatarPublishSubmitBtn.disabled = false;
+    avatarPublishSubmitBtn.textContent = "Paylaş";
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -707,20 +882,18 @@ function _deleteAvatar() {
     deleteAvatarBtn.textContent = "Siliniyor...";
   }
 
-  // Storage'daki tüm avatarları sil
-  var storageRef = firebase.storage().ref();
-  var avatarsRef = storageRef.child("users/" + user.uid + "/avatars");
+  var storageRef = firebase.storage().ref("users/" + user.uid + "/avatars");
 
-  avatarsRef
+  storageRef
     .listAll()
     .then(function (result) {
-      var deletes = result.items.map(function (itemRef) {
-        return itemRef.delete().catch(function () {});
-      });
-      return Promise.all(deletes);
+      return Promise.all(
+        result.items.map(function (item) {
+          return item.delete().catch(function () {});
+        }),
+      );
     })
     .then(function () {
-      // Database'den temizle
       var updates = {};
       updates["users/" + user.uid + "/avatarUrl"] = null;
       updates["users/" + user.uid + "/avatarHistory"] = null;
@@ -729,29 +902,20 @@ function _deleteAvatar() {
     .then(function () {
       window.currentUserAvatarUrl = null;
       window._avatarHistory = [];
-
-      if (typeof updateSidebarAvatar === "function") {
-        updateSidebarAvatar(null);
-      }
-      if (typeof updateProfileAvatar === "function") {
-        updateProfileAvatar(null);
-      }
-
+      if (typeof updateSidebarAvatar === "function") updateSidebarAvatar(null);
+      if (typeof updateProfileAvatar === "function") updateProfileAvatar(null);
       if (avatarPreview) avatarPreview.innerHTML = "";
       if (deleteAvatarBtn) {
         deleteAvatarBtn.style.display = "none";
         deleteAvatarBtn.disabled = false;
         deleteAvatarBtn.textContent = "Avatarı Sil";
       }
-
-      if (typeof showToast === "function") {
-        showToast("Avatar silindi", "info");
-      }
+      if (typeof showToast === "function") showToast("Avatar silindi", "info");
+      _closeAvatarModal();
     })
     .catch(function () {
-      if (typeof showToast === "function") {
+      if (typeof showToast === "function")
         showToast("Avatar silinemedi.", "error");
-      }
       if (deleteAvatarBtn) {
         deleteAvatarBtn.disabled = false;
         deleteAvatarBtn.textContent = "Avatarı Sil";
@@ -760,26 +924,24 @@ function _deleteAvatar() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                     SIDEBAR/PROFIL GÜNCELLEME                             */
+/*                     SIDEBAR / PROFİL GÜNCELLEME                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Sidebar avatarını güncelle ─────────────────── */
 
 function updateSidebarAvatar(url) {
-  var sidebarAvatar = document.querySelector("#sidebarAvatar");
-  if (!sidebarAvatar) return;
-
-  sidebarAvatar.innerHTML = "";
+  var el = document.getElementById("sidebarAvatar");
+  if (!el) return;
+  el.innerHTML = "";
   if (url) {
     var img = document.createElement("img");
     img.src = url;
     img.alt = "";
-    sidebarAvatar.appendChild(img);
+    el.appendChild(img);
   } else {
-    var letter = (firebase.auth().currentUser?.displayName || "?")
+    el.textContent = (firebase.auth().currentUser?.displayName || "?")
       .charAt(0)
       .toUpperCase();
-    sidebarAvatar.textContent = letter;
   }
 }
 
@@ -788,9 +950,7 @@ function updateSidebarAvatar(url) {
 function updateProfileAvatar(url) {
   var profileImg = document.getElementById("profileAvatarImg");
   var profileSvg = document.getElementById("profileAvatarSvg");
-
   if (!profileImg || !profileSvg) return;
-
   if (url) {
     profileImg.src = url;
     profileImg.classList.remove("hidden");

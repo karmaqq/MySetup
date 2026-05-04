@@ -108,8 +108,8 @@ function _loadPostsChunk(cfg) {
         return map[b] - map[a];
       });
 
-      if (ids.length === 0) {
-        if (cfg.getVisible().length === 0 && tab) {
+        if (ids.length === 0) {
+          if (cfg.getVisible().size === 0 && tab) {
           tab.innerHTML =
             '<div class="posts-empty">' +
             (cfg.tabId === "userPostsTab"

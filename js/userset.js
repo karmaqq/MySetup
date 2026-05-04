@@ -34,7 +34,7 @@ function closeDeleteModal() {
 /* ─────────────────── Ayarlar Modalını Aç (Ortak Fonksiyon) ─────────────────── */
 
 function openSettingsModal() {
-  const user = auth.currentUser;
+  const user = firebase.auth().currentUser;
   if (!user) return;
 
   const _ni = document.getElementById("settingsDisplayName");
@@ -126,7 +126,7 @@ const usernameErrEl = document.getElementById("usernameError");
 /* ─────────────────── Düzenleme Durumunu Sıfırla (modal kapanınca da) ─────────────────── */
 
 function resetUsernameEditState() {
-  const user = auth.currentUser;
+  const user = firebase.auth().currentUser;
   if (nameInput) {
     nameInput.value = user?.displayName || "";
     nameInput.readOnly = true;
@@ -197,7 +197,7 @@ saveBtn?.addEventListener("click", async () => {
   saveBtn.disabled = true;
 
   try {
-    const user = auth.currentUser;
+    const user = firebase.auth().currentUser;
     if (!user) {
       if (usernameErrEl) {
         usernameErrEl.textContent = "Oturum bulunamadı, tekrar giriş yapın";
@@ -363,11 +363,11 @@ document
     }
 
     try {
-      const user = auth.currentUser;
-      const credential = firebase.auth.EmailAuthProvider.credential(
-        user.email,
-        oldPass,
-      );
+    const user = firebase.auth().currentUser;
+    const credential = firebase.auth.EmailAuthProvider.credential(
+      user.email,
+      oldPass,
+    );
       await user.reauthenticateWithCredential(credential);
       await user.updatePassword(newPass);
       await user.reload();
@@ -446,7 +446,7 @@ document
     }
 
     try {
-      const user = auth.currentUser;
+      const user = firebase.auth().currentUser;
       if (!user)
         throw new Error("Oturum bulunamadı, lütfen yeniden giriş yapın.");
 

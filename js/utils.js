@@ -13,7 +13,6 @@
 let _currentPage = null;
 let _isAnimating = false;
 let _commentListenerRefs = {};
-let justRegistered = false;
 
 const PAGE_SIZE = 20;
 
@@ -342,7 +341,6 @@ const POST_PHRASES = [
   "bir an bile düşünmeden şunu dedi;",
   "şöyle buyurdu;",
   "fikrini beyan etti;",
-  "avatarını güncelledi.",
 ];
 
 function formatTimeAgo(timestamp, phraseIndex, skipPhrase) {

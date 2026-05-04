@@ -14,18 +14,27 @@ function _renderPostHTML(postId, postData) {
   const commentCount = postData.comments
     ? Object.keys(postData.comments).length
     : 0;
-  const timeText = formatTimeAgo(postData.createdAt, postData.phraseIndex);
+
+  // Avatar postu kontrolü
+  var isAvatarPost = postData.isAvatarPost === true;
+  var timeText;
+
+  if (isAvatarPost) {
+    // Avatar postunda sadece zaman damgasını al, phrase ekleme
+    timeText = formatTimeAgo(postData.createdAt, undefined, true);
+  } else {
+    timeText = formatTimeAgo(postData.createdAt, postData.phraseIndex);
+  }
+
   const pid = escAttr(postId);
 
   let html = '<div class="post-card" data-post-id="' + pid + '">';
 
-  // Avatar postu kontrolü
-  var isAvatarPost = postData.isAvatarPost === true;
   var displayTimeText = timeText;
 
   if (isAvatarPost) {
-    // Avatar postunda timeText + " önce avatarını güncelledi" göster
-    displayTimeText = timeText + " önce avatarını güncelledi";
+    // Avatar postunda timeText + " avatarını güncelledi" göster
+    displayTimeText = timeText + " avatarını güncelledi";
   }
 
   html += '<div class="post-header">';
@@ -195,8 +204,13 @@ function _renderCommentThreadHTML(postId, commentId, commentData) {
   html += '<div class="comment-item" data-comment-id="' + cid + '">';
   html += '<div class="comment-avatar-col">';
   html +=
-     '<div class="comment-avatar">' +
-    renderAvatarHTML(commentData.username || "", commentData.uid || "", commentData.avatarUrl || "", 32) +
+    '<div class="comment-avatar">' +
+    renderAvatarHTML(
+      commentData.username || "",
+      commentData.uid || "",
+      commentData.avatarUrl || "",
+      32,
+    ) +
     "</div>";
   html += "</div>";
   html += '<div class="comment-body">';
@@ -315,8 +329,13 @@ function _renderReplyHTML(postId, commentId, replyId, replyData) {
 
   let html = '<div class="reply-item" data-reply-id="' + rid + '">';
   html +=
-     '<div class="reply-avatar">' +
-    renderAvatarHTML(replyData.username || "", replyData.uid || "", replyData.avatarUrl || "", 26) +
+    '<div class="reply-avatar">' +
+    renderAvatarHTML(
+      replyData.username || "",
+      replyData.uid || "",
+      replyData.avatarUrl || "",
+      26,
+    ) +
     "</div>";
   html += '<div class="reply-body">';
   html += '<div class="reply-meta">';
