@@ -211,14 +211,17 @@ function _startReplyMode(postId, commentId, username) {
   _composerReplyCommentId = commentId;
   _composerReplyUsername = username;
 
-  const target = document.getElementById("replyTarget-" + postId);
-  const targetText = document.getElementById("replyTargetText-" + postId);
+  const card = document.querySelector('[data-post-id="' + postId + '"]');
+  if (!card) return;
+
+  const target = card.querySelector("#replyTarget-" + postId);
+  const targetText = card.querySelector("#replyTargetText-" + postId);
   if (target && targetText) {
     targetText.textContent = "@" + username + " yanıtlanıyor";
     target.classList.add("visible");
   }
 
-  const input = document.getElementById("commentInput-" + postId);
+  const input = card.querySelector("#commentInput-" + postId);
   if (input) {
     input.placeholder = "@" + username + " kişisine yanıtla...";
     input.focus();
@@ -232,10 +235,13 @@ function _cancelReplyMode(postId) {
   _composerReplyCommentId = null;
   _composerReplyUsername = null;
 
-  const target = document.getElementById("replyTarget-" + postId);
+  const card = document.querySelector('[data-post-id="' + postId + '"]');
+  if (!card) return;
+
+  const target = card.querySelector("#replyTarget-" + postId);
   if (target) target.classList.remove("visible");
 
-  const input = document.getElementById("commentInput-" + postId);
+  const input = card.querySelector("#commentInput-" + postId);
   if (input) input.placeholder = "Yorum yaz...";
 }
 
@@ -247,11 +253,10 @@ function _cancelReplyMode(postId) {
 
 function _toggleCommentSection(postId, triggerEl) {
   const card = triggerEl ? triggerEl.closest(".post-card") : null;
-  const section = card
-    ? card.querySelector(".comment-section")
-    : document.getElementById("commentSection-" + postId);
-  const btn = triggerEl || document.querySelector(
-    '[data-action="toggle-comments"][data-id="' + postId + '"]',
+  if (!card) return;
+  const section = card.querySelector(".comment-section");
+  const btn = triggerEl || card.querySelector(
+    '[data-action="toggle-comments"]',
   );
   if (!section) return;
   const isOpen = section.classList.contains("visible");
@@ -275,10 +280,10 @@ function _toggleCommentSection(postId, triggerEl) {
 /* ─────────────────── Yanıtlar bölümünü aç/kapat ─────────────────── */
 
 function _openRepliesSection(postId, commentId) {
-  const sec = document.getElementById("replies-" + postId + "-" + commentId);
-  const btn = document.getElementById(
-    "toggleReplies-" + postId + "-" + commentId,
-  );
+  const card = document.querySelector('[data-post-id="' + postId + '"]');
+  if (!card) return;
+  const sec = card.querySelector("#replies-" + postId + "-" + commentId);
+  const btn = card.querySelector("#toggleReplies-" + postId + "-" + commentId);
   if (!sec || !btn) return;
 
   const isOpen = !sec.classList.contains("hidden");
@@ -315,11 +320,14 @@ function _initCommentListener(postId) {
     if (post.comments[cid]) return;
     post.comments[cid] = data;
 
-    const lists = document.querySelectorAll('[id="commentList-' + postId + '"]');
-    lists.forEach(function (list) {
-      const wrapper = document.createElement("div");
-      wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, data);
-      list.appendChild(wrapper.firstElementChild);
+    const cards = document.querySelectorAll('[data-post-id="' + postId + '"]');
+    cards.forEach(function (card) {
+      const list = card.querySelector("#commentList-" + postId);
+      if (list) {
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, data);
+        list.appendChild(wrapper.firstElementChild);
+      }
     });
     _updateCommentCount(postId);
   });
@@ -333,7 +341,7 @@ function _initCommentListener(postId) {
     if (!post.comments) post.comments = {};
     post.comments[cid] = data;
     const threads = document.querySelectorAll(
-      '[id="commentThread-' + postId + "-" + cid + '"]',
+      '[data-post-id="' + postId + '"] [id="commentThread-' + postId + "-" + cid + '"]',
     );
     threads.forEach(function (thread) {
       _refreshCommentThread(postId, cid, data, thread);
@@ -346,7 +354,7 @@ function _initCommentListener(postId) {
     const post = allPosts[postId];
     if (post && post.comments) delete post.comments[cid];
     const threads = document.querySelectorAll(
-      '[id="commentThread-' + postId + "-" + cid + '"]',
+      '[data-post-id="' + postId + '"] [id="commentThread-' + postId + "-" + cid + '"]',
     );
     threads.forEach(function (thread) {
       thread.remove();
@@ -358,13 +366,14 @@ function _initCommentListener(postId) {
 /* ─────────────────── Yorum thread'ini günceller ─────────────────── */
 
 function _refreshCommentThread(postId, commentId, commentData, existingEl) {
+  const card = existingEl.closest(".post-card");
   const wrapper = document.createElement("div");
   wrapper.innerHTML = _renderCommentThreadHTML(postId, commentId, commentData);
   const newEl = wrapper.firstElementChild;
   const repliesSec = existingEl.querySelector(".replies-section");
   const wasOpen = repliesSec && !repliesSec.classList.contains("hidden");
   existingEl.replaceWith(newEl);
-  if (wasOpen) {
+  if (wasOpen && card) {
     const newRepliesSec = newEl.querySelector(".replies-section");
     if (newRepliesSec) newRepliesSec.classList.remove("hidden");
     const btn = newEl.querySelector(".toggle-replies-btn");
@@ -380,9 +389,12 @@ function _refreshCommentThread(postId, commentId, commentData, existingEl) {
 function _updateCommentCount(postId) {
   const post = allPosts[postId];
   const count = post && post.comments ? Object.keys(post.comments).length :0;
-  const spans = document.querySelectorAll('[class*="comment-count-"][class*="' + postId + '"]');
-  spans.forEach(function (s) {
-    s.textContent = count;
+  const cards = document.querySelectorAll('[data-post-id="' + postId + '"]');
+  cards.forEach(function (card) {
+    const spans = card.querySelectorAll('[class*="comment-count-"]');
+    spans.forEach(function (s) {
+      s.textContent = count;
+    });
   });
 }
 
@@ -526,11 +538,14 @@ document.addEventListener("click", function (e) {
   }
 
   if (action === "start-reply") {
-    _startReplyMode(
-      btn.dataset.postId,
-      btn.dataset.commentId,
-      btn.dataset.username,
-    );
+    const card = btn.closest(".post-card");
+    if (card) {
+      _startReplyMode(
+        card.dataset.postId,
+        btn.dataset.commentId,
+        btn.dataset.username,
+      );
+    }
     return;
   }
 
@@ -579,6 +594,17 @@ document.addEventListener("keydown", function (e) {
   e.preventDefault();
   const btn = postCard.querySelector(".comment-send-btn");
   if (btn) _submitComposer(btn);
+});
+
+/* ─────────────────── Textarea içeriğine göre gönder butonu göster/gizle ─────────────────── */
+
+document.addEventListener("input", function (e) {
+  const target = e.target;
+  if (!target.classList.contains("comment-input-field")) return;
+  const postCard = target.closest(".post-card");
+  if (!postCard) return;
+  const btn = postCard.querySelector(".comment-send-btn");
+  if (btn) btn.classList.toggle("visible", target.value.trim().length > 0);
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

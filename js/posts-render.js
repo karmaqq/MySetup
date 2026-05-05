@@ -24,7 +24,7 @@ function _renderPostHTML(postId, postData) {
   html += '<div class="post-header">';
   html +=
     '<div class="post-avatar">' +
-    (postData.username || "?").charAt(0).toUpperCase() +
+    getAvatarLetter(postData.username) +
     "</div>";
   html += '<div class="post-user-info">';
   html +=
@@ -92,7 +92,6 @@ function _renderPostHTML(postId, postData) {
   html += "</div>";
 
   html += '<div class="comment-section" id="commentSection-' + pid + '">';
-  html += _renderCommentComposerHTML(postId);
   html += '<div class="comment-list" id="commentList-' + pid + '">';
   if (postData.comments) {
     const sorted = Object.keys(postData.comments).sort(function (a, b) {
@@ -105,7 +104,9 @@ function _renderPostHTML(postId, postData) {
       html += _renderCommentThreadHTML(postId, cid, postData.comments[cid]);
     });
   }
-  html += "</div></div>";
+  html += "</div>";
+  html += _renderCommentComposerHTML(postId);
+  html += "</div>";
 
   html += "</div>";
   return html;
@@ -123,7 +124,7 @@ function _renderCommentComposerHTML(postId) {
 
   let html = '<div class="comment-composer" id="commentComposer-' + pid + '">';
   html += '<div class="comment-composer-avatar">';
-  html += (user ? (user.displayName || "?").charAt(0).toUpperCase() : "?");
+  html += getAvatarLetter(user ? user.displayName : "");
   html += "</div>";
   html += '<div class="comment-composer-right">';
   html += '<div class="comment-reply-target" id="replyTarget-' + pid + '">';
@@ -134,6 +135,7 @@ function _renderCommentComposerHTML(postId) {
     '">✕</button>';
   html += "</div>";
   html += '<div class="comment-input-row">';
+  html += '<div class="comment-input-wrapper">';
   html +=
     '<textarea class="comment-input-field" id="commentInput-' +
     pid +
@@ -141,8 +143,8 @@ function _renderCommentComposerHTML(postId) {
   html +=
     '<button class="comment-send-btn" data-action="submit-comment" data-id="' +
     pid +
-    '">Gönder</button>';
-  html += "</div></div></div>";
+    '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>';
+  html += "</div></div></div></div>";
 
   return html;
 }
@@ -176,7 +178,7 @@ function _renderCommentThreadHTML(postId, commentId, commentData) {
   html += '<div class="comment-avatar-col">';
   html +=
     '<div class="comment-avatar">' +
-    (commentData.username || "?").charAt(0).toUpperCase() +
+    getAvatarLetter(commentData.username) +
     "</div>";
   html += "</div>";
   html += '<div class="comment-body">';
@@ -296,7 +298,7 @@ function _renderReplyHTML(postId, commentId, replyId, replyData) {
   let html = '<div class="reply-item" data-reply-id="' + rid + '">';
   html +=
     '<div class="reply-avatar">' +
-    (replyData.username || "?").charAt(0).toUpperCase() +
+    getAvatarLetter(replyData.username) +
     "</div>";
   html += '<div class="reply-body">';
   html += '<div class="reply-meta">';

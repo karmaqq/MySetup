@@ -373,3 +373,14 @@ function formatDateTime(timestamp) {
   var minutes = String(date.getMinutes()).padStart(2, "0");
   return day + "." + month + "." + year + " " + hours + ":" + minutes;
 }
+
+/* ─────────────────── Avatar Harfini Güncelle (Yardımcı) ─────────────────── */
+
+function updateAvatarLetter(elementId, name) {
+  var el = document.getElementById(elementId);
+  if (el) el.textContent = (name || "?").charAt(0).toUpperCase();
+}
+
+function getAvatarLetter(name) {
+  return (name || "?").charAt(0).toUpperCase();
+}

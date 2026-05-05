@@ -550,7 +550,6 @@ function updateItemStatus(itemId, newStatus) {
   if (currentItem._statusNorm === normalizeTr(newStatus)) return;
 
   const oldItem = { ...currentItem };
-  const oldStatus = currentItem.status;
   const oldStatusNorm = currentItem._statusNorm;
 
   currentItem.status = newStatus;

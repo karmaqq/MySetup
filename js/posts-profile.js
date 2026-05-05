@@ -122,8 +122,7 @@ function _loadPostsChunk(cfg) {
       });
 
       if (ids.length === 0) {
-        // 1. Yükleniyor mesajı zaten sekme açılırken atanıyor
-        // 2. Veri geldikten sonra hiç gönderi yoksa boş mesajı göster (ikonlu)
+
         if (tab) {
           tab.innerHTML =
             '<div class="empty-state profile-empty-state">' +

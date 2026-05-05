@@ -66,15 +66,8 @@ function onUserLoggedIn(user) {
     profileUsername.textContent = user.displayName || "Kullanıcı";
   if (profileEmail) profileEmail.textContent = user.email || "E-posta yok";
 
-  // Profil avatar harfini güncelle
-  var profileAvatarLetter = document.getElementById("profileAvatarLetter");
-  if (profileAvatarLetter)
-    profileAvatarLetter.textContent = (user.displayName || "?").charAt(0).toUpperCase();
-
-  // Sidebar avatar harfini güncelle
-  var sidebarAvatar = document.getElementById("sidebarAvatar");
-  if (sidebarAvatar)
-    sidebarAvatar.textContent = (user.displayName || "?").charAt(0).toUpperCase();
+  updateAvatarLetter("profileAvatarLetter", user.displayName);
+  updateAvatarLetter("sidebarAvatar", user.displayName);
 
   if (typeof initUserDataRef === "function") {
     initUserDataRef(user.uid);
@@ -103,7 +96,6 @@ function onUserLoggedOut() {
     showPage("home");
   }
 
-  // Form sıfırlama ve UI temizliği
   const loginFormEl = document.getElementById("loginForm");
   const registerFormEl = document.getElementById("registerForm");
 
@@ -377,6 +369,4 @@ document.querySelectorAll(".toggle-password").forEach((btn) => {
     }
   });
 });
-
-// Oturum kapatma işlemleri onUserLoggedOut içinde yapılıyor
 })();
