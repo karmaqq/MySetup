@@ -160,6 +160,8 @@ function _renderCommentThreadHTML(postId, commentId, commentData) {
   const cid = escAttr(commentId);
   const user = firebase.auth().currentUser;
   const isOwn = user && user.uid === commentData.uid;
+  const postData = allPosts[postId];
+  const isPostOwner = user && postData && user.uid === postData.uid;
   const liked = user && commentData.likes && commentData.likes[user.uid];
   const likeCount = commentData.likes
     ? Object.keys(commentData.likes).length
@@ -188,7 +190,7 @@ function _renderCommentThreadHTML(postId, commentId, commentData) {
     escHtml(commentData.username || "Kullanici") +
     "</span>";
   html += '<span class="comment-time">' + escHtml(timeAgo) + "</span>";
-  if (isOwn) {
+  if (isOwn || isPostOwner) {
     html +=
       '<button class="comment-menu-btn" data-action="comment-menu" data-post-id="' +
       pid +
@@ -289,6 +291,8 @@ function _renderReplyHTML(postId, commentId, replyId, replyData) {
   const rid = escAttr(replyId);
   const user = firebase.auth().currentUser;
   const isOwn = user && user.uid === replyData.uid;
+  const postData = allPosts[postId];
+  const isPostOwner = user && postData && user.uid === postData.uid;
   const liked = user && replyData.likes && replyData.likes[user.uid];
   const likeCount = replyData.likes ? Object.keys(replyData.likes).length : 0;
   const timeAgo = replyData.createdAt
@@ -307,7 +311,7 @@ function _renderReplyHTML(postId, commentId, replyId, replyData) {
     escHtml(replyData.username || "Kullanici") +
     "</span>";
   html += '<span class="reply-time">' + escHtml(timeAgo) + "</span>";
-  if (isOwn) {
+  if (isOwn || isPostOwner) {
     html +=
       '<button class="comment-menu-btn" data-action="reply-menu" data-post-id="' +
       pid +

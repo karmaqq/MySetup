@@ -214,9 +214,10 @@
 #userPostsTab .empty-icon,
 #likedPostsTab .empty-icon,
 .profile-empty-state .empty-icon {
-  font-size: 48px;
-  opacity: 0.22;
+  font-size: 64px;
+  opacity: 0.5;
   margin-bottom: 2px;
+  line-height: 1;
 }
 
 #userPostsTab .empty-text,

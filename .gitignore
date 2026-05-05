@@ -3,6 +3,7 @@ update.bat
 QFIX.md
 QVIS.md
 QPLAN.md
+PLAN.md
 rtdb-rules-clean.json
 storage-rules-clean.rules
 dist/

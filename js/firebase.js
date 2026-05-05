@@ -407,3 +407,29 @@ function removeUserLikesListener() {
     _userLikesListener = null;
   }
 }
+
+/* UserPosts değişikliklerini dinle */
+
+let _userPostsListener = null;
+
+function initUserPostsListener(userId, onPostsChanged) {
+  if (_userPostsListener) {
+    _userPostsListener.off();
+  }
+  _userPostsListener = userPostsRef.child(userId);
+  _userPostsListener.on("child_added", function (s) {
+    if (window._isLoggingOut) return;
+    onPostsChanged(s.key, s.val(), "added");
+  });
+  _userPostsListener.on("child_removed", function (s) {
+    if (window._isLoggingOut) return;
+    onPostsChanged(s.key, null, "removed");
+  });
+}
+
+function removeUserPostsListener() {
+  if (_userPostsListener) {
+    _userPostsListener.off();
+    _userPostsListener = null;
+  }
+}

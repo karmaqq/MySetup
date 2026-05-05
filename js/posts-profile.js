@@ -124,17 +124,19 @@ function _loadPostsChunk(cfg) {
       if (ids.length === 0) {
 
         if (tab) {
-          tab.innerHTML =
-            '<div class="empty-state profile-empty-state">' +
-            '<div class="empty-icon">' +
-            (cfg.tabId === "userPostsTab" ? "📦" : "⭐") +
-            "</div>" +
-            '<div class="empty-text">' +
-            (cfg.tabId === "userPostsTab"
-              ? "Henüz gönderin yok."
-              : "Henüz beğendiğin gönderi yok.") +
-            "</div>" +
-            "</div>";
+          if (cfg.tabId === "userPostsTab") {
+            tab.innerHTML =
+              '<div class="empty-state profile-empty-state">' +
+              '<div class="empty-icon" style="font-size:64px;line-height:1">📰</div>' +
+              '<div class="empty-text">Henüz Gönderi Yayınlamadın</div>' +
+              "</div>";
+          } else {
+            tab.innerHTML =
+              '<div class="empty-state profile-empty-state">' +
+              '<div class="empty-icon" style="font-size:64px;line-height:1">💔</div>' +
+              '<div class="empty-text">Henüz Kimseyi Beğenmedin</div>' +
+              "</div>";
+          }
         }
         cfg.setHasMore(false);
         _removeProfileLoadMoreBtn(cfg.tabId);
@@ -148,21 +150,25 @@ function _loadPostsChunk(cfg) {
         })
         .slice(0, PAGE_SIZE);
 
-      return getPostsByIds(postIds).then(function (posts) {
-        if (tab) tab.innerHTML = "";
-        postIds.forEach(function (id) {
-          if (posts[id]) {
-            allPosts[id] = posts[id];
-            cfg.getVisible().add(id);
-            if (tab) {
-              const wrapper = document.createElement("div");
-              wrapper.innerHTML = _renderPostHTML(id, posts[id]);
-              const el = wrapper.firstElementChild;
-              tab.appendChild(el);
-              _initPostImage(el.querySelector(".post-img-lazy"));
-            }
+        return getPostsByIds(postIds).then(function (posts) {
+          if (tab) {
+            tab.innerHTML = "";
+            const emptyState = tab.querySelector(".profile-empty-state");
+            if (emptyState) emptyState.remove();
           }
-        });
+          postIds.forEach(function (id) {
+            if (posts[id]) {
+              allPosts[id] = posts[id];
+              cfg.getVisible().add(id);
+              if (tab) {
+                const wrapper = document.createElement("div");
+                wrapper.innerHTML = _renderPostHTML(id, posts[id]);
+                const el = wrapper.firstElementChild;
+                tab.appendChild(el);
+                _initPostImage(el.querySelector(".post-img-lazy"));
+              }
+            }
+          });
 
         if (ids.length >= PAGE_SIZE) {
           cfg.setOldestTs(map[ids[ids.length - 1]]);
@@ -215,10 +221,55 @@ function _onUserLikesChanged(postId, value, type) {
   } else if (type === "removed") {
     if (_likedPostsVisible.has(postId)) _likedPostsVisible.delete(postId);
     if (_profileTab === "liked-posts") {
-      const card = document.querySelector(
-        '#likedPostsTab [data-post-id="' + postId + '"]',
-      );
-      if (card) card.remove();
+      document
+        .querySelectorAll('#likedPostsTab [data-post-id="' + postId + '"]')
+        .forEach(function (el) {
+          el.style.opacity = "0";
+          el.style.transform = "translateY(4px)";
+          setTimeout(function () {
+            el.remove();
+            const tab = document.getElementById("likedPostsTab");
+            if (tab && tab.children.length === 0) {
+              tab.innerHTML =
+                '<div class="empty-state profile-empty-state">' +
+                '<div class="empty-icon" style="font-size:64px;line-height:1">💔</div>' +
+                '<div class="empty-text">Henüz Kimseyi Beğenmedin</div>' +
+                "</div>";
+            }
+          }, 320);
+        });
+    }
+  }
+}
+
+function _onUserPostsChanged(postId, value, type) {
+  if (type === "added") {
+    if (!_userPostsVisible.has(postId)) {
+      _userPostsVisible.add(postId);
+    }
+    if (_profileTab === "user-posts") {
+      _appendOrPrependToProfileTab("userPostsTab", postId);
+    }
+  } else if (type === "removed") {
+    if (_userPostsVisible.has(postId)) _userPostsVisible.delete(postId);
+    if (_profileTab === "user-posts") {
+      document
+        .querySelectorAll('#userPostsTab [data-post-id="' + postId + '"]')
+        .forEach(function (el) {
+          el.style.opacity = "0";
+          el.style.transform = "translateY(4px)";
+          setTimeout(function () {
+            el.remove();
+            const tab = document.getElementById("userPostsTab");
+            if (tab && tab.children.length === 0) {
+              tab.innerHTML =
+                '<div class="empty-state profile-empty-state">' +
+                '<div class="empty-icon" style="font-size:64px;line-height:1">📰</div>' +
+                '<div class="empty-text">Henüz Gönderi Yayınlamadın</div>' +
+                "</div>";
+            }
+          }, 320);
+        });
     }
   }
 }
@@ -230,6 +281,8 @@ function _appendOrPrependToProfileTab(tabId, postId) {
   getPostsByIds([postId]).then(function (posts) {
     if (posts[postId]) {
       allPosts[postId] = posts[postId];
+      const emptyState = tab.querySelector(".profile-empty-state");
+      if (emptyState) emptyState.remove();
       const wrapper = document.createElement("div");
       wrapper.innerHTML = _renderPostHTML(postId, posts[postId]);
       const el = wrapper.firstElementChild;
@@ -287,6 +340,7 @@ function _onPageChange(pageName) {
     _removeProfileLoadMoreBtn("userPostsTab");
     _removeProfileLoadMoreBtn("likedPostsTab");
     removeUserLikesListener();
+    removeUserPostsListener();
   }
 }
 

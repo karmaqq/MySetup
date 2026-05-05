@@ -68,6 +68,7 @@ function initPosts() {
   const user = firebase.auth().currentUser;
   if (user) {
     initUserLikesListener(user.uid, _onUserLikesChanged);
+    initUserPostsListener(user.uid, _onUserPostsChanged);
   }
 }
 
@@ -86,7 +87,7 @@ function _teardownPosts() {
 
   Object.values(_commentListenerRefs).forEach(function (ref) { ref.off(); });
   for (var k in _commentListenerRefs) delete _commentListenerRefs[k];
-
+  removeUserPostsListener();
   removeUserLikesListener();
 
   _loadingMoreUserPosts = false;
