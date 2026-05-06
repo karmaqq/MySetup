@@ -10,15 +10,19 @@
 
 /* ─────────────────── Sayfa Geçişi (Animasyonlu) ─────────────────── */
 
-let _currentPage = null;
+let _currentPage = sessionStorage.getItem("_lastPage") || "home";
 let _isAnimating = false;
+let _pendingPage = null;
 let _commentListenerRefs = {};
 const mainScroll = document.getElementById("mainScroll");
 
 const PAGE_SIZE = 20;
 
 function showPage(pageName) {
-  if (_isAnimating) return;
+  if (_isAnimating) {
+    _pendingPage = pageName;
+    return;
+  }
   _isAnimating = true;
 
   const pages = document.querySelectorAll(".page-content");
@@ -63,7 +67,7 @@ function showPage(pageName) {
   setTimeout(() => {
     _isAnimating = false;
     _currentPage = pageName;
-    localStorage.setItem("mySetupLastPage", pageName);
+    sessionStorage.setItem("_lastPage", pageName);
     if (pageName === "profile" && typeof updateProfilePosts === "function") {
       updateProfilePosts();
     }
@@ -72,6 +76,11 @@ function showPage(pageName) {
     }
     if (typeof _onPageChange === "function") {
       _onPageChange(pageName);
+    }
+    if (_pendingPage) {
+      const next = _pendingPage;
+      _pendingPage = null;
+      showPage(next);
     }
   }, 320);
 }
@@ -131,7 +140,6 @@ let currentSearch = "";
 let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
-var _isLoggingOut = false;
 
 /* ─────────────────── AppState Wrapper (BULGU-24) ─────────────────── */
 
@@ -150,8 +158,6 @@ const AppState = {
       set editingId(v) { editingId = v; },
     };
   },
-  get isLoggingOut() { return _isLoggingOut; },
-  set isLoggingOut(v) { _isLoggingOut = v; },
 };
 
 /* ─────────────────── Render Yönetimi ─────────────────── */

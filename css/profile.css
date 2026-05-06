@@ -229,3 +229,14 @@
   font-weight: 500;
   margin-top: 2px;
 }
+
+.posts-loading {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-dim);
+  font-size: 15px;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

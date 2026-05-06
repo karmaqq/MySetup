@@ -15,6 +15,7 @@
   --text-dim: #4e5f78;
   --text-bright: #e0eaf5;
   --accent: #e8a020;
+  --accent-hover: #f5b030;
   --accent-dim: rgba(232,160,32,0.12);
   --accent-glow: rgba(232,160,32,0.25);
   --blue: #4a9eff;
@@ -27,6 +28,9 @@
   --yellow-dim: rgba(245,200,66,0.12);
   --purple: #b57aff;
   --purple-dim: rgba(181,122,255,0.12);
+
+  --shadow-card: rgba(0,0,0,0.38);
+  --shadow-overlay: rgba(0,0,0,0.6);
 
   /* ─── FONT SİSTEMİ ─── */
   --font-ui: "Inter", sans-serif;

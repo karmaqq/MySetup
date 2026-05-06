@@ -241,7 +241,7 @@ if (exportCsvBtn) {
           item.star || 0,
           item.opinion || "-",
         ]
-          .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+          .map((v) => `"${String(v).replace(/"/g, '""').replace(/[\r\n]/g, ' ')}"`)
           .join(","),
       ),
     ].join("\n");

@@ -301,7 +301,7 @@
 }
 
 .auth-submit-btn:hover:not(:disabled) {
-  background: #f5b030;
+  background: var(--accent-hover);
   box-shadow: 0 8px 24px var(--accent-glow);
   transform: translateY(-2px);
 }
@@ -345,7 +345,7 @@
 }
 
 .auth-switch button:hover {
-  color: #f5b030;
+  color: var(--accent-hover);
   text-decoration: underline;
   text-underline-offset: 4px;
   text-shadow: 0 0 8px var(--accent-glow);

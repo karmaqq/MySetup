@@ -234,7 +234,6 @@ function _initCommentListener(postId) {
   _commentListenerRefs[postId] = ref;
 
   ref.on("child_added", function (s) {
-    if (_isLoggingOut) return;
     const cid = s.key;
     const data = s.val();
     const post = allPosts[postId];
@@ -256,7 +255,6 @@ function _initCommentListener(postId) {
   });
 
   ref.on("child_changed", function (s) {
-    if (_isLoggingOut) return;
     const cid = s.key;
     const data = s.val();
     const post = allPosts[postId];
@@ -272,7 +270,6 @@ function _initCommentListener(postId) {
   });
 
   ref.on("child_removed", function (s) {
-    if (_isLoggingOut) return;
     const cid = s.key;
     const post = allPosts[postId];
     if (post && post.comments) delete post.comments[cid];
@@ -289,6 +286,7 @@ function _initCommentListener(postId) {
 /* ─────────────────── Yorum thread'ini günceller ─────────────────── */
 
 function _refreshCommentThread(postId, commentId, commentData, existingEl) {
+  if (!existingEl || !existingEl.isConnected) return;
   const card = existingEl.closest(".post-card");
   const wrapper = document.createElement("div");
   wrapper.innerHTML = _renderCommentThreadHTML(postId, commentId, commentData);
@@ -533,53 +531,6 @@ document.addEventListener("input", function (e) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                           ZAMAN GÜNCELLEMESİ                             */
 /* ═════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Her dakika zaman etiketlerini günceller ─────────────────── */
-
-setInterval(function () {
-  if (
-    typeof _currentPage !== "undefined" &&
-    _currentPage !== "home" &&
-    _currentPage !== "profile"
-  )
-    return;
-
-  document.querySelectorAll(".post-time").forEach(function (el) {
-    const card = el.closest("[data-post-id]");
-    if (!card) return;
-    const post = allPosts[card.dataset.postId];
-    if (!post) return;
-    el.textContent = formatTimeAgo(post.createdAt, post.phraseIndex);
-  });
-
-  document.querySelectorAll(".comment-time").forEach(function (el) {
-    const item = el.closest("[data-comment-id]");
-    const card = el.closest("[data-post-id]");
-    if (!item || !card) return;
-    const post = allPosts[card.dataset.postId];
-    const cid = item.dataset.commentId;
-    if (!post || !post.comments || !post.comments[cid]) return;
-    el.textContent = formatTimeAgo(
-      post.comments[cid].createdAt,
-      undefined,
-      true,
-    );
-  });
-
-  document.querySelectorAll(".reply-time").forEach(function (el) {
-    const replyEl = el.closest("[data-reply-id]");
-    const commentEl = el.closest("[data-comment-id]");
-    const card = el.closest("[data-post-id]");
-    if (!replyEl || !commentEl || !card) return;
-    const post = allPosts[card.dataset.postId];
-    const cid = commentEl.dataset.commentId;
-    const rid = replyEl.dataset.replyId;
-    if (!post || !post.comments || !post.comments[cid]) return;
-    const replies = post.comments[cid].replies;
-    if (!replies || !replies[rid]) return;
-    el.textContent = formatTimeAgo(replies[rid].createdAt, undefined, true);
-  });
-  }, 60 * 1000);
 
 /* ─────────────────── Zaman güncelleme interval kontrolü ─────────────────── */
 

@@ -76,6 +76,11 @@ function onUserLoggedIn(user) {
   if (typeof initPosts === "function") {
     initPosts();
   }
+
+  var lastPage = sessionStorage.getItem("_lastPage");
+  if (lastPage && lastPage !== "home" && typeof showPage === "function") {
+    showPage(lastPage);
+  }
 }
 
 /* ─────────────────── Çıkış Yapıldığında ─────────────────── */
@@ -95,6 +100,9 @@ function onUserLoggedOut() {
   if (typeof showPage === "function") {
     showPage("home");
   }
+  sessionStorage.removeItem("_lastPage");
+
+  if (typeof clearAllModalForms === "function") clearAllModalForms();
 
   const loginFormEl = document.getElementById("loginForm");
   const registerFormEl = document.getElementById("registerForm");
@@ -275,8 +283,9 @@ if (registerForm) {
       }
 
       // 2. Kullanıcı oluştur
+      let cred = null;
       try {
-        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        cred = await auth.createUserWithEmailAndPassword(email, password);
 
         // 3. UID ile güncelle
         await usernameRef.set(cred.user.uid);
@@ -286,7 +295,9 @@ if (registerForm) {
       } catch (userErr) {
         // Hata durumunda rezervasyonu temizle
         try { await usernameRef.remove(); } catch (_) {}
-        try { await cred.user.delete(); } catch (_) {}
+        if (cred && cred.user) {
+          try { await cred.user.delete(); } catch (_) {}
+        }
         errEl.textContent = getAuthErrorMessage(userErr.code) || "Bir hata oluştu.";
         btn.textContent = "Kayıt Ol";
         btn.disabled = false;

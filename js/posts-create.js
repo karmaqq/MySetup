@@ -118,7 +118,6 @@ function _startPostsListener() {
   const ref = postsRef.orderByChild("createdAt");
 
   ref.limitToLast(PAGE_SIZE).once("value", function (snap) {
-    if (_isLoggingOut) return;
 
     const raw = snap.val() || {};
     const keys = Object.keys(raw).sort(function (a, b) {
@@ -163,7 +162,6 @@ function _checkHasMorePosts(oldestTs) {
     .endAt(oldestTs - 1)
     .limitToLast(1)
     .once("value", function (snap) {
-      if (_isLoggingOut) return;
       _hasMorePosts = snap.exists();
       if (_hasMorePosts) {
         _renderLoadMoreBtn();
@@ -184,7 +182,6 @@ function _listenForNewPosts(ref) {
   _postsQuery = liveQuery;
 
   liveQuery.on("child_added", function (s) {
-    if (_isLoggingOut) return;
     const id = s.key;
     const data = s.val();
     allPosts[id] = data;
@@ -194,7 +191,6 @@ function _listenForNewPosts(ref) {
   });
 
   postsRef.on("child_changed", function (s) {
-    if (_isLoggingOut) return;
     const id = s.key;
     if (!allPosts[id]) return;
     const oldData = allPosts[id];
@@ -207,7 +203,6 @@ function _listenForNewPosts(ref) {
   });
 
   postsRef.on("child_removed", function (s) {
-    if (_isLoggingOut) return;
     const id = s.key;
     if (_commentListenerRefs[id]) {
       _commentListenerRefs[id].off();
@@ -252,7 +247,6 @@ function _loadMorePosts() {
     .endAt(oldestTs - 1)
     .limitToLast(PAGE_SIZE)
     .once("value", function (snap) {
-      if (_isLoggingOut) return;
 
       const raw = snap.val() || {};
       const keys = Object.keys(raw).sort(function (a, b) {

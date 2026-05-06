@@ -20,15 +20,50 @@ function closeSettingsModal() {
 }
 
 function closeChangePassModal() {
+  const form = document.getElementById("changePasswordForm");
+  if (form) form.reset();
+  const errEl = document.getElementById("changePassError");
+  if (errEl) errEl.textContent = "";
+  const submitBtn = document.getElementById("changePassSubmitBtn");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Şifreyi Kaydet";
+  }
+  ["oldPassword", "newPassword", "newPasswordConfirm"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.value = "";
+      el.classList.remove("input-error");
+    }
+  });
   if (changePasswordModal) {
     changePasswordModal.classList.remove("active");
   }
 }
 
 function closeDeleteModal() {
+  const form = document.getElementById("deleteAccountForm");
+  if (form) form.reset();
+  const errEl = document.getElementById("deleteAccountError");
+  if (errEl) errEl.textContent = "";
+  const checkEl = document.getElementById("deleteConfirmCheck");
+  if (checkEl) checkEl.checked = false;
+  const submitBtn = document.getElementById("finalDeleteBtn");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Hesabı Kalıcı Olarak Sil";
+  }
+  var passEl = document.getElementById("deletePassword");
+  if (passEl) passEl.value = "";
   if (deleteAccountModal) {
     deleteAccountModal.classList.remove("active");
   }
+}
+
+function clearAllModalForms() {
+  closeSettingsModal();
+  closeChangePassModal();
+  closeDeleteModal();
 }
 
 /* ─────────────────── Ayarlar Modalını Aç (Ortak Fonksiyon) ─────────────────── */
@@ -79,7 +114,7 @@ deleteAccountModal?.addEventListener("click", (e) => {
 /* ─────────────────── Çıkış Yap ─────────────────── */
 
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
-  closeSettingsModal();
+  clearAllModalForms();
   if (typeof initUserDataRef === "function") {
     initUserDataRef(null);
   }
@@ -283,6 +318,7 @@ saveBtn?.addEventListener("click", async () => {
 
 document.getElementById("openChangePassBtn")?.addEventListener("click", () => {
   closeSettingsModal();
+  closeChangePassModal();
   if (changePasswordModal) {
     changePasswordModal.classList.add("active");
   }
@@ -419,6 +455,7 @@ document
   .getElementById("openDeleteAccountBtn")
   ?.addEventListener("click", () => {
     closeSettingsModal();
+    closeDeleteModal();
     if (deleteAccountModal) {
       deleteAccountModal.classList.add("active");
     }
@@ -439,7 +476,6 @@ document
   ?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById("deleteEmail").value;
     const pass = document.getElementById("deletePassword").value;
     const errEl = document.getElementById("deleteAccountError");
     const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
@@ -455,44 +491,19 @@ document
         throw new Error("Oturum bulunamadı, lütfen yeniden giriş yapın.");
 
       const credential = firebase.auth.EmailAuthProvider.credential(
-        email,
+        user.email,
         pass,
       );
       await user.reauthenticateWithCredential(credential);
 
-      if (typeof database !== "undefined" && user.uid) {
-        await database.ref("users/" + user.uid).remove();
-        const usernameKey = (user.displayName || "").trim().toLowerCase();
-        if (usernameKey) {
-          const ref = database.ref("usernames/" + usernameKey);
-          const snap = await ref.once("value");
-          if (snap.val() === user.uid) await ref.remove();
-        }
+      const result = await deleteUserAccount(user);
+      if (!result.success) {
+        throw result.error;
+      }
 
-        }
-
-        /* Firebase üzerinden tüm verileri sil */
-        if (typeof deleteUserAccount === "function") {
-          const result = await deleteUserAccount(user);
-          if (!result.success) {
-            throw result.error;
-          }
-        } else {
-          /* Yedek: Eski yöntem */
-          if (typeof database !== "undefined" && user.uid) {
-            try {
-              const storageRef = firebase.storage().ref();
-              const userFolderRef = storageRef.child(`users/${user.uid}`);
-              await deleteAllInFolder(userFolderRef);
-            } catch (storageErr) {
-              console.warn("Storage silme hatası:", storageErr);
-            }
-          }
-          await user.delete();
-        }
-        if (typeof showToast === "function")
-          showToast("Hesabınız kalıcı olarak silindi.", "info");
-        closeDeleteModal();
+      if (typeof showToast === "function")
+        showToast("Hesabınız kalıcı olarak silindi.", "info");
+      closeDeleteModal();
     } catch (err) {
       errEl.style.color = "var(--red)";
       const code = err?.code || "";
@@ -500,7 +511,7 @@ document
         code === "auth/wrong-password" ||
         code === "auth/invalid-credential"
       ) {
-        errEl.textContent = "E-posta veya şifre hatalı.";
+        errEl.textContent = "Şifre hatalı.";
       } else if (code === "auth/too-many-requests") {
         errEl.textContent = "Çok fazla deneme. Lütfen bekleyin.";
       } else if (code === "auth/requires-recent-login") {

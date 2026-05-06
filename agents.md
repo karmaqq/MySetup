@@ -1,4 +1,4 @@
-# AGENTS.md — MySetup v2.6.3
+# AGENTS.md — MySetup v2.6.5
 
 > Bu dosya, MySetup projesine kod müdahalesi yapacak her yapay zeka ajanı, editör eklentisi veya geliştirici için zorunlu okuma belgesidir.
 > Projeyi ilk kez gören bir ajanın hata yapmaması için gereken tüm yapısal bilgi burada tanımlanmıştır.
@@ -97,7 +97,7 @@ auth.js         → utils.js + firebase.js + editmodal.js + userset.js'e bağım
 userset.js      → utils.js + firebase.js + auth.js'e bağımlı
 post-comments-render.js → utils.js + firebase.js'e bağımlı
 posts-render.js → utils.js + firebase.js + post-comments-render.js'e bağımlı
-posts-create.js → utils.js + firebase.js + posts-render.js + posts-actions.js + posts-profile.js'e bağımlı
+posts-create.js → utils.js + firebase.js + posts-render.js'e bağımlı
 posts-delete.js → utils.js + firebase.js + io.js'e bağımlı
 posts-actions.js→ utils.js + firebase.js + posts-render.js + post-comments-render.js + posts-delete.js + io.js'e bağımlı
 posts-profile.js→ utils.js + firebase.js + posts-render.js + posts-actions.js + posts-delete.js + post-comments-render.js'e bağımlı
@@ -136,6 +136,15 @@ Aşağıdaki değişkenler yalnızca `js/utils.js` içinde `let` veya `const` il
 | `_profileTab`         | `null`         | Aktif profil sekmesi                                |
 | `_userPostsVisible`   | `Set`          | Görünür kullanıcı postları (BULGU-14)               |
 | `_likedPostsVisible`  | `Set`          | Görünür beğenilen postlar (BULGU-14)               |
+
+### Modül-İçi İstisna Değişkenleri
+
+Aşağıdaki değişkenler yalnızca tanımlandıkları dosyanın kapsamındadır ve `utils.js`'e taşınmaz:
+
+| Değişken              | Dosya          | Açıklama                                            |
+| --------------------- | -------------- | -------------------------------------------------- |
+| `_resetRafId`         | editmodal.js   | Preview sıfırlama RAF referansı                     |
+| `currentRating`       | editmodal.js   | Aktif yıldız derecelendirmesi                       |
 
 ---
 
@@ -414,8 +423,4 @@ Tüm optimizasyon bulguları çözülmüştür. Kod değişikliği yapmadan önc
 
 ---
 
-_Son güncelleme: 2026-05-06 — MySetup v2.6.3 — Tüm bulgular çözülmüştür_
-
----
-
-_Son güncelleme: 2026-05-06 — MySetup v2.6.3 — Tüm bulgular çözülmüştür_
+_Son güncelleme: 2026-05-07 — MySetup v2.6.5 — Tüm bulgular çözülmüştür_

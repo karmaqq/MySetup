@@ -72,7 +72,7 @@ function _renderPostHTML(postId, postData) {
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="' +
     (liked ? "currentColor" : "none") +
     '" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/></svg>';
-  html += " " + likeCount + "</button>";
+  html += ' <span class="post-like-count-' + pid + '">' + likeCount + '</span></button>';
   html +=
     '<button class="post-action-btn comment-btn" data-action="toggle-comments" data-id="' +
     pid +
@@ -201,10 +201,8 @@ function _patchPostLikes(postId, likes) {
     btn.classList.toggle("liked", !!liked);
     const svg = btn.querySelector("svg");
     if (svg) svg.setAttribute("fill", liked ? "currentColor" : "none");
-    const txt = Array.from(btn.childNodes).filter(function (n) {
-      return n.nodeType === 3;
-    });
-    if (txt.length) txt[txt.length - 1].textContent = " " + likeCount;
+    const span = btn.querySelector(".post-like-count-" + postId);
+    if (span) span.textContent = likeCount;
   });
 }
 

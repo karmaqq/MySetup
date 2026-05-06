@@ -152,6 +152,19 @@ async function deleteUserAccount(user) {
   const uid = user.uid;
 
   try {
+    await user.getIdToken(true);
+
+    // UserLikes
+    await database.ref("userLikes/" + uid).remove();
+
+    // UserPosts
+    const userPostsSnap = await database.ref("userPosts/" + uid).once("value");
+    const postIds = userPostsSnap.val() ? Object.keys(userPostsSnap.val()) : [];
+    await Promise.all(
+      postIds.map((id) => database.ref("posts/" + id).remove()),
+    );
+    await database.ref("userPosts/" + uid).remove();
+
     // Database temizliği
     await database.ref("users/" + uid).remove();
 
@@ -162,17 +175,6 @@ async function deleteUserAccount(user) {
       const snap = await ref.once("value");
       if (snap.val() === uid) await ref.remove();
     }
-
-    // UserPosts
-    const userPostsSnap = await database.ref("userPosts/" + uid).once("value");
-    const postIds = userPostsSnap.val() ? Object.keys(userPostsSnap.val()) : [];
-    await Promise.all(
-      postIds.map((id) => database.ref("posts/" + id).remove()),
-    );
-    await database.ref("userPosts/" + uid).remove();
-
-    // UserLikes
-    await database.ref("userLikes/" + uid).remove();
 
     // Storage
     await deleteAllInFolder(
@@ -250,7 +252,6 @@ async function deleteAllInFolder(ref) {
 /*                          POST SİSTEMİ                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-postsRef = database.ref("posts");
 const userPostsRef = database.ref("userPosts");
 const userLikesRef = database.ref("userLikes");
 
@@ -352,23 +353,22 @@ function getPostsRef() {
 
 function getPostsByIds(postIds) {
   if (!postIds || !postIds.length) return Promise.resolve({});
-  var sorted = [].concat(postIds).sort();
-  return postsRef
-    .orderByKey()
-    .startAt(sorted[0])
-    .endAt(sorted[sorted.length - 1])
-    .once("value")
-    .then(function (snap) {
-      var all = snap.val() || {};
-      var map = {};
-      postIds.forEach(function (id) {
-        if (all[id]) {
-          all[id]._id = id;
-          map[id] = all[id];
-        }
+  return Promise.all(
+    postIds.map(function (id) {
+      return postsRef.child(id).once("value").then(function (s) {
+        return s.exists() ? { id: id, data: s.val() } : null;
       });
-      return map;
+    })
+  ).then(function (results) {
+    var map = {};
+    results.forEach(function (r) {
+      if (r) {
+        r.data._id = r.id;
+        map[r.id] = r.data;
+      }
     });
+    return map;
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -446,11 +446,9 @@ function initUserLikesListener(userId, onLikesChanged) {
   }
   _userLikesListener = userLikesRef.child(userId);
   _userLikesListener.on("child_added", function (s) {
-    if (_isLoggingOut) return;
     onLikesChanged(s.key, s.val(), "added");
   });
   _userLikesListener.on("child_removed", function (s) {
-    if (_isLoggingOut) return;
     onLikesChanged(s.key, null, "removed");
   });
 }
@@ -472,11 +470,9 @@ function initUserPostsListener(userId, onPostsChanged) {
   }
   _userPostsListener = userPostsRef.child(userId);
   _userPostsListener.on("child_added", function (s) {
-    if (_isLoggingOut) return;
     onPostsChanged(s.key, s.val(), "added");
   });
   _userPostsListener.on("child_removed", function (s) {
-    if (_isLoggingOut) return;
     onPostsChanged(s.key, null, "removed");
   });
 }

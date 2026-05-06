@@ -25,7 +25,7 @@
   border-radius: 14px;
   border: 2px solid var(--accent);
   background: var(--surface3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.38);
+  box-shadow: 0 8px 32px var(--shadow-card);
   overflow: hidden;
 
   opacity: 0;
@@ -159,7 +159,7 @@
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 16px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 64px var(--shadow-overlay);
   transform: translateY(16px) scale(0.97);
   transition: transform 0.22s ease;
 }
@@ -480,7 +480,7 @@
 }
 
 .btn-modal-save:hover {
-  background: #f5b030;
+  background: var(--accent-hover);
   box-shadow: 0 4px 12px var(--accent-glow);
 }
 

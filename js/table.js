@@ -462,7 +462,9 @@ function renderAll() {
   updateResultCount(list.length);
 
   requestAnimationFrame(() => {
-    if (mainScroll) mainScroll.scrollTop = scrollY;
+    requestAnimationFrame(() => {
+      if (mainScroll) mainScroll.scrollTop = scrollY;
+    });
   });
 }
 
@@ -579,6 +581,7 @@ function updateItemStatus(itemId, newStatus) {
       currentItem.status = oldItem.status;
       currentItem._statusNorm = oldItem._statusNorm;
       rebuildStatsCache();
+      updateStats(getFilteredSortedList());
       applyToDOM();
       showToast("Durum güncellenemedi", "error");
     });

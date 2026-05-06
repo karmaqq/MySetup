@@ -4,7 +4,7 @@
 /*                          ELECTRON ANA SÜREÇ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const { app, BrowserWindow, shell, session, ipcMain } = require("electron");
+const { app, BrowserWindow, shell, session, ipcMain, globalShortcut } = require("electron");
 const path = require("path");
 const { setupUpdater, checkForUpdates } = require("./js/updater.js");
 let mainWindow;
@@ -76,6 +76,10 @@ function createWindow() {
     checkForUpdates();
   });
 
+  globalShortcut.register("F5", () => {
+    if (mainWindow) mainWindow.reload();
+  });
+
   setupUpdater(mainWindow);
 }
 
@@ -99,5 +103,6 @@ app.on("activate", () => {
 });
 
 app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
   ipcMain.removeAllListeners();
 });

@@ -16,6 +16,28 @@ const EMPTY_STATE = {
   likedPostsTab: { emoji: "💔", text: "Henüz Kimseyi Beğenmedin" },
 };
 
+/* ─────────────────── Profil Durum Yönetimi ─────────────────── */
+
+function _showProfileLoading(tab) {
+  tab.innerHTML = '<div class="posts-loading">Yükleniyor...</div>';
+}
+
+function _showProfileEmptyState(tab, tabId) {
+  var s = EMPTY_STATE[tabId];
+  tab.innerHTML =
+    '<div class="empty-state profile-empty-state">' +
+    '<div class="empty-icon">' + s.emoji + '</div>' +
+    '<div class="empty-text">' + s.text + '</div>' +
+    '</div>';
+}
+
+function _showProfileContent(tab) {
+  var loading = tab.querySelector('.posts-loading');
+  var empty = tab.querySelector('.profile-empty-state');
+  if (loading) loading.remove();
+  if (empty) empty.remove();
+}
+
 /* ─────────────────── Profil sekmesi değiştğinde çağrılır ─────────────────── */
 
 function updateProfilePosts() {
@@ -43,7 +65,7 @@ function _initUserPostsTab() {
   const tab = document.getElementById("userPostsTab");
   if (!tab) return;
 
-  tab.innerHTML = '<div class="posts-empty">Yükleniyor...</div>';
+  _showProfileLoading(tab);
   _userPostsVisible.clear();
   _userPostsOldestTs = null;
   _hasMoreUserPosts = false;
@@ -79,7 +101,7 @@ function _initLikedPostsTab() {
   const tab = document.getElementById("likedPostsTab");
   if (!tab) return;
 
-  tab.innerHTML = '<div class="posts-empty">Yükleniyor...</div>';
+  _showProfileLoading(tab);
   _likedPostsVisible.clear();
   _likedPostsOldestTs = null;
   _hasMoreLikedPosts = false;
@@ -134,15 +156,7 @@ function _loadPostsChunk(cfg) {
       });
 
       if (ids.length === 0) {
-
-        if (tab) {
-          const s = EMPTY_STATE[cfg.tabId];
-          tab.innerHTML =
-            '<div class="empty-state profile-empty-state">' +
-            '<div class="empty-icon">' + s.emoji + "</div>" +
-            '<div class="empty-text">' + s.text + "</div>" +
-            "</div>";
-        }
+        if (tab) _showProfileEmptyState(tab, cfg.tabId);
         cfg.setHasMore(false);
         _removeProfileLoadMoreBtn(cfg.tabId);
         cfg.setLoading(false);
@@ -156,11 +170,7 @@ function _loadPostsChunk(cfg) {
         .slice(0, PAGE_SIZE);
 
         return getPostsByIds(postIds).then(function (posts) {
-          if (tab) {
-            const emptyState = tab.querySelector(".profile-empty-state");
-            if (emptyState) emptyState.remove();
-            tab.innerHTML = "";
-          }
+          if (tab) _showProfileContent(tab);
           postIds.forEach(function (id) {
             if (posts[id]) {
               allPosts[id] = posts[id];
@@ -235,11 +245,7 @@ function _onUserLikesChanged(postId, value, type) {
             el.remove();
             const tab = document.getElementById("likedPostsTab");
             if (tab && tab.children.length === 0) {
-              tab.innerHTML =
-                '<div class="empty-state profile-empty-state">' +
-                '<div class="empty-icon" style="font-size:64px;line-height:1">💔</div>' +
-                '<div class="empty-text">Henüz Kimseyi Beğenmedin</div>' +
-                "</div>";
+              _showProfileEmptyState(tab, "likedPostsTab");
             }
           }, 320);
         });
@@ -267,11 +273,7 @@ function _onUserPostsChanged(postId, value, type) {
             el.remove();
             const tab = document.getElementById("userPostsTab");
             if (tab && tab.children.length === 0) {
-              tab.innerHTML =
-                '<div class="empty-state profile-empty-state">' +
-                '<div class="empty-icon" style="font-size:64px;line-height:1">📰</div>' +
-                '<div class="empty-text">Henüz Gönderi Yayınlamadın</div>' +
-                "</div>";
+              _showProfileEmptyState(tab, "userPostsTab");
             }
           }, 320);
         });
@@ -286,8 +288,7 @@ function _appendOrPrependToProfileTab(tabId, postId) {
   getPostsByIds([postId]).then(function (posts) {
     if (posts[postId]) {
       allPosts[postId] = posts[postId];
-      const emptyState = tab.querySelector(".profile-empty-state");
-      if (emptyState) emptyState.remove();
+      _showProfileContent(tab);
       const wrapper = document.createElement("div");
       wrapper.innerHTML = _renderPostHTML(postId, posts[postId]);
       const el = wrapper.firstElementChild;
