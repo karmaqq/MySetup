@@ -13,7 +13,9 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: opacity 0.3s, transform 0.3s;
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
 }
 
 .post-header {
@@ -145,7 +147,7 @@
 }
 
 .post-image {
-  margin-top: 12px;
+  margin: 12px;
   display: flex;
   justify-content: center;
   border-radius: var(--radius);

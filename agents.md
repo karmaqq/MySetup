@@ -54,8 +54,9 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 | `js/editmodal.js`  | Düzenleme modali, görsel yükleme/önizleme, yıldız derecelendirme, klavye kısayolları                                   |
 | `js/auth.js`       | Firebase Auth, oturum durumu, giriş/kayıt formları, şifre kontrolü                                     |
 | `js/userset.js`    | Hesap ayarları, kullanıcı adı/şifre değiştirme, hesap silme                                                            |
-| `js/posts.js`      | **Post sistemi ana modül**, oluşturma, silme, akış yönetimi, sayfalama, listener başlatma  |
-| `js/posts-render.js` | Post/yorum/yanıt HTML render, görsel yükleme, feed DOM işlemleri |
+| `js/post-comments-render.js` | Yorum/yanıt HTML render, composer HTML, beğeni butonu DOM güncelleme |
+| `js/posts-render.js` | Post kartı HTML render, görsel yükleme, feed DOM işlemleri, post patch/remove |
+| `js/posts-create.js` | **Post oluşturma**, görsel seçimi, Firebase'e kayıt, sayfalama, listener başlatma  |
 | `js/posts-delete.js` | Post/yorum/yanıt silme onayları (`_confirmDeletePost`, `_confirmDeleteComment`, `_confirmDeleteReply`) |
 | `js/posts-actions.js` | Beğeni aksiyonları, yorum/yanıt gönderimi, gerçek zamanlı yorum listener'ı, event delegation |
 | `js/posts-profile.js` | Profil sekmesi yükleme, `_loadPostsChunk`, beğeni değişikliği, sayfa değişimi |
@@ -64,7 +65,7 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 
 | Dosya               | Sorumluluk                                                                                        |
 | ------------------- | ------------------------------------------------------------------------------------------------- |
-| `css/base.css`      | CSS değişkenleri (`:root`), reset, toast, loading, scroll, genel layout, responsive, sayfa düzeni |
+| `css/base.css`      | CSS değişkenleri (`:root` - `clr-` prefix), reset, toast, loading, scroll, genel layout, responsive, sayfa düzeni |
 | `css/sidebar.css`   | Logo, versiyon, nav menü, update butonu, user info, logout                                        |
 | `css/home.css`      | 700px akış içeriği, karşılama ekranı                                                              |
 | `css/profile.css`   | 700px profil içeriği, card, hesap ayarları butonu                                         |
@@ -94,11 +95,12 @@ updater-ui.js   → utils.js'e bağımlı (window.electronAPI)
 editmodal.js    → utils.js + firebase.js + io.js'e bağımlı
 auth.js         → utils.js + firebase.js + editmodal.js + userset.js'e bağımlı
 userset.js      → utils.js + firebase.js + auth.js'e bağımlı
-posts.js        → utils.js + firebase.js + posts-render.js + posts-actions.js + posts-profile.js'e bağımlı
-posts-render.js → utils.js + firebase.js + posts.js'e bağımlı
+post-comments-render.js → utils.js + firebase.js'e bağımlı
+posts-render.js → utils.js + firebase.js + post-comments-render.js'e bağımlı
+posts-create.js → utils.js + firebase.js + posts-render.js + posts-actions.js + posts-profile.js'e bağımlı
 posts-delete.js → utils.js + firebase.js + io.js'e bağımlı
-posts-actions.js→ utils.js + firebase.js + posts-render.js + posts-delete.js + io.js'e bağımlı
-posts-profile.js→ utils.js + firebase.js + posts-render.js + posts-actions.js + posts-delete.js'e bağımlı
+posts-actions.js→ utils.js + firebase.js + posts-render.js + post-comments-render.js + posts-delete.js + io.js'e bağımlı
+posts-profile.js→ utils.js + firebase.js + posts-render.js + posts-actions.js + posts-delete.js + post-comments-render.js'e bağımlı
 ```
 
 Bu sıra `index.html` içindeki `<script>` etiketlerinde sabittir. **Asla değiştirilemez.**
@@ -121,7 +123,7 @@ Aşağıdaki değişkenler yalnızca `js/utils.js` içinde `let` veya `const` il
 | `_currentPage`        | `null`         | utils.js (satır 13)  | Aktif sayfa adı                                     |
 | `_isAnimating`        | `false`        | utils.js (satır 14)  | Sayfa geçiş animasyonu kontrolü                     |
 
-### posts.js Global Durum Değişkenleri (posts.js içinde tanımlı)
+### posts-create.js Global Durum Değişkenleri (posts-create.js içinde tanımlı)
 
 | Değişken              | Tip            | Açıklama                                            |
 | --------------------- | -------------- | -------------------------------------------------- |
@@ -170,12 +172,28 @@ Tüm arama ve durum karşılaştırmaları bu fonksiyondan geçer. Ham string ka
 Storage'daki kullanıcı dosyalarını özyinelemeli siler. **Yalnızca hesap silme akışında** çağrılabilir.
 
 ### `_loadPostsChunk(cfg)` — `js/posts-profile.js`
-
+:
 Profil sekmesi veri yükleme işlemlerini birleştiren ortak fonksiyondur. `config` nesnesi ile çalışır (BULGU-07 çözümü).
 
 ### `_initPostImage(img)` — `js/posts-render.js`
-
+:
 Post görsellerinin yüklendiğinde aspect ratio kontrolü yapar. CSP uyumlu `addEventListener` kullanır (BULGU-12 çözümü).
+
+### `_renderPostHTML(postId, postData)` — `js/posts-render.js`
+:
+Post kartı HTML'ini oluşturur. Yorumları ve composer'ı çağırır.
+
+### `_renderCommentComposerHTML(postId)` — `js/post-comments-render.js`
+:
+Ortak yorum/yanıt giriş alanı HTML'ini döndürür.
+
+### `_renderCommentThreadHTML(postId, commentId, commentData)` — `js/post-comments-render.js`
+:
+Yorum + yanıtları kapsayan blok HTML'ini oluşturur.
+
+### `_renderReplyHTML(postId, commentId, replyId, replyData)` — `js/post-comments-render.js`
+:
+Tek yanıt satırı HTML'ini döndürür.
 
 ---
 
@@ -199,13 +217,17 @@ Post görsellerinin yüklendiğinde aspect ratio kontrolü yapar. CSP uyumlu `ad
 
 `showToast`, `showConfirm`, `parseCsvLine`, `processCsv`
 
-### posts.js (~429 satır)
+### post-comments-render.js (~200 satır)
+
+`_renderCommentComposerHTML`, `_renderCommentThreadHTML`, `_renderReplyHTML`, `_patchCommentLikeBtn`, `_patchReplyLikeBtn`
+
+### posts-render.js (~320 satır)
+
+`_renderPostHTML`, `_initPostImage`, `_handlePostImageLoad`, `_prependPostToFeed`, `_appendPostToFeed`, `_patchPostCard`, `_patchPostLikes`, `_softRemovePost`, `_renderEmptyFeed`
+
+### posts-create.js (~440 satır)
 
 `initPosts`, `_teardownPosts`, `_startPostsListener`, `_checkHasMorePosts`, `_listenForNewPosts`, `_getNewestTimestamp`, `_loadMorePosts`, `_renderLoadMoreBtn`, `_removeLoadMoreBtn`, `createPost`, `_uploadAndSavePost`, `_savePost`, `_handlePostImageSelect`, `_removePostImage`, `clearPostDraft`
-
-### posts-render.js (~545 satır)
-
-`_renderPostHTML`, `_renderCommentComposerHTML`, `_renderCommentThreadHTML`, `_renderReplyHTML`, `_initPostImage`, `_handlePostImageLoad`, `_prependPostToFeed`, `_appendPostToFeed`, `_patchPostCard`, `_patchPostLikes`, `_softRemovePost`, `_renderEmptyFeed`, `_patchCommentLikeBtn`, `_patchReplyLikeBtn`
 
 ### posts-delete.js (~80 satır)
 
