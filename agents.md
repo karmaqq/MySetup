@@ -1,4 +1,4 @@
-# AGENTS.md — MySetup v2.5.3
+# AGENTS.md — MySetup v2.6.3
 
 > Bu dosya, MySetup projesine kod müdahalesi yapacak her yapay zeka ajanı, editör eklentisi veya geliştirici için zorunlu okuma belgesidir.
 > Projeyi ilk kez gören bir ajanın hata yapmaması için gereken tüm yapısal bilgi burada tanımlanmıştır.
@@ -10,7 +10,7 @@
 Bu dosya ve `OPTIMIZATIONS.md`, ajanın her işlemindeki mutlak referansıdır:
 
 1. **AGENTS.md** → Mutlak kural kitabıdır; projeye dair tüm teknik ve yazımsal kurallar buradadır.
-2. **OPTIMIZATIONS.md** → Proje sağlık durumu referansıdır; tüm bulgular çözülmüştür.
+2. **OPTIMIZATIONS.md** → Proje sağlık durumu referansıdır; tüm bulgular çözülmüştür (13 bulgu ✅).
 3. **Kullanıcı talimatı** → Her zaman 1. önceliktir. Kullanıcı "yapma" derse yapılmaz, "yap" derse yapılır.
 4. **Güncel veri kullanımı** → Ajan, kendi önceki deneyimlerinden hatırladığı kuralları değil, her zaman bu iki dosyadaki en güncel hali referans alır.
 5. **İşlem öncesi ve sonrası kontrol** → Her kod değişikliği öncesi ve sonrası bu iki dosya okunur ve kurallara uygun hareket edilir.
@@ -56,7 +56,8 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 | `js/userset.js`    | Hesap ayarları, kullanıcı adı/şifre değiştirme, hesap silme                                                            |
 | `js/posts.js`      | **Post sistemi ana modül**, oluşturma, silme, akış yönetimi, sayfalama, listener başlatma  |
 | `js/posts-render.js` | Post/yorum/yanıt HTML render, görsel yükleme, feed DOM işlemleri |
-| `js/posts-actions.js` | Beğeni & silme aksiyonları, yorum/yanıt gönderimi, gerçek zamanlı yorum listener'ı, event delegation |
+| `js/posts-delete.js` | Post/yorum/yanıt silme onayları (`_confirmDeletePost`, `_confirmDeleteComment`, `_confirmDeleteReply`) |
+| `js/posts-actions.js` | Beğeni aksiyonları, yorum/yanıt gönderimi, gerçek zamanlı yorum listener'ı, event delegation |
 | `js/posts-profile.js` | Profil sekmesi yükleme, `_loadPostsChunk`, beğeni değişikliği, sayfa değişimi |
 
 ### Renderer Process — CSS
@@ -95,8 +96,9 @@ auth.js         → utils.js + firebase.js + editmodal.js + userset.js'e bağım
 userset.js      → utils.js + firebase.js + auth.js'e bağımlı
 posts.js        → utils.js + firebase.js + posts-render.js + posts-actions.js + posts-profile.js'e bağımlı
 posts-render.js → utils.js + firebase.js + posts.js'e bağımlı
-posts-actions.js→ utils.js + firebase.js + posts-render.js + io.js'e bağımlı
-posts-profile.js→ utils.js + firebase.js + posts-render.js + posts-actions.js'e bağımlı
+posts-delete.js → utils.js + firebase.js + io.js'e bağımlı
+posts-actions.js→ utils.js + firebase.js + posts-render.js + posts-delete.js + io.js'e bağımlı
+posts-profile.js→ utils.js + firebase.js + posts-render.js + posts-actions.js + posts-delete.js'e bağımlı
 ```
 
 Bu sıra `index.html` içindeki `<script>` etiketlerinde sabittir. **Asla değiştirilemez.**
@@ -205,9 +207,13 @@ Post görsellerinin yüklendiğinde aspect ratio kontrolü yapar. CSP uyumlu `ad
 
 `_renderPostHTML`, `_renderCommentComposerHTML`, `_renderCommentThreadHTML`, `_renderReplyHTML`, `_initPostImage`, `_handlePostImageLoad`, `_prependPostToFeed`, `_appendPostToFeed`, `_patchPostCard`, `_patchPostLikes`, `_softRemovePost`, `_renderEmptyFeed`, `_patchCommentLikeBtn`, `_patchReplyLikeBtn`
 
-### posts-actions.js (~628 satır)
+### posts-delete.js (~80 satır)
 
-`_togglePostLike`, `_toggleCommentLike`, `_toggleReplyLike`, `_confirmDeletePost`, `_confirmDeleteComment`, `_confirmDeleteReply`, `_submitComposer`, `_startReplyMode`, `_cancelReplyMode`, `_toggleCommentSection`, `_openRepliesSection`, `_initCommentListener`, `_refreshCommentThread`, `_updateCommentCount`, `_onlyLikesChanged`, click/keydown delegation, zaman güncellemesi
+`_confirmDeletePost`, `_confirmDeleteComment`, `_confirmDeleteReply`
+
+### posts-actions.js (~560 satır)
+
+`_togglePostLike`, `_toggleCommentLike`, `_toggleReplyLike`, `_submitComposer`, `_startReplyMode`, `_cancelReplyMode`, `_toggleCommentSection`, `_openRepliesSection`, `_initCommentListener`, `_refreshCommentThread`, `_updateCommentCount`, `_onlyLikesChanged`, click/keydown delegation, zaman güncellemesi
 
 ### posts-profile.js (~302 satır)
 
@@ -382,8 +388,12 @@ Kontrol listesi:
 
 ## 14. OPTIMIZATIONS.md ile İlişki
 
-Bekleyen optimizasyon bulguları `OPTIMIZATIONS.md` dosyasında belgelenmiştir. Tüm bulgular çözülmüştür ve durumları `✅ Uygulandı` olarak işaretlenmiştir. Kod değişikliği yapmadan önce ilgili bulgu okunmalı, değişiklik sonrası tablodaki durum kontrol edilmelidir.
+Tüm optimizasyon bulguları çözülmüştür. Kod değişikliği yapmadan önce ilgili bulgu okunmalı, değişiklik sonrası tablodaki durum kontrol edilmelidir.
 
 ---
 
-_Son güncelleme: 2026-05-04 — MySetup v2.5.3 — Tüm bulgular çözülmüştür_
+_Son güncelleme: 2026-05-06 — MySetup v2.6.3 — Tüm bulgular çözülmüştür_
+
+---
+
+_Son güncelleme: 2026-05-06 — MySetup v2.6.3 — Tüm bulgular çözülmüştür_

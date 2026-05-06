@@ -65,6 +65,10 @@ function initPosts() {
   _removeLoadMoreBtn();
   _startPostsListener();
 
+  if (typeof _startTimeUpdateInterval === "function") {
+    _startTimeUpdateInterval();
+  }
+
   const user = firebase.auth().currentUser;
   if (user) {
     initUserLikesListener(user.uid, _onUserLikesChanged);
@@ -90,6 +94,10 @@ function _teardownPosts() {
   removeUserPostsListener();
   removeUserLikesListener();
 
+  if (typeof _stopTimeUpdateInterval === "function") {
+    _stopTimeUpdateInterval();
+  }
+
   _loadingMoreUserPosts = false;
   _loadingMoreLikedPosts = false;
   _userPostsVisible = new Set();
@@ -110,7 +118,7 @@ function _startPostsListener() {
   const ref = postsRef.orderByChild("createdAt");
 
   ref.limitToLast(PAGE_SIZE).once("value", function (snap) {
-    if (window._isLoggingOut) return;
+    if (_isLoggingOut) return;
 
     const raw = snap.val() || {};
     const keys = Object.keys(raw).sort(function (a, b) {
@@ -155,7 +163,7 @@ function _checkHasMorePosts(oldestTs) {
     .endAt(oldestTs - 1)
     .limitToLast(1)
     .once("value", function (snap) {
-      if (window._isLoggingOut) return;
+      if (_isLoggingOut) return;
       _hasMorePosts = snap.exists();
       if (_hasMorePosts) {
         _renderLoadMoreBtn();
@@ -176,7 +184,7 @@ function _listenForNewPosts(ref) {
   _postsQuery = liveQuery;
 
   liveQuery.on("child_added", function (s) {
-    if (window._isLoggingOut) return;
+    if (_isLoggingOut) return;
     const id = s.key;
     const data = s.val();
     allPosts[id] = data;
@@ -186,7 +194,7 @@ function _listenForNewPosts(ref) {
   });
 
   postsRef.on("child_changed", function (s) {
-    if (window._isLoggingOut) return;
+    if (_isLoggingOut) return;
     const id = s.key;
     if (!allPosts[id]) return;
     const oldData = allPosts[id];
@@ -199,8 +207,12 @@ function _listenForNewPosts(ref) {
   });
 
   postsRef.on("child_removed", function (s) {
-    if (window._isLoggingOut) return;
+    if (_isLoggingOut) return;
     const id = s.key;
+    if (_commentListenerRefs[id]) {
+      _commentListenerRefs[id].off();
+      delete _commentListenerRefs[id];
+    }
     delete allPosts[id];
     _softRemovePost(id);
   });
@@ -240,7 +252,7 @@ function _loadMorePosts() {
     .endAt(oldestTs - 1)
     .limitToLast(PAGE_SIZE)
     .once("value", function (snap) {
-      if (window._isLoggingOut) return;
+      if (_isLoggingOut) return;
 
       const raw = snap.val() || {};
       const keys = Object.keys(raw).sort(function (a, b) {
@@ -394,11 +406,11 @@ function _handlePostImageSelect(e) {
   reader.onload = function (ev) {
     if (!postImagePreviewEl) return;
     postImagePreviewEl.innerHTML =
-      '<div style="position:relative;display:inline-block;">' +
+      '<div class="post-preview-wrapper">' +
       '<img src="' +
       ev.target.result +
-      '" style="max-width:100%;max-height:200px;border-radius:8px;" />' +
-      '<button class="remove-post-image-btn" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:13px;">✕</button>' +
+      '" class="post-preview-img" />' +
+      '<button class="remove-post-image-btn">✕</button>' +
       "</div>";
     postImagePreviewEl.classList.remove("hidden");
   };

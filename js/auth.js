@@ -128,14 +128,6 @@ function onUserLoggedOut() {
   if (loginError) loginError.textContent = "";
   if (regError) regError.textContent = "";
 
-  const savedEmail = localStorage.getItem("rememberedEmail");
-  if (savedEmail) {
-    const loginEmailInput = document.getElementById("loginEmail");
-    if (loginEmailInput) loginEmailInput.value = savedEmail;
-    const rememberMeCheck = document.getElementById("rememberMe");
-    if (rememberMeCheck) rememberMeCheck.checked = true;
-  }
-
   document.querySelectorAll(".password-wrapper input").forEach((input) => {
     input.type = "password";
   });
@@ -214,12 +206,12 @@ if (loginForm) {
     btn.disabled = true;
 
     try {
+      await auth.setPersistence(
+        rememberMeCheck?.checked
+          ? firebase.auth.Auth.Persistence.LOCAL
+          : firebase.auth.Auth.Persistence.SESSION
+      );
       await auth.signInWithEmailAndPassword(email, password);
-      if (rememberMeCheck?.checked) {
-        localStorage.setItem("rememberedEmail", email);
-      } else {
-        localStorage.removeItem("rememberedEmail");
-      }
     } catch (err) {
       errEl.textContent = getAuthErrorMessage(err.code);
       btn.textContent = "Giriş Yap";
@@ -267,35 +259,35 @@ if (registerForm) {
     try {
       const usernameKey = username.toLowerCase();
 
-      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      // 1. Önce username'i rezerve et (temp token ile)
+      const tempToken = "reserving_" + Date.now() + "_" + Math.random();
+      const usernameRef = database.ref("usernames/" + usernameKey);
 
-      try {
-        const usernameRef = database.ref("usernames/" + usernameKey);
-        const txnResult = await usernameRef.transaction((current) => {
-          if (current === null) return cred.user.uid;
-          return;
-        });
+      const txnResult = await usernameRef.transaction((current) => {
+        if (current === null) return tempToken;
+      });
 
-        if (!txnResult.committed) {
-          await cred.user.delete();
-          errEl.textContent = "Bu kullanıcı adı zaten alınmış.";
-          btn.textContent = "Kayıt Ol";
-          btn.disabled = false;
-          return;
-        }
-
-        await cred.user.updateProfile({ displayName: username });
-
+      if (!txnResult.committed) {
+        errEl.textContent = "Bu kullanıcı adı zaten alınmış.";
+        btn.textContent = "Kayıt Ol";
+        btn.disabled = false;
         return;
-      } catch (claimErr) {
-        try {
-          await cred.user.delete();
-        } catch (_) {}
-        errEl.textContent =
-          claimErr.code === "PERMISSION_DENIED" ||
-          claimErr.message?.includes("Permission")
-            ? "Bu kullanıcı adı zaten alınmış."
-            : "Bir hata oluştu.";
+      }
+
+      // 2. Kullanıcı oluştur
+      try {
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+
+        // 3. UID ile güncelle
+        await usernameRef.set(cred.user.uid);
+
+        // 4. Profil güncelle
+        await cred.user.updateProfile({ displayName: username });
+      } catch (userErr) {
+        // Hata durumunda rezervasyonu temizle
+        try { await usernameRef.remove(); } catch (_) {}
+        try { await cred.user.delete(); } catch (_) {}
+        errEl.textContent = getAuthErrorMessage(userErr.code) || "Bir hata oluştu.";
         btn.textContent = "Kayıt Ol";
         btn.disabled = false;
       }

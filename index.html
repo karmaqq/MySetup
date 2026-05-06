@@ -19,6 +19,7 @@
       rel="stylesheet"
     />
 
+    <link rel="stylesheet" href="css/theme.css" />
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/sidebar.css" />
     <link rel="stylesheet" href="css/home.css" />
@@ -26,9 +27,6 @@
     <link rel="stylesheet" href="css/inventory.css" />
     <link rel="stylesheet" href="css/editmodal.css" />
     <link rel="stylesheet" href="css/posts.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
-
-
     <link rel="stylesheet" href="css/auth.css" />
     <link rel="stylesheet" href="css/userset.css" />
 
@@ -36,7 +34,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <template id="svg-eye">
       <svg
@@ -547,9 +544,9 @@
       </div>
     </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!--                              SAYFA GÖVDE                             -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!--                              SAYFA GÖVDE                             -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
 
     <!-- ─────────────────── Kayıt Düzenleme Modali ─────────────────── -->
     <div class="modal-overlay" id="editModal">
@@ -1009,6 +1006,7 @@
     <script src="js/io.js"></script>
     <script src="js/posts.js"></script>
     <script src="js/posts-render.js"></script>
+    <script src="js/posts-delete.js"></script>
     <script src="js/posts-actions.js"></script>
     <script src="js/posts-profile.js"></script>
     <script src="js/updater-ui.js"></script>

@@ -4,6 +4,18 @@
 /*                      PROFİL SEKMESİ YÜKLEME                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Sabitler ─────────────────── */
+
+const TAB = {
+  USER_POSTS: "userPostsTab",
+  LIKED_POSTS: "likedPostsTab",
+};
+
+const EMPTY_STATE = {
+  userPostsTab: { emoji: "📰", text: "Henüz Gönderi Yayınlamadın" },
+  likedPostsTab: { emoji: "💔", text: "Henüz Kimseyi Beğenmedin" },
+};
+
 /* ─────────────────── Profil sekmesi değiştğinde çağrılır ─────────────────── */
 
 function updateProfilePosts() {
@@ -12,8 +24,8 @@ function updateProfilePosts() {
 
 function switchProfileTab(tabName) {
   _profileTab = tabName;
-  const userPostsTab = document.getElementById("userPostsTab");
-  const likedPostsTab = document.getElementById("likedPostsTab");
+  const userPostsTab = document.getElementById(TAB.USER_POSTS);
+  const likedPostsTab = document.getElementById(TAB.LIKED_POSTS);
 
   if (tabName === "user-posts") {
     _initUserPostsTab();
@@ -124,19 +136,12 @@ function _loadPostsChunk(cfg) {
       if (ids.length === 0) {
 
         if (tab) {
-          if (cfg.tabId === "userPostsTab") {
-            tab.innerHTML =
-              '<div class="empty-state profile-empty-state">' +
-              '<div class="empty-icon" style="font-size:64px;line-height:1">📰</div>' +
-              '<div class="empty-text">Henüz Gönderi Yayınlamadın</div>' +
-              "</div>";
-          } else {
-            tab.innerHTML =
-              '<div class="empty-state profile-empty-state">' +
-              '<div class="empty-icon" style="font-size:64px;line-height:1">💔</div>' +
-              '<div class="empty-text">Henüz Kimseyi Beğenmedin</div>' +
-              "</div>";
-          }
+          const s = EMPTY_STATE[cfg.tabId];
+          tab.innerHTML =
+            '<div class="empty-state profile-empty-state">' +
+            '<div class="empty-icon">' + s.emoji + "</div>" +
+            '<div class="empty-text">' + s.text + "</div>" +
+            "</div>";
         }
         cfg.setHasMore(false);
         _removeProfileLoadMoreBtn(cfg.tabId);
@@ -152,9 +157,9 @@ function _loadPostsChunk(cfg) {
 
         return getPostsByIds(postIds).then(function (posts) {
           if (tab) {
-            tab.innerHTML = "";
             const emptyState = tab.querySelector(".profile-empty-state");
             if (emptyState) emptyState.remove();
+            tab.innerHTML = "";
           }
           postIds.forEach(function (id) {
             if (posts[id]) {
@@ -300,7 +305,7 @@ function _appendOrPrependToProfileTab(tabId, postId) {
 
 function _renderProfileLoadMoreBtn(tabId, onClick) {
   const btnId =
-    tabId === "userPostsTab" ? "loadMoreUserPostsBtn" : "loadMoreLikedPostsBtn";
+    tabId === TAB.USER_POSTS ? "loadMoreUserPostsBtn" : "loadMoreLikedPostsBtn";
   if (document.getElementById(btnId)) return;
 
   const btn = document.createElement("button");
@@ -317,7 +322,7 @@ function _renderProfileLoadMoreBtn(tabId, onClick) {
 
 function _removeProfileLoadMoreBtn(tabId) {
   const btnId =
-    tabId === "userPostsTab" ? "loadMoreUserPostsBtn" : "loadMoreLikedPostsBtn";
+    tabId === TAB.USER_POSTS ? "loadMoreUserPostsBtn" : "loadMoreLikedPostsBtn";
   const btn = document.getElementById(btnId);
   if (btn) btn.remove();
 }
@@ -361,7 +366,7 @@ document.querySelectorAll(".profile-tabs .tab-btn").forEach(function (btn) {
         c.classList.remove("active");
       });
     const target = document.getElementById(
-      tab === "user-posts" ? "userPostsTab" : "likedPostsTab",
+      tab === "user-posts" ? TAB.USER_POSTS : TAB.LIKED_POSTS,
     );
     if (target) target.classList.add("active");
     switchProfileTab(tab);

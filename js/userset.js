@@ -469,47 +469,30 @@ document
           if (snap.val() === user.uid) await ref.remove();
         }
 
-        /* Kullanıcının postlarını ve indexlerini temizle */
-        try {
-          const userPostsSnap = await database
-            .ref("userPosts/" + user.uid)
-            .once("value");
-          const postIds = userPostsSnap.val()
-            ? Object.keys(userPostsSnap.val())
-            : [];
-          await Promise.all(
-            postIds.map(function (id) {
-              return database.ref("posts/" + id).remove();
-            }),
-          );
-          await database.ref("userPosts/" + user.uid).remove();
-        } catch (e) {
-          console.warn("Post silme hatası:", e);
         }
 
-        /* Beğeni indexini temizle */
-        try {
-          await database.ref("userLikes/" + user.uid).remove();
-        } catch (e) {
-          console.warn("Like index silme hatası:", e);
+        /* Firebase üzerinden tüm verileri sil */
+        if (typeof deleteUserAccount === "function") {
+          const result = await deleteUserAccount(user);
+          if (!result.success) {
+            throw result.error;
+          }
+        } else {
+          /* Yedek: Eski yöntem */
+          if (typeof database !== "undefined" && user.uid) {
+            try {
+              const storageRef = firebase.storage().ref();
+              const userFolderRef = storageRef.child(`users/${user.uid}`);
+              await deleteAllInFolder(userFolderRef);
+            } catch (storageErr) {
+              console.warn("Storage silme hatası:", storageErr);
+            }
+          }
+          await user.delete();
         }
-      }
-
-      /* Storage'dan tüm dosyaları sil */
-      if (typeof database !== "undefined" && user.uid) {
-        try {
-          const storageRef = firebase.storage().ref();
-          const userFolderRef = storageRef.child(`users/${user.uid}`);
-          await deleteAllInFolder(userFolderRef);
-        } catch (storageErr) {
-          console.warn("Storage silme hatası:", storageErr);
-        }
-      }
-
-      await user.delete();
-      if (typeof showToast === "function")
-        showToast("Hesabınız kalıcı olarak silindi.", "info");
-      closeDeleteModal();
+        if (typeof showToast === "function")
+          showToast("Hesabınız kalıcı olarak silindi.", "info");
+        closeDeleteModal();
     } catch (err) {
       errEl.style.color = "var(--red)";
       const code = err?.code || "";

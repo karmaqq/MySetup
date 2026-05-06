@@ -13,6 +13,7 @@
 let _currentPage = null;
 let _isAnimating = false;
 let _commentListenerRefs = {};
+const mainScroll = document.getElementById("mainScroll");
 
 const PAGE_SIZE = 20;
 
@@ -89,7 +90,7 @@ const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
 /* ─────────────────── Tarih Formatlayıcı ─────────────────── */
 
 const _dateCache = new Map();
-const _DATECACHE_MAX = 500;
+const _DATECACHE_MAX = 2000;
 
 const DATE_FORMAT = (dateString) => {
   if (!dateString) return "-";
@@ -121,7 +122,7 @@ const STATUS_MAP = {
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          GLOBAL DURUM DEĞİŞKENLERİ                       */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Uygulama Durumu ─────────────────── */
 
@@ -130,6 +131,28 @@ let currentSearch = "";
 let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
+var _isLoggingOut = false;
+
+/* ─────────────────── AppState Wrapper (BULGU-24) ─────────────────── */
+
+const AppState = {
+  get inventory() {
+    return {
+      get data() { return allData; },
+      set data(v) { allData = v; },
+      get search() { return currentSearch; },
+      set search(v) { currentSearch = v; },
+      get status() { return currentStatusFilter; },
+      set status(v) { currentStatusFilter = v; },
+      get sort() { return currentSort; },
+      set sort(v) { currentSort = v; },
+      get editingId() { return editingId; },
+      set editingId(v) { editingId = v; },
+    };
+  },
+  get isLoggingOut() { return _isLoggingOut; },
+  set isLoggingOut(v) { _isLoggingOut = v; },
+};
 
 /* ─────────────────── Render Yönetimi ─────────────────── */
 
@@ -227,7 +250,7 @@ function normalizeTr(s) {
 /* ─────────────────── HTML Karakter Kaçışı ─────────────────── */
 
 function escHtml(str) {
-  return (str || "").replace(/[&<>"'']/g, (c) => {
+  return (str || "").replace(/[&<>"']/g, (c) => {
     switch (c) {
       case "&":
         return "&amp;";

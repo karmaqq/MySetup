@@ -455,15 +455,14 @@ function renderTableRows(list) {
 /* ─────────────────── Tam Render (Filtre + Tablo + İstatistik) ─────────────────── */
 
 function renderAll() {
-  const container = document.getElementById("mainScroll");
-  const scrollY = container ? container.scrollTop : 0;
+  const scrollY = mainScroll ? mainScroll.scrollTop : 0;
   const list = getFilteredSortedList();
   updateStats(list);
   renderTableRows(list);
   updateResultCount(list.length);
 
   requestAnimationFrame(() => {
-    if (container) container.scrollTop = scrollY;
+    if (mainScroll) mainScroll.scrollTop = scrollY;
   });
 }
 
@@ -560,10 +559,14 @@ function updateItemStatus(itemId, newStatus) {
   const applyToDOM = () => {
     const row = tableBody?.querySelector(`tr[data-id="${itemId}"]`);
     const cell = row?.querySelector(".status-cell");
-    if (cell)
-      cell.outerHTML = buildStatusCellInnerHTML(
+    if (cell && cell.parentNode) {
+      const newCell = document.createElement("td");
+      newCell.className = "status-cell";
+      newCell.innerHTML = buildStatusCellInnerHTML(
         Object.assign({ id: itemId }, currentItem),
       );
+      cell.parentNode.replaceChild(newCell, cell);
+    }
   };
 
   applyToDOM();
@@ -573,8 +576,8 @@ function updateItemStatus(itemId, newStatus) {
       showToast("Kayıt güncellendi", "success");
     })
     .catch(() => {
-      currentItem.status = oldStatus;
-      currentItem._statusNorm = oldStatusNorm;
+      currentItem.status = oldItem.status;
+      currentItem._statusNorm = oldItem._statusNorm;
       rebuildStatsCache();
       applyToDOM();
       showToast("Durum güncellenemedi", "error");

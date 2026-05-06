@@ -142,3 +142,30 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* POST PREVIEW */
+
+.post-preview-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.post-preview-img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+}
+
+.remove-post-image-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 13px;
+}

@@ -77,83 +77,6 @@ function _toggleReplyLike(postId, commentId, replyId) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                           SİLME İŞLEMLERİ                                */
-/* ═════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Post silme onayı ─────────────────── */
-
-function _confirmDeletePost(postId) {
-  var postData = allPosts[postId];
-  showConfirm("Bu gönderiyi silmek istediğine emin misin?", function () {
-    deletePostFromFirebase(postId, postData)
-      .then(function () {
-        showToast("Gönderi silindi.", "success");
-      })
-      .catch(function () {
-        showToast("Gönderi silinemedi.", "error");
-      });
-  });
-}
-
-/* ─────────────────── Yorum silme onayı ─────────────────── */
-
-function _confirmDeleteComment(postId, commentId) {
-  showConfirm("Yorum silinsin mi?", function () {
-    const thread = document.getElementById(
-      "commentThread-" + postId + "-" + commentId,
-    );
-    if (thread) {
-      thread.style.transition = "opacity 0.3s, transform 0.3s";
-      thread.style.opacity = "0";
-      thread.style.transform = "translateY(4px)";
-      setTimeout(function () {
-        thread.remove();
-      }, 320);
-    }
-    deleteCommentFromFirebase(postId, commentId)
-      .then(function () {
-        showToast("Yorum silindi.", "success");
-      })
-      .catch(function () {
-        showToast("Yorum silinemedi.", "error");
-        if (thread) {
-          thread.style.opacity = "1";
-          thread.style.transform = "translateY(0)";
-        }
-      });
-  });
-}
-
-/* ─────────────────── Yanıt silme onayı ─────────────────── */
-
-function _confirmDeleteReply(postId, commentId, replyId) {
-  showConfirm("Yanıt silinsin mi?", function () {
-    const replyEl = document.querySelector(
-      '[data-reply-id="' + replyId + '"]',
-    );
-    if (replyEl) {
-      replyEl.style.transition = "opacity 0.3s, transform 0.3s";
-      replyEl.style.opacity = "0";
-      replyEl.style.transform = "translateY(4px)";
-      setTimeout(function () {
-        replyEl.remove();
-      }, 320);
-    }
-    deleteReplyFromFirebase(postId, commentId, replyId)
-      .then(function () {
-        showToast("Yanıt silindi.", "success");
-      })
-      .catch(function () {
-        showToast("Yanıt silinemedi.", "error");
-        if (replyEl) {
-          replyEl.style.opacity = "1";
-          replyEl.style.transform = "translateY(0)";
-        }
-      });
-  });
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                       YORUM / YANIT GÖNDERİMİ                         */
 /* ═════════════════════════════════════════════════════════════════════════ */
 
@@ -311,7 +234,7 @@ function _initCommentListener(postId) {
   _commentListenerRefs[postId] = ref;
 
   ref.on("child_added", function (s) {
-    if (window._isLoggingOut) return;
+    if (_isLoggingOut) return;
     const cid = s.key;
     const data = s.val();
     const post = allPosts[postId];
@@ -333,7 +256,7 @@ function _initCommentListener(postId) {
   });
 
   ref.on("child_changed", function (s) {
-    if (window._isLoggingOut) return;
+    if (_isLoggingOut) return;
     const cid = s.key;
     const data = s.val();
     const post = allPosts[postId];
@@ -349,7 +272,7 @@ function _initCommentListener(postId) {
   });
 
   ref.on("child_removed", function (s) {
-    if (window._isLoggingOut) return;
+    if (_isLoggingOut) return;
     const cid = s.key;
     const post = allPosts[postId];
     if (post && post.comments) delete post.comments[cid];
@@ -656,4 +579,63 @@ setInterval(function () {
     if (!replies || !replies[rid]) return;
     el.textContent = formatTimeAgo(replies[rid].createdAt, undefined, true);
   });
-}, 60 * 1000);
+  }, 60 * 1000);
+
+/* ─────────────────── Zaman güncelleme interval kontrolü ─────────────────── */
+
+let _timeUpdateInterval = null;
+
+function _startTimeUpdateInterval() {
+  if (_timeUpdateInterval) clearInterval(_timeUpdateInterval);
+  _timeUpdateInterval = setInterval(function () {
+    if (
+      typeof _currentPage !== "undefined" &&
+      _currentPage !== "home" &&
+      _currentPage !== "profile"
+    )
+      return;
+
+    document.querySelectorAll(".post-time").forEach(function (el) {
+      const card = el.closest("[data-post-id]");
+      if (!card) return;
+      const post = allPosts[card.dataset.postId];
+      if (!post) return;
+      el.textContent = formatTimeAgo(post.createdAt, post.phraseIndex);
+    });
+
+    document.querySelectorAll(".comment-time").forEach(function (el) {
+      const item = el.closest("[data-comment-id]");
+      const card = el.closest("[data-post-id]");
+      if (!item || !card) return;
+      const post = allPosts[card.dataset.postId];
+      const cid = item.dataset.commentId;
+      if (!post || !post.comments || !post.comments[cid]) return;
+      el.textContent = formatTimeAgo(
+        post.comments[cid].createdAt,
+        undefined,
+        true,
+      );
+    });
+
+    document.querySelectorAll(".reply-time").forEach(function (el) {
+      const replyEl = el.closest("[data-reply-id]");
+      const commentEl = el.closest("[data-comment-id]");
+      const card = el.closest("[data-post-id]");
+      if (!replyEl || !commentEl || !card) return;
+      const post = allPosts[card.dataset.postId];
+      const cid = commentEl.dataset.commentId;
+      const rid = replyEl.dataset.replyId;
+      if (!post || !post.comments || !post.comments[cid]) return;
+      const replies = post.comments[cid].replies;
+      if (!replies || !replies[rid]) return;
+      el.textContent = formatTimeAgo(replies[rid].createdAt, undefined, true);
+    });
+  }, 60 * 1000);
+}
+
+function _stopTimeUpdateInterval() {
+  if (_timeUpdateInterval) {
+    clearInterval(_timeUpdateInterval);
+    _timeUpdateInterval = null;
+  }
+}

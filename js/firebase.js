@@ -20,8 +20,7 @@ const database = firebase.database();
 
 let userDataRef = null;
 let activeBasePath = null;
-let postsRef = null;
-window._isLoggingOut = false;
+let postsRef = database.ref("posts");
 
 /* Enrich Item */
 function enrichItem(item) {
@@ -42,10 +41,12 @@ function enrichItem(item) {
 
 /* Init User Data */
 function initUserDataRef(userId) {
+  var sessionToken = Date.now() + "_" + Math.random();
+  initUserDataRef._activeToken = sessionToken;
+
   if (userDataRef) {
     userDataRef.off();
     userDataRef = null;
-    _isLoggingOut = true;
   }
 
   _statsCache.total = 0;
@@ -57,19 +58,17 @@ function initUserDataRef(userId) {
   if (!userId) {
     activeBasePath = null;
     allData = {};
-    _isLoggingOut = false;
     if (typeof renderAll === "function") renderAll();
     return;
   }
 
-  _isLoggingOut = false;
   activeBasePath = "users/" + userId + "/components";
   userDataRef = database.ref(activeBasePath);
 
   var firstLoad = true;
 
   userDataRef.once("value").then(function (snapshot) {
-    if (_isLoggingOut) return;
+    if (initUserDataRef._activeToken !== sessionToken) return;
     var rawData = snapshot.val() || {};
     allData = {};
     Object.keys(rawData).forEach(function (id) {
@@ -85,7 +84,7 @@ function initUserDataRef(userId) {
   userDataRef.on(
     "child_added",
     function (snapshot) {
-      if (firstLoad || _isLoggingOut) return;
+      if (firstLoad || initUserDataRef._activeToken !== sessionToken) return;
       var id = snapshot.key;
       var item = enrichItem(snapshot.val());
       item.id = id;
@@ -96,7 +95,7 @@ function initUserDataRef(userId) {
         addOrUpdateTableRow(id, item);
     },
     function (err) {
-      if (_isLoggingOut) return;
+      if (initUserDataRef._activeToken !== sessionToken) return;
       if (!userDataRef) return;
       if (err && err.toString().includes("permission_denied")) return;
       console.error("child_added error:", err);
@@ -106,7 +105,7 @@ function initUserDataRef(userId) {
   userDataRef.on(
     "child_changed",
     function (snapshot) {
-      if (_isLoggingOut) return;
+      if (initUserDataRef._activeToken !== sessionToken) return;
       var id = snapshot.key;
       var item = enrichItem(snapshot.val());
       item.id = id;
@@ -117,7 +116,7 @@ function initUserDataRef(userId) {
         addOrUpdateTableRow(id, item);
     },
     function (err) {
-      if (_isLoggingOut) return;
+      if (initUserDataRef._activeToken !== sessionToken) return;
       if (!userDataRef) return;
       if (err && err.toString().includes("permission_denied")) return;
       console.error("child_changed error:", err);
@@ -127,7 +126,7 @@ function initUserDataRef(userId) {
   userDataRef.on(
     "child_removed",
     function (snapshot) {
-      if (_isLoggingOut) return;
+      if (initUserDataRef._activeToken !== sessionToken) return;
       var id = snapshot.key;
       var oldItem = allData[id];
       delete allData[id];
@@ -135,12 +134,62 @@ function initUserDataRef(userId) {
       if (typeof removeTableRow === "function") removeTableRow(id);
     },
     function (err) {
-      if (_isLoggingOut) return;
+      if (initUserDataRef._activeToken !== sessionToken) return;
       if (!userDataRef) return;
       if (err && err.toString().includes("permission_denied")) return;
       console.error("child_removed error:", err);
     },
   );
+}
+
+initUserDataRef._activeToken = null;
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                           HESAP SILME                                  */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+async function deleteUserAccount(user) {
+  const uid = user.uid;
+
+  try {
+    // Database temizliği
+    await database.ref("users/" + uid).remove();
+
+    // Username temizliği
+    const usernameKey = (user.displayName || "").trim().toLowerCase();
+    if (usernameKey) {
+      const ref = database.ref("usernames/" + usernameKey);
+      const snap = await ref.once("value");
+      if (snap.val() === uid) await ref.remove();
+    }
+
+    // UserPosts
+    const userPostsSnap = await database.ref("userPosts/" + uid).once("value");
+    const postIds = userPostsSnap.val() ? Object.keys(userPostsSnap.val()) : [];
+    await Promise.all(
+      postIds.map((id) => database.ref("posts/" + id).remove()),
+    );
+    await database.ref("userPosts/" + uid).remove();
+
+    // UserLikes
+    await database.ref("userLikes/" + uid).remove();
+
+    // Storage
+    await deleteAllInFolder(
+      firebase
+        .storage()
+        .ref()
+        .child("users/" + uid),
+    );
+
+    // Auth
+    await user.delete();
+
+    return { success: true };
+  } catch (e) {
+    console.error("Hesap silme hatası:", e);
+    return { success: false, error: e };
+  }
 }
 
 /* Component CRUD */
@@ -237,21 +286,22 @@ function deletePostFromFirebase(postId, postData) {
       });
   }
 
-  var cleanupPromises = [];
-  if (uid) {
-    cleanupPromises.push(userPostsRef.child(uid).child(postId).remove());
-  }
-  if (postData && postData.likes) {
-    Object.keys(postData.likes).forEach(function (userId) {
+  return postsRef.child(postId).child("likes").once("value").then(function (likesSnap) {
+    var likes = likesSnap.val() || (postData && postData.likes) || {};
+    var cleanupPromises = [];
+    if (uid) {
+      cleanupPromises.push(userPostsRef.child(uid).child(postId).remove());
+    }
+    Object.keys(likes).forEach(function (userId) {
       cleanupPromises.push(userLikesRef.child(userId).child(postId).remove());
     });
-  }
 
-  return deletePromise.then(function () {
-    return Promise.all([
-      postsRef.child(postId).remove(),
-      Promise.all(cleanupPromises),
-    ]);
+    return deletePromise.then(function () {
+      return Promise.all([
+        postsRef.child(postId).remove(),
+        Promise.all(cleanupPromises),
+      ]);
+    });
   });
 }
 
@@ -296,25 +346,29 @@ function getUserLikesOnce(userId, limit, endAt) {
   });
 }
 
+function getPostsRef() {
+  return postsRef;
+}
+
 function getPostsByIds(postIds) {
   if (!postIds || !postIds.length) return Promise.resolve({});
-  var promises = postIds.map(function (id) {
-    return postsRef
-      .child(id)
-      .once("value")
-      .then(function (s) {
-        var val = s.val();
-        if (val) val._id = s.key;
-        return val;
+  var sorted = [].concat(postIds).sort();
+  return postsRef
+    .orderByKey()
+    .startAt(sorted[0])
+    .endAt(sorted[sorted.length - 1])
+    .once("value")
+    .then(function (snap) {
+      var all = snap.val() || {};
+      var map = {};
+      postIds.forEach(function (id) {
+        if (all[id]) {
+          all[id]._id = id;
+          map[id] = all[id];
+        }
       });
-  });
-  return Promise.all(promises).then(function (results) {
-    var map = {};
-    results.forEach(function (r) {
-      if (r && r._id) map[r._id] = r;
+      return map;
     });
-    return map;
-  });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -392,11 +446,11 @@ function initUserLikesListener(userId, onLikesChanged) {
   }
   _userLikesListener = userLikesRef.child(userId);
   _userLikesListener.on("child_added", function (s) {
-    if (window._isLoggingOut) return;
+    if (_isLoggingOut) return;
     onLikesChanged(s.key, s.val(), "added");
   });
   _userLikesListener.on("child_removed", function (s) {
-    if (window._isLoggingOut) return;
+    if (_isLoggingOut) return;
     onLikesChanged(s.key, null, "removed");
   });
 }
@@ -418,11 +472,11 @@ function initUserPostsListener(userId, onPostsChanged) {
   }
   _userPostsListener = userPostsRef.child(userId);
   _userPostsListener.on("child_added", function (s) {
-    if (window._isLoggingOut) return;
+    if (_isLoggingOut) return;
     onPostsChanged(s.key, s.val(), "added");
   });
   _userPostsListener.on("child_removed", function (s) {
-    if (window._isLoggingOut) return;
+    if (_isLoggingOut) return;
     onPostsChanged(s.key, null, "removed");
   });
 }
