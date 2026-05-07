@@ -169,6 +169,27 @@ function _confirmDeleteReply(postId, commentId, replyId) {
 
 /* ─────────────────── CSV İşleme ─────────────────── */
 
+function parseCsvLine(line) {
+  var result = [];
+  var inQuote = false;
+  var current = "";
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (c === '"') {
+      inQuote = !inQuote;
+      continue;
+    }
+    if (c === "," && !inQuote) {
+      result.push(current);
+      current = "";
+      continue;
+    }
+    current += c;
+  }
+  result.push(current);
+  return result;
+}
+
 function processCsv(csvText) {
   const lines = csvText.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) {

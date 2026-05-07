@@ -278,7 +278,7 @@ saveBtn?.addEventListener("click", async () => {
       }
       if (oldName && oldName !== newKey) {
         try {
-          await database.ref("usernames/" + oldName).set(null);
+          await database.ref("usernames/" + oldName).remove();
         } catch (_) {}
       }
     }

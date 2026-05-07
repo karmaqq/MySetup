@@ -221,8 +221,7 @@ function _initCommentListener(postId) {
     if (post.comments[cid]) return;
     post.comments[cid] = data;
 
-    const cards = document.querySelectorAll('[data-post-id="' + postId + '"]');
-    cards.forEach(function (card) {
+    getPostCards(postId).forEach(function (card) {
       const list = card.querySelector("#commentList-" + postId);
       if (list) {
         const wrapper = document.createElement("div");
@@ -289,8 +288,7 @@ function _refreshCommentThread(postId, commentId, commentData, existingEl) {
 function _updateCommentCount(postId) {
   const post = allPosts[postId];
   const count = post && post.comments ? Object.keys(post.comments).length :0;
-  const cards = document.querySelectorAll('[data-post-id="' + postId + '"]');
-  cards.forEach(function (card) {
+  getPostCards(postId).forEach(function (card) {
     const spans = card.querySelectorAll('[class*="comment-count-"]');
     spans.forEach(function (s) {
       s.textContent = count;
@@ -503,10 +501,8 @@ function _startTimeUpdateInterval() {
 
     if (document.hidden) return;
 
-    const feed = document.getElementById("postsFeed");
-    if (!feed) return;
-
-    const postCards = feed.querySelectorAll("[data-post-id]");
+    const postCards = document.querySelectorAll("[data-post-id]");
+    if (!postCards.length) return;
     postCards.forEach(function (card) {
       const post = allPosts[card.dataset.postId];
       if (!post) return;

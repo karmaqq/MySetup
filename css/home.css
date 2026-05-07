@@ -33,15 +33,6 @@
   scrollbar-color: var(--border2) transparent;
 }
 
-.post-textarea::-webkit-scrollbar {
-  width: 4px;
-}
-
-.post-textarea::-webkit-scrollbar-thumb {
-  background: var(--border2);
-  border-radius: 2px;
-}
-
 .post-textarea:focus {
   border-color: var(--accent);
 }

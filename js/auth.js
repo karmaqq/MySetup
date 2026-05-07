@@ -98,8 +98,6 @@ function onUserLoggedOut() {
   }
   sessionStorage.removeItem("_lastPage");
 
-  if (typeof clearAllModalForms === "function") clearAllModalForms();
-
   const loginFormEl = document.getElementById("loginForm");
   const registerFormEl = document.getElementById("registerForm");
 

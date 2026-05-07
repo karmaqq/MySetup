@@ -399,3 +399,7 @@ function updateAvatarLetter(elementId, name) {
 function getAvatarLetter(name) {
   return (name || "?").charAt(0).toUpperCase();
 }
+
+function getPostCards(postId) {
+  return document.querySelectorAll('[data-post-id="' + postId + '"]');
+}

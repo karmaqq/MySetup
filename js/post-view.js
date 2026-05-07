@@ -11,7 +11,6 @@ let _previousScrollTop = 0;
 let _replyTargetCommentId = null;
 let _replyTargetUsername = null;
 let _pvActiveNavBtn = null;
-let _pvRestoreInterval = null;
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*                              AÇMA / KAPAMA                                 */
@@ -468,34 +467,40 @@ function _restorePostViewOnLoad() {
   var savedPid = sessionStorage.getItem("_viewingPostId");
   if (!savedPid) return;
 
-  var _tries = 0;
-  _pvRestoreInterval = setInterval(function () {
-    _tries++;
-    if (_tries > 40) {
-      clearInterval(_pvRestoreInterval);
-      _pvRestoreInterval = null;
-    }
+  var _fallbackTimer = setTimeout(function () {
+    document.removeEventListener("postsReady", _onPostsReady);
     if (typeof allPosts !== "undefined" && allPosts[savedPid]) {
-      clearInterval(_pvRestoreInterval);
-      _pvRestoreInterval = null;
-      _viewingPostId = savedPid;
-      var postData = allPosts[savedPid];
-      var authorLabel = document.getElementById("postViewAuthorLabel");
-      if (authorLabel) {
-        authorLabel.textContent =
-          escHtml(postData.username || "Kullanıcı") + " gönderisi";
-      }
-      _previousPage = sessionStorage.getItem("_pvPreviousPage") || "home";
-      _previousScrollTop =
-        parseInt(sessionStorage.getItem("_pvScrollTop")) || 0;
-      _pvActiveNavBtn = document.querySelector(
-        '.sidebar-nav-btn[data-page="' + _previousPage + '"]',
-      );
-      _renderPostViewContent(savedPid, postData);
-      showPage("postView");
-      if (_pvActiveNavBtn) {
-        _pvActiveNavBtn.classList.add("active");
-      }
+      _onPostsReady();
     }
-  }, 100);
+  }, 5000);
+
+  function _onPostsReady() {
+    clearTimeout(_fallbackTimer);
+    document.removeEventListener("postsReady", _onPostsReady);
+    if (!allPosts[savedPid]) return;
+    _viewingPostId = savedPid;
+    var postData = allPosts[savedPid];
+    var authorLabel = document.getElementById("postViewAuthorLabel");
+    if (authorLabel) {
+      authorLabel.textContent =
+        escHtml(postData.username || "Kullanıcı") + " gönderisi";
+    }
+    _previousPage = sessionStorage.getItem("_pvPreviousPage") || "home";
+    _previousScrollTop =
+      parseInt(sessionStorage.getItem("_pvScrollTop")) || 0;
+    _pvActiveNavBtn = document.querySelector(
+      '.sidebar-nav-btn[data-page="' + _previousPage + '"]',
+    );
+    _renderPostViewContent(savedPid, postData);
+    showPage("postView");
+    if (_pvActiveNavBtn) {
+      _pvActiveNavBtn.classList.add("active");
+    }
+  }
+
+  if (typeof allPosts !== "undefined" && allPosts[savedPid]) {
+    _onPostsReady();
+  } else {
+    document.addEventListener("postsReady", _onPostsReady);
+  }
 }

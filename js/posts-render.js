@@ -156,8 +156,15 @@ function _appendPostToFeed(postId, postData) {
   const wrapper = document.createElement("div");
   wrapper.innerHTML = _renderPostHTML(postId, postData);
   const el = wrapper.firstElementChild;
+  el.style.opacity = "0";
+  el.style.transform = "translateY(8px)";
+  el.style.transition = "opacity 0.25s ease, transform 0.25s ease";
   postsFeed.appendChild(el);
   _initPostImage(el.querySelector(".post-img-lazy"));
+  requestAnimationFrame(function () {
+    el.style.opacity = "1";
+    el.style.transform = "translateY(0)";
+  });
 }
 
 /* ─────────────────── Mevcut kart varsa yerinde günceller ─────────────────── */
@@ -187,7 +194,7 @@ function _patchPostLikes(postId, likes) {
   const user = firebase.auth().currentUser;
   const likeCount = likes ? Object.keys(likes).length : 0;
   const liked = user && likes && likes[user.uid];
-  const cards = document.querySelectorAll('[data-post-id="' + postId + '"]');
+  const cards = getPostCards(postId);
   cards.forEach(function (card) {
     const btn = card.querySelector('[data-action="like-post"]');
     if (!btn) return;
@@ -202,9 +209,7 @@ function _patchPostLikes(postId, likes) {
 /* ─────────────────── Postu animasyonla kaldırır ─────────────────── */
 
 function _softRemovePost(postId) {
-  document
-    .querySelectorAll('[data-post-id="' + postId + '"]')
-    .forEach(function (el) {
+  getPostCards(postId).forEach(function (el) {
       el.style.transition = "opacity 0.3s, transform 0.3s";
       el.style.opacity = "0";
       el.style.transform = "translateY(4px)";
@@ -262,7 +267,10 @@ function _teardownPosts() {
     _postsQuery.off();
     _postsQuery = null;
   }
-  if (postsRef) postsRef.off();
+  if (postsRef) {
+    postsRef.off("child_changed", _onPostChanged);
+    postsRef.off("child_removed", _onPostRemoved);
+  }
   _postsListenerActive = false;
   allPosts = {};
   if (postsFeed) postsFeed.innerHTML = "";
@@ -277,10 +285,6 @@ function _teardownPosts() {
     _stopTimeUpdateInterval();
   }
 
-  if (typeof _pvRestoreInterval !== "undefined" && _pvRestoreInterval) {
-    clearInterval(_pvRestoreInterval);
-    _pvRestoreInterval = null;
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -322,6 +326,7 @@ function _startPostsListener() {
     );
 
     _listenForNewPosts(ref);
+    document.dispatchEvent(new CustomEvent("postsReady"));
   });
 }
 
@@ -349,6 +354,28 @@ function _checkHasMorePosts(oldestTs) {
 
 /* ─────────────────── Yeni gelen postları gerçek zamanlı dinler ─────────────────── */
 
+function _onPostChanged(s) {
+  const id = s.key;
+  if (!allPosts[id]) return;
+  const oldData = allPosts[id];
+  allPosts[id] = s.val();
+  if (_onlyLikesChanged(oldData, s.val())) {
+    _patchPostLikes(id, s.val().likes);
+  } else {
+    _patchPostCard(id, s.val());
+  }
+}
+
+function _onPostRemoved(s) {
+  const id = s.key;
+  if (_commentListenerRefs[id]) {
+    _commentListenerRefs[id].off();
+    delete _commentListenerRefs[id];
+  }
+  delete allPosts[id];
+  _softRemovePost(id);
+}
+
 function _listenForNewPosts(ref) {
   if (_postsListenerActive) return;
   _postsListenerActive = true;
@@ -366,27 +393,8 @@ function _listenForNewPosts(ref) {
     _prependPostToFeed(id, data);
   });
 
-  postsRef.on("child_changed", function (s) {
-    const id = s.key;
-    if (!allPosts[id]) return;
-    const oldData = allPosts[id];
-    allPosts[id] = s.val();
-    if (_onlyLikesChanged(oldData, s.val())) {
-      _patchPostLikes(id, s.val().likes);
-    } else {
-      _patchPostCard(id, s.val());
-    }
-  });
-
-  postsRef.on("child_removed", function (s) {
-    const id = s.key;
-    if (_commentListenerRefs[id]) {
-      _commentListenerRefs[id].off();
-      delete _commentListenerRefs[id];
-    }
-    delete allPosts[id];
-    _softRemovePost(id);
-  });
+  postsRef.on("child_changed", _onPostChanged);
+  postsRef.on("child_removed", _onPostRemoved);
 }
 
 /* ─────────────────── En yeni yüklü postun timestamp'i ─────────────────── */
@@ -436,8 +444,13 @@ function _loadMorePosts() {
 
       if (keys.length > 0) {
         _oldestLoadedKey = keys[keys.length - 1];
-        const newOldestTs = raw[_oldestLoadedKey].createdAt;
-        _checkHasMorePosts(newOldestTs);
+        if (keys.length < PAGE_SIZE) {
+          _hasMorePosts = false;
+          _removeLoadMoreBtn();
+        } else {
+          const newOldestTs = raw[_oldestLoadedKey].createdAt;
+          _checkHasMorePosts(newOldestTs);
+        }
       } else {
         _hasMorePosts = false;
         _removeLoadMoreBtn();

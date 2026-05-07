@@ -13,16 +13,29 @@ async function deleteUserAccount(user) {
     // UserLikes (kullanıcının beğendikleri)
     await database.ref("userLikes/" + uid).remove();
 
-    // UserPosts - beğeniler i temizlemek için deletePostFromFirebase kullan
+    // UserPosts - likes temizliği ile toplu sil
     const userPostsSnap = await database.ref("userPosts/" + uid).once("value");
     const postIds = userPostsSnap.val() ? Object.keys(userPostsSnap.val()) : [];
 
-    // Önce post verilerini çek (likes bilgisi için)
+    // Her post için likes temizle + post sil (userPosts tek tek silinmez,
+    // toplu silme alttaki remove() ile yapılır)
     const postDataMap = await getPostsByIds(postIds);
-
-    // Her postu deletePostFromFirebase ile sil (likes temizleme dahil)
     await Promise.all(
-      postIds.map((id) => deletePostFromFirebase(id, postDataMap[id] || null)),
+      postIds.map(async (id) => {
+        var imageUrl = postDataMap[id] ? postDataMap[id].imageUrl : null;
+        if (imageUrl) {
+          try { await firebase.storage().refFromURL(imageUrl).delete(); } catch (_) {}
+        }
+        // likes'ları temizle
+        var likesSnap = await postsRef.child(id).child("likes").once("value");
+        var likes = likesSnap.val() || {};
+        var likeCleanups = Object.keys(likes).map(function (userId) {
+          return userLikesRef.child(userId).child(id).remove();
+        });
+        await Promise.all(likeCleanups);
+        // post'u sil
+        await postsRef.child(id).remove();
+      }),
     );
 
     await database.ref("userPosts/" + uid).remove();

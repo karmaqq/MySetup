@@ -15,8 +15,10 @@ const VSCROLL_INITIAL = 40;
       if (typeof renderAll === "function") renderAll();
     }
   });
-  document.querySelectorAll(".modal-overlay").forEach(function (el) {
-    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
+  observer.observe(document.body, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["class"],
   });
 })();
 

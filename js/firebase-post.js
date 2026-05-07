@@ -119,22 +119,14 @@ function getUserLikesOnce(userId, limit, endAt) {
 
 function getPostsByIds(postIds) {
   if (!postIds || !postIds.length) return Promise.resolve({});
-  // Önce cache'den al
-  var cached = {};
-  var missing = [];
-  postIds.forEach(function (id) {
-    if (allPosts[id]) cached[id] = allPosts[id];
-    else missing.push(id);
-  });
-  if (!missing.length) return Promise.resolve(cached);
   return Promise.all(
-    missing.map(function (id) {
+    postIds.map(function (id) {
       return postsRef.child(id).once("value").then(function (s) {
         return s.exists() ? { id: id, data: s.val() } : null;
       });
     })
   ).then(function (results) {
-    var map = cached;
+    var map = {};
     results.forEach(function (r) {
       if (r) {
         r.data._id = r.id;
@@ -164,12 +156,8 @@ function toggleCommentLike(postId, commentId, userId) {
     .child(commentId)
     .child("likes")
     .child(userId);
-  return likeRef.once("value").then(function (snapshot) {
-    if (snapshot.exists()) {
-      return likeRef.remove();
-    } else {
-      return likeRef.set(true);
-    }
+  return likeRef.transaction(function (current) {
+    return current ? null : true;
   });
 }
 
@@ -201,12 +189,8 @@ function toggleReplyLike(postId, commentId, replyId, userId) {
     .child(replyId)
     .child("likes")
     .child(userId);
-  return likeRef.once("value").then(function (snapshot) {
-    if (snapshot.exists()) {
-      return likeRef.remove();
-    } else {
-      return likeRef.set(true);
-    }
+  return likeRef.transaction(function (current) {
+    return current ? null : true;
   });
 }
 

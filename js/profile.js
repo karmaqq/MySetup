@@ -61,8 +61,6 @@ function updateProfilePosts() {
 
 function switchProfileTab(tabName) {
   _profileTab = tabName;
-  const userPostsTab = document.getElementById(TAB.USER_POSTS);
-  const likedPostsTab = document.getElementById(TAB.LIKED_POSTS);
 
   if (tabName === "user-posts") {
     _initUserPostsTab();
@@ -185,7 +183,23 @@ function _loadPostsChunk(cfg) {
         })
         .slice(0, PAGE_SIZE);
 
-      return getPostsByIds(postIds).then(function (posts) {
+      // Önce allPosts cache'inden al, eksikleri Firebase'den fetch et
+      var cached = {};
+      var missing = [];
+      postIds.forEach(function (id) {
+        if (allPosts[id]) cached[id] = allPosts[id];
+        else missing.push(id);
+      });
+
+      var fetchPromise = missing.length
+        ? getPostsByIds(missing)
+        : Promise.resolve({});
+
+      return fetchPromise.then(function (fetched) {
+        var posts = Object.assign({}, cached);
+        Object.keys(fetched).forEach(function (id) {
+          posts[id] = fetched[id];
+        });
         if (tab) _showProfileContent(tab);
         postIds.forEach(function (id) {
           if (posts[id]) {
@@ -246,7 +260,7 @@ function _onUserLikesChanged(postId, value, type) {
     if (!_likedPostsVisible.has(postId)) {
       _likedPostsVisible.add(postId);
     }
-    if (_profileTab === "liked-posts") {
+    if (_profileTab === "liked-posts" && _currentPage === "profile") {
       _appendOrPrependToProfileTab("likedPostsTab", postId);
     }
   } else if (type === "removed") {
@@ -274,7 +288,7 @@ function _onUserPostsChanged(postId, value, type) {
     if (!_userPostsVisible.has(postId)) {
       _userPostsVisible.add(postId);
     }
-    if (_profileTab === "user-posts") {
+    if (_profileTab === "user-posts" && _currentPage === "profile") {
       _appendOrPrependToProfileTab("userPostsTab", postId);
     }
   } else if (type === "removed") {
@@ -301,6 +315,15 @@ function _appendOrPrependToProfileTab(tabId, postId) {
   const tab = document.getElementById(tabId);
   if (!tab) return;
   if (tab.querySelector('[data-post-id="' + postId + '"]')) return;
+  if (allPosts[postId]) {
+    _showProfileContent(tab);
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = _renderPostHTML(postId, allPosts[postId]);
+    const el = wrapper.firstElementChild;
+    tab.appendChild(el);
+    _initPostImage(el.querySelector(".post-img-lazy"));
+    return;
+  }
   getPostsByIds([postId]).then(function (posts) {
     if (posts[postId]) {
       allPosts[postId] = posts[postId];

@@ -76,9 +76,11 @@ function createWindow() {
     checkForUpdates();
   });
 
-  globalShortcut.register("F5", () => {
-    if (mainWindow) mainWindow.reload();
-  });
+  if (!app.isPackaged) {
+    globalShortcut.register("F5", () => {
+      if (mainWindow) mainWindow.reload();
+    });
+  }
 
   setupUpdater(mainWindow);
 }

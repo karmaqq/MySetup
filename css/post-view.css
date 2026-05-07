@@ -6,13 +6,20 @@
 
 /* ─────────────────── Sayfa Yapısı ─────────────────── */
 
+#postViewPage {
+  display: flex;
+  flex-direction: column;
+}
+
 .post-view-container {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: visible;
+  overflow: hidden;
 }
 
 /* ─────────────────── Sabit Back Bar (Title bar +10 aşağıda) ─────────────────── */
@@ -21,6 +28,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  flex-shrink: 0;
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
@@ -52,7 +60,11 @@
 /* ─────────────────── Kaydırılabilir Alan ─────────────────── */
 
 .post-view-scroll {
-  overflow: visible;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 
 #postViewContent .post-card {
@@ -90,6 +102,7 @@
   position: sticky;
   bottom: 0;
   z-index: 10;
+  flex-shrink: 0;
   border-top: 1px solid var(--border);
   background: var(--surface);
   padding: 10px 16px;

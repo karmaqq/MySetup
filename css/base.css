@@ -129,6 +129,18 @@ body {
   background-clip: padding-box;
 }
 
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.thin-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 2px;
+}
+
 /* ─────────────────── Title Bar Sürükleme ─────────────────── */
 
 .title-bar-drag {

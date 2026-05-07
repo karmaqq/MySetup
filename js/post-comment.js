@@ -25,7 +25,7 @@ function _renderCommentComposerHTML(postId) {
   html += '<div class="comment-input-row">';
   html += '<div class="comment-input-wrapper">';
   html +=
-    '<textarea class="comment-input-field" id="commentInput-' +
+    '<textarea class="comment-input-field thin-scrollbar" id="commentInput-' +
     pid +
     '" placeholder="Yorum yaz..." maxlength="500" rows="1"></textarea>';
   html +=

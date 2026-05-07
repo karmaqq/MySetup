@@ -129,15 +129,6 @@
   scrollbar-color: var(--border2) transparent;
 }
 
-.comment-input-row .comment-input-field::-webkit-scrollbar {
-  width: 4px;
-}
-
-.comment-input-row .comment-input-field::-webkit-scrollbar-thumb {
-  background: var(--border2);
-  border-radius: 2px;
-}
-
 .comment-input-row .comment-input-field:focus {
   border-color: var(--accent);
 }
