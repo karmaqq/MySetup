@@ -18,6 +18,17 @@ const EMPTY_STATE = {
 
 /* ─────────────────── Profil Durum Yönetimi ─────────────────── */
 
+let _profileTab = null;
+let _userPostsVisible = new Set();
+let _userPostsOldestTs = null;
+let _hasMoreUserPosts = false;
+let _loadingMoreUserPosts = false;
+
+let _likedPostsVisible = new Set();
+let _likedPostsOldestTs = null;
+let _hasMoreLikedPosts = false;
+let _loadingMoreLikedPosts = false;
+
 function _showProfileLoading(tab) {
   tab.innerHTML = '<div class="posts-loading">Yükleniyor...</div>';
 }

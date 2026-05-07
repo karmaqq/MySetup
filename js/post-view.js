@@ -23,7 +23,10 @@ function openPostView(postId, fromCommentBtn) {
   if (!postData) return;
 
   _viewingPostId = postId;
+  sessionStorage.setItem("_viewingPostId", postId);
   _previousPage = _currentPage;
+  sessionStorage.setItem("_pvPreviousPage", _previousPage);
+  sessionStorage.setItem("_pvScrollTop", mainScroll ? mainScroll.scrollTop : 0);
   _previousScrollTop = mainScroll ? mainScroll.scrollTop : 0;
 
   var authorLabel = document.getElementById("postViewAuthorLabel");
@@ -63,6 +66,9 @@ function closePostView() {
   var savedNavBtn = _pvActiveNavBtn;
 
   _viewingPostId = null;
+  sessionStorage.removeItem("_viewingPostId");
+  sessionStorage.removeItem("_pvPreviousPage");
+  sessionStorage.removeItem("_pvScrollTop");
   _previousPage = null;
   _previousScrollTop = 0;
   _replyTargetCommentId = null;
@@ -451,4 +457,40 @@ if (_pvContent) {
       return;
     }
   });
+}
+
+/* ═════════════════════════════════════════════════════════════════ */
+/*                          F5 / RELOAD KORUMASI                           */
+/* ═════════════════════════════════════════════════════════════════ */
+
+function _restorePostViewOnLoad() {
+  var savedPid = sessionStorage.getItem("_viewingPostId");
+  if (!savedPid) return;
+
+  var _tries = 0;
+  var _check = setInterval(function () {
+    _tries++;
+    if (_tries > 40) clearInterval(_check);
+    if (typeof allPosts !== "undefined" && allPosts[savedPid]) {
+      clearInterval(_check);
+      _viewingPostId = savedPid;
+      var postData = allPosts[savedPid];
+      var authorLabel = document.getElementById("postViewAuthorLabel");
+      if (authorLabel) {
+        authorLabel.textContent =
+          escHtml(postData.username || "Kullanıcı") + " gönderisi";
+      }
+      _previousPage = sessionStorage.getItem("_pvPreviousPage") || "home";
+      _previousScrollTop =
+        parseInt(sessionStorage.getItem("_pvScrollTop")) || 0;
+      _pvActiveNavBtn = document.querySelector(
+        '.sidebar-nav-btn[data-page="' + _previousPage + '"]',
+      );
+      _renderPostViewContent(savedPid, postData);
+      showPage("postView");
+      if (_pvActiveNavBtn) {
+        _pvActiveNavBtn.classList.add("active");
+      }
+    }
+  }, 100);
 }

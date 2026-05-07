@@ -1,10 +1,20 @@
 /*--- zorunlu - agents.md yorum kurallarına uy ---*/
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                            POST RENDER                                    */
+/*                            POST RENDER + FEED YÖNETİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Post kartı HTML döndürür ─────────────────── */
+/* ─────────────────── Feed Durum Değişkenleri ─────────────────── */
+
+let allPosts = {};
+let _postsListenerActive = false;
+let _postsQuery = null;
+
+let _oldestLoadedKey = null;
+let _hasMorePosts = false;
+let _loadingMore = false;
+
+/* ─────────────────── Post Kartı HTML Döndürür ─────────────────── */
 
 function _renderPostHTML(postId, postData) {
   const user = firebase.auth().currentUser;
@@ -211,4 +221,241 @@ function _renderEmptyFeed() {
   if (!postsFeed) return;
   postsFeed.innerHTML =
     '<div class="posts-empty">Henüz gönderi yok. İlk gönderiyi sen yap!</div>';
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                         POST SİSTEMİ BAŞLATMA                            */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Giriş yapıldığında çağrılır ─────────────────── */
+
+function initPosts() {
+  _teardownPosts();
+  allPosts = {};
+  _oldestLoadedKey = null;
+  _hasMorePosts = false;
+  _loadingMore = false;
+
+  if (postsFeed) postsFeed.innerHTML = "";
+  _removeLoadMoreBtn();
+  _startPostsListener();
+
+  if (typeof _startTimeUpdateInterval === "function") {
+    _startTimeUpdateInterval();
+  }
+
+  const user = firebase.auth().currentUser;
+  if (user) {
+    initUserLikesListener(user.uid, _onUserLikesChanged);
+    initUserPostsListener(user.uid, _onUserPostsChanged);
+  }
+}
+
+/* ─────────────────── Çıkış yapıldığında çağrılır ─────────────────── */
+
+function _teardownPosts() {
+  if (_postsQuery) {
+    _postsQuery.off();
+    _postsQuery = null;
+  }
+  if (postsRef) postsRef.off();
+  _postsListenerActive = false;
+  allPosts = {};
+  if (postsFeed) postsFeed.innerHTML = "";
+  _removeLoadMoreBtn();
+
+  Object.values(_commentListenerRefs).forEach(function (ref) { ref.off(); });
+  for (var k in _commentListenerRefs) delete _commentListenerRefs[k];
+  removeUserPostsListener();
+  removeUserLikesListener();
+
+  if (typeof _stopTimeUpdateInterval === "function") {
+    _stopTimeUpdateInterval();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                         SAYFALAMA VE LİSTENER                             */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── İlk 20 postu yükler, listener başlatır ─────────────────── */
+
+function _startPostsListener() {
+  const ref = postsRef.orderByChild("createdAt");
+
+  ref.limitToLast(PAGE_SIZE).once("value", function (snap) {
+
+    const raw = snap.val() || {};
+    const keys = Object.keys(raw).sort(function (a, b) {
+      return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);
+    });
+
+    keys.forEach(function (id) {
+      allPosts[id] = raw[id];
+    });
+
+    if (keys.length > 0) {
+      _oldestLoadedKey = keys[keys.length - 1];
+    }
+
+    if (postsFeed) postsFeed.innerHTML = "";
+    keys.forEach(function (id) {
+      _appendPostToFeed(id, raw[id]);
+    });
+
+    if (keys.length === 0) {
+      _renderEmptyFeed();
+    }
+
+    _checkHasMorePosts(
+      raw[_oldestLoadedKey] ? raw[_oldestLoadedKey].createdAt : null,
+    );
+
+    _listenForNewPosts(ref);
+  });
+}
+
+/* ─────────────────── Veritabanında daha fazla post var mı kontrol eder ─────────────────── */
+
+function _checkHasMorePosts(oldestTs) {
+  if (!oldestTs) {
+    _hasMorePosts = false;
+    _removeLoadMoreBtn();
+    return;
+  }
+  postsRef
+    .orderByChild("createdAt")
+    .endAt(oldestTs - 1)
+    .limitToLast(1)
+    .once("value", function (snap) {
+      _hasMorePosts = snap.exists();
+      if (_hasMorePosts) {
+        _renderLoadMoreBtn();
+      } else {
+        _removeLoadMoreBtn();
+      }
+    });
+}
+
+/* ─────────────────── Yeni gelen postları gerçek zamanlı dinler ─────────────────── */
+
+function _listenForNewPosts(ref) {
+  if (_postsListenerActive) return;
+  _postsListenerActive = true;
+
+  const newestTs = _getNewestTimestamp();
+  const liveQuery = ref.startAt(newestTs + 1);
+  _postsQuery = liveQuery;
+
+  liveQuery.on("child_added", function (s) {
+    const id = s.key;
+    const data = s.val();
+    allPosts[id] = data;
+    const empty = postsFeed && postsFeed.querySelector(".posts-empty");
+    if (empty) empty.remove();
+    _prependPostToFeed(id, data);
+  });
+
+  postsRef.on("child_changed", function (s) {
+    const id = s.key;
+    if (!allPosts[id]) return;
+    const oldData = allPosts[id];
+    allPosts[id] = s.val();
+    if (_onlyLikesChanged(oldData, s.val())) {
+      _patchPostLikes(id, s.val().likes);
+    } else {
+      _patchPostCard(id, s.val());
+    }
+  });
+
+  postsRef.on("child_removed", function (s) {
+    const id = s.key;
+    if (_commentListenerRefs[id]) {
+      _commentListenerRefs[id].off();
+      delete _commentListenerRefs[id];
+    }
+    delete allPosts[id];
+    _softRemovePost(id);
+  });
+}
+
+/* ─────────────────── En yeni yüklü postun timestamp'i ─────────────────── */
+
+function _getNewestTimestamp() {
+  let max = 0;
+  Object.values(allPosts).forEach(function (p) {
+    if ((p.createdAt || 0) > max) max = p.createdAt;
+  });
+  return max;
+}
+
+/* ─────────────────── Daha fazla post yükle (sayfalama) ─────────────────── */
+
+function _loadMorePosts() {
+  if (_loadingMore || !_hasMorePosts || !_oldestLoadedKey) return;
+  _loadingMore = true;
+
+  const btn = document.getElementById("loadMoreBtn");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Yükleniyor...";
+  }
+
+  const oldestData = allPosts[_oldestLoadedKey];
+  const oldestTs = oldestData ? oldestData.createdAt : null;
+  if (!oldestTs) {
+    _loadingMore = false;
+    return;
+  }
+
+  postsRef
+    .orderByChild("createdAt")
+    .endAt(oldestTs - 1)
+    .limitToLast(PAGE_SIZE)
+    .once("value", function (snap) {
+
+      const raw = snap.val() || {};
+      const keys = Object.keys(raw).sort(function (a, b) {
+        return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);
+      });
+
+      keys.forEach(function (id) {
+        allPosts[id] = raw[id];
+        _appendPostToFeed(id, raw[id]);
+      });
+
+      if (keys.length > 0) {
+        _oldestLoadedKey = keys[keys.length - 1];
+        const newOldestTs = raw[_oldestLoadedKey].createdAt;
+        _checkHasMorePosts(newOldestTs);
+      } else {
+        _hasMorePosts = false;
+        _removeLoadMoreBtn();
+      }
+
+      _loadingMore = false;
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Daha Fazla Göster";
+      }
+    });
+}
+
+/* ─────────────────── Daha fazla yükle butonunu render eder ─────────────────── */
+
+function _renderLoadMoreBtn() {
+  if (document.getElementById("loadMoreBtn")) return;
+  const btn = document.createElement("button");
+  btn.id = "loadMoreBtn";
+  btn.className = "load-more-btn";
+  btn.textContent = "Daha Fazla Göster";
+  btn.onclick = _loadMorePosts;
+  postsFeed &&
+    postsFeed.parentNode &&
+    postsFeed.parentNode.insertBefore(btn, postsFeed.nextSibling);
+}
+
+function _removeLoadMoreBtn() {
+  const btn = document.getElementById("loadMoreBtn");
+  if (btn) btn.remove();
 }

@@ -1,4 +1,4 @@
-# AGENTS.md — MySetup v2.7.0
+# AGENTS.md — MySetup v2.8.0
 
 > Bu dosya, MySetup projesine kod müdahalesi yapacak her yapay zeka ajanı, editör eklentisi veya geliştirici için zorunlu okuma belgesidir.
 > Projeyi ilk kez gören bir ajanın hata yapmaması için gereken tüm yapısal bilgi burada tanımlanmıştır.
@@ -47,19 +47,21 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 | Dosya              | Sorumluluk                                                                                                             |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
 | `js/utils.js`      | **Tüm global değişkenler**, DOM referansları, yardımcı fonksiyonlar, `scheduleRender`, `formatTimeAgo`, `DATE_FORMAT`, `parseDateInput`, `parsePriceInput` |
-| `js/firebase.js`   | Firebase init, `allData` CRUD, realtime listener yönetimi, `enrichItem()`, **post CRUD**, `initPostsListener`, yorum/yanıt CRUD |
+| `js/firebase-core.js`   | Firebase init, `enrichItem()`, `initUserDataRef()` |
+| `js/firebase-inv.js`   | Envanter CRUD: `addComponentToFirebase`, `replaceUserDataInFirebase`, `updateComponentInFirebase`, `updateComponentStatusInFirebase`, `deleteComponentFromFirebase`, `uploadImageToFirebase`, `deleteAllInFolder` |
+| `js/firebase-user.js`  | `deleteUserAccount()` (hesap silme işlemleri) |
+| `js/firebase-post.js`  | Post CRUD + yorum/yanıt CRUD + beğeni işlemleri + listener'lar (`addPostToFirebase`, `togglePostLike`, `addCommentToFirebase`, `initUserLikesListener`, vb.) |
 | `js/table.js`      | Render motoru, filtre/sıralama, istatistik önbelleği, CRUD UI eylemleri, event delegation                                |
-| `js/io.js`         | Toast/confirm sistemi, arama debounce, CSV içe/dışa aktarma, tüm listeyi sil                                           |
-| `js/updater-ui.js` | Güncelleme butonu ve IPC olayları (renderer tarafı)                                                                    |
+| `js/io.js`         | Toast/confirm sistemi, arama debounce, CSV içe/dışa aktarma, tüm listeyi sil, **post/yorum/yanıt silme onayları** (`_confirmDeletePost`, vb.)                                           |
+| `js/updater-ui.js`   | Güncelleme butonu ve IPC olayları (renderer tarafı)                                                                    |
 | `js/editmodal.js`  | Düzenleme modali, görsel yükleme/önizleme, yıldız derecelendirme, klavye kısayolları                                   |
 | `js/auth.js`       | Firebase Auth, oturum durumu, giriş/kayıt formları, şifre kontrolü                                     |
 | `js/userset.js`    | Hesap ayarları, kullanıcı adı/şifre değiştirme, hesap silme                                                            |
-| `js/post-comments-render.js` | Yorum/yanıt HTML render, composer HTML, beğeni butonu DOM güncelleme |
-| `js/posts-render.js` | Post kartı HTML render, görsel yükleme, feed DOM işlemleri, post patch/remove |
-| `js/posts-create.js` | **Post oluşturma**, görsel seçimi, Firebase'e kayıt, sayfalama, listener başlatma  |
-| `js/posts-delete.js` | Post/yorum/yanıt silme onayları (`_confirmDeletePost`, `_confirmDeleteComment`, `_confirmDeleteReply`) |
-| `js/posts-actions.js` | Beğeni aksiyonları, yorum/yanıt gönderimi, gerçek zamanlı yorum listener'ı, event delegation |
-| `js/posts-profile.js` | Profil sekmesi yükleme, `_loadPostsChunk`, beğeni değişikliği, sayfa değişimi |
+| `js/post-comment.js` | Yorum/yanıt HTML render, composer HTML, beğeni butonu DOM güncelleme |
+| `js/posts-render.js` | Post kartı HTML render, görsel yükleme, feed DOM işlemleri, **post listener başlatma**, sayfalama, `initPosts()`, `_teardownPosts()` |
+| `js/posts-create.js` | **Post oluşturma**, görsel seçimi, Firebase'e kayıt |
+| `js/posts-actions.js` | Beğeni aksiyonları, yorum/yanıt gönderimi, gerçek zamanlı yorum listener'ı, event delegation, composer state yönetimi |
+| `js/profile.js` | Profil sekmesi yükleme, `_loadPostsChunk`, beğeni değişikliği, sayfa değişimi |
 | `js/post-view.js`   | Post View açma/kapama, render, yorum listener, scroll yönetimi |
 
 ### Renderer Process — CSS
@@ -74,7 +76,9 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 | `css/editmodal.css` | Düzenleme modali, floating görsel önizleme, yıldız sistemi                                        |
 | `css/auth.css`      | Auth overlay, giriş/kayıt panelleri                                                               |
 | `css/userset.css`   | Ayarlar modalleri, kullanıcı adı düzenleme, tehlike alanı                                         |
-| `css/post-view.css` | Post View panel, back bar, scroll alan, sticky composer stilleri |
+| `css/posts.css` | Post create ve postların dışarıdan nasıl görüneceğini belirler |
+| `css/post-view.css` | Post özel sayfasının nasıl görüneceğini belirler |
+| `css/post-comment.css` | Post yorumlarının ve yanıtlarının nasıl görüneceğini belirler |
 
 ### Diğer
 
@@ -90,20 +94,22 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 
 ```
 utils.js        → Hiçbir şeye bağımlı değil; diğer her dosya buna bağımlıdır
-firebase.js     → utils.js'e bağımlı (allData, normalizeTr, _statsCache)
-table.js        → utils.js + firebase.js'e bağımlı
-io.js           → utils.js + table.js + firebase.js'e bağımlı
+firebase-core.js → utils.js'e bağımlı
+firebase-inv.js → firebase-core.js'e bağımlı (database)
+firebase-user.js → firebase-core.js + firebase-post.js'e bağımlı
+firebase-post.js → firebase-core.js'e bağımlı (postsRef, userPostsRef, userLikesRef)
+table.js        → utils.js + firebase-inv.js'e bağımlı
+io.js           → utils.js + table.js + firebase-post.js'e bağımlı
 updater-ui.js   → utils.js'e bağımlı (window.electronAPI)
-editmodal.js    → utils.js + firebase.js + io.js'e bağımlı
-auth.js         → utils.js + firebase.js + editmodal.js + userset.js'e bağımlı
-userset.js      → utils.js + firebase.js + auth.js'e bağımlı
-post-comments-render.js → utils.js + firebase.js'e bağımlı
-posts-render.js → utils.js + firebase.js + post-comments-render.js'e bağımlı
-posts-create.js → utils.js + firebase.js + posts-render.js'e bağımlı
-posts-delete.js → utils.js + firebase.js + io.js'e bağımlı
-posts-actions.js→ utils.js + firebase.js + posts-render.js + post-comments-render.js + posts-delete.js + io.js'e bağımlı
-posts-profile.js→ utils.js + firebase.js + posts-render.js + posts-actions.js + posts-delete.js + post-comments-render.js'e bağımlı
-post-view.js → utils.js + firebase.js + posts-render.js + post-comments-render.js + posts-actions.js
+editmodal.js    → utils.js + firebase-inv.js + io.js'e bağımlı
+auth.js         → utils.js + firebase-core.js + editmodal.js + userset.js'e bağımlı
+userset.js      → utils.js + firebase-core.js + firebase-user.js + auth.js'e bağımlı
+post-comment.js → utils.js + firebase-post.js'e bağımlı
+posts-render.js → utils.js + firebase-post.js + post-comment.js'e bağımlı
+posts-create.js → utils.js + firebase-post.js + posts-render.js'e bağımlı
+posts-actions.js→ utils.js + firebase-post.js + posts-render.js + post-comment.js + io.js'e bağımlı
+profile.js → utils.js + firebase-post.js + posts-render.js + posts-actions.js + post-comment.js'e bağımlı
+post-view.js → utils.js + firebase-post.js + posts-render.js + post-comment.js + posts-actions.js
 ```
 
 Bu sıra `index.html` içindeki `<script>` etiketlerinde sabittir. **Asla değiştirilemez.**
@@ -127,19 +133,45 @@ Aşağıdaki değişkenler yalnızca `js/utils.js` içinde `let` veya `const` il
 | `_isAnimating`        | `false`        | utils.js (satır 14)  | Sayfa geçiş animasyonu kontrolü                     |
 | `_viewingPostId`      | `string\|null` | utils.js (satır 16)  | Şu an görüntülenen post ID'si                     |
 
-### posts-create.js Global Durum Değişkenleri (posts-create.js içinde tanımlı)
+### posts-render.js Global Durum Değişkenleri (posts-render.js içinde tanımlı)
 
 | Değişken              | Tip            | Açıklama                                            |
 | --------------------- | -------------- | -------------------------------------------------- |
 | `allPosts`            | `{}`           | Tüm post verisinin anlık görüntüsü                   |
-| `selectedPostImage`   | `null`         | Seçilen post görseli                                |
 | `_postsListenerActive`| `false`        | Post listener aktif mi                              |
+| `_postsQuery`         | `null`         | Post query referansı                                |
 | `_oldestLoadedKey`    | `null`         | En eski yüklenen post anahtarı                       |
 | `_hasMorePosts`       | `false`        | Daha fazla post var mı                              |
 | `_loadingMore`        | `false`        | Post yükleniyor mu                                   |
+
+### posts-create.js Global Durum Değişkenleri (posts-create.js içinde tanımlı)
+
+| Değişken              | Tip            | Açıklama                                            |
+| --------------------- | -------------- | -------------------------------------------------- |
+| `selectedPostImage`   | `null`         | Seçilen post görseli                                |
+
+### posts-actions.js Global Durum Değişkenleri (posts-actions.js içinde tanımlı)
+
+| Değişken              | Tip            | Açıklama                                            |
+| --------------------- | -------------- | -------------------------------------------------- |
+| `_composerTargetPostId` | `null`         | Composer'ın hedef post ID'si                        |
+| `_composerReplyCommentId` | `null`      | Composer'ın hedef yorum ID'si                       |
+| `_composerReplyUsername` | `null`       | Composer'ın hedef kullanıcı adı                     |
+| `_timeUpdateInterval` | `null`         | Zaman güncelleme interval'i                         |
+
+### profile.js Global Durum Değişkenleri (profile.js içinde tanımlı)
+
+| Değişken              | Tip            | Açıklama                                            |
+| --------------------- | -------------- | -------------------------------------------------- |
 | `_profileTab`         | `null`         | Aktif profil sekmesi                                |
 | `_userPostsVisible`   | `Set`          | Görünür kullanıcı postları (BULGU-14)               |
+| `_userPostsOldestTs`  | `null`         | En eski kullanıcı post timestamp'i                   |
+| `_hasMoreUserPosts`   | `false`        | Daha fazla kullanıcı postu var mı                     |
+| `_loadingMoreUserPosts`| `false`        | Kullanıcı postu yükleniyor mu                         |
 | `_likedPostsVisible`  | `Set`          | Görünür beğenilen postlar (BULGU-14)               |
+| `_likedPostsOldestTs` | `null`         | En eski beğenilen post timestamp'i                 |
+| `_hasMoreLikedPosts`  | `false`        | Daha fazla beğenilen post var mı                     |
+| `_loadingMoreLikedPosts`| `false`       | Beğenilen post yükleniyor mu                         |
 
 ### Modül-İçi İstisna Değişkenleri
 
@@ -159,11 +191,11 @@ Aşağıdaki değişkenler yalnızca tanımlandıkları dosyanın kapsamındadı
 
 ## 5. Kritik Fonksiyonlar ve Kuralları
 
-### `enrichItem(item)` — `js/firebase.js`
+### `enrichItem(item)` — `js/firebase-core.js`
 
 Firebase'den gelen ham veriyi `allData`'ya yazmadan önce bu fonksiyondan geçirmek **zorunludur**. `_searchTag` ve `_statusNorm` alanlarını ekler. Bu alanlar olmadan arama ve filtreleme çalışmaz.
 
-### `initUserDataRef(uid)` — `js/firebase.js`
+### `initUserDataRef(uid)` — `js/firebase-core.js`
 
 Başında `userDataRef.off()` çağrısı vardır; bu satır kaldırılamaz. Kaldırılırsa listener'lar birikir ve aynı event birden fazla kez tetiklenir.
 
@@ -185,33 +217,41 @@ Tüm arama ve durum karşılaştırmaları bu fonksiyondan geçer. Ham string ka
 
 **Önemli:** `updateStatsCacheOnChange` içinde `normalizeTr(item.status)` YERİNE `item._statusNorm` kullanılmalıdır. `rebuildStatsCache` içinde de aynı kural geçerlidir.
 
-### `deleteAllInFolder(ref)` — `js/firebase.js`
+### `deleteAllInFolder(ref)` — `js/firebase-inv.js`
 
 Storage'daki kullanıcı dosyalarını özyinelemeli siler. **Yalnızca hesap silme akışında** çağrılabilir.
 
-### `_loadPostsChunk(cfg)` — `js/posts-profile.js`
-:
+### `_loadPostsChunk(cfg)` — `js/profile.js`
+
 Profil sekmesi veri yükleme işlemlerini birleştiren ortak fonksiyondur. `config` nesnesi ile çalışır (BULGU-07 çözümü).
 
 ### `_initPostImage(img)` — `js/posts-render.js`
-:
+
 Post görsellerinin yüklendiğinde aspect ratio kontrolü yapar. CSP uyumlu `addEventListener` kullanır (BULGU-12 çözümü).
 
 ### `_renderPostHTML(postId, postData)` — `js/posts-render.js`
-:
+
 Post kartı HTML'ini oluşturur. Yorumları ve composer'ı çağırır.
 
-### `_renderCommentComposerHTML(postId)` — `js/post-comments-render.js`
-:
+### `_renderCommentComposerHTML(postId)` — `js/post-comment.js`
+
 Ortak yorum/yanıt giriş alanı HTML'ini döndürür.
 
-### `_renderCommentThreadHTML(postId, commentId, commentData)` — `js/post-comments-render.js`
-:
+### `_renderCommentThreadHTML(postId, commentId, commentData)` — `js/post-comment.js`
+
 Yorum + yanıtları kapsayan blok HTML'ini oluşturur.
 
-### `_renderReplyHTML(postId, commentId, replyId, replyData)` — `js/post-comments-render.js`
-:
+### `_renderReplyHTML(postId, commentId, replyId, replyData)` — `js/post-comment.js`
+
 Tek yanıt satırı HTML'ini döndürür.
+
+### `initPosts()` — `js/posts-render.js`
+
+Post sistemini başlatır, listener'ları kurar, sayfalama ayarlarını yapar.
+
+### `createPost()` — `js/posts-create.js`
+
+Yeni post oluşturur, görsel varsa yükler ve Firebase'e kaydeder.
 
 ---
 
@@ -221,43 +261,49 @@ Tek yanıt satırı HTML'ini döndürür.
 
 `showPage`, `isAnyModalOpen`, `scheduleRender`, `normalizeTr`, `escHtml`, `escAttr`, `safeExternalUrl`, `applyPriceFormat`, `parseDateInput`, `parsePriceInput`, `formatTimeAgo`, `formatDateTime`, `DATE_FORMAT`
 
-### firebase.js (23 fn)
+### firebase-core.js (4 fn)
 
-**Envanter:** `enrichItem`, `initUserDataRef`, `addComponentToFirebase`, `replaceUserDataInFirebase`, `updateComponentInFirebase`, `updateComponentStatusInFirebase`, `deleteComponentFromFirebase`, `uploadImageToFirebase`, `deleteAllInFolder`  
-**Post:** `addPostToFirebase`, `deletePostFromFirebase`, `togglePostLike`, `getUserPostsOnce`, `getUserLikesOnce`, `getPostsByIds`  
-**Yorum:** `addCommentToFirebase`, `deleteCommentFromFirebase`, `toggleCommentLike`, `addReplyToFirebase`, `deleteReplyFromFirebase`, `toggleReplyLike`, `initUserLikesListener`, `removeUserLikesListener`
+`enrichItem`, `initUserDataRef`
+
+### firebase-inv.js (7 fn)
+
+`addComponentToFirebase`, `replaceUserDataInFirebase`, `updateComponentInFirebase`, `updateComponentStatusInFirebase`, `deleteComponentFromFirebase`, `uploadImageToFirebase`, `deleteAllInFolder`
+
+### firebase-user.js (1 fn)
+
+`deleteUserAccount`
+
+### firebase-post.js (17 fn)
+
+`addPostToFirebase`, `deletePostFromFirebase`, `togglePostLike`, `getUserPostsOnce`, `getUserLikesOnce`, `getPostsByIds`, `getPostsRef`, `addCommentToFirebase`, `deleteCommentFromFirebase`, `toggleCommentLike`, `addReplyToFirebase`, `deleteReplyFromFirebase`, `toggleReplyLike`, `initUserLikesListener`, `removeUserLikesListener`, `initUserPostsListener`, `removeUserPostsListener`
 
 ### table.js (23 fn)
 
 `getFilteredSortedList`, `rebuildStatsCache`, `updateStatsCacheOnChange`, `updateStats`, `updateResultCount`, `updateSortIcons`, `getStatusClassName`, `buildStatusCellInnerHTML`, `buildCombinedSpecsCellHTML`, `buildRowHTML`, `buildGroupRowHTML`, `createRowEl`, `buildRowsFragment`, `renderTableRows`, `renderAll`, `_countVisibleItems`, `isItemVisible`, `addOrUpdateTableRow`, `removeTableRow`, `updateItemStatus`, `deleteItem`, `initiateAddRow`, `submitNewItem`, `initTableBodyEvents`
 
-### io.js (4 fn + event handlers)
+### io.js (4 fn + event handlers + 3 delete fn)
 
-`showToast`, `showConfirm`, `parseCsvLine`, `processCsv`
+`showToast`, `showConfirm`, `parseCsvLine`, `processCsv`, `_confirmDeletePost`, `_confirmDeleteComment`, `_confirmDeleteReply`
 
-### post-comments-render.js (~200 satır)
+### post-comment.js (~200 satır)
 
 `_renderCommentComposerHTML`, `_renderCommentThreadHTML`, `_renderReplyHTML`, `_patchCommentLikeBtn`, `_patchReplyLikeBtn`
 
-### posts-render.js (~320 satır)
+### posts-render.js (~500 satır)
 
-`_renderPostHTML`, `_initPostImage`, `_handlePostImageLoad`, `_prependPostToFeed`, `_appendPostToFeed`, `_patchPostCard`, `_patchPostLikes`, `_softRemovePost`, `_renderEmptyFeed`
+`_renderPostHTML`, `_initPostImage`, `_handlePostImageLoad`, `_prependPostToFeed`, `_appendPostToFeed`, `_patchPostCard`, `_patchPostLikes`, `_softRemovePost`, `_renderEmptyFeed`, `initPosts`, `_teardownPosts`, `_startPostsListener`, `_checkHasMorePosts`, `_listenForNewPosts`, `_getNewestTimestamp`, `_loadMorePosts`, `_renderLoadMoreBtn`, `_removeLoadMoreBtn`
 
-### posts-create.js (~440 satır)
+### posts-create.js (~180 satır)
 
-`initPosts`, `_teardownPosts`, `_startPostsListener`, `_checkHasMorePosts`, `_listenForNewPosts`, `_getNewestTimestamp`, `_loadMorePosts`, `_renderLoadMoreBtn`, `_removeLoadMoreBtn`, `createPost`, `_uploadAndSavePost`, `_savePost`, `_handlePostImageSelect`, `_removePostImage`, `clearPostDraft`
-
-### posts-delete.js (~80 satır)
-
-`_confirmDeletePost`, `_confirmDeleteComment`, `_confirmDeleteReply`
+`createPost`, `_uploadAndSavePost`, `_savePost`, `_handlePostImageSelect`, `_removePostImage`, `clearPostDraft`
 
 ### posts-actions.js (~560 satır)
 
-`_togglePostLike`, `_toggleCommentLike`, `_toggleReplyLike`, `_submitComposer`, `_openRepliesSection`, `_initCommentListener`, `_refreshCommentThread`, `_updateCommentCount`, `_onlyLikesChanged`, click/keydown delegation, zaman güncellemesi
+`_togglePostLike`, `_toggleCommentLike`, `_toggleReplyLike`, `_submitComposer`, `_startReplyMode`, `_cancelReplyMode`, `_openRepliesSection`, `_initCommentListener`, `_refreshCommentThread`, `_updateCommentCount`, `_onlyLikesChanged`, click/keydown delegation, zaman güncellemesi
 
-### posts-profile.js (~302 satır)
+### profile.js (~375 satır)
 
-`updateProfilePosts`, `switchProfileTab`, `_initUserPostsTab`, `_initLikedPostsTab`, `_loadPostsChunk`, `_onUserLikesChanged`, `_appendOrPrependToProfileTab`, `_renderProfileLoadMoreBtn`, `_removeProfileLoadMoreBtn`, `_onPageChange`, profil sekme event listener'ları
+`updateProfilePosts`, `switchProfileTab`, `_initUserPostsTab`, `_initLikedPostsTab`, `_loadPostsChunk`, `_onUserLikesChanged`, `_onUserPostsChanged`, `_appendOrPrependToProfileTab`, `_renderProfileLoadMoreBtn`, `_removeProfileLoadMoreBtn`, `_onPageChange`, profil sekme event listener'ları
 
 ### editmodal.js (17 fn)
 
@@ -275,7 +321,7 @@ Tek yanıt satırı HTML'ini döndürür.
 
 `startDotAnimation`, `stopDotAnimation`
 
-### post-view.js (~270 satır)
+### post-view.js (~450 satır)
 
 `openPostView`, `closePostView`, `_renderPostViewContent`, `_initPostViewCommentListener`, `_updatePostViewCommentCount`, `_setPostViewReplyTarget`, `_clearPostViewReplyTarget`, `_submitPostViewComment`
 
@@ -351,6 +397,7 @@ const x = a + b; // toplam                    ← YASAK: satır sonu yorumu
 - `package.json → build.publish` içindeki `owner`/`repo` değerlerini değiştirmek
 - Firebase modular SDK sentaksı (`import { initializeApp }`) kullanmak
 - `escAttr` ve `escHtml`'i aynı string'e ardışık uygulamak (çift escape)
+- `firebase.js` içindeki kodları izole etmeden yeni firebase dosyası eklemek (v2.8.0 kuralı)
 
 ---
 
@@ -364,6 +411,7 @@ const x = a + b; // toplam                    ← YASAK: satır sonu yorumu
 - Yeni modal eklemek; eklenen her yeni `.modal-overlay` için `MutationObserver`'ın gözlemleyeceği listeye dahil etmek (`table.js` başındaki IIFE)
 - `preload.js`'e yeni IPC kanalı eklemek — her kanal için `onceListener` pattern'i kullanmak
 - `cors.json`'ı yalnızca Firebase Console'dan Storage CORS ayarı için güncellemek
+- Firebase işlemlerini mantıksal parçalara bölmek (`firebase-core`, `firebase-inv`, `firebase-user`, `firebase-post`) (v2.8.0 yeniliği)
 
 ---
 
@@ -379,7 +427,7 @@ const x = a + b; // toplam                    ← YASAK: satır sonu yorumu
 import { initializeApp } from 'firebase/app';
 ```
 
-`firebase.apps.length` kontrolü `firebase.js`'de yapılıyor; ikinci `initializeApp` çağrısı hata üretir.
+`firebase.apps.length` kontrolü `firebase-core.js`'de yapılıyor; ikinci `initializeApp` çağrısı hata üretir.
 
 ---
 
@@ -427,6 +475,7 @@ Kontrol listesi:
 - Post oluşturma, beğenme, yorum/yanıt ekleme
 - Post görsel yükleme ve kaldırma
 - Profil sekmeleri (Gönderilerim / Beğenilenler)
+- Firebase dosya yapısı: `firebase-core.js`, `firebase-inv.js`, `firebase-user.js`, `firebase-post.js` ayrımı
 
 ---
 
@@ -436,4 +485,6 @@ Tüm optimizasyon bulguları çözülmüştür. Kod değişikliği yapmadan önc
 
 ---
 
-_Son güncelleme: 2026-05-07 — MySetup v2.7.0 — Post View Sistemi eklendi_
+_Son güncelleme: 2026-05-07 — MySetup v2.8.0 — Firebase sistemi modülerleştirildi (firebase-core, firebase-inv, firebase-user, firebase-post)_
+
+_Son güncelleme: 2026-05-07 — MySetup v2.8.0 — Post sistemi yeniden yapılandırıldı (posts-create, posts-render, posts-actions, profile, io.js içinde delete işlemleri)_
