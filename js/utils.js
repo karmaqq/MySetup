@@ -12,7 +12,7 @@
 
 let _currentPage = sessionStorage.getItem("_lastPage") || "home";
 let _isAnimating = false;
-let _pendingPage = null;
+let _pendingPageQueue = [];
 let _commentListenerRefs = {};
 let _viewingPostId = null;
 const mainScroll = document.getElementById("mainScroll");
@@ -21,7 +21,10 @@ const PAGE_SIZE = 20;
 
 function showPage(pageName) {
   if (_isAnimating) {
-    _pendingPage = pageName;
+    // Kuyruğa ekle, aynı sayfa varsa tekrar ekleme
+    if (_pendingPageQueue[_pendingPageQueue.length - 1] !== pageName) {
+      _pendingPageQueue.push(pageName);
+    }
     return;
   }
   _isAnimating = true;
@@ -46,20 +49,17 @@ function showPage(pageName) {
 
   if (oldPage) {
     oldPage.style.opacity = "0";
-    oldPage.style.transform = "translateY(10px)";
     oldPage.style.visibility = "hidden";
     oldPage.classList.remove("active");
   }
 
   newPage.style.visibility = "visible";
   newPage.style.opacity = "0";
-  newPage.style.transform = "translateY(10px)";
   newPage.classList.add("active");
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       newPage.style.opacity = "1";
-      newPage.style.transform = "translateY(0)";
     });
   });
 
@@ -78,9 +78,8 @@ function showPage(pageName) {
     if (typeof _onPageChange === "function") {
       _onPageChange(pageName);
     }
-    if (_pendingPage) {
-      const next = _pendingPage;
-      _pendingPage = null;
+    if (_pendingPageQueue.length) {
+      const next = _pendingPageQueue.shift();
       showPage(next);
     }
   }, 320);
@@ -100,22 +99,25 @@ const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
 /* ─────────────────── Tarih Formatlayıcı ─────────────────── */
 
 const _dateCache = new Map();
-const _DATECACHE_MAX = 2000;
+const _DATECACHE_MAX = 1000;
 
 const DATE_FORMAT = (dateString) => {
   if (!dateString) return "-";
-  if (_dateCache.has(dateString)) return _dateCache.get(dateString);
+  if (_dateCache.has(dateString)) {
+    // LRU: hit olanı sona taşı
+    const val = _dateCache.get(dateString);
+    _dateCache.delete(dateString);
+    _dateCache.set(dateString, val);
+    return val;
+  }
   const date = new Date(dateString);
   const result = isNaN(date.getTime())
     ? dateString
     : date.toLocaleDateString("tr-TR");
   if (_dateCache.size >= _DATECACHE_MAX) {
-    const deleteCount = Math.floor(_DATECACHE_MAX * 0.2);
-    let removed = 0;
-    for (const key of _dateCache.keys()) {
-      _dateCache.delete(key);
-      if (++removed >= deleteCount) break;
-    }
+    // En eski kaydı sil (Map sırası insertion order)
+    const firstKey = _dateCache.keys().next().value;
+    _dateCache.delete(firstKey);
   }
   _dateCache.set(dateString, result);
   return result;
@@ -142,24 +144,7 @@ let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
 
-/* ─────────────────── AppState Wrapper (BULGU-24) ─────────────────── */
 
-const AppState = {
-  get inventory() {
-    return {
-      get data() { return allData; },
-      set data(v) { allData = v; },
-      get search() { return currentSearch; },
-      set search(v) { currentSearch = v; },
-      get status() { return currentStatusFilter; },
-      set status(v) { currentStatusFilter = v; },
-      get sort() { return currentSort; },
-      set sort(v) { currentSort = v; },
-      get editingId() { return editingId; },
-      set editingId(v) { editingId = v; },
-    };
-  },
-};
 
 /* ─────────────────── Render Yönetimi ─────────────────── */
 

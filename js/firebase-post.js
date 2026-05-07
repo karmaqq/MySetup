@@ -51,7 +51,7 @@ function deletePostFromFirebase(postId, postData) {
   }
 
   return postsRef.child(postId).child("likes").once("value").then(function (likesSnap) {
-    var likes = likesSnap.val() || (postData && postData.likes) || {};
+    var likes = likesSnap.val() || {};
     var cleanupPromises = [];
     if (uid) {
       cleanupPromises.push(userPostsRef.child(uid).child(postId).remove());
@@ -72,16 +72,19 @@ function deletePostFromFirebase(postId, postData) {
 function togglePostLike(postId, userId) {
   var likeRef = postsRef.child(postId).child("likes").child(userId);
   var userLikeRef = userLikesRef.child(userId).child(postId);
-  return likeRef.once("value").then(function (snapshot) {
-    if (snapshot.exists()) {
-      return Promise.all([likeRef.remove(), userLikeRef.remove()]);
-    } else {
-      return Promise.all([
-        likeRef.set(true),
-        userLikeRef.set(firebase.database.ServerValue.TIMESTAMP),
-      ]);
-    }
-  });
+  return likeRef
+    .transaction(function (currentValue) {
+      return currentValue ? null : true;
+    })
+    .then(function (result) {
+      if (result.committed) {
+        if (result.snapshot.val() === null) {
+          return userLikeRef.remove();
+        } else {
+          return userLikeRef.set(firebase.database.ServerValue.TIMESTAMP);
+        }
+      }
+    });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -116,14 +119,22 @@ function getUserLikesOnce(userId, limit, endAt) {
 
 function getPostsByIds(postIds) {
   if (!postIds || !postIds.length) return Promise.resolve({});
+  // Önce cache'den al
+  var cached = {};
+  var missing = [];
+  postIds.forEach(function (id) {
+    if (allPosts[id]) cached[id] = allPosts[id];
+    else missing.push(id);
+  });
+  if (!missing.length) return Promise.resolve(cached);
   return Promise.all(
-    postIds.map(function (id) {
+    missing.map(function (id) {
       return postsRef.child(id).once("value").then(function (s) {
         return s.exists() ? { id: id, data: s.val() } : null;
       });
     })
   ).then(function (results) {
-    var map = {};
+    var map = cached;
     results.forEach(function (r) {
       if (r) {
         r.data._id = r.id;

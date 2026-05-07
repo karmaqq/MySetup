@@ -78,67 +78,68 @@ function initUserDataRef(userId) {
     if (typeof rebuildStatsCache === "function") rebuildStatsCache();
     if (typeof renderAll === "function") renderAll();
     firstLoad = false;
+
+    // Listener'ları burada kur - firstLoad false olduktan sonra
+    userDataRef.on(
+      "child_added",
+      function (snapshot) {
+        if (initUserDataRef._activeToken !== sessionToken) return;
+        var id = snapshot.key;
+        var item = enrichItem(snapshot.val());
+        item.id = id;
+        var oldItem = allData[id];
+        allData[id] = item;
+        updateStatsCacheOnChange(item, oldItem, false);
+        if (typeof addOrUpdateTableRow === "function")
+          addOrUpdateTableRow(id, item);
+      },
+      function (err) {
+        if (initUserDataRef._activeToken !== sessionToken) return;
+        if (!userDataRef) return;
+        if (err && err.toString().includes("permission_denied")) return;
+        console.error("child_added error:", err);
+      },
+    );
+
+    userDataRef.on(
+      "child_changed",
+      function (snapshot) {
+        if (initUserDataRef._activeToken !== sessionToken) return;
+        var id = snapshot.key;
+        var item = enrichItem(snapshot.val());
+        item.id = id;
+        var oldItem = allData[id];
+        allData[id] = item;
+        updateStatsCacheOnChange(item, oldItem, false);
+        if (typeof addOrUpdateTableRow === "function")
+          addOrUpdateTableRow(id, item);
+      },
+      function (err) {
+        if (initUserDataRef._activeToken !== sessionToken) return;
+        if (!userDataRef) return;
+        if (err && err.toString().includes("permission_denied")) return;
+        console.error("child_changed error:", err);
+      },
+    );
+
+    userDataRef.on(
+      "child_removed",
+      function (snapshot) {
+        if (initUserDataRef._activeToken !== sessionToken) return;
+        var id = snapshot.key;
+        var oldItem = allData[id];
+        delete allData[id];
+        if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
+        if (typeof removeTableRow === "function") removeTableRow(id);
+      },
+      function (err) {
+        if (initUserDataRef._activeToken !== sessionToken) return;
+        if (!userDataRef) return;
+        if (err && err.toString().includes("permission_denied")) return;
+        console.error("child_removed error:", err);
+      },
+    );
   });
-
-  userDataRef.on(
-    "child_added",
-    function (snapshot) {
-      if (firstLoad || initUserDataRef._activeToken !== sessionToken) return;
-      var id = snapshot.key;
-      var item = enrichItem(snapshot.val());
-      item.id = id;
-      var oldItem = allData[id];
-      allData[id] = item;
-      updateStatsCacheOnChange(item, oldItem, false);
-      if (typeof addOrUpdateTableRow === "function")
-        addOrUpdateTableRow(id, item);
-    },
-    function (err) {
-      if (initUserDataRef._activeToken !== sessionToken) return;
-      if (!userDataRef) return;
-      if (err && err.toString().includes("permission_denied")) return;
-      console.error("child_added error:", err);
-    },
-  );
-
-  userDataRef.on(
-    "child_changed",
-    function (snapshot) {
-      if (initUserDataRef._activeToken !== sessionToken) return;
-      var id = snapshot.key;
-      var item = enrichItem(snapshot.val());
-      item.id = id;
-      var oldItem = allData[id];
-      allData[id] = item;
-      updateStatsCacheOnChange(item, oldItem, false);
-      if (typeof addOrUpdateTableRow === "function")
-        addOrUpdateTableRow(id, item);
-    },
-    function (err) {
-      if (initUserDataRef._activeToken !== sessionToken) return;
-      if (!userDataRef) return;
-      if (err && err.toString().includes("permission_denied")) return;
-      console.error("child_changed error:", err);
-    },
-  );
-
-  userDataRef.on(
-    "child_removed",
-    function (snapshot) {
-      if (initUserDataRef._activeToken !== sessionToken) return;
-      var id = snapshot.key;
-      var oldItem = allData[id];
-      delete allData[id];
-      if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
-      if (typeof removeTableRow === "function") removeTableRow(id);
-    },
-    function (err) {
-      if (initUserDataRef._activeToken !== sessionToken) return;
-      if (!userDataRef) return;
-      if (err && err.toString().includes("permission_denied")) return;
-      console.error("child_removed error:", err);
-    },
-  );
 }
 
 initUserDataRef._activeToken = null;

@@ -80,11 +80,10 @@ document.addEventListener("keydown", (e) => {
 
 /* ─────────────────── Filtre Butonları Dinleyicisi ─────────────────── */
 
-document.querySelectorAll(".filter-btn").forEach((btn) => {
+const filterBtns = document.querySelectorAll(".filter-btn");
+filterBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
-    document
-      .querySelectorAll(".filter-btn")
-      .forEach((b) => b.classList.remove("active"));
+    filterBtns.forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentStatusFilter = btn.dataset.status;
     if (typeof renderAll === "function") renderAll();
@@ -178,11 +177,8 @@ function processCsv(csvText) {
   }
 
   const getNewKey = () => {
-    if (typeof database === "undefined") return null;
-    if (typeof activeBasePath !== "undefined" && activeBasePath) {
-      return database.ref(activeBasePath).push().key;
-    }
-    return database.ref().push().key;
+    if (typeof database === "undefined" || !activeBasePath) return null;
+    return database.ref(activeBasePath).push().key;
   };
 
   const dataLines = lines.slice(1);

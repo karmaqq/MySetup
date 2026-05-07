@@ -1,6 +1,8 @@
-/*--- mandatory - obey agents.md comment rules ---*/
+/*--- zorunlu - agents.md yorum kurallarına uy ---*/
 
-/* POST CREATE BOX */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          POST OLUŞTURMA KUTUSU                           */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .create-post {
   background: var(--surface);
@@ -114,7 +116,9 @@
   border: 1px solid var(--border);
 }
 
-/* LOAD MORE BUTTON */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          DAHA FAZLA YÜKLE BUTONU                        */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .load-more-btn {
   width: 100%;
@@ -143,7 +147,9 @@
   cursor: not-allowed;
 }
 
-/* POST PREVIEW */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          POST ÖNİZLEME                                  */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .post-preview-wrapper {
   position: relative;

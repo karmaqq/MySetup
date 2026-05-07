@@ -11,6 +11,7 @@ let _previousScrollTop = 0;
 let _replyTargetCommentId = null;
 let _replyTargetUsername = null;
 let _pvActiveNavBtn = null;
+let _pvRestoreInterval = null;
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*                              AÇMA / KAPAMA                                 */
@@ -468,11 +469,15 @@ function _restorePostViewOnLoad() {
   if (!savedPid) return;
 
   var _tries = 0;
-  var _check = setInterval(function () {
+  _pvRestoreInterval = setInterval(function () {
     _tries++;
-    if (_tries > 40) clearInterval(_check);
+    if (_tries > 40) {
+      clearInterval(_pvRestoreInterval);
+      _pvRestoreInterval = null;
+    }
     if (typeof allPosts !== "undefined" && allPosts[savedPid]) {
-      clearInterval(_check);
+      clearInterval(_pvRestoreInterval);
+      _pvRestoreInterval = null;
       _viewingPostId = savedPid;
       var postData = allPosts[savedPid];
       var authorLabel = document.getElementById("postViewAuthorLabel");

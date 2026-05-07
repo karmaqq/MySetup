@@ -67,7 +67,7 @@ function refreshPreview(url, imagePreview, imageUploadBtn) {
 
     const imgEl = document.getElementById("editImagePreviewImg");
     if (imgEl) {
-      imgEl.onload = () => applyAdaptiveSize(imgEl, imagePreview);
+      imgEl.addEventListener("load", () => applyAdaptiveSize(imgEl, imagePreview), { once: true });
       if (imgEl.complete) applyAdaptiveSize(imgEl, imagePreview);
     }
 

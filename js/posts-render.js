@@ -281,6 +281,7 @@ function _teardownPosts() {
 /* ─────────────────── İlk 20 postu yükler, listener başlatır ─────────────────── */
 
 function _startPostsListener() {
+  if (postsRef) postsRef.off();
   const ref = postsRef.orderByChild("createdAt");
 
   ref.limitToLast(PAGE_SIZE).once("value", function (snap) {

@@ -95,7 +95,7 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
     }
     if (_statsCache.mostExpId === item.id) {
       rebuildStatsCache();
-      updateStats(getFilteredSortedList());
+      scheduleRender();
     }
   } else {
     if (!oldItem) {
@@ -399,7 +399,7 @@ function buildRowsFragment(list) {
 
 let _vsRafId = null;
 
-function renderTableRows(list) {
+function renderTableRows(list, scrollY) {
   if (_vsRafId) {
     cancelAnimationFrame(_vsRafId);
     _vsRafId = null;
@@ -426,6 +426,7 @@ function renderTableRows(list) {
 
   if (currentSort.col === "date" || list.length <= VSCROLL_INITIAL) {
     tableBody.replaceChildren(buildRowsFragment(list), ...unsavedRows);
+    if (mainScroll && scrollY !== undefined) mainScroll.scrollTop = scrollY;
     return;
   }
 
@@ -449,6 +450,8 @@ function renderTableRows(list) {
     } else {
       tableBody.appendChild(restFrag);
     }
+
+    if (mainScroll && scrollY !== undefined) mainScroll.scrollTop = scrollY;
   });
 }
 
@@ -458,14 +461,8 @@ function renderAll() {
   const scrollY = mainScroll ? mainScroll.scrollTop : 0;
   const list = getFilteredSortedList();
   updateStats(list);
-  renderTableRows(list);
+  renderTableRows(list, scrollY);
   updateResultCount(list.length);
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      if (mainScroll) mainScroll.scrollTop = scrollY;
-    });
-  });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

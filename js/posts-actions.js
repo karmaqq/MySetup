@@ -496,46 +496,54 @@ function _startTimeUpdateInterval() {
     if (
       typeof _currentPage !== "undefined" &&
       _currentPage !== "home" &&
-      _currentPage !== "profile"
+      _currentPage !== "profile" &&
+      _currentPage !== "postView"
     )
       return;
 
-    document.querySelectorAll(".post-time").forEach(function (el) {
-      const card = el.closest("[data-post-id]");
-      if (!card) return;
+    if (document.hidden) return;
+
+    const feed = document.getElementById("postsFeed");
+    if (!feed) return;
+
+    const postCards = feed.querySelectorAll("[data-post-id]");
+    postCards.forEach(function (card) {
       const post = allPosts[card.dataset.postId];
       if (!post) return;
-      el.textContent = formatTimeAgo(post.createdAt, post.phraseIndex);
-    });
 
-    document.querySelectorAll(".comment-time").forEach(function (el) {
-      const item = el.closest("[data-comment-id]");
-      const card = el.closest("[data-post-id]");
-      if (!item || !card) return;
-      const post = allPosts[card.dataset.postId];
-      const cid = item.dataset.commentId;
-      if (!post || !post.comments || !post.comments[cid]) return;
-      el.textContent = formatTimeAgo(
-        post.comments[cid].createdAt,
-        undefined,
-        true,
-      );
-    });
+      // Post zamanı
+      const postTimeEl = card.querySelector(":scope > .post-header .post-time");
+      if (postTimeEl) {
+        postTimeEl.textContent = formatTimeAgo(post.createdAt, post.phraseIndex);
+      }
 
-    document.querySelectorAll(".reply-time").forEach(function (el) {
-      const replyEl = el.closest("[data-reply-id]");
-      const commentEl = el.closest("[data-comment-id]");
-      const card = el.closest("[data-post-id]");
-      if (!replyEl || !commentEl || !card) return;
-      const post = allPosts[card.dataset.postId];
-      const cid = commentEl.dataset.commentId;
-      const rid = replyEl.dataset.replyId;
-      if (!post || !post.comments || !post.comments[cid]) return;
-      const replies = post.comments[cid].replies;
-      if (!replies || !replies[rid]) return;
-      el.textContent = formatTimeAgo(replies[rid].createdAt, undefined, true);
+      // Yorumlar ve yanıtlar
+      const comments = post.comments || {};
+      Object.keys(comments).forEach(function (cid) {
+        const commentEl = card.querySelector(`[data-comment-id="${cid}"]`);
+        if (!commentEl) return;
+        const commentTimeEl = commentEl.querySelector(".comment-time");
+        if (commentTimeEl) {
+          commentTimeEl.textContent = formatTimeAgo(
+            comments[cid].createdAt,
+            undefined,
+            true,
+          );
+        }
+        const replies = comments[cid].replies || {};
+        Object.keys(replies).forEach(function (rid) {
+          const replyTimeEl = commentEl.querySelector(`[data-reply-id="${rid}"] .reply-time`);
+          if (replyTimeEl) {
+            replyTimeEl.textContent = formatTimeAgo(
+              replies[rid].createdAt,
+              undefined,
+              true,
+            );
+          }
+        });
+      });
     });
-  }, 60 * 1000);
+  }, 5 * 60 * 1000);
 }
 
 function _stopTimeUpdateInterval() {

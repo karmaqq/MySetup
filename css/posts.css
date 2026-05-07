@@ -1,6 +1,8 @@
-/*--- mandatory - obey agents.md comment rules ---*/
+/*--- zorunlu - agents.md yorum kurallarına uy ---*/
 
-/* POST SYSTEM */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          POST SİSTEMİ                                    */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .posts-feed {
   display: flex;

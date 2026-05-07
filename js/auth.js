@@ -24,11 +24,7 @@ function initNavigation() {
   });
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initNavigation);
-} else {
-  initNavigation();
-}
+initNavigation();
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                         OTURUM DURUMU YÖNETİMİ                            */
@@ -147,10 +143,7 @@ function onUserLoggedOut() {
   });
 
   if (typeof _teardownPosts === "function") _teardownPosts();
-  if (typeof closeSettingsModal === "function") closeSettingsModal();
-  if (typeof closeChangePassModal === "function") closeChangePassModal();
-  if (typeof closeDeleteModal === "function") closeDeleteModal();
-  if (typeof closeEditModal === "function") closeEditModal();
+  if (typeof clearAllModalForms === "function") clearAllModalForms();
 
   if (authOverlay) authOverlay.classList.add("active");
 }
@@ -293,8 +286,13 @@ if (registerForm) {
         // 4. Profil güncelle
         await cred.user.updateProfile({ displayName: username });
       } catch (userErr) {
-        // Hata durumunda rezervasyonu temizle
-        try { await usernameRef.remove(); } catch (_) {}
+        // Hata durumunda rezervasyonu temizle - sadece kendi rezervasyonumuzu sil
+        try {
+          await usernameRef.transaction(function (current) {
+            if (current === tempToken) return null;
+            return current;
+          });
+        } catch (_) {}
         if (cred && cred.user) {
           try { await cred.user.delete(); } catch (_) {}
         }

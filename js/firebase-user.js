@@ -10,15 +10,21 @@ async function deleteUserAccount(user) {
   try {
     await user.getIdToken(true);
 
-    // UserLikes
+    // UserLikes (kullanıcının beğendikleri)
     await database.ref("userLikes/" + uid).remove();
 
-    // UserPosts
+    // UserPosts - beğeniler i temizlemek için deletePostFromFirebase kullan
     const userPostsSnap = await database.ref("userPosts/" + uid).once("value");
     const postIds = userPostsSnap.val() ? Object.keys(userPostsSnap.val()) : [];
+
+    // Önce post verilerini çek (likes bilgisi için)
+    const postDataMap = await getPostsByIds(postIds);
+
+    // Her postu deletePostFromFirebase ile sil (likes temizleme dahil)
     await Promise.all(
-      postIds.map((id) => database.ref("posts/" + id).remove()),
+      postIds.map((id) => deletePostFromFirebase(id, postDataMap[id] || null)),
     );
+
     await database.ref("userPosts/" + uid).remove();
 
     // Database temizliği

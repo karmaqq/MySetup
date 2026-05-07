@@ -16,21 +16,21 @@
   --text-bright: #e0eaf5;
   --accent: #e8a020;
   --accent-hover: #f5b030;
-  --accent-dim: rgba(232,160,32,0.12);
-  --accent-glow: rgba(232,160,32,0.25);
+  --accent-dim: rgba(232, 160, 32, 0.12);
+  --accent-glow: rgba(232, 160, 32, 0.25);
   --blue: #4a9eff;
-  --blue-dim: rgba(74,158,255,0.12);
+  --blue-dim: rgba(74, 158, 255, 0.12);
   --green: #3dd68c;
-  --green-dim: rgba(61,214,140,0.12);
+  --green-dim: rgba(61, 214, 140, 0.12);
   --red: #f56060;
-  --red-dim: rgba(245,96,96,0.12);
+  --red-dim: rgba(245, 96, 96, 0.12);
   --yellow: #f5c842;
-  --yellow-dim: rgba(245,200,66,0.12);
+  --yellow-dim: rgba(245, 200, 66, 0.12);
   --purple: #b57aff;
-  --purple-dim: rgba(181,122,255,0.12);
+  --purple-dim: rgba(181, 122, 255, 0.12);
 
-  --shadow-card: rgba(0,0,0,0.38);
-  --shadow-overlay: rgba(0,0,0,0.6);
+  --shadow-card: rgba(0, 0, 0, 0.38);
+  --shadow-overlay: rgba(0, 0, 0, 0.6);
 
   /* ─── FONT SİSTEMİ ─── */
   --font-ui: "Inter", sans-serif;
@@ -45,6 +45,20 @@
   --scrollbar-width: 20px;
   --scrollbar-thumb: var(--border2);
   --scrollbar-thumb-hover: var(--text-dim);
+
+  /* ─── Tablo Sütun Genişlikleri ─── */
+  --col-date: 110px;
+  --col-component: 140px;
+  --col-price: 120px;
+  --col-vendor: 120px;
+  --col-status: 170px;
+
+  /* ─── Title Bar & Layout ─── */
+  --title-bar-height: 35px;
+  --sidebar-width: 250px;
+  --sidebar-gap: 10px;
+  --content-margin: 10px;
+  --footer-height: 35px;
 }
 
 /* ─────────────────── Sıfırlama ─────────────────── */
@@ -70,17 +84,17 @@ body {
   background-image:
     radial-gradient(
       ellipse 80% 40% at 15% 0%,
-      rgba(232,160,32,0.09) 0%,
+      rgba(232, 160, 32, 0.09) 0%,
       transparent 60%
     ),
     radial-gradient(
       ellipse 60% 50% at 85% 100%,
-      rgba(74,158,255,0.07) 0%,
+      rgba(74, 158, 255, 0.07) 0%,
       transparent 55%
     ),
     radial-gradient(
       ellipse 40% 30% at 50% 50%,
-      rgba(61,214,140,0.03) 0%,
+      rgba(61, 214, 140, 0.03) 0%,
       transparent 50%
     );
   color: var(--text);
@@ -88,16 +102,6 @@ body {
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-}
-
-/* ─────────────────── CSS Custom Property (Header & Title Bar Height) ─────────────────── */
-
-:root {
-  --title-bar-height: 35px;
-  --sidebar-width: 250px;
-  --sidebar-gap: 10px;
-  --content-margin: 10px;
-  --footer-height: 35px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -136,7 +140,7 @@ body {
   -webkit-app-region: drag;
   background: rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(126, 126, 126, 0.096);
   z-index: 10000;
 }
 
@@ -169,7 +173,7 @@ body {
 .main-scroll {
   position: fixed;
   top: calc(var(--title-bar-height) + var(--content-margin));
-  bottom: var(--footer-height);
+  bottom: calc(var(--footer-height) + var(--content-margin));
   left: calc(var(--sidebar-width) + var(--sidebar-gap));
   right: 0;
   overflow-y: auto;
@@ -184,7 +188,7 @@ body {
   width: 100%;
   max-width: 1300px;
   margin: 0 auto;
-  padding: var(--content-margin) 0 var(--content-margin);
+  padding: var(--content-margin) var(--content-margin) var(--content-margin);
 }
 
 /* ─────────────────── Sayfa İçerik Bölümleri (Animasyonlu) ─────────────────── */
@@ -193,11 +197,7 @@ body {
   display: none;
   visibility: hidden;
   opacity: 0;
-  transform: translateY(10px);
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease,
-    visibility 0.3s;
+  transition: opacity 0.3s ease;
   margin: 0 auto;
 }
 
@@ -205,7 +205,6 @@ body {
   display: block;
   visibility: visible;
   opacity: 1;
-  transform: translateY(0);
 }
 
 .page-650 {
@@ -232,17 +231,17 @@ body {
   background-image:
     radial-gradient(
       ellipse 80% 40% at 15% 0%,
-      rgba(232,160,32,0.09) 0%,
+      rgba(232, 160, 32, 0.09) 0%,
       transparent 60%
     ),
     radial-gradient(
       ellipse 60% 50% at 85% 100%,
-      rgba(74,158,255,0.07) 0%,
+      rgba(74, 158, 255, 0.07) 0%,
       transparent 55%
     ),
     radial-gradient(
       ellipse 40% 30% at 50% 50%,
-      rgba(61,214,140,0.03) 0%,
+      rgba(61, 214, 140, 0.03) 0%,
       transparent 60%
     );
 }

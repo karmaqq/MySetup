@@ -37,14 +37,18 @@ function _showProfileEmptyState(tab, tabId) {
   var s = EMPTY_STATE[tabId];
   tab.innerHTML =
     '<div class="empty-state profile-empty-state">' +
-    '<div class="empty-icon">' + s.emoji + '</div>' +
-    '<div class="empty-text">' + s.text + '</div>' +
-    '</div>';
+    '<div class="empty-icon">' +
+    s.emoji +
+    "</div>" +
+    '<div class="empty-text">' +
+    s.text +
+    "</div>" +
+    "</div>";
 }
 
 function _showProfileContent(tab) {
-  var loading = tab.querySelector('.posts-loading');
-  var empty = tab.querySelector('.profile-empty-state');
+  var loading = tab.querySelector(".posts-loading");
+  var empty = tab.querySelector(".profile-empty-state");
   if (loading) loading.remove();
   if (empty) empty.remove();
 }
@@ -70,6 +74,7 @@ function switchProfileTab(tabName) {
 /* ─────────────────── Gönderilerim sekmesini başlatır ─────────────────── */
 
 function _initUserPostsTab() {
+  if (_profileTab === "user-posts" && _userPostsVisible.size > 0) return;
   const user = firebase.auth().currentUser;
   if (!user) return;
 
@@ -180,21 +185,21 @@ function _loadPostsChunk(cfg) {
         })
         .slice(0, PAGE_SIZE);
 
-        return getPostsByIds(postIds).then(function (posts) {
-          if (tab) _showProfileContent(tab);
-          postIds.forEach(function (id) {
-            if (posts[id]) {
-              allPosts[id] = posts[id];
-              cfg.getVisible().add(id);
-              if (tab) {
-                const wrapper = document.createElement("div");
-                wrapper.innerHTML = _renderPostHTML(id, posts[id]);
-                const el = wrapper.firstElementChild;
-                tab.appendChild(el);
-                _initPostImage(el.querySelector(".post-img-lazy"));
-              }
+      return getPostsByIds(postIds).then(function (posts) {
+        if (tab) _showProfileContent(tab);
+        postIds.forEach(function (id) {
+          if (posts[id]) {
+            allPosts[id] = posts[id];
+            cfg.getVisible().add(id);
+            if (tab) {
+              const wrapper = document.createElement("div");
+              wrapper.innerHTML = _renderPostHTML(id, posts[id]);
+              const el = wrapper.firstElementChild;
+              tab.appendChild(el);
+              _initPostImage(el.querySelector(".post-img-lazy"));
             }
-          });
+          }
+        });
 
         if (ids.length >= PAGE_SIZE) {
           cfg.setOldestTs(map[ids[ids.length - 1]]);
@@ -356,8 +361,8 @@ function _onPageChange(pageName) {
     if (likedPostsTab) likedPostsTab.innerHTML = "";
     _removeProfileLoadMoreBtn("userPostsTab");
     _removeProfileLoadMoreBtn("likedPostsTab");
-    removeUserLikesListener();
-    removeUserPostsListener();
+    // Not: removeUserLikesListener() ve removeUserPostsListener() çağrılmıyor
+    // çünkü bunlar initPosts() tarafından home feed için de kullanılıyor
   }
 }
 
