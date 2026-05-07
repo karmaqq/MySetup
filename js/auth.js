@@ -62,8 +62,7 @@ function onUserLoggedIn(user) {
     profileUsername.textContent = user.displayName || "Kullanıcı";
   if (profileEmail) profileEmail.textContent = user.email || "E-posta yok";
 
-  updateAvatarLetter("profileAvatarLetter", user.displayName);
-  updateAvatarLetter("sidebarAvatar", user.displayName);
+  refreshAllAvatars(user.displayName);
 
   if (typeof initUserDataRef === "function") {
     initUserDataRef(user.uid);

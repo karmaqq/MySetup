@@ -1,10 +1,8 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                                PROFİL SAYFASI                                */
+/*                               PROFİL                                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Profile Card ─────────────────── */
+/* ─────────────────── Profil Kartı ─────────────────── */
 
 .profile-card {
   display: flex;
@@ -73,7 +71,7 @@
   transform: translateY(-1px);
 }
 
-/* ─────────── Profile Avatar ─────────── */
+/* ─────────────────── Avatar ─────────────────── */
 
 .profile-avatar {
   position: relative;
@@ -94,7 +92,7 @@
   color: var(--accent);
 }
 
-/* ─────────── Profil Sekmeleri ─────────── */
+/* ─────────────────── Sekmeler ─────────────────── */
 
 .profile-tabs {
   display: flex;
@@ -132,8 +130,6 @@
   border-color: rgba(232, 160, 32, 0.2);
 }
 
-/* ─────────────────── Sekme İçerikleri ─────────────────── */
-
 .tab-content {
   display: none;
   flex-direction: column;
@@ -145,7 +141,7 @@
   display: flex;
 }
 
-/* ─────────────────── Profil Post Kartı (650px içinde) ─────────────────── */
+/* ─────────────────── Profil Post Kartı ─────────────────── */
 
 .profile-post-card {
   background: var(--surface);
@@ -182,7 +178,7 @@
   border-top: 1px solid var(--border);
 }
 
-/* ─────────────────── Profil Sekmeleri İçin Post Feed ─────────────────── */
+/* ─────────────────── Sekme İçi Post Akışı ─────────────────── */
 
 #userPostsTab,
 #likedPostsTab {

@@ -41,6 +41,10 @@ function showPage(pageName) {
     return;
   }
 
+  if (oldPage && oldPage.id === "postViewPage" && mainScroll) {
+    mainScroll.classList.remove("pv-active");
+  }
+
   navBtns.forEach((b) => b.classList.remove("active"));
   const activeNavBtn = document.querySelector(
     `.sidebar-nav-btn[data-page="${pageName}"]`,
@@ -398,6 +402,11 @@ function updateAvatarLetter(elementId, name) {
 
 function getAvatarLetter(name) {
   return (name || "?").charAt(0).toUpperCase();
+}
+
+function refreshAllAvatars(name) {
+  updateAvatarLetter("profileAvatarLetter", name);
+  updateAvatarLetter("sidebarAvatar", name);
 }
 
 function getPostCards(postId) {

@@ -1,11 +1,5 @@
-﻿/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                                ENVANTER SAYFASI (1250px)                     */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                                İSTATİSTİK KARTLARI                           */
+/*                          İSTATİSTİK KARTLARI                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 .stats-row {
@@ -54,16 +48,19 @@
   border-color: var(--red);
   color: var(--red);
 }
+
 .stat-icon.status-reserve {
   background: var(--yellow-dim);
   border-color: var(--yellow);
   color: var(--yellow);
 }
+
 .stat-icon.status-discarded {
   background: var(--purple-dim);
   border-color: var(--purple);
   color: var(--purple);
 }
+
 .stat-icon.status-healthy {
   background: var(--blue-dim);
   border-color: var(--blue);
@@ -74,14 +71,17 @@
   background: var(--red-dim);
   border-color: var(--red);
 }
+
 .stat-card.status-reserve {
   background: var(--yellow-dim);
   border-color: var(--yellow);
 }
+
 .stat-card.status-discarded {
   background: var(--purple-dim);
   border-color: var(--purple);
 }
+
 .stat-card.status-healthy {
   background: var(--green-dim);
   border-color: var(--green);
@@ -117,8 +117,10 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                                ARAÇ ÇUBUĞU                                  */
+/*                              ARAÇ ÇUBUĞU                                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Arama ─────────────────── */
 
 .toolbar {
   display: flex;
@@ -127,8 +129,6 @@
   gap: 8px;
   margin-bottom: 16px;
 }
-
-/* ─────────────────── Arama Alanı ─────────────────── */
 
 .search-wrapper {
   position: relative;
@@ -206,7 +206,7 @@
   color: var(--text);
 }
 
-/* ─────────────────── Filtre Grubu ─────────────────── */
+/* ─────────────────── Filtre ─────────────────── */
 
 .filter-group {
   display: flex;
@@ -261,7 +261,7 @@
   color: #fff;
 }
 
-/* ─────────────────── İşlem Grubu ─────────────────── */
+/* ─────────────────── İşlemler ─────────────────── */
 
 .action-group {
   display: flex;
@@ -308,8 +308,6 @@
   transform: translateY(-1px);
 }
 
-/* ─────────────────── Tüm Listeyi Sil Butonu ─────────────────── */
-
 .btn-delete-all {
   color: var(--red);
   border-color: rgba(245, 96, 96, 0.3);
@@ -324,7 +322,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* TABLO SİSTEMİ                                 */
+/*                               TABLO                                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Tablo Kapsayıcı ─────────────────── */
@@ -336,9 +334,7 @@
   border: none;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* TABLO ANA YAPISI                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Sütun Genişlikleri ─────────────────── */
 
 table {
   width: 100%;
@@ -347,30 +343,31 @@ table {
   table-layout: fixed;
 }
 
-/* ─────────────────── <colgroup> ile Sabit Sütun Genişlikleri ─────────────────── */
-
 col.col-date {
   width: var(--col-date);
 }
+
 col.col-component {
   width: var(--col-component);
 }
+
 col.col-specs {
   width: 100%;
 }
+
 col.col-price {
   width: var(--col-price);
 }
+
 col.col-vendor {
   width: var(--col-vendor);
 }
+
 col.col-status {
   width: var(--col-status);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* BAŞLIK HÜCRELERİ                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Başlık Hücreleri ─────────────────── */
 
 th {
   position: sticky;
@@ -421,9 +418,7 @@ th.sort-active .sort-icon {
   opacity: 1;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* VERİ HÜCRELERİ                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Veri Hücreleri ─────────────────── */
 
 td {
   padding: 11px 16px;
@@ -450,7 +445,7 @@ td.col-date,
   border-left: 3px solid var(--accent) !important;
 }
 
-/* ─────────────────── Satır Hover ─────────────────── */
+/* ─────────────────── Satır Durumları ─────────────────── */
 
 tbody tr {
   transition: background 0.15s;
@@ -474,9 +469,7 @@ tbody tr:hover .col-price {
   background: rgba(61, 214, 140, 0.15);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* SÜTUN ÖZEL STİLLERİ                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Sütun Stilleri ─────────────────── */
 
 .col-component {
   background: var(--blue-dim);
@@ -509,8 +502,6 @@ tbody tr:hover .col-price {
   white-space: nowrap;
 }
 
-/* ─────────────────── Rowspan hücreleri dikey hizalama ─────────────────── */
-
 td[rowspan] {
   vertical-align: middle;
 }
@@ -530,7 +521,7 @@ td[rowspan] {
   border-top: 1px solid var(--border);
 }
 
-/* ─────────────────── Birleştirilmiş Marka ve Özellikler Sütunu ─────────────────── */
+/* ─────────────────── Birleşik Hücre ─────────────────── */
 
 .combined-specs-cell {
   display: flex;
@@ -580,9 +571,7 @@ td[rowspan] {
   color: var(--accent);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* BOŞ HÜCRELER                                     */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Boş Hücre ─────────────────── */
 
 .empty-cell {
   padding: 60px 20px !important;
@@ -607,9 +596,7 @@ td[rowspan] {
   opacity: 0.3;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* DURUM HÜCRESİ                                  */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Durum Hücresi ─────────────────── */
 
 .status-cell {
   position: relative;
@@ -632,8 +619,6 @@ td[rowspan] {
   justify-content: center;
   cursor: pointer;
 }
-
-/* ─────────────────── Durum Etiketleri ─────────────────── */
 
 .status-label {
   display: inline-flex;
@@ -677,8 +662,6 @@ td[rowspan] {
   color: var(--purple);
   border: 1px solid rgba(181, 122, 255, 0.2);
 }
-
-/* ─────────────────── Durum Açılır Menü ─────────────────── */
 
 .status-options {
   visibility: hidden;
@@ -785,7 +768,7 @@ tbody tr:hover .row-actions {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* TABLO ALT BİLGİ                               */
+/*                           TABLO ALT BİLGİ                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 tfoot {
@@ -850,7 +833,7 @@ tfoot {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* GENEL BUTONLAR                               */
+/*                              BUTONLAR                                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 .btn {
@@ -884,8 +867,10 @@ tfoot {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* YENİ KAYIT SATIRI                               */
+/*                           YENİ KAYIT SATIRI                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Girdi Alanları ─────────────────── */
 
 .new-item-row td {
   background: var(--surface2);
@@ -978,11 +963,9 @@ tfoot {
   justify-content: center;
   transition: 0.18s;
   white-space: nowrap;
-
   &.new-row-save {
     display: none;
   }
-
   &.new-row-save.visible {
     display: inline-flex;
   }
@@ -994,7 +977,7 @@ tfoot {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                                DUYARLI TASARIM                               */
+/*                            DUYARLI TASARIM                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 900px) {
@@ -1008,20 +991,16 @@ tfoot {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
-
   .toolbar {
     flex-wrap: wrap;
   }
-
   .filter-group {
     overflow-x: auto;
     padding-bottom: 4px;
   }
-
   .modal-body {
     grid-template-columns: 1fr;
   }
-
   .field-full {
     grid-column: 1;
   }

@@ -1,7 +1,5 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                     KULLANICI AYARLARI STİLLERİ                         */
+/*                         KULLANICI AYARLARI                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 .label-hint {
@@ -9,18 +7,16 @@
   font-weight: 400;
 }
 
-/* ─────────────────── Modal Input Hata Stili ─────────────────── */
-
 .modal-input.input-error {
   border-color: var(--red) !important;
   box-shadow: 0 0 0 1px rgba(245, 96, 96, 0.25);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          AYARLAR MODALLARI                               */
+/*                            AYARLAR MODALI                                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Premium Modal Temel ─────────────────── */
+/* ─────────────────── Premium Modal ─────────────────── */
 
 .premium-modal {
   width: 100%;
@@ -259,7 +255,9 @@
   background: rgba(245, 96, 96, 0.08);
 }
 
-/* ─────────────────── Ayarlar Modal Düzeni ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                           AYAR SATIRLARI                                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 #userSettingsModal .setting-row {
   min-height: 0;
@@ -309,7 +307,9 @@
   margin: 6px 0;
 }
 
-/* ─────────────────── Hesap Silme ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                            HESAP SİLME                                       */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .premium-modal .warning-box {
   background: var(--red-dim);
@@ -476,7 +476,9 @@
   background: rgba(245, 96, 96, 0.2);
 }
 
-/* ─────────────────── Şifre / Hesap Silme Modalları ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                         ŞİFRE DEĞİŞTİRME                                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 #changePasswordModal .premium-modal.wide,
 #deleteAccountModal .premium-modal.wide {
@@ -512,7 +514,9 @@
   transform: none;
 }
 
-/* ─────────────────── Tehlike Butonu ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                           TEHLİKE BUTONU                                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .btn-danger {
   background: var(--red) !important;
@@ -525,7 +529,9 @@
   cursor: not-allowed;
 }
 
-/* ─────────────────── Duyarlı Tasarım (Ayarlar) ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                            DUYARLI TASARIM                                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 760px) {
   .premium-modal,
@@ -536,16 +542,13 @@
     max-width: min(100%, 94vw);
     padding: 24px 20px !important;
   }
-
   #userSettingsModal .modal-body,
   .premium-modal .form-grid {
     grid-template-columns: 1fr;
   }
-
   #userSettingsModal .settings-actions {
     grid-template-columns: 1fr;
   }
-
   .premium-modal .form-col-full {
     grid-column: auto;
   }

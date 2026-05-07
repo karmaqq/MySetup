@@ -288,8 +288,7 @@ saveBtn?.addEventListener("click", async () => {
     const profileUsernameEl = document.getElementById("profileUsername");
     if (profileUsernameEl) profileUsernameEl.textContent = newName;
 
-    updateAvatarLetter("profileAvatarLetter", newName);
-    updateAvatarLetter("sidebarAvatar", newName);
+    refreshAllAvatars(newName);
 
     if (usernameErrEl) usernameErrEl.textContent = "";
     if (typeof showToast === "function")

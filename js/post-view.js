@@ -41,6 +41,8 @@ function openPostView(postId, fromCommentBtn) {
 
   showPage("postView");
 
+  if (mainScroll) mainScroll.classList.add("pv-active");
+
   if (_pvActiveNavBtn) {
     _pvActiveNavBtn.classList.add("active");
   }
@@ -77,6 +79,8 @@ function closePostView() {
 
   var postViewContent = document.getElementById("postViewContent");
   if (postViewContent) postViewContent.innerHTML = "";
+
+  if (mainScroll) mainScroll.classList.remove("pv-active");
 
   showPage(targetPage);
 
@@ -452,10 +456,6 @@ if (_pvContent) {
       return;
     }
 
-    if (action === "toggle-replies") {
-      _openRepliesSection(btn.dataset.postId, btn.dataset.commentId);
-      return;
-    }
   });
 }
 
@@ -493,12 +493,16 @@ function _restorePostViewOnLoad() {
     );
     _renderPostViewContent(savedPid, postData);
     showPage("postView");
+    if (mainScroll) mainScroll.classList.add("pv-active");
     if (_pvActiveNavBtn) {
       _pvActiveNavBtn.classList.add("active");
     }
   }
 
-  if (typeof allPosts !== "undefined" && allPosts[savedPid]) {
+  if (
+    (typeof allPosts !== "undefined" && allPosts[savedPid]) ||
+    window._postsReadyFired
+  ) {
     _onPostsReady();
   } else {
     document.addEventListener("postsReady", _onPostsReady);

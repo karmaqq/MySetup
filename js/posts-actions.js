@@ -111,12 +111,13 @@ function _submitComposer(btn) {
   const isReply = _composerTargetPostId === postId && _composerReplyCommentId;
 
   if (isReply) {
-    addReplyToFirebase(postId, _composerReplyCommentId, baseData)
+    const targetCommentId = _composerReplyCommentId;
+    addReplyToFirebase(postId, targetCommentId, baseData)
       .then(function () {
         input.value = "";
         _cancelReplyMode(postId);
         showToast("Yanıt eklendi", "success");
-        _openRepliesSection(postId, _composerReplyCommentId);
+        _openRepliesSection(postId, targetCommentId);
       })
       .catch(function () {
         showToast("Yanıt eklenemedi", "error");
@@ -140,7 +141,10 @@ function _startReplyMode(postId, commentId, username) {
   _composerReplyCommentId = commentId;
   _composerReplyUsername = username;
 
-  const card = document.querySelector('[data-post-id="' + postId + '"]');
+  var activePage = document.querySelector(".page-content.active");
+  var card = activePage
+    ? activePage.querySelector('[data-post-id="' + postId + '"]')
+    : document.querySelector('[data-post-id="' + postId + '"]');
   if (!card) return;
 
   const target = card.querySelector("#replyTarget-" + postId);
@@ -164,7 +168,10 @@ function _cancelReplyMode(postId) {
   _composerReplyCommentId = null;
   _composerReplyUsername = null;
 
-  const card = document.querySelector('[data-post-id="' + postId + '"]');
+  var activePage = document.querySelector(".page-content.active");
+  var card = activePage
+    ? activePage.querySelector('[data-post-id="' + postId + '"]')
+    : document.querySelector('[data-post-id="' + postId + '"]');
   if (!card) return;
 
   const target = card.querySelector("#replyTarget-" + postId);
@@ -181,7 +188,10 @@ function _cancelReplyMode(postId) {
 /* ─────────────────── Yanıtlar bölümünü aç/kapat ─────────────────── */
 
 function _openRepliesSection(postId, commentId) {
-  const card = document.querySelector('[data-post-id="' + postId + '"]');
+  var activePage = document.querySelector(".page-content.active");
+  var card = activePage
+    ? activePage.querySelector('[data-post-id="' + postId + '"]')
+    : document.querySelector('[data-post-id="' + postId + '"]');
   if (!card) return;
   const sec = card.querySelector("#replies-" + postId + "-" + commentId);
   const btn = card.querySelector("#toggleReplies-" + postId + "-" + commentId);

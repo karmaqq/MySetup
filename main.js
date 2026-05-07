@@ -32,7 +32,15 @@ function setupCspHeaders() {
     responseHeaders["Content-Security-Policy"] = [APP_CSP];
 
     if (details.url.includes("firebasestorage.googleapis.com")) {
-      responseHeaders["Access-Control-Allow-Origin"] = ["*"];
+      var origin = details.requestHeaders ? (details.requestHeaders.Origin || "") : "";
+      var allowed = [
+        "file://",
+        "app://",
+        "https://mysetup-8dcd5.firebaseapp.com",
+      ];
+      if (allowed.some(function (o) { return origin.startsWith(o); }) || !origin) {
+        responseHeaders["Access-Control-Allow-Origin"] = [origin || "*"];
+      }
       responseHeaders["Access-Control-Allow-Methods"] = ["GET, HEAD, OPTIONS"];
     }
 

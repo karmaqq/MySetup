@@ -1,33 +1,30 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                           GÖRSEL ÖNİZLEME                                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Modal + Önizleme Wrapper ─────────────────── */
+/* ─────────────────── Floating Önizleme ─────────────────── */
 
 .modal-with-preview {
   position: relative;
   display: inline-block;
 }
 
-/* ─────────────────── Floating Görsel Önizleme ─────────────────── */
-
 .floating-preview {
   position: absolute;
   top: 0;
   right: calc(100% + 10px);
   z-index: 1100;
-
   min-width: 180px;
   min-height: 140px;
   max-width: 340px;
   max-height: 260px;
   width: 200px;
   height: 160px;
-
   border-radius: 14px;
   border: 2px solid var(--accent);
   background: var(--surface3);
   box-shadow: 0 8px 32px var(--shadow-card);
   overflow: hidden;
-
   opacity: 0;
   transform: translateY(10px) scale(0.96);
   transition:
@@ -57,7 +54,7 @@
   display: block;
 }
 
-/* ─────────────────── Durum + Görsel Yükleme Satırı ─────────────────── */
+/* ─────────────────── Durum ve Görsel Satırı ─────────────────── */
 
 .status-image-row {
   display: flex;
@@ -71,13 +68,11 @@
   min-width: 0;
 }
 
-/* ─────────────────── Modal-box konum referansı ─────────────────── */
-
 .modal-box {
   position: relative;
 }
 
-/* ─────────────────── Önizleme Mini Loading ─────────────────── */
+/* ─────────────────── Önizleme Yükleniyor ─────────────────── */
 
 .preview-loading {
   width: 100%;
@@ -126,7 +121,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          DÜZENLEME MODALI                                */
+/*                            DÜZENLEME MODALI                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Modal Overlay ─────────────────── */
@@ -152,7 +147,7 @@
   visibility: visible;
 }
 
-/* ─────────────────── Modal Kutu ─────────────────── */
+/* ─────────────────── Modal Kutusu ─────────────────── */
 
 .modal-box {
   width: min(520px, 95vw);
@@ -226,7 +221,7 @@
   grid-column: 1 / -1;
 }
 
-/* ─────────────────── Görsel Yükleme Butonu ─────────────────── */
+/* ─────────────────── Görsel Yükleme ─────────────────── */
 
 .image-upload-cell {
   display: flex;
@@ -281,6 +276,7 @@
   justify-content: center;
   margin-bottom: 12px;
 }
+
 .image-preview-cell img {
   width: 100%;
   height: 100%;
@@ -351,7 +347,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* GÖRÜŞLERİM VE YILDIZ SİSTEMİ                            */
+/*                          GÖRÜŞ VE YILDIZ SİSTEMİ                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 .opinion-divider {
@@ -422,7 +418,6 @@
   min-height: 102px;
   max-height: 102px;
   overflow-y: auto;
-
   transition:
     border-color 0.15s,
     box-shadow 0.15s;
@@ -438,7 +433,9 @@
   color: var(--text-dim);
 }
 
-/* ─────────────────── Modal Alt Bilgi ─────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                            MODAL ALT BİLGİ                                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .modal-footer {
   display: flex;
@@ -483,5 +480,3 @@
   background: var(--accent-hover);
   box-shadow: 0 4px 12px var(--accent-glow);
 }
-
-

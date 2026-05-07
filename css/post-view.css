@@ -1,14 +1,13 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                             POST GÖRÜNTÜLEME                                 */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ═══════════════════════════════════════════════════════════════════ */
-/*                              POST VIEW                                     */
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Ana Konteyner ─────────────────── */
 
-/* ─────────────────── Sayfa Yapısı ─────────────────── */
-
-#postViewPage {
+#postViewPage.active {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .post-view-container {
@@ -22,13 +21,11 @@
   overflow: hidden;
 }
 
-/* ─────────────────── Sabit Back Bar (Title bar +10 aşağıda) ─────────────────── */
+/* ─────────────────── Geri Butonu ─────────────────── */
 
 .post-view-back-bar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
   flex-shrink: 0;
+  z-index: 10;
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
@@ -62,12 +59,23 @@
 .post-view-scroll {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable;
 }
 
+#postViewContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 #postViewContent .post-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -77,10 +85,15 @@
   cursor: default;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 #postViewContent .post-header:hover {
   background: transparent;
+}
+
+#postViewContent .post-body {
+  flex-shrink: 0;
 }
 
 #postViewContent .post-content {
@@ -88,28 +101,37 @@
 }
 
 #postViewContent .post-actions {
+  flex-shrink: 0;
   padding: 8px 16px;
 }
 
 #postViewContent .comment-section {
-  display: flex !important;
+  flex: 1;
+  display: none;
+  flex-direction: column;
   border-top: 1px solid var(--border);
 }
 
-/* ─────────────────── Sabit Composer Bar (Footer +10 yukarıda) ─────────────────── */
+#postViewContent .comment-section.visible {
+  display: flex;
+}
+
+#postViewContent .comment-list {
+  flex: 1;
+}
+
+/* ─────────────────── Composer ─────────────────── */
 
 .post-view-composer-bar {
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
   flex-shrink: 0;
+  z-index: 10;
   border-top: 1px solid var(--border);
   background: var(--surface);
   padding: 10px 16px;
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
-/* ─────────────────── Yanıt Hedef Göstergesi ─────────────────── */
+/* ─────────────────── Yanıt Hedefi ─────────────────── */
 
 .post-view-reply-target {
   display: none;
@@ -146,7 +168,7 @@
   opacity: 1;
 }
 
-/* ─────────────────── Feed kartları için tıklanabilir alanlar ─────────────────── */
+/* ─────────────────── Tıklanabilir Alanlar ─────────────────── */
 
 .post-header-link {
   cursor: pointer;

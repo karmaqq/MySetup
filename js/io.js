@@ -363,18 +363,21 @@ window.showConfirm = function (message, onConfirm, opts) {
     requestAnimationFrame(() => toast.classList.add("visible"));
   });
 
-  const dismiss = () => {
+  function _dismissConfirm() {
+    if (autoTimeout) clearTimeout(autoTimeout);
     toast.classList.remove("visible");
     toast.addEventListener("transitionend", () => toast.remove(), {
       once: true,
     });
   };
 
+  const autoTimeout = setTimeout(_dismissConfirm, 15000);
+
   yesBtn.onclick = () => {
-    dismiss();
+    _dismissConfirm();
     onConfirm();
   };
-  noBtn.onclick = dismiss;
+  noBtn.onclick = _dismissConfirm;
 };
 
 const deleteAllBtn = document.getElementById("deleteAllBtn");

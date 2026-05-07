@@ -64,8 +64,6 @@ function initUserDataRef(userId) {
   activeBasePath = "users/" + userId + "/components";
   userDataRef = database.ref(activeBasePath);
 
-  var firstLoad = true;
-
   userDataRef.once("value").then(function (snapshot) {
     if (initUserDataRef._activeToken !== sessionToken) return;
     var rawData = snapshot.val() || {};
@@ -77,9 +75,8 @@ function initUserDataRef(userId) {
     });
     if (typeof rebuildStatsCache === "function") rebuildStatsCache();
     if (typeof renderAll === "function") renderAll();
-    firstLoad = false;
 
-    // Listener'ları burada kur - firstLoad false olduktan sonra
+    // Listener'ları burada kur
     userDataRef.on(
       "child_added",
       function (snapshot) {

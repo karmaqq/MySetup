@@ -272,6 +272,7 @@ function _teardownPosts() {
     postsRef.off("child_removed", _onPostRemoved);
   }
   _postsListenerActive = false;
+  window._postsReadyFired = false;
   allPosts = {};
   if (postsFeed) postsFeed.innerHTML = "";
   _removeLoadMoreBtn();
@@ -326,6 +327,7 @@ function _startPostsListener() {
     );
 
     _listenForNewPosts(ref);
+    window._postsReadyFired = true;
     document.dispatchEvent(new CustomEvent("postsReady"));
   });
 }

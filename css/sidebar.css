@@ -1,7 +1,5 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                                SIDEBAR                                    */
+/*                               SIDEBAR                                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Sidebar Konteyneri ─────────────────── */
@@ -21,7 +19,7 @@
   border-left: none;
 }
 
-/* ─────────────────── Logo ve Versiyon ─────────────────── */
+/* ─────────────────── Marka ve Versiyon ─────────────────── */
 
 .sidebar-brand {
   display: flex;
@@ -57,8 +55,6 @@
   padding-left: 2px;
 }
 
-/* ─────────────────── Divider ─────────────────── */
-
 .sidebar-divider {
   width: 100%;
   height: 1px;
@@ -66,7 +62,7 @@
   margin: 4px 0;
 }
 
-/* ─────────────────── Navigasyon Menüsü ─────────────────── */
+/* ─────────────────── Navigasyon ─────────────────── */
 
 .sidebar-nav {
   display: flex;
@@ -115,7 +111,7 @@
   flex-shrink: 0;
 }
 
-/* ─────────────────── Alt Kısım (Kullanıcı Bilgisi) ─────────────────── */
+/* ─────────────────── Kullanıcı Bölümü ─────────────────── */
 
 .sidebar-footer {
   display: flex;
@@ -140,12 +136,6 @@
   font-weight: 700;
   text-transform: uppercase;
   color: var(--accent);
-}
-
-.sidebar-user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .sidebar-user-info {

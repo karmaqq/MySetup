@@ -1,14 +1,16 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                              POST SİSTEMİ                                    */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          POST SİSTEMİ                                    */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─────────────────── Post Akışı ─────────────────── */
 
 .posts-feed {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
+
+/* ─────────────────── Post Kartı ─────────────────── */
 
 .post-card {
   background: var(--surface);
@@ -135,6 +137,8 @@
   background: var(--red-dim);
 }
 
+/* ─────────────────── Post İçerik ─────────────────── */
+
 .post-content {
   padding: 12px 12px;
 }
@@ -176,6 +180,8 @@
   max-height: 500px;
   max-width: 100%;
 }
+
+/* ─────────────────── Post Etkileşim ─────────────────── */
 
 .post-actions {
   display: flex;
@@ -221,16 +227,16 @@
   background: var(--accent-dim);
 }
 
-  .post-date {
-    margin-left: auto;
-    font-family: var(--font-data);
-    font-size: 11px;
-    color: var(--text-dim);
-  }
+.post-date {
+  margin-left: auto;
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--text-dim);
+}
 
-  .posts-empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-dim);
-    font-size: 14px;
-  }
+.posts-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+  font-size: 14px;
+}
