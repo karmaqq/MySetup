@@ -1,8 +1,7 @@
 .env.bat
 update.bat
-QFIX.md
-QVIS.md
-QPLAN.md
+OPTIMIZATIONS.md
+VIEW.md
 PLAN.md
 rtdb-rules-clean.json
 storage-rules-clean.rules

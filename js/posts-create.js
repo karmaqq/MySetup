@@ -178,7 +178,7 @@ function _listenForNewPosts(ref) {
   _postsListenerActive = true;
 
   const newestTs = _getNewestTimestamp();
-  const liveQuery = ref.startAt(newestTs + 1, "createdAt");
+  const liveQuery = ref.startAt(newestTs + 1);
   _postsQuery = liveQuery;
 
   liveQuery.on("child_added", function (s) {

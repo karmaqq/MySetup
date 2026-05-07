@@ -53,6 +53,8 @@ function closeDeleteModal() {
     submitBtn.disabled = true;
     submitBtn.textContent = "Hesabı Kalıcı Olarak Sil";
   }
+  var emailEl = document.getElementById("deleteEmail");
+  if (emailEl) emailEl.value = "";
   var passEl = document.getElementById("deletePassword");
   if (passEl) passEl.value = "";
   if (deleteAccountModal) {
@@ -476,6 +478,7 @@ document
   ?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    const email = document.getElementById("deleteEmail").value;
     const pass = document.getElementById("deletePassword").value;
     const errEl = document.getElementById("deleteAccountError");
     const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
@@ -491,7 +494,7 @@ document
         throw new Error("Oturum bulunamadı, lütfen yeniden giriş yapın.");
 
       const credential = firebase.auth.EmailAuthProvider.credential(
-        user.email,
+        email,
         pass,
       );
       await user.reauthenticateWithCredential(credential);
@@ -511,7 +514,7 @@ document
         code === "auth/wrong-password" ||
         code === "auth/invalid-credential"
       ) {
-        errEl.textContent = "Şifre hatalı.";
+        errEl.textContent = "E-posta veya şifre hatalı.";
       } else if (code === "auth/too-many-requests") {
         errEl.textContent = "Çok fazla deneme. Lütfen bekleyin.";
       } else if (code === "auth/requires-recent-login") {

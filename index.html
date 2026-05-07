@@ -269,6 +269,10 @@
               </div>
             </div>
             <p class="auth-error" id="regError"></p>
+            <div class="remember-me">
+              <input type="checkbox" id="regRememberMe" checked />
+              <label for="regRememberMe">Beni hatırla</label>
+            </div>
             <button type="submit" class="auth-submit-btn">Kayıt Ol</button>
           </form>
           <p class="auth-switch">
@@ -944,6 +948,17 @@
           </div>
           <form id="deleteAccountForm">
             <div class="form-grid">
+              <div class="auth-field">
+                <label for="deleteEmail">E-posta Adresiniz</label>
+                <input
+                  type="email"
+                  id="deleteEmail"
+                  class="modal-input"
+                  placeholder="ornek@gmail.com"
+                  autocomplete="username"
+                  required
+                />
+              </div>
               <div class="auth-field">
                 <label for="deletePassword">Şifreniz</label>
                 <input
