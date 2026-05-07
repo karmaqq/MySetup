@@ -21,7 +21,7 @@ function _renderPostHTML(postId, postData) {
 
   let html = '<div class="post-card" data-post-id="' + pid + '">';
 
-  html += '<div class="post-header">';
+  html += '<div class="post-header post-header-link" data-action="open-post-view" data-id="' + pid + '">';
   html +=
     '<div class="post-avatar">' +
     getAvatarLetter(postData.username) +
@@ -50,7 +50,7 @@ function _renderPostHTML(postId, postData) {
   }
   html += "</div>";
 
-  html += '<div class="post-body">';
+  html += '<div class="post-body post-body-link" data-action="open-post-view" data-id="' + pid + '">';
   if (postData.content)
     html += '<div class="post-text">' + escHtml(postData.content) + "</div>";
   if (postData.imageUrl) {
@@ -74,7 +74,7 @@ function _renderPostHTML(postId, postData) {
     '" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/></svg>';
   html += ' <span class="post-like-count-' + pid + '">' + likeCount + '</span></button>';
   html +=
-    '<button class="post-action-btn comment-btn" data-action="toggle-comments" data-id="' +
+    '<button class="post-action-btn comment-btn" data-action="open-post-view" data-id="' +
     pid +
     '">';
   html +=
@@ -89,23 +89,6 @@ function _renderPostHTML(postId, postData) {
     '<span class="post-date">' +
     escHtml(formatDateTime(postData.createdAt)) +
     "</span>";
-  html += "</div>";
-
-  html += '<div class="comment-section" id="commentSection-' + pid + '">';
-  html += '<div class="comment-list" id="commentList-' + pid + '">';
-  if (postData.comments) {
-    const sorted = Object.keys(postData.comments).sort(function (a, b) {
-      return (
-        (postData.comments[a].createdAt || 0) -
-        (postData.comments[b].createdAt || 0)
-      );
-    });
-    sorted.forEach(function (cid) {
-      html += _renderCommentThreadHTML(postId, cid, postData.comments[cid]);
-    });
-  }
-  html += "</div>";
-  html += _renderCommentComposerHTML(postId);
   html += "</div>";
 
   html += "</div>";

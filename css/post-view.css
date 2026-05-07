@@ -1,0 +1,130 @@
+/*--- zorunlu - agents.md yorum kurallarına uy ---*/
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*                              POST VIEW                                     */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Ana Konteyner ─────────────────── */
+
+.post-view-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(
+    100vh - var(--title-bar-height) - var(--content-margin) -
+      var(--footer-height) - var(--content-margin)
+  );
+}
+
+/* ─────────────────── Geri Çubuğu ─────────────────── */
+
+.post-view-back-bar {
+  flex-shrink: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.post-view-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 10px;
+  transition: all 0.15s;
+}
+
+.post-view-back-btn:hover {
+  background: var(--surface2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* ─────────────────── Kaydırılabilir Alan ─────────────────── */
+
+.post-view-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  padding: 16px 0;
+}
+
+#postViewContent .post-header {
+  cursor: default;
+}
+
+#postViewContent .post-header:hover {
+  background: transparent;
+}
+
+#postViewContent .comment-section {
+  display: flex !important;
+}
+
+/* ─────────────────── Sticky Composer Bar ─────────────────── */
+
+.post-view-composer-bar {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: 10px 0;
+}
+
+/* ─────────────────── Yanıt Hedef Göstergesi ─────────────────── */
+
+.post-view-reply-target {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-glow);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--accent);
+  font-family: var(--font-ui);
+  margin-bottom: 8px;
+}
+
+.post-view-reply-target.visible {
+  display: flex;
+}
+
+.post-view-reply-cancel {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.post-view-reply-cancel:hover {
+  opacity: 1;
+}
+
+/* ─────────────────── Feed kartları için tıklanabilir alanlar ─────────────────── */
+
+.post-header-link {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.post-header-link:hover {
+  background: var(--surface2);
+}
+
+.post-body-link {
+  cursor: pointer;
+}

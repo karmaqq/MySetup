@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="css/posts.css" />
     <link rel="stylesheet" href="css/auth.css" />
     <link rel="stylesheet" href="css/userset.css" />
+<link rel="stylesheet" href="css/post-view.css" />
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -361,6 +362,72 @@
           <!-- Sekme İçerikleri -->
           <div class="tab-content active" id="userPostsTab"></div>
           <div class="tab-content" id="likedPostsTab"></div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!--                        POST VIEW SAYFASI                          -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <section class="page-content page-650" id="postViewPage">
+          <div class="post-view-container">
+            <!-- Geri Çubuğu -->
+            <div class="post-view-back-bar">
+              <button class="post-view-back-btn" id="postViewBackBtn">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+                <span id="postViewAuthorLabel">gönderisi</span>
+              </button>
+            </div>
+
+            <!-- Kaydırılabilir Alan: Post + Yorumlar -->
+            <div class="post-view-scroll" id="postViewScroll">
+              <div id="postViewContent"></div>
+            </div>
+
+            <!-- Sticky Composer (Flex Bottom) -->
+            <div class="post-view-composer-bar" id="postViewComposerBar">
+              <div class="post-view-reply-target" id="postViewReplyTarget">
+                <span id="postViewReplyTargetText"></span>
+                <button class="post-view-reply-cancel" id="postViewReplyCancel">
+                  ✕
+                </button>
+              </div>
+              <div class="comment-input-row">
+                <div class="comment-input-wrapper">
+                  <textarea
+                    class="comment-input-field"
+                    id="postViewCommentInput"
+                    placeholder="Yorum yaz..."
+                    maxlength="500"
+                    rows="1"
+                  ></textarea>
+                  <button class="comment-send-btn" id="postViewSendBtn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="14"
+                      height="14"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- ─────────────────── Envanter Sayfası (1250px) ─────────────────── -->
@@ -1019,5 +1086,6 @@
     <script src="js/posts-delete.js"></script>
     <script src="js/posts-actions.js"></script>
     <script src="js/posts-profile.js"></script>
+    <script src="js/post-view.js"></script>
   </body>
 </html>

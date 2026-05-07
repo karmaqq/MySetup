@@ -172,34 +172,6 @@ function _cancelReplyMode(postId) {
 /*                         YORUM BÖLÜMÜ AÇ / KAPAT                          */
 /* ═════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Yorum bölümünü toggle eder ─────────────────── */
-
-function _toggleCommentSection(postId, triggerEl) {
-  const card = triggerEl ? triggerEl.closest(".post-card") : null;
-  if (!card) return;
-  const section = card.querySelector(".comment-section");
-  const btn = triggerEl || card.querySelector(
-    '[data-action="toggle-comments"]',
-  );
-  if (!section) return;
-  const isOpen = section.classList.contains("visible");
-  section.classList.toggle("visible");
-  if (btn) btn.classList.toggle("active", !isOpen);
-
-  if (!isOpen && !section.dataset.listenerInit) {
-    section.dataset.listenerInit = "true";
-    _initCommentListener(postId);
-  }
-
-  if (!isOpen) {
-    const input = section.querySelector(".comment-input-field");
-    if (input)
-      setTimeout(function () {
-        input.focus();
-      }, 80);
-  }
-}
-
 /* ─────────────────── Yanıtlar bölümünü aç/kapat ─────────────────── */
 
 function _openRepliesSection(postId, commentId) {
@@ -226,6 +198,7 @@ function _openRepliesSection(postId, commentId) {
 /* ─────────────────── Yorum bölümü açıldığında Firebase'i dinler ─────────────────── */
 
 function _initCommentListener(postId) {
+  if (_viewingPostId === postId) return;
   if (_commentListenerRefs[postId]) return;
   const ref = postsRef
     .child(postId)
@@ -438,35 +411,10 @@ document.addEventListener("click", function (e) {
     return;
   }
 
-  if (action === "toggle-comments") {
-    _toggleCommentSection(btn.dataset.id, btn);
-    return;
-  }
-
-  if (action === "submit-comment") {
-    _submitComposer(btn);
-    return;
-  }
-
-  if (action === "cancel-reply") {
-    const postCard = btn.closest(".post-card");
-    if (postCard) {
-      _cancelReplyMode(postCard.dataset.postId);
-      const input = postCard.querySelector(".comment-input-field");
-      if (input) input.value = "";
-    }
-    return;
-  }
-
-  if (action === "start-reply") {
-    const card = btn.closest(".post-card");
-    if (card) {
-      _startReplyMode(
-        card.dataset.postId,
-        btn.dataset.commentId,
-        btn.dataset.username,
-      );
-    }
+  if (action === "open-post-view") {
+    const fromComment = btn.classList.contains("comment-btn");
+    if (typeof openPostView === "function")
+      openPostView(btn.dataset.id, fromComment);
     return;
   }
 

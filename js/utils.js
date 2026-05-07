@@ -14,6 +14,7 @@ let _currentPage = sessionStorage.getItem("_lastPage") || "home";
 let _isAnimating = false;
 let _pendingPage = null;
 let _commentListenerRefs = {};
+let _viewingPostId = null;
 const mainScroll = document.getElementById("mainScroll");
 
 const PAGE_SIZE = 20;

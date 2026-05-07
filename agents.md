@@ -1,4 +1,4 @@
-# AGENTS.md — MySetup v2.6.5
+# AGENTS.md — MySetup v2.7.0
 
 > Bu dosya, MySetup projesine kod müdahalesi yapacak her yapay zeka ajanı, editör eklentisi veya geliştirici için zorunlu okuma belgesidir.
 > Projeyi ilk kez gören bir ajanın hata yapmaması için gereken tüm yapısal bilgi burada tanımlanmıştır.
@@ -60,6 +60,7 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 | `js/posts-delete.js` | Post/yorum/yanıt silme onayları (`_confirmDeletePost`, `_confirmDeleteComment`, `_confirmDeleteReply`) |
 | `js/posts-actions.js` | Beğeni aksiyonları, yorum/yanıt gönderimi, gerçek zamanlı yorum listener'ı, event delegation |
 | `js/posts-profile.js` | Profil sekmesi yükleme, `_loadPostsChunk`, beğeni değişikliği, sayfa değişimi |
+| `js/post-view.js`   | Post View açma/kapama, render, yorum listener, scroll yönetimi |
 
 ### Renderer Process — CSS
 
@@ -73,6 +74,7 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 | `css/editmodal.css` | Düzenleme modali, floating görsel önizleme, yıldız sistemi                                        |
 | `css/auth.css`      | Auth overlay, giriş/kayıt panelleri                                                               |
 | `css/userset.css`   | Ayarlar modalleri, kullanıcı adı düzenleme, tehlike alanı                                         |
+| `css/post-view.css` | Post View panel, back bar, scroll alan, sticky composer stilleri |
 
 ### Diğer
 
@@ -101,6 +103,7 @@ posts-create.js → utils.js + firebase.js + posts-render.js'e bağımlı
 posts-delete.js → utils.js + firebase.js + io.js'e bağımlı
 posts-actions.js→ utils.js + firebase.js + posts-render.js + post-comments-render.js + posts-delete.js + io.js'e bağımlı
 posts-profile.js→ utils.js + firebase.js + posts-render.js + posts-actions.js + posts-delete.js + post-comments-render.js'e bağımlı
+post-view.js → utils.js + firebase.js + posts-render.js + post-comments-render.js + posts-actions.js
 ```
 
 Bu sıra `index.html` içindeki `<script>` etiketlerinde sabittir. **Asla değiştirilemez.**
@@ -122,6 +125,7 @@ Aşağıdaki değişkenler yalnızca `js/utils.js` içinde `let` veya `const` il
 | `_commentListenerRefs` | `{}`           | utils.js (satır 15)  | Açık yorum listener referansları                     |
 | `_currentPage`        | `null`         | utils.js (satır 13)  | Aktif sayfa adı                                     |
 | `_isAnimating`        | `false`        | utils.js (satır 14)  | Sayfa geçiş animasyonu kontrolü                     |
+| `_viewingPostId`      | `string\|null` | utils.js (satır 16)  | Şu an görüntülenen post ID'si                     |
 
 ### posts-create.js Global Durum Değişkenleri (posts-create.js içinde tanımlı)
 
@@ -145,6 +149,11 @@ Aşağıdaki değişkenler yalnızca tanımlandıkları dosyanın kapsamındadı
 | --------------------- | -------------- | -------------------------------------------------- |
 | `_resetRafId`         | editmodal.js   | Preview sıfırlama RAF referansı                     |
 | `currentRating`       | editmodal.js   | Aktif yıldız derecelendirmesi                       |
+| `_previousPage`         | post-view.js   | Gelinen sayfa adı              |
+| `_previousScrollTop`    | post-view.js   | Kaydedilen scroll pozisyonu    |
+| `_replyTargetCommentId` | post-view.js   | Yanıt verilen yorum ID'si      |
+| `_replyTargetUsername`  | post-view.js   | Yanıt verilen kullanıcı adı    |
+| `_pvActiveNavBtn`       | post-view.js   | Korunan nav buton referansı    |
 
 ---
 
@@ -244,7 +253,7 @@ Tek yanıt satırı HTML'ini döndürür.
 
 ### posts-actions.js (~560 satır)
 
-`_togglePostLike`, `_toggleCommentLike`, `_toggleReplyLike`, `_submitComposer`, `_startReplyMode`, `_cancelReplyMode`, `_toggleCommentSection`, `_openRepliesSection`, `_initCommentListener`, `_refreshCommentThread`, `_updateCommentCount`, `_onlyLikesChanged`, click/keydown delegation, zaman güncellemesi
+`_togglePostLike`, `_toggleCommentLike`, `_toggleReplyLike`, `_submitComposer`, `_openRepliesSection`, `_initCommentListener`, `_refreshCommentThread`, `_updateCommentCount`, `_onlyLikesChanged`, click/keydown delegation, zaman güncellemesi
 
 ### posts-profile.js (~302 satır)
 
@@ -265,6 +274,10 @@ Tek yanıt satırı HTML'ini döndürür.
 ### updater-ui.js (2 fn)
 
 `startDotAnimation`, `stopDotAnimation`
+
+### post-view.js (~270 satır)
+
+`openPostView`, `closePostView`, `_renderPostViewContent`, `_initPostViewCommentListener`, `_updatePostViewCommentCount`, `_setPostViewReplyTarget`, `_clearPostViewReplyTarget`, `_submitPostViewComment`
 
 ---
 
@@ -423,4 +436,4 @@ Tüm optimizasyon bulguları çözülmüştür. Kod değişikliği yapmadan önc
 
 ---
 
-_Son güncelleme: 2026-05-07 — MySetup v2.6.5 — Tüm bulgular çözülmüştür_
+_Son güncelleme: 2026-05-07 — MySetup v2.7.0 — Post View Sistemi eklendi_
