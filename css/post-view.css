@@ -6,24 +6,21 @@
 
 /* ─────────────────── Sayfa Yapısı ─────────────────── */
 
-#postViewPage {
-  height: 100%;
-}
-
 .post-view-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* ─────────────────── Sabit Back Bar (Title bar +10 aşağıda) ─────────────────── */
 
 .post-view-back-bar {
-  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
@@ -55,10 +52,7 @@
 /* ─────────────────── Kaydırılabilir Alan ─────────────────── */
 
 .post-view-scroll {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-gutter: stable;
+  overflow: visible;
 }
 
 #postViewContent .post-card {
@@ -93,7 +87,9 @@
 /* ─────────────────── Sabit Composer Bar (Footer +10 yukarıda) ─────────────────── */
 
 .post-view-composer-bar {
-  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
   border-top: 1px solid var(--border);
   background: var(--surface);
   padding: 10px 16px;

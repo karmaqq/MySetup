@@ -249,6 +249,10 @@ function initPosts() {
     initUserLikesListener(user.uid, _onUserLikesChanged);
     initUserPostsListener(user.uid, _onUserPostsChanged);
   }
+
+  if (typeof _restorePostViewOnLoad === "function") {
+    _restorePostViewOnLoad();
+  }
 }
 
 /* ─────────────────── Çıkış yapıldığında çağrılır ─────────────────── */
@@ -271,6 +275,11 @@ function _teardownPosts() {
 
   if (typeof _stopTimeUpdateInterval === "function") {
     _stopTimeUpdateInterval();
+  }
+
+  if (typeof _pvRestoreInterval !== "undefined" && _pvRestoreInterval) {
+    clearInterval(_pvRestoreInterval);
+    _pvRestoreInterval = null;
   }
 }
 
