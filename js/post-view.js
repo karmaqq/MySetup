@@ -8,6 +8,7 @@
 
 let _previousPage = null;
 let _previousScrollTop = 0;
+let _previousProfileTab = null;
 let _replyTargetCommentId = null;
 let _replyTargetUsername = null;
 let _pvActiveNavBtn = null;
@@ -24,6 +25,7 @@ function openPostView(postId, fromCommentBtn) {
 
   _viewingPostId = postId;
   _previousPage = _currentPage;
+  _previousProfileTab = _currentPage === "profile" ? _profileTab : null;
   sessionStorage.setItem("_pvPreviousPage", _previousPage);
   sessionStorage.setItem("_pvScrollTop", mainScroll ? mainScroll.scrollTop : 0);
   _previousScrollTop = mainScroll ? mainScroll.scrollTop : 0;
@@ -65,12 +67,14 @@ function closePostView() {
   var targetPage = _previousPage || "home";
   var savedScroll = _previousScrollTop;
   var savedNavBtn = _pvActiveNavBtn;
+  var savedProfileTab = _previousProfileTab;
 
   _viewingPostId = null;
   sessionStorage.removeItem("_pvPreviousPage");
   sessionStorage.removeItem("_pvScrollTop");
   _previousPage = null;
   _previousScrollTop = 0;
+  _previousProfileTab = null;
   _replyTargetCommentId = null;
   _replyTargetUsername = null;
   _pvActiveNavBtn = null;
@@ -79,6 +83,10 @@ function closePostView() {
   if (postViewContent) postViewContent.innerHTML = "";
 
   if (mainScroll) mainScroll.classList.remove("pv-active");
+
+  if (targetPage === "profile" && savedProfileTab) {
+    window._pendingProfileTab = savedProfileTab;
+  }
 
   showPage(targetPage);
 

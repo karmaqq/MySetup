@@ -6,18 +6,31 @@
 
 /* ─────────────────── Firebase Config ─────────────────── */
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDINeXkzy4JCwt9cSjII5Icm-x_NpmtmK4",
-  authDomain: "mysetup-8dcd5.firebaseapp.com",
-  databaseURL: "https://mysetup-8dcd5-default-rtdb.firebaseio.com",
-  projectId: "mysetup-8dcd5",
-  storageBucket: "mysetup-8dcd5.firebasestorage.app",
-  messagingSenderId: "888468129237",
-  appId: "1:888468129237:web:9374ae62de891d7013295c",
-};
+function _resolveFirebaseConfig() {
+  // 1. Electron IPC (preload.js üzerinden main.js'den)
+  try {
+    if (window.electronAPI && typeof window.electronAPI.getFirebaseConfig === "function") {
+      var cfg = window.electronAPI.getFirebaseConfig();
+      if (cfg && cfg.apiKey) return cfg;
+    }
+  } catch (_) {}
+  // 2. Browser test / direct script (js/firebase-config.js)
+  if (window.__FB_CONFIG__ && window.__FB_CONFIG__.apiKey) {
+    return window.__FB_CONFIG__;
+  }
+  // 3. Bulunamadı — hata fırlat
+  return null;
+}
 
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+const firebaseConfig = _resolveFirebaseConfig();
+let database = null;
+
+if (firebaseConfig) {
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  database = firebase.database();
+} else {
+  console.error("Firebase config bulunamadı. js/firebase-config.js dosyasını oluşturun.");
+}
 
 let userDataRef = null;
 let activeBasePath = null;

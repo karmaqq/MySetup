@@ -52,6 +52,36 @@
   --footer-height: 35px;
 }
 
+/* ─────────────────── Yerel Fontlar ─────────────────── */
+
+@font-face {
+  font-family: "Inter";
+  src: url("../assets/fonts/Inter.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../assets/fonts/JetBrainsMono.woff2") format("woff2");
+  font-weight: 400 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Rajdhani";
+  src: url("../assets/fonts/Rajdhani-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Rajdhani";
+  src: url("../assets/fonts/Rajdhani-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
 /* ─────────────────── Sıfırlama ─────────────────── */
 
 *,

@@ -44,9 +44,10 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 
 ### Renderer Process — JavaScript (yükleme sırası bu şekilde korunmalı)
 
-| Dosya                 | Sorumluluk                                                                                                                                                                                                        |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `js/utils.js`         | **Tüm global değişkenler**, DOM referansları, yardımcı fonksiyonlar, `scheduleRender`, `formatTimeAgo`, `DATE_FORMAT`, `parseDateInput`, `parsePriceInput`                                                        |
+| Dosya                     | Sorumluluk                                                                                                                                                                                                        |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `js/firebase-config.js`   | Firebase config (`.gitignore`'da; yoksa `firebase-core.js` fallback kullanır)                                                                                                                                    |
+| `js/utils.js`             | **Tüm global değişkenler**, DOM referansları, yardımcı fonksiyonlar, `scheduleRender`, `formatTimeAgo`, `DATE_FORMAT`, `parseDateInput`, `parsePriceInput`                                                        |
 | `js/firebase-core.js` | Firebase init, `enrichItem()`, `initUserDataRef()`                                                                                                                                                                |
 | `js/firebase-inv.js`  | Envanter CRUD: `addComponentToFirebase`, `replaceUserDataInFirebase`, `updateComponentInFirebase`, `updateComponentStatusInFirebase`, `deleteComponentFromFirebase`, `uploadImageToFirebase`, `deleteAllInFolder` |
 | `js/firebase-user.js` | `deleteUserAccount()` (hesap silme işlemleri)                                                                                                                                                                     |
@@ -93,23 +94,9 @@ Renderer tarafında `import` / `export` / `require` kesinlikle kullanılamaz. Bu
 ## 3. Bağımlılık Zinciri
 
 ```
-utils.js        → Hiçbir şeye bağımlı değil; diğer her dosya buna bağımlıdır
-firebase-core.js → utils.js'e bağımlı
-firebase-inv.js → firebase-core.js'e bağımlı (database)
-firebase-user.js → firebase-core.js + firebase-post.js'e bağımlı
-firebase-post.js → firebase-core.js'e bağımlı (postsRef, userPostsRef, userLikesRef)
-table.js        → utils.js + firebase-inv.js'e bağımlı
-io.js           → utils.js + table.js + firebase-post.js'e bağımlı
-updater-ui.js   → utils.js'e bağımlı (window.electronAPI)
-editmodal.js    → utils.js + firebase-inv.js + io.js'e bağımlı
-auth.js         → utils.js + firebase-core.js + editmodal.js + userset.js'e bağımlı
-userset.js      → utils.js + firebase-core.js + firebase-user.js + auth.js'e bağımlı
-post-comment.js → utils.js + firebase-post.js'e bağımlı
-posts-render.js → utils.js + firebase-post.js + post-comment.js'e bağımlı
-posts-create.js → utils.js + firebase-post.js + posts-render.js'e bağımlı
-posts-actions.js→ utils.js + firebase-post.js + posts-render.js + post-comment.js + io.js'e bağımlı
-profile.js → utils.js + firebase-post.js + posts-render.js + posts-actions.js + post-comment.js'e bağımlı
-post-view.js → utils.js + firebase-post.js + posts-render.js + post-comment.js + posts-actions.js
+firebase-config.js → Hiçbir şeye bağımlı değil; sadece `window.__FB_CONFIG__` set eder
+utils.js         → Hiçbir şeye bağımlı değil; diğer her dosya buna bağımlıdır
+firebase-core.js  → utils.js + firebase-config.js'e bağımlı (_resolveFirebaseConfig)
 ```
 
 Bu sıra `index.html` içindeki `<script>` etiketlerinde sabittir. **Asla değiştirilemez.**

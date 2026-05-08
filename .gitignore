@@ -7,3 +7,4 @@ rtdb-rules-clean.json
 storage-rules-clean.rules
 dist/
 node_modules/
+js/firebase-config.js

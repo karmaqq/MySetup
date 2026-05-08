@@ -19,11 +19,13 @@ const EMPTY_STATE = {
 /* ─────────────────── Profil Durum Yönetimi ─────────────────── */
 
 let _profileTab = null;
+let _userPostsInitialized = false;
 let _userPostsVisible = new Set();
 let _userPostsOldestTs = null;
 let _hasMoreUserPosts = false;
 let _loadingMoreUserPosts = false;
 
+let _likedPostsInitialized = false;
 let _likedPostsVisible = new Set();
 let _likedPostsOldestTs = null;
 let _hasMoreLikedPosts = false;
@@ -56,7 +58,19 @@ function _showProfileContent(tab) {
 /* ─────────────────── Profil sekmesi değiştğinde çağrılır ─────────────────── */
 
 function updateProfilePosts() {
-  switchProfileTab("user-posts");
+  if (window._pendingProfileTab) {
+    switchProfileTab(window._pendingProfileTab);
+    window._pendingProfileTab = null;
+  } else {
+    switchProfileTab("user-posts");
+  }
+}
+
+function _syncNewProfileItems(tab, visibleSet) {
+  if (!tab) return;
+  visibleSet.forEach(function (postId) {
+    _appendOrPrependToProfileTab(tab.id, postId);
+  });
 }
 
 function switchProfileTab(tabName) {
@@ -72,12 +86,17 @@ function switchProfileTab(tabName) {
 /* ─────────────────── Gönderilerim sekmesini başlatır ─────────────────── */
 
 function _initUserPostsTab() {
-  if (_userPostsVisible.size > 0) return;
-  const user = firebase.auth().currentUser;
-  if (!user) return;
-
   const tab = document.getElementById("userPostsTab");
   if (!tab) return;
+
+  if (_userPostsInitialized && tab.children.length > 0) {
+    _syncNewProfileItems(tab, _userPostsVisible);
+    return;
+  }
+  _userPostsInitialized = false;
+
+  const user = firebase.auth().currentUser;
+  if (!user) return;
 
   _showProfileLoading(tab);
   _userPostsVisible.clear();
@@ -103,18 +122,26 @@ function _initUserPostsTab() {
       _loadingMoreUserPosts = v;
     },
     getLoading: () => _loadingMoreUserPosts,
+    onInitDone: function () {
+      _userPostsInitialized = true;
+    },
   });
 }
 
 /* ─────────────────── Beğenilerim sekmesini başlatır ─────────────────── */
 
 function _initLikedPostsTab() {
-  if (_likedPostsVisible.size > 0) return;
-  const user = firebase.auth().currentUser;
-  if (!user) return;
-
   const tab = document.getElementById("likedPostsTab");
   if (!tab) return;
+
+  if (_likedPostsInitialized && tab.children.length > 0) {
+    _syncNewProfileItems(tab, _likedPostsVisible);
+    return;
+  }
+  _likedPostsInitialized = false;
+
+  const user = firebase.auth().currentUser;
+  if (!user) return;
 
   _showProfileLoading(tab);
   _likedPostsVisible.clear();
@@ -140,6 +167,9 @@ function _initLikedPostsTab() {
       _loadingMoreLikedPosts = v;
     },
     getLoading: () => _loadingMoreLikedPosts,
+    onInitDone: function () {
+      _likedPostsInitialized = true;
+    },
   });
 }
 
@@ -216,6 +246,7 @@ function _loadPostsChunk(cfg) {
           btn.disabled = false;
           btn.textContent = "Daha Fazla Göster";
         }
+        if (typeof cfg.onInitDone === "function") cfg.onInitDone();
       });
     })
     .catch(function () {
