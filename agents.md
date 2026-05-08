@@ -245,9 +245,9 @@ Yeni post oluşturur, görsel varsa yükler ve Firebase'e kaydeder.
 
 ## 6. Fonksiyon Haritası
 
-### utils.js (14 fn)
+### utils.js (15 fn)
 
-`showPage`, `isAnyModalOpen`, `scheduleRender`, `normalizeTr`, `escHtml`, `escAttr`, `safeExternalUrl`, `applyPriceFormat`, `parseDateInput`, `parsePriceInput`, `formatTimeAgo`, `formatDateTime`, `DATE_FORMAT`, `getPostCards`
+`showPage`, `isAnyModalOpen`, `scheduleRender`, `normalizeTr`, `escHtml`, `escAttr`, `safeExternalUrl`, `applyPriceFormat`, `parseDateInput`, `parsePriceInput`, `formatTimeAgo`, `formatDateTime`, `DATE_FORMAT`, `getPostCards`, `_onlyCommentLikesChanged`
 
 ### firebase-core.js (4 fn)
 
@@ -311,7 +311,7 @@ Yeni post oluşturur, görsel varsa yükler ve Firebase'e kaydeder.
 
 ### post-view.js (~450 satır)
 
-`openPostView`, `closePostView`, `_renderPostViewContent`, `_initPostViewCommentListener`, `_updatePostViewCommentCount`, `_setPostViewReplyTarget`, `_clearPostViewReplyTarget`, `_submitPostViewComment`
+`openPostView`, `closePostView`, `_renderPostViewContent`, `_initPostViewCommentListener`, `_updatePostViewCommentCount`, `_setPostViewReplyTarget`, `_clearPostViewReplyTarget`, `_submitPostViewComment`, `_handleDeletedPostView`
 
 ---
 

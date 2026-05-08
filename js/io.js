@@ -1,12 +1,8 @@
 /*--- zorunlu - agents.md yorum kurallarına uy ---*/
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                        GİRİŞ / ÇIKIŞ VE BİLDİRİMLER                    */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════== */
 /*                          BİLDİRİM SİSTEMİ                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════== */
 
 /* ─────────────────── Toast Bildirimi Göster ─────────────────── */
 
@@ -35,9 +31,9 @@ window.showToast = function (message, type = "info", duration = 3200) {
   }, duration);
 };
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════== */
 /*                          ARAMA VE FİLTRELEME                            */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════== */
 
 /* ─────────────────── Arama Alanı Dinleyicisi ─────────────────── */
 
@@ -90,9 +86,9 @@ filterBtns.forEach((btn) => {
   });
 });
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════== */
 /*                          SİLME İŞLEMLERİ                              */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════== */
 
 /* ─────────────────── Genel silme onayı (post/yorum/yanıt) ─────────────────── */
 
@@ -102,30 +98,49 @@ function _confirmDelete(type, ids) {
     comment: "Yorum silinsin mi?",
     reply: "Yanıt silinsin mi?",
   };
-  var animEl = null;
-  if (type === "comment") {
-    animEl = document.getElementById("commentThread-" + ids.postId + "-" + ids.commentId);
-  } else if (type === "reply") {
-    animEl = document.querySelector('[data-reply-id="' + ids.replyId + '"]');
-  }
-  if (animEl) {
-    animEl.style.transition = "opacity 0.3s, transform 0.3s";
-    animEl.style.opacity = "0";
-    animEl.style.transform = "translateY(4px)";
-  }
+  var successMessages = {
+    post: "Gönderi silindi",
+    comment: "Yorum silindi",
+    reply: "Yanıt silindi",
+  };
   var fns = {
-    post: function () { return deletePostFromFirebase(ids.postId, allPosts[ids.postId]); },
-    comment: function () { return deleteCommentFromFirebase(ids.postId, ids.commentId); },
-    reply: function () { return deleteReplyFromFirebase(ids.postId, ids.commentId, ids.replyId); },
+    post: function () {
+      return deletePostFromFirebase(ids.postId, allPosts[ids.postId]);
+    },
+    comment: function () {
+      return deleteCommentFromFirebase(ids.postId, ids.commentId);
+    },
+    reply: function () {
+      return deleteReplyFromFirebase(ids.postId, ids.commentId, ids.replyId);
+    },
   };
   showConfirm(messages[type], function () {
+    var animEl = null;
+    if (type === "comment") {
+      animEl = document.getElementById(
+        "commentThread-" + ids.postId + "-" + ids.commentId,
+      );
+    } else if (type === "reply") {
+      animEl = document.querySelector('[data-reply-id="' + ids.replyId + '"]');
+    }
+    if (animEl) {
+      animEl.style.transition = "opacity 0.3s, transform 0.3s";
+      animEl.style.opacity = "0";
+      animEl.style.transform = "translateY(4px)";
+    }
     fns[type]()
       .then(function () {
-        if (animEl) setTimeout(function () { animEl.remove(); }, 320);
-        showToast(messages[type].replace("?", "").trim() + " silindi", "success");
+        if (animEl)
+          setTimeout(function () {
+            animEl.remove();
+          }, 320);
+        showToast(successMessages[type], "success");
       })
       .catch(function () {
-        if (animEl) { animEl.style.opacity = "1"; animEl.style.transform = "translateY(0)"; }
+        if (animEl) {
+          animEl.style.opacity = "1";
+          animEl.style.transform = "translateY(0)";
+        }
         showToast("Silinemedi", "error");
       });
   });
@@ -276,7 +291,12 @@ if (exportCsvBtn) {
           item.star || 0,
           item.opinion || "-",
         ]
-          .map((v) => `"${String(v).replace(/"/g, '""').replace(/[\r\n]/g, ' ')}"`)
+          .map(
+            (v) =>
+              `"${String(v)
+                .replace(/"/g, '""')
+                .replace(/[\r\n]/g, " ")}"`,
+          )
           .join(","),
       ),
     ].join("\n");
@@ -338,7 +358,7 @@ window.showConfirm = function (message, onConfirm, opts) {
     toast.addEventListener("transitionend", () => toast.remove(), {
       once: true,
     });
-  };
+  }
 
   const autoTimeout = setTimeout(_dismissConfirm, 15000);
 
@@ -374,7 +394,7 @@ if (deleteAllBtn) {
             showToast("Silme işlemi tamamlanamadı", "error");
           });
       },
-      { yesText: "Onay" }
+      { yesText: "Onay" },
     );
   });
 }

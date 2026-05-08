@@ -242,7 +242,12 @@ function _initCommentListener(postId) {
       const list = card.querySelector("#commentList-" + postId);
       if (list) {
         const wrapper = document.createElement("div");
-        wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, data, _currentUser);
+        wrapper.innerHTML = _renderCommentThreadHTML(
+          postId,
+          cid,
+          data,
+          _currentUser,
+        );
         list.appendChild(wrapper.firstElementChild);
       }
     });
@@ -254,10 +259,29 @@ function _initCommentListener(postId) {
     const data = s.val();
     const post = allPosts[postId];
     if (!post) return;
+    const oldData = post.comments ? post.comments[cid] : null;
     if (!post.comments) post.comments = {};
     post.comments[cid] = data;
+    if (
+      oldData &&
+      typeof _onlyCommentLikesChanged === "function" &&
+      _onlyCommentLikesChanged(oldData, data)
+    ) {
+      getPostCards(postId).forEach(function (card) {
+        if (typeof _patchCommentLikeBtn === "function") {
+          _patchCommentLikeBtn(postId, cid, data.likes, _currentUser);
+        }
+      });
+      return;
+    }
     const threads = document.querySelectorAll(
-      '[data-post-id="' + postId + '"] [id="commentThread-' + postId + "-" + cid + '"]',
+      '[data-post-id="' +
+        postId +
+        '"] [id="commentThread-' +
+        postId +
+        "-" +
+        cid +
+        '"]',
     );
     threads.forEach(function (thread) {
       _refreshCommentThread(postId, cid, data, thread, _currentUser);
@@ -269,7 +293,13 @@ function _initCommentListener(postId) {
     const post = allPosts[postId];
     if (post && post.comments) delete post.comments[cid];
     const threads = document.querySelectorAll(
-      '[data-post-id="' + postId + '"] [id="commentThread-' + postId + "-" + cid + '"]',
+      '[data-post-id="' +
+        postId +
+        '"] [id="commentThread-' +
+        postId +
+        "-" +
+        cid +
+        '"]',
     );
     threads.forEach(function (thread) {
       thread.remove();
@@ -280,11 +310,22 @@ function _initCommentListener(postId) {
 
 /* ─────────────────── Yorum thread'ini günceller ─────────────────── */
 
-function _refreshCommentThread(postId, commentId, commentData, existingEl, user) {
+function _refreshCommentThread(
+  postId,
+  commentId,
+  commentData,
+  existingEl,
+  user,
+) {
   if (!existingEl || !existingEl.isConnected) return;
   const card = existingEl.closest(".post-card");
   const wrapper = document.createElement("div");
-  wrapper.innerHTML = _renderCommentThreadHTML(postId, commentId, commentData, user);
+  wrapper.innerHTML = _renderCommentThreadHTML(
+    postId,
+    commentId,
+    commentData,
+    user,
+  );
   const newEl = wrapper.firstElementChild;
   const repliesSec = existingEl.querySelector(".replies-section");
   const wasOpen = repliesSec && !repliesSec.classList.contains("hidden");
@@ -304,7 +345,7 @@ function _refreshCommentThread(postId, commentId, commentData, existingEl, user)
 
 function _updateCommentCount(postId) {
   const post = allPosts[postId];
-  const count = post && post.comments ? Object.keys(post.comments).length :0;
+  const count = post && post.comments ? Object.keys(post.comments).length : 0;
   getPostCards(postId).forEach(function (card) {
     const spans = card.querySelectorAll('[class*="comment-count-"]');
     spans.forEach(function (s) {
@@ -401,7 +442,9 @@ document.addEventListener("click", function (e) {
       d.classList.remove("active");
     });
     const commentItem = btn.closest(".comment-item");
-    const dd = commentItem ? commentItem.querySelector(".comment-dropdown") : null;
+    const dd = commentItem
+      ? commentItem.querySelector(".comment-dropdown")
+      : null;
     if (dd) {
       dd.classList.toggle("active");
     }
@@ -459,12 +502,19 @@ document.addEventListener("click", function (e) {
   }
 
   if (action === "delete-comment") {
-    _confirmDelete("comment", { postId: btn.dataset.postId, commentId: btn.dataset.commentId });
+    _confirmDelete("comment", {
+      postId: btn.dataset.postId,
+      commentId: btn.dataset.commentId,
+    });
     return;
   }
 
   if (action === "delete-reply") {
-    _confirmDelete("reply", { postId: btn.dataset.postId, commentId: btn.dataset.commentId, replyId: btn.dataset.replyId });
+    _confirmDelete("reply", {
+      postId: btn.dataset.postId,
+      commentId: btn.dataset.commentId,
+      replyId: btn.dataset.replyId,
+    });
     return;
   }
 });
@@ -504,56 +554,64 @@ let _visibilityListenerRegistered = false;
 
 function _startTimeUpdateInterval() {
   if (_timeUpdateInterval) clearInterval(_timeUpdateInterval);
-  _timeUpdateInterval = setInterval(function () {
-    if (
-      typeof _currentPage !== "undefined" &&
-      _currentPage !== "home" &&
-      _currentPage !== "profile" &&
-      _currentPage !== "postView"
-    )
-      return;
+  _timeUpdateInterval = setInterval(
+    function () {
+      if (
+        typeof _currentPage !== "undefined" &&
+        _currentPage !== "home" &&
+        _currentPage !== "profile" &&
+        _currentPage !== "postView"
+      )
+        return;
 
-    if (document.hidden) return;
+      if (document.hidden) return;
 
-    const postCards = document.querySelectorAll("[data-post-id]");
-    if (!postCards.length) return;
-    postCards.forEach(function (card) {
-      const post = allPosts[card.dataset.postId];
-      if (!post) return;
+      const postCards = document.querySelectorAll("[data-post-id]");
+      if (!postCards.length) return;
+      postCards.forEach(function (card) {
+        const post = allPosts[card.dataset.postId];
+        if (!post) return;
 
-      // Post zamanı
-      const postTimeEl = card.querySelector(":scope > .post-header .post-time");
-      if (postTimeEl) {
-        postTimeEl.textContent = formatTimeAgo(post.createdAt, post.phraseIndex);
-      }
-
-      // Yorumlar ve yanıtlar
-      const comments = post.comments || {};
-      Object.keys(comments).forEach(function (cid) {
-        const commentEl = card.querySelector(`[data-comment-id="${cid}"]`);
-        if (!commentEl) return;
-        const commentTimeEl = commentEl.querySelector(".comment-time");
-        if (commentTimeEl) {
-          commentTimeEl.textContent = formatTimeAgo(
-            comments[cid].createdAt,
-            undefined,
-            true,
+        const postTimeEl = card.querySelector(
+          ":scope > .post-header .post-time",
+        );
+        if (postTimeEl) {
+          postTimeEl.textContent = formatTimeAgo(
+            post.createdAt,
+            post.phraseIndex,
           );
         }
-        const replies = comments[cid].replies || {};
-        Object.keys(replies).forEach(function (rid) {
-          const replyTimeEl = commentEl.querySelector(`[data-reply-id="${rid}"] .reply-time`);
-          if (replyTimeEl) {
-            replyTimeEl.textContent = formatTimeAgo(
-              replies[rid].createdAt,
+
+        const comments = post.comments || {};
+        Object.keys(comments).forEach(function (cid) {
+          const commentEl = card.querySelector(`[data-comment-id="${cid}"]`);
+          if (!commentEl) return;
+          const commentTimeEl = commentEl.querySelector(".comment-time");
+          if (commentTimeEl) {
+            commentTimeEl.textContent = formatTimeAgo(
+              comments[cid].createdAt,
               undefined,
               true,
             );
           }
+          const replies = comments[cid].replies || {};
+          Object.keys(replies).forEach(function (rid) {
+            const replyTimeEl = commentEl.querySelector(
+              `[data-reply-id="${rid}"] .reply-time`,
+            );
+            if (replyTimeEl) {
+              replyTimeEl.textContent = formatTimeAgo(
+                replies[rid].createdAt,
+                undefined,
+                true,
+              );
+            }
+          });
         });
       });
-    });
-  }, 5 * 60 * 1000);
+    },
+    5 * 60 * 1000,
+  );
 }
 
 function _stopTimeUpdateInterval() {
@@ -569,7 +627,8 @@ if (!_visibilityListenerRegistered) {
     if (document.hidden) {
       _stopTimeUpdateInterval();
     } else if (
-      typeof _postsListenerActive !== "undefined" && _postsListenerActive
+      typeof _postsListenerActive !== "undefined" &&
+      _postsListenerActive
     ) {
       _startTimeUpdateInterval();
     }

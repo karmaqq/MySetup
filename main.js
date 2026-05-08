@@ -4,12 +4,19 @@
 /*                          ELECTRON ANA SÜREÇ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const { app, BrowserWindow, shell, session, ipcMain, globalShortcut } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  shell,
+  session,
+  ipcMain,
+  globalShortcut,
+} = require("electron");
 const path = require("path");
 const { setupUpdater, checkForUpdates } = require("./js/updater.js");
 let mainWindow;
 
-/* ─────────────────── CSP Başlık Tanımlaması ─────────────────── */
+/* ------------------- CSP Başlık Tanımlaması ------------------- */
 
 const APP_CSP = [
   "default-src 'self'",
@@ -23,7 +30,7 @@ const APP_CSP = [
   "base-uri 'self'",
 ].join("; ");
 
-/* ─────────────────── CSP Header Kurulumu ─────────────────── */
+/* ------------------- CSP Header Kurulumu ------------------- */
 
 function setupCspHeaders() {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -32,13 +39,20 @@ function setupCspHeaders() {
     responseHeaders["Content-Security-Policy"] = [APP_CSP];
 
     if (details.url.includes("firebasestorage.googleapis.com")) {
-      var origin = details.requestHeaders ? (details.requestHeaders.Origin || "") : "";
+      var origin = details.requestHeaders
+        ? details.requestHeaders.Origin || ""
+        : "";
       var allowed = [
         "file://",
         "app://",
         "https://mysetup-8dcd5.firebaseapp.com",
       ];
-      if (allowed.some(function (o) { return origin.startsWith(o); }) || !origin) {
+      if (
+        allowed.some(function (o) {
+          return origin.startsWith(o);
+        }) ||
+        !origin
+      ) {
         responseHeaders["Access-Control-Allow-Origin"] = [origin || "*"];
       }
       responseHeaders["Access-Control-Allow-Methods"] = ["GET, HEAD, OPTIONS"];
@@ -48,7 +62,7 @@ function setupCspHeaders() {
   });
 }
 
-/* ─────────────────── Pencere Oluşturma ─────────────────── */
+/* ------------------- Pencere Oluşturma ------------------- */
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -93,7 +107,7 @@ function createWindow() {
   setupUpdater(mainWindow);
 }
 
-/* ─────────────────── UYGULAMA YAŞAM DÖNGÜSÜ ─────────────────── */
+/* ------------------- UYGULAMA YAŞAM DÖNGÜSÜ ------------------- */
 
 app.whenReady().then(() => {
   setupCspHeaders();

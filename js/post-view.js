@@ -1,8 +1,8 @@
 /*--- zorunlu - agents.md yorum kurallarına uy ---*/
 
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                              POST VIEW                                     */
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Modül Durum Değişkenleri ─────────────────── */
 
@@ -13,15 +13,18 @@ let _replyTargetCommentId = null;
 let _replyTargetUsername = null;
 let _pvActiveNavBtn = null;
 
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                              AÇMA / KAPAMA                                 */
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Post View'i açar ─────────────────── */
 
 function openPostView(postId, fromCommentBtn) {
   var postData = allPosts[postId];
   if (!postData) return;
+
+  var composerBar = document.getElementById("postViewComposerBar");
+  if (composerBar) composerBar.style.display = "";
 
   _viewingPostId = postId;
   _previousPage = _currentPage;
@@ -99,9 +102,9 @@ function closePostView() {
   }, 320);
 }
 
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                                RENDER                                      */
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Post + yorumları render eder ─────────────────── */
 
@@ -164,7 +167,12 @@ function _renderPostViewContent(postId, postData) {
       );
     });
     sorted.forEach(function (cid) {
-      html += _renderCommentThreadHTML(postId, cid, postData.comments[cid], user);
+      html += _renderCommentThreadHTML(
+        postId,
+        cid,
+        postData.comments[cid],
+        user,
+      );
     });
   }
 
@@ -180,9 +188,9 @@ function _renderPostViewContent(postId, postData) {
   _initPostViewCommentListener(postId);
 }
 
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          YORUM LİSTENER (POST VIEW)                        */
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Firebase yorum listener'ını başlatır ─────────────────── */
 
@@ -209,7 +217,12 @@ function _initPostViewCommentListener(postId) {
     var commentList = document.getElementById("commentList-" + postId);
     if (commentList) {
       var wrapper = document.createElement("div");
-      wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, data, _currentUser);
+      wrapper.innerHTML = _renderCommentThreadHTML(
+        postId,
+        cid,
+        data,
+        _currentUser,
+      );
       commentList.appendChild(wrapper.firstElementChild);
     }
     _updatePostViewCommentCount(postId);
@@ -228,13 +241,23 @@ function _initPostViewCommentListener(postId) {
     var thread = document.getElementById("commentThread-" + postId + "-" + cid);
     if (!thread) return;
 
-    if (oldData && typeof _onlyLikesChanged === "function" && _onlyLikesChanged(oldData, newData)) {
-      if (typeof _patchCommentLikeBtn === "function") _patchCommentLikeBtn(postId, cid, newData.likes, _currentUser);
+    if (
+      oldData &&
+      typeof _onlyCommentLikesChanged === "function" &&
+      _onlyCommentLikesChanged(oldData, newData)
+    ) {
+      if (typeof _patchCommentLikeBtn === "function")
+        _patchCommentLikeBtn(postId, cid, newData.likes, _currentUser);
       return;
     }
 
     var wrapper = document.createElement("div");
-    wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, newData, _currentUser);
+    wrapper.innerHTML = _renderCommentThreadHTML(
+      postId,
+      cid,
+      newData,
+      _currentUser,
+    );
     var newEl = wrapper.firstElementChild;
     var repliesSec = thread.querySelector(".replies-section");
     var wasOpen = repliesSec && !repliesSec.classList.contains("hidden");
@@ -267,9 +290,9 @@ function _updatePostViewCommentCount(postId) {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          YANIT HEDEF YÖNETİMİ                              */
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Yanıt hedefini ayarlar ─────────────────── */
 
@@ -304,15 +327,19 @@ function _clearPostViewReplyTarget() {
   if (input) input.placeholder = "Yorum yaz...";
 }
 
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                            YORUM GÖNDERİMİ                                 */
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Yorum veya yanıt gönderir ─────────────────── */
 
 function _submitPostViewComment() {
   var input = document.getElementById("postViewCommentInput");
   if (!input || !_viewingPostId) return;
+  if (!allPosts[_viewingPostId]) {
+    showToast("Bu gönderi artık mevcut değil", "warn");
+    return;
+  }
 
   var text = input.value.trim();
   if (!text) return;
@@ -358,9 +385,37 @@ function _submitPostViewComment() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                       SİLİNEN POST YÖNETİMİ                              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+function _handleDeletedPostView() {
+  var composerBar = document.getElementById("postViewComposerBar");
+  if (composerBar) composerBar.style.display = "none";
+
+  var content = document.getElementById("postViewContent");
+  if (!content) return;
+
+  content.innerHTML =
+    '<div class="post-view-deleted-state">' +
+    '<div class="post-view-deleted-icon">' +
+    '<svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+    '<polyline points="3 6 5 6 21 6"/>' +
+    '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
+    "</svg>" +
+    "</div>" +
+    '<div class="post-view-deleted-text">Bu gönderi artık mevcut değil</div>' +
+    '<div class="post-view-deleted-sub">Gönderi sahibi tarafından silindi.</div>' +
+    '<button class="post-view-deleted-btn" id="deletedPostBackBtn">Geri Dön</button>' +
+    "</div>";
+
+  var backBtn = document.getElementById("deletedPostBackBtn");
+  if (backBtn) backBtn.addEventListener("click", closePostView);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          OLAY DİNLEYİCİLERİ                                */
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Geri butonu ─────────────────── */
 
@@ -415,13 +470,12 @@ if (_pvContent) {
       _setPostViewReplyTarget(btn.dataset.commentId, btn.dataset.username);
       return;
     }
-
   });
 }
 
-/* ═════════════════════════════════════════════════════════════════ */
+/* ================================================================= */
 /*                          F5 / RELOAD KORUMASI                           */
-/* ═════════════════════════════════════════════════════════════════ */
+/* ================================================================= */
 
 function _restorePostViewOnLoad() {
   var savedPid = sessionStorage.getItem("_viewingPostId");
@@ -448,8 +502,7 @@ function _restorePostViewOnLoad() {
         escHtml(postData.username || "Kullanıcı") + " gönderisi";
     }
     _previousPage = sessionStorage.getItem("_pvPreviousPage") || "home";
-    _previousScrollTop =
-      parseInt(sessionStorage.getItem("_pvScrollTop")) || 0;
+    _previousScrollTop = parseInt(sessionStorage.getItem("_pvScrollTop")) || 0;
     _pvActiveNavBtn = document.querySelector(
       '.sidebar-nav-btn[data-page="' + _previousPage + '"]',
     );

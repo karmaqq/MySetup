@@ -404,11 +404,11 @@ document
     }
 
     try {
-    const user = firebase.auth().currentUser;
-    const credential = firebase.auth.EmailAuthProvider.credential(
-      user.email,
-      oldPass,
-    );
+      const user = firebase.auth().currentUser;
+      const credential = firebase.auth.EmailAuthProvider.credential(
+        user.email,
+        oldPass,
+      );
       await user.reauthenticateWithCredential(credential);
       await user.updatePassword(newPass);
       await user.reload();

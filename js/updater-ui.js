@@ -100,9 +100,16 @@ if (window.electronAPI) {
   updateBtn?.addEventListener("click", () => {
     if (!updateBtnSpan) return;
     stopDotAnimation();
-    updateBtnSpan.textContent = "Bağlanıyor...";
-    updateBtn.style.pointerEvents = "none";
-    updateBtn.style.setProperty("--progress", "0%");
-    window.electronAPI.launchUpdater();
+    if (updateBtn.classList.contains("ready")) {
+      updateBtnSpan.textContent = "Yeniden Başlatılıyor";
+      updateBtn.style.pointerEvents = "none";
+      startDotAnimation();
+      window.electronAPI.launchUpdater();
+    } else {
+      updateBtnSpan.textContent = "Bağlanıyor...";
+      updateBtn.style.pointerEvents = "none";
+      updateBtn.style.setProperty("--progress", "0%");
+      window.electronAPI.launchUpdater();
+    }
   });
 }

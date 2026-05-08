@@ -4,7 +4,7 @@
 /*                          ENVANTER FIREBASE İŞLEMLERİ                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Component CRUD ─────────────────── */
+/* ─────────────────── Bileşen CRUD ─────────────────── */
 
 function addComponentToFirebase(itemData) {
   return userDataRef.push(itemData);

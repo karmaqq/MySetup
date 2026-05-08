@@ -50,23 +50,27 @@ function deletePostFromFirebase(postId, postData) {
       });
   }
 
-  return postsRef.child(postId).child("likes").once("value").then(function (likesSnap) {
-    var likes = likesSnap.val() || {};
-    var cleanupPromises = [];
-    if (uid) {
-      cleanupPromises.push(userPostsRef.child(uid).child(postId).remove());
-    }
-    Object.keys(likes).forEach(function (userId) {
-      cleanupPromises.push(userLikesRef.child(userId).child(postId).remove());
-    });
+  return postsRef
+    .child(postId)
+    .child("likes")
+    .once("value")
+    .then(function (likesSnap) {
+      var likes = likesSnap.val() || {};
+      var cleanupPromises = [];
+      if (uid) {
+        cleanupPromises.push(userPostsRef.child(uid).child(postId).remove());
+      }
+      Object.keys(likes).forEach(function (userId) {
+        cleanupPromises.push(userLikesRef.child(userId).child(postId).remove());
+      });
 
-    return deletePromise.then(function () {
-      return Promise.all([
-        postsRef.child(postId).remove(),
-        Promise.all(cleanupPromises),
-      ]);
+      return deletePromise.then(function () {
+        return Promise.all([
+          postsRef.child(postId).remove(),
+          Promise.all(cleanupPromises),
+        ]);
+      });
     });
-  });
 }
 
 function togglePostLike(postId, userId) {
@@ -131,10 +135,13 @@ function getPostsByIds(postIds, existing) {
   if (!missing.length) return Promise.resolve(result);
   return Promise.all(
     missing.map(function (id) {
-      return postsRef.child(id).once("value").then(function (s) {
-        return s.exists() ? { id: id, data: s.val() } : null;
-      });
-    })
+      return postsRef
+        .child(id)
+        .once("value")
+        .then(function (s) {
+          return s.exists() ? { id: id, data: s.val() } : null;
+        });
+    }),
   ).then(function (results) {
     results.forEach(function (r) {
       if (r) {

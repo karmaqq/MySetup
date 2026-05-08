@@ -13,6 +13,7 @@ const { autoUpdater } = require("electron-updater");
 
 let _mainWindow = null;
 let _initialized = false;
+let _updateReady = false;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          GÜNCELLEME KURULUMU                             */
@@ -44,11 +45,8 @@ function setupUpdater(mainWindow) {
   /* ─────────────────── İndirme Tamamlandı ─────────────────── */
 
   autoUpdater.on("update-downloaded", () => {
+    _updateReady = true;
     _mainWindow.webContents.send("update_downloaded");
-
-    setTimeout(() => {
-      autoUpdater.quitAndInstall(true, true);
-    }, 2500);
   });
 
   /* ─────────────────── Güncelleme Hatası ─────────────────── */
@@ -60,7 +58,11 @@ function setupUpdater(mainWindow) {
   /* ─────────────────── IPC: İndirmeyi Başlat ─────────────────── */
 
   ipcMain.on("launch_updater", () => {
-    autoUpdater.downloadUpdate();
+    if (_updateReady) {
+      autoUpdater.quitAndInstall(true, true);
+    } else {
+      autoUpdater.downloadUpdate();
+    }
   });
 }
 

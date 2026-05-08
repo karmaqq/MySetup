@@ -96,7 +96,10 @@ function _insertPostToFeed(postId, postData, prepend) {
   const wrapper = document.createElement("div");
   wrapper.innerHTML = _renderPostHTML(postId, postData);
   const el = wrapper.firstElementChild;
-  el.style.cssText = "opacity:0;transform:translateY(" + (prepend ? "-" : "") + "8px);transition:opacity 0.25s ease,transform 0.25s ease";
+  el.style.cssText =
+    "opacity:0;transform:translateY(" +
+    (prepend ? "-" : "") +
+    "8px);transition:opacity 0.25s ease,transform 0.25s ease";
   if (prepend) {
     postsFeed.insertBefore(el, postsFeed.firstChild);
   } else {
@@ -151,13 +154,13 @@ function _patchPostLikes(postId, likes, user) {
 
 function _softRemovePost(postId) {
   getPostCards(postId).forEach(function (el) {
-      el.style.transition = "opacity 0.3s, transform 0.3s";
-      el.style.opacity = "0";
-      el.style.transform = "translateY(4px)";
-      setTimeout(function () {
-        el.remove();
-      }, 320);
-    });
+    el.style.transition = "opacity 0.3s, transform 0.3s";
+    el.style.opacity = "0";
+    el.style.transform = "translateY(4px)";
+    setTimeout(function () {
+      el.remove();
+    }, 320);
+  });
   if (postsFeed && postsFeed.children.length === 0) _renderEmptyFeed();
 }
 
@@ -218,7 +221,9 @@ function _teardownPosts() {
   if (postsFeed) postsFeed.innerHTML = "";
   _removeLoadMoreBtn();
 
-  Object.values(_commentListenerRefs).forEach(function (ref) { ref.off(); });
+  Object.values(_commentListenerRefs).forEach(function (ref) {
+    ref.off();
+  });
   for (var k in _commentListenerRefs) delete _commentListenerRefs[k];
   removeUserPostsListener();
   removeUserLikesListener();
@@ -226,7 +231,6 @@ function _teardownPosts() {
   if (typeof _stopTimeUpdateInterval === "function") {
     _stopTimeUpdateInterval();
   }
-
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -240,7 +244,6 @@ function _startPostsListener() {
   const ref = postsRef.orderByChild("createdAt");
 
   ref.limitToLast(PAGE_SIZE).once("value", function (snap) {
-
     const raw = snap.val() || {};
     const keys = Object.keys(raw).sort(function (a, b) {
       return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);
@@ -318,6 +321,11 @@ function _onPostRemoved(s) {
   }
   delete allPosts[id];
   _softRemovePost(id);
+  if (typeof _viewingPostId !== "undefined" && _viewingPostId === id) {
+    if (typeof _handleDeletedPostView === "function") {
+      _handleDeletedPostView();
+    }
+  }
 }
 
 function _listenForNewPosts(ref) {
@@ -375,7 +383,6 @@ function _loadMorePosts() {
     .endAt(oldestTs - 1)
     .limitToLast(PAGE_SIZE)
     .once("value", function (snap) {
-
       const raw = snap.val() || {};
       const keys = Object.keys(raw).sort(function (a, b) {
         return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);

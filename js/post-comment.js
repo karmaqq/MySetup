@@ -12,9 +12,11 @@ function _buildDeleteDropdownHTML(action, attrs) {
       return `data-${k}="${attrs[k]}"`;
     })
     .join(" ");
-  return `<div class="comment-dropdown">`
-    + `<button class="comment-dropdown-item delete" data-action="${action}" ${attrStr}>`
-    + `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Sil</button></div>`;
+  return (
+    `<div class="comment-dropdown">` +
+    `<button class="comment-dropdown-item delete" data-action="${action}" ${attrStr}>` +
+    `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Sil</button></div>`
+  );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -52,7 +54,10 @@ function _renderCommentThreadHTML(postId, commentId, commentData, user) {
   html += `<span class="comment-time">${escHtml(timeAgo)}</span>`;
   if (isOwn || isPostOwner) {
     html += `<button class="comment-menu-btn" data-action="comment-menu" data-post-id="${pid}" data-comment-id="${cid}">⋮</button>`;
-    html += _buildDeleteDropdownHTML("delete-comment", { "post-id": pid, "comment-id": cid });
+    html += _buildDeleteDropdownHTML("delete-comment", {
+      "post-id": pid,
+      "comment-id": cid,
+    });
   }
   html += "</div>";
   html += `<div class="comment-text">${escHtml(commentData.text || "")}</div>`;
@@ -61,7 +66,7 @@ function _renderCommentThreadHTML(postId, commentId, commentData, user) {
   html += `<svg viewBox="0 0 24 24" width="12" height="12" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/></svg>`;
   html += ` <span class="like-count-c-${cid}">${likeCount}</span></button>`;
   html += `<button class="comment-action-btn reply-btn" data-action="start-reply" data-post-id="${pid}" data-comment-id="${cid}" data-username="${escAttr(commentData.username || "Kullanici")}">`;
-  html += `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 10 20 15 15 20"/><path d="M17 15H3.5a2.5 2.5 0 0 1 0-5h.5"/><line x1="13" y1="5" x2="18" y2="5"/><line x1="15" y1="1" x2="15" y2="9"/></svg>`;
+  html += `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>`;
   html += `<span class="reply-count-${cid}">${replyCount}</span></button>`;
   if (replyCount > 0) {
     html += `<button class="toggle-replies-btn" id="toggleReplies-${pid}-${cid}" data-action="toggle-replies" data-post-id="${pid}" data-comment-id="${cid}">`;
@@ -123,7 +128,11 @@ function _renderReplyHTML(postId, commentId, replyId, replyData, user) {
   html += `<span class="reply-time">${escHtml(timeAgo)}</span>`;
   if (isOwn || isPostOwner) {
     html += `<button class="comment-menu-btn" data-action="reply-menu" data-post-id="${pid}" data-comment-id="${cid}" data-reply-id="${rid}">⋮</button>`;
-    html += _buildDeleteDropdownHTML("delete-reply", { "post-id": pid, "comment-id": cid, "reply-id": rid });
+    html += _buildDeleteDropdownHTML("delete-reply", {
+      "post-id": pid,
+      "comment-id": cid,
+      "reply-id": rid,
+    });
   }
   html += "</div>";
   html += `<div class="reply-text">${escHtml(replyData.text || "")}</div>`;

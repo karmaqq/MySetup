@@ -2,6 +2,61 @@
 /*                             POST GÖRÜNTÜLEME                                 */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Silinen Post Durumu ─────────────────── */
+
+.post-view-deleted-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--text-dim);
+  padding: 56px 20px 48px 20px;
+  min-height: 220px;
+}
+
+.post-view-deleted-icon {
+  font-size: 64px;
+  opacity: 0.5;
+  margin-bottom: 2px;
+  line-height: 1;
+}
+
+.post-view-deleted-text {
+  font-size: 17px;
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.post-view-deleted-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  text-align: center;
+}
+
+.post-view-deleted-btn {
+  margin-top: 8px;
+  padding: 10px 24px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-glow);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.post-view-deleted-btn:hover {
+  background: var(--accent);
+  color: var(--text-btn);
+  transform: translateY(-1px);
+}
+
 /* ─────────────────── Ana Konteyner ─────────────────── */
 
 #postViewPage.active {

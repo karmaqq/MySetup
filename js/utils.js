@@ -16,7 +16,9 @@ let _pendingPageQueue = [];
 let _commentListenerRefs = {};
 var _viewingPostIdVal = null;
 Object.defineProperty(window, "_viewingPostId", {
-  get() { return _viewingPostIdVal; },
+  get() {
+    return _viewingPostIdVal;
+  },
   set(v) {
     _viewingPostIdVal = v;
     if (v) sessionStorage.setItem("_viewingPostId", v);
@@ -37,7 +39,6 @@ function showPage(pageName) {
 
   const pages = document.querySelectorAll(".page-content");
   const navBtns = document.querySelectorAll(".sidebar-nav-btn");
-  const mainScroll = document.getElementById("mainScroll");
 
   const oldPage = document.querySelector(".page-content.active");
   const newPage = document.getElementById(pageName + "Page");
@@ -115,7 +116,6 @@ const _DATECACHE_MAX = 1000;
 const DATE_FORMAT = (dateString) => {
   if (!dateString) return "-";
   if (_dateCache.has(dateString)) {
-    // LRU: hit olanı sona taşı
     const val = _dateCache.get(dateString);
     _dateCache.delete(dateString);
     _dateCache.set(dateString, val);
@@ -126,7 +126,6 @@ const DATE_FORMAT = (dateString) => {
     ? dateString
     : date.toLocaleDateString("tr-TR");
   if (_dateCache.size >= _DATECACHE_MAX) {
-    // En eski kaydı sil (Map sırası insertion order)
     const firstKey = _dateCache.keys().next().value;
     _dateCache.delete(firstKey);
   }
@@ -145,7 +144,7 @@ const STATUS_MAP = {
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          GLOBAL DURUM DEĞİŞKENLERİ                       */
-/* ═════════════════════════════════════════════════════════════════════════ */
+/* ========================================================================= */
 
 /* ─────────────────── Uygulama Durumu ─────────────────── */
 
@@ -154,8 +153,6 @@ let currentSearch = "";
 let currentStatusFilter = "all";
 let currentSort = { col: "date", dir: "asc" };
 let editingId = null;
-
-
 
 /* ─────────────────── Render Yönetimi ─────────────────── */
 
@@ -386,11 +383,12 @@ function formatTimeAgo(timestamp, phraseIndex, skipPhrase) {
   const days = Math.floor(hours / 24);
 
   let timeText = "az önce";
-  if (minutes < 60) timeText = minutes + " dakika önce";
-  else if (hours < 24) timeText = hours + " saat önce";
-  else if (days < 7) timeText = days + " gün önce";
-  else if (days < 365) timeText = Math.floor(days / 7) + " hafta önce";
-  else timeText = Math.floor(days / 365) + " yıl önce";
+  if (minutes >= 1 && minutes < 60) timeText = minutes + " dakika önce";
+  else if (hours >= 1 && hours < 24) timeText = hours + " saat önce";
+  else if (days >= 1 && days < 7) timeText = days + " gün önce";
+  else if (days >= 7 && days < 365)
+    timeText = Math.floor(days / 7) + " hafta önce";
+  else if (days >= 365) timeText = Math.floor(days / 365) + " yıl önce";
 
   if (skipPhrase) return timeText;
   var idx =
@@ -432,18 +430,26 @@ function getPostCards(postId) {
 }
 
 function buildAvatarHTML(name, cssClass) {
-  return '<div class="' + cssClass + '">' + getAvatarLetter(name) + '</div>';
+  return '<div class="' + cssClass + '">' + getAvatarLetter(name) + "</div>";
 }
 
 function buildPostMenuHTML(pid, isOwn) {
   if (!isOwn) return "";
-  return '<button class="post-menu-btn" data-action="post-menu" data-id="' + pid + '">⋮</button>'
-    + '<div class="post-dropdown" id="postDropdown-' + pid + '">'
-    + '<button class="post-dropdown-item delete" data-action="delete-post" data-id="' + pid + '">'
-    + '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">'
-    + '<polyline points="3 6 5 6 21 6"/>'
-    + '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
-    + '</svg> Sil</button></div>';
+  return (
+    '<button class="post-menu-btn" data-action="post-menu" data-id="' +
+    pid +
+    '">⋮</button>' +
+    '<div class="post-dropdown" id="postDropdown-' +
+    pid +
+    '">' +
+    '<button class="post-dropdown-item delete" data-action="delete-post" data-id="' +
+    pid +
+    '">' +
+    '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">' +
+    '<polyline points="3 6 5 6 21 6"/>' +
+    '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
+    "</svg> Sil</button></div>"
+  );
 }
 
 function renderLoadMoreBtn(afterEl, btnId, onClick) {
@@ -459,4 +465,14 @@ function renderLoadMoreBtn(afterEl, btnId, onClick) {
 function removeLoadMoreBtn(btnId) {
   const btn = document.getElementById(btnId);
   if (btn) btn.remove();
+}
+
+function _onlyCommentLikesChanged(oldComment, newComment) {
+  if (!oldComment || !newComment) return false;
+  if (oldComment.text !== newComment.text) return false;
+  if (oldComment.uid !== newComment.uid) return false;
+  var oldRC = oldComment.replies ? Object.keys(oldComment.replies).length : 0;
+  var newRC = newComment.replies ? Object.keys(newComment.replies).length : 0;
+  if (oldRC !== newRC) return false;
+  return true;
 }

@@ -7,18 +7,18 @@
 /* ─────────────────── Firebase Config ─────────────────── */
 
 function _resolveFirebaseConfig() {
-  // 1. Electron IPC (preload.js üzerinden main.js'den)
   try {
-    if (window.electronAPI && typeof window.electronAPI.getFirebaseConfig === "function") {
+    if (
+      window.electronAPI &&
+      typeof window.electronAPI.getFirebaseConfig === "function"
+    ) {
       var cfg = window.electronAPI.getFirebaseConfig();
       if (cfg && cfg.apiKey) return cfg;
     }
   } catch (_) {}
-  // 2. Browser test / direct script (js/firebase-config.js)
   if (window.__FB_CONFIG__ && window.__FB_CONFIG__.apiKey) {
     return window.__FB_CONFIG__;
   }
-  // 3. Bulunamadı — hata fırlat
   return null;
 }
 
@@ -29,7 +29,9 @@ if (firebaseConfig) {
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   database = firebase.database();
 } else {
-  console.error("Firebase config bulunamadı. js/firebase-config.js dosyasını oluşturun.");
+  console.error(
+    "Firebase config bulunamadı. js/firebase-config.js dosyasını oluşturun.",
+  );
 }
 
 let userDataRef = null;
@@ -39,9 +41,12 @@ let activeBasePath = null;
 
 function enrichItem(item) {
   var searchRaw = (
-    (item.component || "") + " " +
-    (item.brand || "") + " " +
-    (item.specs || "") + " " +
+    (item.component || "") +
+    " " +
+    (item.brand || "") +
+    " " +
+    (item.specs || "") +
+    " " +
     (item.vendor || "")
   ).toLowerCase();
   return Object.assign({}, item, {
@@ -89,7 +94,6 @@ function initUserDataRef(userId) {
     if (typeof rebuildStatsCache === "function") rebuildStatsCache();
     if (typeof renderAll === "function") renderAll();
 
-    // Listener'ları burada kur
     userDataRef.on(
       "child_added",
       function (snapshot) {

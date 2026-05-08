@@ -120,7 +120,10 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
       if (!oldHealthy && newHealthy) _statsCache.healthy++;
       else if (oldHealthy && !newHealthy) _statsCache.healthy--;
 
-      if (_statsCache.mostExpId === item.id || newPrice > _statsCache.mostExpPrice) {
+      if (
+        _statsCache.mostExpId === item.id ||
+        newPrice > _statsCache.mostExpPrice
+      ) {
         rebuildStatsCache();
         scheduleRender();
       }
