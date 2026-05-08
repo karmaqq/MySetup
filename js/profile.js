@@ -72,7 +72,7 @@ function switchProfileTab(tabName) {
 /* ─────────────────── Gönderilerim sekmesini başlatır ─────────────────── */
 
 function _initUserPostsTab() {
-  if (_profileTab === "user-posts" && _userPostsVisible.size > 0) return;
+  if (_userPostsVisible.size > 0) return;
   const user = firebase.auth().currentUser;
   if (!user) return;
 
@@ -109,6 +109,7 @@ function _initUserPostsTab() {
 /* ─────────────────── Beğenilerim sekmesini başlatır ─────────────────── */
 
 function _initLikedPostsTab() {
+  if (_likedPostsVisible.size > 0) return;
   const user = firebase.auth().currentUser;
   if (!user) return;
 
@@ -183,23 +184,7 @@ function _loadPostsChunk(cfg) {
         })
         .slice(0, PAGE_SIZE);
 
-      // Önce allPosts cache'inden al, eksikleri Firebase'den fetch et
-      var cached = {};
-      var missing = [];
-      postIds.forEach(function (id) {
-        if (allPosts[id]) cached[id] = allPosts[id];
-        else missing.push(id);
-      });
-
-      var fetchPromise = missing.length
-        ? getPostsByIds(missing)
-        : Promise.resolve({});
-
-      return fetchPromise.then(function (fetched) {
-        var posts = Object.assign({}, cached);
-        Object.keys(fetched).forEach(function (id) {
-          posts[id] = fetched[id];
-        });
+      return getPostsByIds(postIds, allPosts).then(function (posts) {
         if (tab) _showProfileContent(tab);
         postIds.forEach(function (id) {
           if (posts[id]) {
@@ -324,7 +309,7 @@ function _appendOrPrependToProfileTab(tabId, postId) {
     _initPostImage(el.querySelector(".post-img-lazy"));
     return;
   }
-  getPostsByIds([postId]).then(function (posts) {
+  getPostsByIds([postId], allPosts).then(function (posts) {
     if (posts[postId]) {
       allPosts[postId] = posts[postId];
       _showProfileContent(tab);
@@ -346,25 +331,14 @@ function _appendOrPrependToProfileTab(tabId, postId) {
 function _renderProfileLoadMoreBtn(tabId, onClick) {
   const btnId =
     tabId === TAB.USER_POSTS ? "loadMoreUserPostsBtn" : "loadMoreLikedPostsBtn";
-  if (document.getElementById(btnId)) return;
-
-  const btn = document.createElement("button");
-  btn.id = btnId;
-  btn.className = "load-more-btn";
-  btn.textContent = "Daha Fazla Göster";
-  btn.onclick = onClick;
-
   const tab = document.getElementById(tabId);
-  if (tab && tab.parentNode) {
-    tab.parentNode.insertBefore(btn, tab.nextSibling);
-  }
+  if (tab) renderLoadMoreBtn(tab, btnId, onClick);
 }
 
 function _removeProfileLoadMoreBtn(tabId) {
   const btnId =
     tabId === TAB.USER_POSTS ? "loadMoreUserPostsBtn" : "loadMoreLikedPostsBtn";
-  const btn = document.getElementById(btnId);
-  if (btn) btn.remove();
+  removeLoadMoreBtn(btnId);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -376,16 +350,6 @@ function _removeProfileLoadMoreBtn(tabId) {
 function _onPageChange(pageName) {
   if (pageName !== "profile") {
     _profileTab = null;
-    _userPostsVisible = new Set();
-    _likedPostsVisible = new Set();
-    const userPostsTab = document.getElementById("userPostsTab");
-    const likedPostsTab = document.getElementById("likedPostsTab");
-    if (userPostsTab) userPostsTab.innerHTML = "";
-    if (likedPostsTab) likedPostsTab.innerHTML = "";
-    _removeProfileLoadMoreBtn("userPostsTab");
-    _removeProfileLoadMoreBtn("likedPostsTab");
-    // Not: removeUserLikesListener() ve removeUserPostsListener() çağrılmıyor
-    // çünkü bunlar initPosts() tarafından home feed için de kullanılıyor
   }
 }
 

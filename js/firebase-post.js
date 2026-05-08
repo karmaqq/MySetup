@@ -117,23 +117,32 @@ function getUserLikesOnce(userId, limit, endAt) {
   });
 }
 
-function getPostsByIds(postIds) {
+function getPostsByIds(postIds, existing) {
   if (!postIds || !postIds.length) return Promise.resolve({});
+  var result = {};
+  var missing = [];
+  postIds.forEach(function (id) {
+    if (existing && existing[id]) {
+      result[id] = existing[id];
+    } else {
+      missing.push(id);
+    }
+  });
+  if (!missing.length) return Promise.resolve(result);
   return Promise.all(
-    postIds.map(function (id) {
+    missing.map(function (id) {
       return postsRef.child(id).once("value").then(function (s) {
         return s.exists() ? { id: id, data: s.val() } : null;
       });
     })
   ).then(function (results) {
-    var map = {};
     results.forEach(function (r) {
       if (r) {
         r.data._id = r.id;
-        map[r.id] = r.data;
+        result[r.id] = r.data;
       }
     });
-    return map;
+    return result;
   });
 }
 

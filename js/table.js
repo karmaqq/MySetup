@@ -104,6 +104,13 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
       _statsCache.total += newPrice;
       _statsCache.count++;
       if ((item._statusNorm || "").includes("saglikli")) _statsCache.healthy++;
+      if (newPrice > _statsCache.mostExpPrice) {
+        _statsCache.mostExpPrice = newPrice;
+        _statsCache.mostExpId = item.id;
+        const mostExpItem = allData[_statsCache.mostExpId];
+        if (statExpensive)
+          statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
+      }
     } else {
       const priceDiff = newPrice - oldPrice;
       if (priceDiff !== 0) _statsCache.total += priceDiff;
@@ -112,13 +119,11 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
       const newHealthy = (item._statusNorm || "").includes("saglikli");
       if (!oldHealthy && newHealthy) _statsCache.healthy++;
       else if (oldHealthy && !newHealthy) _statsCache.healthy--;
-    }
-    if (newPrice > _statsCache.mostExpPrice) {
-      _statsCache.mostExpPrice = newPrice;
-      _statsCache.mostExpId = item.id;
-      const mostExpItem = allData[_statsCache.mostExpId];
-      if (statExpensive)
-        statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
+
+      if (_statsCache.mostExpId === item.id || newPrice > _statsCache.mostExpPrice) {
+        rebuildStatsCache();
+        scheduleRender();
+      }
     }
   }
 }

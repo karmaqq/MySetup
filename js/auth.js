@@ -72,7 +72,7 @@ function onUserLoggedIn(user) {
     initPosts();
   }
 
-  var lastPage = sessionStorage.getItem("_lastPage");
+  const lastPage = sessionStorage.getItem("_lastPage");
   if (lastPage && lastPage !== "home" && typeof showPage === "function") {
     showPage(lastPage);
   }
@@ -140,7 +140,7 @@ function onUserLoggedOut() {
   });
 
   if (typeof _teardownPosts === "function") _teardownPosts();
-  if (typeof clearAllModalForms === "function") clearAllModalForms();
+  if (typeof closeAllModals === "function") closeAllModals();
 
   if (authOverlay) authOverlay.classList.add("active");
 }

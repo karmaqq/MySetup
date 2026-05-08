@@ -14,17 +14,23 @@ let _currentPage = sessionStorage.getItem("_lastPage") || "home";
 let _isAnimating = false;
 let _pendingPageQueue = [];
 let _commentListenerRefs = {};
-let _viewingPostId = null;
+var _viewingPostIdVal = null;
+Object.defineProperty(window, "_viewingPostId", {
+  get() { return _viewingPostIdVal; },
+  set(v) {
+    _viewingPostIdVal = v;
+    if (v) sessionStorage.setItem("_viewingPostId", v);
+    else sessionStorage.removeItem("_viewingPostId");
+  },
+  configurable: true,
+});
 const mainScroll = document.getElementById("mainScroll");
 
 const PAGE_SIZE = 20;
 
 function showPage(pageName) {
   if (_isAnimating) {
-    // Kuyruğa ekle, aynı sayfa varsa tekrar ekleme
-    if (_pendingPageQueue[_pendingPageQueue.length - 1] !== pageName) {
-      _pendingPageQueue.push(pageName);
-    }
+    _pendingPageQueue = [pageName];
     return;
   }
   _isAnimating = true;
@@ -83,7 +89,8 @@ function showPage(pageName) {
       _onPageChange(pageName);
     }
     if (_pendingPageQueue.length) {
-      const next = _pendingPageQueue.shift();
+      const next = _pendingPageQueue.pop();
+      _pendingPageQueue = [];
       showPage(next);
     }
   }, 320);
@@ -282,6 +289,17 @@ function escAttr(str) {
 
 /* ─────────────────── Güvenli Harici URL Doğrulama ─────────────────── */
 
+function escUrl(url) {
+  if (!url) return "";
+  try {
+    var p = new URL(url);
+    if (p.protocol !== "http:" && p.protocol !== "https:") return "";
+    return escAttr(p.toString());
+  } catch (_) {
+    return "";
+  }
+}
+
 function safeExternalUrl(value) {
   if (!value) return "";
   try {
@@ -411,4 +429,34 @@ function refreshAllAvatars(name) {
 
 function getPostCards(postId) {
   return document.querySelectorAll('[data-post-id="' + postId + '"]');
+}
+
+function buildAvatarHTML(name, cssClass) {
+  return '<div class="' + cssClass + '">' + getAvatarLetter(name) + '</div>';
+}
+
+function buildPostMenuHTML(pid, isOwn) {
+  if (!isOwn) return "";
+  return '<button class="post-menu-btn" data-action="post-menu" data-id="' + pid + '">⋮</button>'
+    + '<div class="post-dropdown" id="postDropdown-' + pid + '">'
+    + '<button class="post-dropdown-item delete" data-action="delete-post" data-id="' + pid + '">'
+    + '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">'
+    + '<polyline points="3 6 5 6 21 6"/>'
+    + '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
+    + '</svg> Sil</button></div>';
+}
+
+function renderLoadMoreBtn(afterEl, btnId, onClick) {
+  if (document.getElementById(btnId)) return;
+  const btn = document.createElement("button");
+  btn.id = btnId;
+  btn.className = "load-more-btn";
+  btn.textContent = "Daha Fazla Göster";
+  btn.onclick = onClick;
+  afterEl.parentNode.insertBefore(btn, afterEl.nextSibling);
+}
+
+function removeLoadMoreBtn(btnId) {
+  const btn = document.getElementById(btnId);
+  if (btn) btn.remove();
 }

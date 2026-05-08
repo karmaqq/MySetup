@@ -468,7 +468,7 @@
   background: var(--accent);
   border: none;
   border-radius: var(--radius);
-  color: #000;
+  color: var(--text-btn);
   font-family: var(--font-ui);
   font-size: 14px;
   font-weight: 700;

@@ -29,76 +29,34 @@ function _renderPostHTML(postId, postData) {
 
   const pid = escAttr(postId);
 
-  let html = '<div class="post-card" data-post-id="' + pid + '">';
+  let html = `<div class="post-card" data-post-id="${pid}">`;
 
-  html += '<div class="post-header post-header-link" data-action="open-post-view" data-id="' + pid + '">';
-  html +=
-    '<div class="post-avatar">' +
-    getAvatarLetter(postData.username) +
-    "</div>";
+  html += `<div class="post-header post-header-link" data-action="open-post-view" data-id="${pid}">`;
+  html += buildAvatarHTML(postData.username, "post-avatar");
   html += '<div class="post-user-info">';
-  html +=
-    '<span class="post-username">' +
-    escHtml(postData.username || "Kullanici") +
-    "</span>";
-  html += '<span class="post-time">' + escHtml(timeText) + "</span>";
+  html += `<span class="post-username">${escHtml(postData.username || "Kullanici")}</span>`;
+  html += `<span class="post-time">${escHtml(timeText)}</span>`;
   html += "</div>";
 
-  if (isOwn) {
-    html +=
-      '<button class="post-menu-btn" data-action="post-menu" data-id="' +
-      pid +
-      '">⋮</button>';
-    html += '<div class="post-dropdown" id="postDropdown-' + pid + '">';
-    html +=
-      '<button class="post-dropdown-item delete" data-action="delete-post" data-id="' +
-      pid +
-      '">';
-    html +=
-      '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Sil</button>';
-    html += "</div>";
-  }
+  html += buildPostMenuHTML(pid, isOwn);
   html += "</div>";
 
-  html += '<div class="post-body post-body-link" data-action="open-post-view" data-id="' + pid + '">';
+  html += `<div class="post-body post-body-link" data-action="open-post-view" data-id="${pid}">`;
   if (postData.content)
-    html += '<div class="post-text">' + escHtml(postData.content) + "</div>";
+    html += `<div class="post-text">${escHtml(postData.content)}</div>`;
   if (postData.imageUrl) {
-    html +=
-      '<div class="post-image"><img src="' +
-      escAttr(postData.imageUrl) +
-      '" alt="" class="post-img-lazy"></div>';
+    html += `<div class="post-image"><img src="${escUrl(postData.imageUrl)}" alt="" class="post-img-lazy"></div>`;
   }
   html += "</div>";
 
   html += '<div class="post-actions">';
-  html +=
-    '<button class="post-action-btn like-btn' +
-    (liked ? " liked" : "") +
-    '" data-action="like-post" data-id="' +
-    pid +
-    '">';
-  html +=
-    '<svg viewBox="0 0 24 24" width="15" height="15" fill="' +
-    (liked ? "currentColor" : "none") +
-    '" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/></svg>';
-  html += ' <span class="post-like-count-' + pid + '">' + likeCount + '</span></button>';
-  html +=
-    '<button class="post-action-btn comment-btn" data-action="open-post-view" data-id="' +
-    pid +
-    '">';
-  html +=
-    '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
-  html +=
-    ' <span class="comment-count-' +
-    pid +
-    '">' +
-    commentCount +
-    "</span></button>";
-  html +=
-    '<span class="post-date">' +
-    escHtml(formatDateTime(postData.createdAt)) +
-    "</span>";
+  html += `<button class="post-action-btn like-btn${liked ? " liked" : ""}" data-action="like-post" data-id="${pid}">`;
+  html += `<svg viewBox="0 0 24 24" width="15" height="15" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/></svg>`;
+  html += ` <span class="post-like-count-${pid}">${likeCount}</span></button>`;
+  html += `<button class="post-action-btn comment-btn" data-action="open-post-view" data-id="${pid}">`;
+  html += `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+  html += ` <span class="comment-count-${pid}">${commentCount}</span></button>`;
+  html += `<span class="post-date">${escHtml(formatDateTime(postData.createdAt))}</span>`;
   html += "</div>";
 
   html += "</div>";
@@ -131,35 +89,19 @@ function _handlePostImageLoad(img) {
   p.classList.toggle("square", r >= 0.8 && r <= 1.2);
 }
 
-/* ─────────────────── Feed'in en başına yeni post ekler (animasyonlu) ─────────────────── */
+/* ─────────────────── Post ekle (prepend/append, animasyonlu) ─────────────────── */
 
-function _prependPostToFeed(postId, postData) {
+function _insertPostToFeed(postId, postData, prepend) {
   if (!postsFeed) return;
   const wrapper = document.createElement("div");
   wrapper.innerHTML = _renderPostHTML(postId, postData);
   const el = wrapper.firstElementChild;
-  el.style.opacity = "0";
-  el.style.transform = "translateY(-8px)";
-  el.style.transition = "opacity 0.25s ease, transform 0.25s ease";
-  postsFeed.insertBefore(el, postsFeed.firstChild);
-  _initPostImage(el.querySelector(".post-img-lazy"));
-  requestAnimationFrame(function () {
-    el.style.opacity = "1";
-    el.style.transform = "translateY(0)";
-  });
-}
-
-/* ─────────────────── Feed'in sonuna post ekler (daha fazla yükle) ─────────────────── */
-
-function _appendPostToFeed(postId, postData) {
-  if (!postsFeed) return;
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = _renderPostHTML(postId, postData);
-  const el = wrapper.firstElementChild;
-  el.style.opacity = "0";
-  el.style.transform = "translateY(8px)";
-  el.style.transition = "opacity 0.25s ease, transform 0.25s ease";
-  postsFeed.appendChild(el);
+  el.style.cssText = "opacity:0;transform:translateY(" + (prepend ? "-" : "") + "8px);transition:opacity 0.25s ease,transform 0.25s ease";
+  if (prepend) {
+    postsFeed.insertBefore(el, postsFeed.firstChild);
+  } else {
+    postsFeed.appendChild(el);
+  }
   _initPostImage(el.querySelector(".post-img-lazy"));
   requestAnimationFrame(function () {
     el.style.opacity = "1";
@@ -190,8 +132,7 @@ function _patchPostCard(postId, postData) {
 
 /* ─────────────────── Sadece beğeni sayacını günceller ─────────────────── */
 
-function _patchPostLikes(postId, likes) {
-  const user = firebase.auth().currentUser;
+function _patchPostLikes(postId, likes, user) {
   const likeCount = likes ? Object.keys(likes).length : 0;
   const liked = user && likes && likes[user.uid];
   const cards = getPostCards(postId);
@@ -315,7 +256,7 @@ function _startPostsListener() {
 
     if (postsFeed) postsFeed.innerHTML = "";
     keys.forEach(function (id) {
-      _appendPostToFeed(id, raw[id]);
+      _insertPostToFeed(id, raw[id], false);
     });
 
     if (keys.length === 0) {
@@ -361,8 +302,9 @@ function _onPostChanged(s) {
   if (!allPosts[id]) return;
   const oldData = allPosts[id];
   allPosts[id] = s.val();
+  const user = firebase.auth().currentUser;
   if (_onlyLikesChanged(oldData, s.val())) {
-    _patchPostLikes(id, s.val().likes);
+    _patchPostLikes(id, s.val().likes, user);
   } else {
     _patchPostCard(id, s.val());
   }
@@ -392,7 +334,7 @@ function _listenForNewPosts(ref) {
     allPosts[id] = data;
     const empty = postsFeed && postsFeed.querySelector(".posts-empty");
     if (empty) empty.remove();
-    _prependPostToFeed(id, data);
+    _insertPostToFeed(id, data, true);
   });
 
   postsRef.on("child_changed", _onPostChanged);
@@ -441,7 +383,7 @@ function _loadMorePosts() {
 
       keys.forEach(function (id) {
         allPosts[id] = raw[id];
-        _appendPostToFeed(id, raw[id]);
+        _insertPostToFeed(id, raw[id], false);
       });
 
       if (keys.length > 0) {
@@ -469,18 +411,10 @@ function _loadMorePosts() {
 /* ─────────────────── Daha fazla yükle butonunu render eder ─────────────────── */
 
 function _renderLoadMoreBtn() {
-  if (document.getElementById("loadMoreBtn")) return;
-  const btn = document.createElement("button");
-  btn.id = "loadMoreBtn";
-  btn.className = "load-more-btn";
-  btn.textContent = "Daha Fazla Göster";
-  btn.onclick = _loadMorePosts;
-  postsFeed &&
-    postsFeed.parentNode &&
-    postsFeed.parentNode.insertBefore(btn, postsFeed.nextSibling);
+  if (!postsFeed) return;
+  renderLoadMoreBtn(postsFeed, "loadMoreBtn", _loadMorePosts);
 }
 
 function _removeLoadMoreBtn() {
-  const btn = document.getElementById("loadMoreBtn");
-  if (btn) btn.remove();
+  removeLoadMoreBtn("loadMoreBtn");
 }

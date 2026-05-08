@@ -62,7 +62,7 @@ function closeDeleteModal() {
   }
 }
 
-function clearAllModalForms() {
+function closeAllModals() {
   closeSettingsModal();
   closeChangePassModal();
   closeDeleteModal();
@@ -116,7 +116,7 @@ deleteAccountModal?.addEventListener("click", (e) => {
 /* ─────────────────── Çıkış Yap ─────────────────── */
 
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
-  clearAllModalForms();
+  closeAllModals();
   if (typeof initUserDataRef === "function") {
     initUserDataRef(null);
   }

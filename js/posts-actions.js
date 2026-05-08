@@ -31,7 +31,7 @@ function _toggleCommentLike(postId, commentId) {
     comment.likes[user.uid] = true;
   }
 
-  _patchCommentLikeBtn(postId, commentId, comment.likes);
+  _patchCommentLikeBtn(postId, commentId, comment.likes, user);
 
   toggleCommentLike(postId, commentId, user.uid).catch(function () {
     if (had) {
@@ -39,7 +39,7 @@ function _toggleCommentLike(postId, commentId) {
     } else {
       delete comment.likes[user.uid];
     }
-    _patchCommentLikeBtn(postId, commentId, comment.likes);
+    _patchCommentLikeBtn(postId, commentId, comment.likes, user);
     showToast("Beğeni kaydedilemedi.", "error");
   });
 }
@@ -63,7 +63,7 @@ function _toggleReplyLike(postId, commentId, replyId) {
     reply.likes[user.uid] = true;
   }
 
-  _patchReplyLikeBtn(postId, commentId, replyId, reply.likes);
+  _patchReplyLikeBtn(postId, commentId, replyId, reply.likes, user);
 
   toggleReplyLike(postId, commentId, replyId, user.uid).catch(function () {
     if (had) {
@@ -71,7 +71,7 @@ function _toggleReplyLike(postId, commentId, replyId) {
     } else {
       delete reply.likes[user.uid];
     }
-    _patchReplyLikeBtn(postId, commentId, replyId, reply.likes);
+    _patchReplyLikeBtn(postId, commentId, replyId, reply.likes, user);
     showToast("Beğeni kaydedilemedi.", "error");
   });
 }
@@ -216,11 +216,18 @@ function _openRepliesSection(postId, commentId) {
 function _initCommentListener(postId) {
   if (_viewingPostId === postId) return;
   if (_commentListenerRefs[postId]) return;
+  const keys = Object.keys(_commentListenerRefs);
+  if (keys.length >= 10) {
+    const oldest = keys[0];
+    _commentListenerRefs[oldest].off();
+    delete _commentListenerRefs[oldest];
+  }
   const ref = postsRef
     .child(postId)
     .child("comments")
     .orderByChild("createdAt");
   _commentListenerRefs[postId] = ref;
+  const _currentUser = firebase.auth().currentUser;
 
   ref.on("child_added", function (s) {
     const cid = s.key;
@@ -235,7 +242,7 @@ function _initCommentListener(postId) {
       const list = card.querySelector("#commentList-" + postId);
       if (list) {
         const wrapper = document.createElement("div");
-        wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, data);
+        wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, data, _currentUser);
         list.appendChild(wrapper.firstElementChild);
       }
     });
@@ -253,7 +260,7 @@ function _initCommentListener(postId) {
       '[data-post-id="' + postId + '"] [id="commentThread-' + postId + "-" + cid + '"]',
     );
     threads.forEach(function (thread) {
-      _refreshCommentThread(postId, cid, data, thread);
+      _refreshCommentThread(postId, cid, data, thread, _currentUser);
     });
   });
 
@@ -273,11 +280,11 @@ function _initCommentListener(postId) {
 
 /* ─────────────────── Yorum thread'ini günceller ─────────────────── */
 
-function _refreshCommentThread(postId, commentId, commentData, existingEl) {
+function _refreshCommentThread(postId, commentId, commentData, existingEl, user) {
   if (!existingEl || !existingEl.isConnected) return;
   const card = existingEl.closest(".post-card");
   const wrapper = document.createElement("div");
-  wrapper.innerHTML = _renderCommentThreadHTML(postId, commentId, commentData);
+  wrapper.innerHTML = _renderCommentThreadHTML(postId, commentId, commentData, user);
   const newEl = wrapper.firstElementChild;
   const repliesSec = existingEl.querySelector(".replies-section");
   const wasOpen = repliesSec && !repliesSec.classList.contains("hidden");
@@ -415,7 +422,7 @@ document.addEventListener("click", function (e) {
 
   if (action === "delete-post") {
     const postCard = btn.closest(".post-card");
-    if (postCard) _confirmDeletePost(postCard.dataset.postId);
+    if (postCard) _confirmDelete("post", { postId: postCard.dataset.postId });
     return;
   }
 
@@ -452,16 +459,12 @@ document.addEventListener("click", function (e) {
   }
 
   if (action === "delete-comment") {
-    _confirmDeleteComment(btn.dataset.postId, btn.dataset.commentId);
+    _confirmDelete("comment", { postId: btn.dataset.postId, commentId: btn.dataset.commentId });
     return;
   }
 
   if (action === "delete-reply") {
-    _confirmDeleteReply(
-      btn.dataset.postId,
-      btn.dataset.commentId,
-      btn.dataset.replyId,
-    );
+    _confirmDelete("reply", { postId: btn.dataset.postId, commentId: btn.dataset.commentId, replyId: btn.dataset.replyId });
     return;
   }
 });
@@ -497,6 +500,7 @@ document.addEventListener("input", function (e) {
 /* ─────────────────── Zaman güncelleme interval kontrolü ─────────────────── */
 
 let _timeUpdateInterval = null;
+let _visibilityListenerRegistered = false;
 
 function _startTimeUpdateInterval() {
   if (_timeUpdateInterval) clearInterval(_timeUpdateInterval);
@@ -557,4 +561,17 @@ function _stopTimeUpdateInterval() {
     clearInterval(_timeUpdateInterval);
     _timeUpdateInterval = null;
   }
+}
+
+if (!_visibilityListenerRegistered) {
+  _visibilityListenerRegistered = true;
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+      _stopTimeUpdateInterval();
+    } else if (
+      typeof _postsListenerActive !== "undefined" && _postsListenerActive
+    ) {
+      _startTimeUpdateInterval();
+    }
+  });
 }

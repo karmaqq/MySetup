@@ -23,7 +23,6 @@ function openPostView(postId, fromCommentBtn) {
   if (!postData) return;
 
   _viewingPostId = postId;
-  sessionStorage.setItem("_viewingPostId", postId);
   _previousPage = _currentPage;
   sessionStorage.setItem("_pvPreviousPage", _previousPage);
   sessionStorage.setItem("_pvScrollTop", mainScroll ? mainScroll.scrollTop : 0);
@@ -68,7 +67,6 @@ function closePostView() {
   var savedNavBtn = _pvActiveNavBtn;
 
   _viewingPostId = null;
-  sessionStorage.removeItem("_viewingPostId");
   sessionStorage.removeItem("_pvPreviousPage");
   sessionStorage.removeItem("_pvScrollTop");
   _previousPage = null;
@@ -112,96 +110,43 @@ function _renderPostViewContent(postId, postData) {
     : 0;
   var pid = escAttr(postId);
 
-  var html = '<div class="post-card" data-post-id="' + pid + '">';
+  var html = `<div class="post-card" data-post-id="${pid}">`;
 
   html += '<div class="post-header">';
-  html +=
-    '<div class="post-avatar">' + getAvatarLetter(postData.username) + "</div>";
+  html += buildAvatarHTML(postData.username, "post-avatar");
   html += '<div class="post-user-info">';
-  html +=
-    '<span class="post-username">' +
-    escHtml(postData.username || "Kullanici") +
-    "</span>";
-  html +=
-    '<span class="post-time">' +
-    escHtml(formatTimeAgo(postData.createdAt, postData.phraseIndex)) +
-    "</span>";
+  html += `<span class="post-username">${escHtml(postData.username || "Kullanici")}</span>`;
+  html += `<span class="post-time">${escHtml(formatTimeAgo(postData.createdAt, postData.phraseIndex))}</span>`;
   html += "</div>";
 
-  if (isOwn) {
-    html +=
-      '<button class="post-menu-btn" data-action="post-menu" data-id="' +
-      pid +
-      '">⋮</button>';
-    html += '<div class="post-dropdown" id="postDropdown-' + pid + '">';
-    html +=
-      '<button class="post-dropdown-item delete" data-action="delete-post" data-id="' +
-      pid +
-      '">';
-    html +=
-      '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">';
-    html += '<polyline points="3 6 5 6 21 6"/>';
-    html +=
-      '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>';
-    html += "</svg> Sil</button>";
-    html += "</div>";
-  }
+  html += buildPostMenuHTML(pid, isOwn);
   html += "</div>";
 
   html += '<div class="post-body">';
   if (postData.content) {
-    html += '<div class="post-text">' + escHtml(postData.content) + "</div>";
+    html += `<div class="post-text">${escHtml(postData.content)}</div>`;
   }
   if (postData.imageUrl) {
-    html +=
-      '<div class="post-image"><img src="' +
-      escAttr(postData.imageUrl) +
-      '" alt="" class="post-img-lazy"></div>';
+    html += `<div class="post-image"><img src="${escUrl(postData.imageUrl)}" alt="" class="post-img-lazy"></div>`;
   }
   html += "</div>";
 
   html += '<div class="post-actions">';
-  html +=
-    '<button class="post-action-btn like-btn' +
-    (liked ? " liked" : "") +
-    '" data-action="like-post" data-id="' +
-    pid +
-    '">';
-  html +=
-    '<svg viewBox="0 0 24 24" width="15" height="15" fill="' +
-    (liked ? "currentColor" : "none") +
-    '" stroke="currentColor" stroke-width="2">';
-  html +=
-    '<path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/>';
-  html +=
-    '</svg> <span class="post-like-count-' +
-    pid +
-    '">' +
-    likeCount +
-    "</span></button>";
+  html += `<button class="post-action-btn like-btn${liked ? " liked" : ""}" data-action="like-post" data-id="${pid}">`;
+  html += `<svg viewBox="0 0 24 24" width="15" height="15" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2">`;
+  html += `<path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/>`;
+  html += `</svg> <span class="post-like-count-${pid}">${likeCount}</span></button>`;
 
-  html +=
-    '<button class="post-action-btn comment-btn" data-action="pv-focus-composer">';
-  html +=
-    '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">';
-  html +=
-    '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>';
-  html +=
-    '</svg> <span class="comment-count-' +
-    pid +
-    '">' +
-    commentCount +
-    "</span></button>";
+  html += `<button class="post-action-btn comment-btn" data-action="pv-focus-composer">`;
+  html += `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">`;
+  html += `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`;
+  html += `</svg> <span class="comment-count-${pid}">${commentCount}</span></button>`;
 
-  html +=
-    '<span class="post-date">' +
-    escHtml(formatDateTime(postData.createdAt)) +
-    "</span>";
+  html += `<span class="post-date">${escHtml(formatDateTime(postData.createdAt))}</span>`;
   html += "</div>";
 
-  html +=
-    '<div class="comment-section visible" id="commentSection-' + pid + '">';
-  html += '<div class="comment-list" id="commentList-' + pid + '">';
+  html += `<div class="comment-section visible" id="commentSection-${pid}">`;
+  html += `<div class="comment-list" id="commentList-${pid}">`;
 
   if (postData.comments) {
     var sorted = Object.keys(postData.comments).sort(function (a, b) {
@@ -211,7 +156,7 @@ function _renderPostViewContent(postId, postData) {
       );
     });
     sorted.forEach(function (cid) {
-      html += _renderCommentThreadHTML(postId, cid, postData.comments[cid]);
+      html += _renderCommentThreadHTML(postId, cid, postData.comments[cid], user);
     });
   }
 
@@ -241,6 +186,7 @@ function _initPostViewCommentListener(postId) {
 
   var ref = postsRef.child(postId).child("comments").orderByChild("createdAt");
   _commentListenerRefs[postId] = ref;
+  var _currentUser = firebase.auth().currentUser;
 
   ref.on("child_added", function (s) {
     if (_viewingPostId !== postId) return;
@@ -255,7 +201,7 @@ function _initPostViewCommentListener(postId) {
     var commentList = document.getElementById("commentList-" + postId);
     if (commentList) {
       var wrapper = document.createElement("div");
-      wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, data);
+      wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, data, _currentUser);
       commentList.appendChild(wrapper.firstElementChild);
     }
     _updatePostViewCommentCount(postId);
@@ -264,24 +210,30 @@ function _initPostViewCommentListener(postId) {
   ref.on("child_changed", function (s) {
     if (_viewingPostId !== postId) return;
     var cid = s.key;
-    var data = s.val();
+    var newData = s.val();
     var post = allPosts[postId];
     if (!post) return;
+    var oldData = post.comments ? post.comments[cid] : null;
     if (!post.comments) post.comments = {};
-    post.comments[cid] = data;
+    post.comments[cid] = newData;
 
     var thread = document.getElementById("commentThread-" + postId + "-" + cid);
-    if (thread) {
-      var wrapper = document.createElement("div");
-      wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, data);
-      var newEl = wrapper.firstElementChild;
-      var repliesSec = thread.querySelector(".replies-section");
-      var wasOpen = repliesSec && !repliesSec.classList.contains("hidden");
-      thread.replaceWith(newEl);
-      if (wasOpen) {
-        var newRepliesSec = newEl.querySelector(".replies-section");
-        if (newRepliesSec) newRepliesSec.classList.remove("hidden");
-      }
+    if (!thread) return;
+
+    if (oldData && typeof _onlyLikesChanged === "function" && _onlyLikesChanged(oldData, newData)) {
+      if (typeof _patchCommentLikeBtn === "function") _patchCommentLikeBtn(postId, cid, newData.likes, _currentUser);
+      return;
+    }
+
+    var wrapper = document.createElement("div");
+    wrapper.innerHTML = _renderCommentThreadHTML(postId, cid, newData, _currentUser);
+    var newEl = wrapper.firstElementChild;
+    var repliesSec = thread.querySelector(".replies-section");
+    var wasOpen = repliesSec && !repliesSec.classList.contains("hidden");
+    thread.replaceWith(newEl);
+    if (wasOpen) {
+      var newRepliesSec = newEl.querySelector(".replies-section");
+      if (newRepliesSec) newRepliesSec.classList.remove("hidden");
     }
   });
 
@@ -471,8 +423,10 @@ function _restorePostViewOnLoad() {
     document.removeEventListener("postsReady", _onPostsReady);
     if (typeof allPosts !== "undefined" && allPosts[savedPid]) {
       _onPostsReady();
+    } else {
+      sessionStorage.removeItem("_viewingPostId");
     }
-  }, 5000);
+  }, 2000);
 
   function _onPostsReady() {
     clearTimeout(_fallbackTimer);

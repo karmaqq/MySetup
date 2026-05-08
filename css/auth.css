@@ -234,7 +234,7 @@
   top: 1px;
   width: 4px;
   height: 8px;
-  border: solid #000;
+  border: solid var(--text-btn);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
@@ -298,7 +298,7 @@
   background: var(--accent);
   border: none;
   border-radius: 12px;
-  color: #000;
+  color: var(--text-btn);
   font-family: var(--font-ui);
   font-size: 15px;
   font-weight: 800;

@@ -243,12 +243,12 @@
 
 .filter-btn.active[data-status="saglikli"] {
   background: var(--blue);
-  color: #000;
+  color: var(--text-btn);
 }
 
 .filter-btn.active[data-status="yedek"] {
   background: var(--yellow);
-  color: #000;
+  color: var(--text-btn);
 }
 
 .filter-btn.active[data-status="bozuk"] {
@@ -853,7 +853,7 @@ tfoot {
 
 .btn-add {
   background: var(--accent);
-  color: #000;
+  color: var(--text-btn);
 }
 
 .btn-add:hover {
@@ -953,7 +953,7 @@ tfoot {
   border-radius: var(--radius-sm);
   padding: 8px 14px;
   background: var(--accent);
-  color: #000;
+  color: var(--text-btn);
   font-family: var(--font-ui);
   font-size: 13px;
   font-weight: 600;

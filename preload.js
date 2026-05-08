@@ -4,7 +4,7 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 function onceListener(channel, handler) {
   ipcRenderer.removeAllListeners(channel);
-  ipcRenderer.on(channel, handler);
+  ipcRenderer.once(channel, (_e, ...args) => handler(...args));
 }
 
 contextBridge.exposeInMainWorld("electronAPI", {

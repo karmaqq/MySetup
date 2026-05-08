@@ -94,77 +94,41 @@ filterBtns.forEach((btn) => {
 /*                          SİLME İŞLEMLERİ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Post silme onayı ─────────────────── */
+/* ─────────────────── Genel silme onayı (post/yorum/yanıt) ─────────────────── */
 
-function _confirmDeletePost(postId) {
-  var postData = allPosts[postId];
-  showConfirm("Bu gönderiyi silmek istediğine emin misin?", function () {
-    deletePostFromFirebase(postId, postData)
+function _confirmDelete(type, ids) {
+  var messages = {
+    post: "Bu gönderiyi silmek istediğine emin misin?",
+    comment: "Yorum silinsin mi?",
+    reply: "Yanıt silinsin mi?",
+  };
+  var animEl = null;
+  if (type === "comment") {
+    animEl = document.getElementById("commentThread-" + ids.postId + "-" + ids.commentId);
+  } else if (type === "reply") {
+    animEl = document.querySelector('[data-reply-id="' + ids.replyId + '"]');
+  }
+  if (animEl) {
+    animEl.style.transition = "opacity 0.3s, transform 0.3s";
+    animEl.style.opacity = "0";
+    animEl.style.transform = "translateY(4px)";
+  }
+  var fns = {
+    post: function () { return deletePostFromFirebase(ids.postId, allPosts[ids.postId]); },
+    comment: function () { return deleteCommentFromFirebase(ids.postId, ids.commentId); },
+    reply: function () { return deleteReplyFromFirebase(ids.postId, ids.commentId, ids.replyId); },
+  };
+  showConfirm(messages[type], function () {
+    fns[type]()
       .then(function () {
-        showToast("Gönderi silindi.", "success");
+        if (animEl) setTimeout(function () { animEl.remove(); }, 320);
+        showToast(messages[type].replace("?", "").trim() + " silindi", "success");
       })
       .catch(function () {
-        showToast("Gönderi silinemedi.", "error");
+        if (animEl) { animEl.style.opacity = "1"; animEl.style.transform = "translateY(0)"; }
+        showToast("Silinemedi", "error");
       });
   });
-}
-
-/* ─────────────────── Yorum silme onayı ─────────────────── */
-
-function _confirmDeleteComment(postId, commentId) {
-  showConfirm("Yorum silinsin mi?", function () {
-    const thread = document.getElementById(
-      "commentThread-" + postId + "-" + commentId,
-    );
-    if (thread) {
-      thread.style.transition = "opacity 0.3s, transform 0.3s";
-      thread.style.opacity = "0";
-      thread.style.transform = "translateY(4px)";
-      setTimeout(function () {
-        thread.remove();
-      }, 320);
-    }
-    deleteCommentFromFirebase(postId, commentId)
-      .then(function () {
-        showToast("Yorum silindi.", "success");
-      })
-      .catch(function () {
-        showToast("Yorum silinemedi.", "error");
-        if (thread) {
-          thread.style.opacity = "1";
-          thread.style.transform = "translateY(0)";
-        }
-      });
-  });
-}
-
-/* ─────────────────── Yanıt silme onayı ─────────────────── */
-
-function _confirmDeleteReply(postId, commentId, replyId) {
-  showConfirm("Yanıt silinsin mi?", function () {
-    const replyEl = document.querySelector(
-      '[data-reply-id="' + replyId + '"]',
-    );
-    if (replyEl) {
-      replyEl.style.transition = "opacity 0.3s, transform 0.3s";
-      replyEl.style.opacity = "0";
-      replyEl.style.transform = "translateY(4px)";
-      setTimeout(function () {
-        replyEl.remove();
-      }, 320);
-    }
-    deleteReplyFromFirebase(postId, commentId, replyId)
-      .then(function () {
-        showToast("Yanıt silindi.", "success");
-      })
-      .catch(function () {
-        showToast("Yanıt silinemedi.", "error");
-        if (replyEl) {
-          replyEl.style.opacity = "1";
-          replyEl.style.transform = "translateY(0)";
-        }
-      });
-   });
 }
 
 /* ─────────────────── CSV İşleme ─────────────────── */
@@ -338,6 +302,11 @@ if (exportCsvBtn) {
 
 window.showConfirm = function (message, onConfirm, opts) {
   if (!toastContainer) return;
+  var existing = toastContainer.querySelector(".toast-confirm");
+  if (existing) {
+    existing.classList.remove("visible");
+    existing.remove();
+  }
   var yesText = (opts && opts.yesText) || "Evet, Devam Et";
   var noText = (opts && opts.noText) || "İptal";
   const toast = document.createElement("div");
