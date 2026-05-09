@@ -85,13 +85,9 @@ if (window.electronAPI) {
   window.electronAPI.onUpdateError?.((errMessage) => {
     if (!updateBtn || !updateBtnSpan) return;
     stopDotAnimation();
-    updateBtn.classList.add("visible");
+    updateBtn.classList.add("visible", "error");
     updateBtn.classList.remove("downloading", "ready");
     updateBtn.style.setProperty("--progress", "0%");
-    updateBtn.style.background = "var(--red, #ef4444)";
-    updateBtn.style.borderColor = "var(--red, #ef4444)";
-    updateBtn.style.color = "#fff";
-    updateBtn.style.pointerEvents = "auto";
     updateBtnSpan.textContent = "Güncelleme Hatası";
     document.getElementById("userInfo")?.classList.remove("has-update");
 
