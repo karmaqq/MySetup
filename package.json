@@ -1,6 +1,6 @@
 {
     "name":  "mysetup",
-    "version":  "2.8.0",
+    "version":  "2.8.4",
     "description":  "Envanter Sistemi",
     "author":  "Karma shbkarma@gmail.com",
     "main":  "dist/main.js",
@@ -11,6 +11,7 @@
                     "watch:ts":  "node build.mjs --watch",
                     "build":  "node build.mjs \u0026\u0026 electron-builder",
                     "build:full":  "npm run clean \u0026\u0026 node build.mjs \u0026\u0026 electron-builder",
+                    "update":  "node update.mjs",
                     "clean":  "node -e \"require(\u0027fs\u0027).rmSync(\u0027dist\u0027,{recursive:true,force:true});require(\u0027fs\u0027).rmSync(\u0027release\u0027,{recursive:true,force:true})\""
                 },
     "dependencies":  {
