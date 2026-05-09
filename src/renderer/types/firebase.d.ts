@@ -2,7 +2,7 @@
 /*                     FIREBASE COMPAT SDK TYPE STUBS                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  Firebase Compat SDK v9.22.1 — CDN üzerinden yüklenir, global `firebase` */
-/*  Bu dosya, compat SDK'nin kullanılan kısımları için tip tanımları sağlar. */
+/*  Bu dosya compat SDK'nin kullanılan kısımları için tip tanımları sağlar. */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 declare namespace firebase {
@@ -28,9 +28,17 @@ declare namespace firebase {
   namespace auth {
     interface Auth {
       currentUser: User | null;
-      onAuthStateChanged(nextOrObserver: object | ((user: User | null) => void)): () => void;
-      signInWithEmailAndPassword(email: string, password: string): Promise<UserCredential>;
-      createUserWithEmailAndPassword(email: string, password: string): Promise<UserCredential>;
+      onAuthStateChanged(
+        nextOrObserver: object | ((user: User | null) => void),
+      ): () => void;
+      signInWithEmailAndPassword(
+        email: string,
+        password: string,
+      ): Promise<UserCredential>;
+      createUserWithEmailAndPassword(
+        email: string,
+        password: string,
+      ): Promise<UserCredential>;
       signOut(): Promise<void>;
       sendPasswordResetEmail(email: string): Promise<void>;
       updateCurrentUser(user: User | null): Promise<void>;
@@ -49,7 +57,10 @@ declare namespace firebase {
       reload(): Promise<void>;
       getIdTokenResult(): Promise<{ claims: Record<string, unknown> }>;
       getIdToken(forceRefresh?: boolean): Promise<string>;
-      updateProfile(profile: { displayName?: string | null; photoURL?: string | null }): Promise<void>;
+      updateProfile(profile: {
+        displayName?: string | null;
+        photoURL?: string | null;
+      }): Promise<void>;
       reauthenticateWithCredential(credential: object): Promise<UserCredential>;
     }
 
@@ -94,10 +105,27 @@ declare namespace firebase {
       update(values: Record<string, unknown>): Promise<void>;
       remove(): Promise<void>;
       push(value?: unknown): ThenableReference;
-      once(eventType: string, successCallback?: (snapshot: DataSnapshot) => void): Promise<DataSnapshot>;
-      on(eventType: string, callback: (snapshot: DataSnapshot) => void, cancelCallbackOrContext?: object): () => void;
-      off(eventType?: string, callback?: (snapshot: DataSnapshot) => void): void;
-      transaction(updateFn: (current: unknown) => unknown, onComplete?: (error: Error | null, committed: boolean, snapshot: DataSnapshot | null) => void): Promise<{ committed: boolean; snapshot: DataSnapshot | null }>;
+      once(
+        eventType: string,
+        successCallback?: (snapshot: DataSnapshot) => void,
+      ): Promise<DataSnapshot>;
+      on(
+        eventType: string,
+        callback: (snapshot: DataSnapshot) => void,
+        cancelCallbackOrContext?: object,
+      ): () => void;
+      off(
+        eventType?: string,
+        callback?: (snapshot: DataSnapshot) => void,
+      ): void;
+      transaction(
+        updateFn: (current: unknown) => unknown,
+        onComplete?: (
+          error: Error | null,
+          committed: boolean,
+          snapshot: DataSnapshot | null,
+        ) => void,
+      ): Promise<{ committed: boolean; snapshot: DataSnapshot | null }>;
       orderByChild(path: string): Query;
       orderByKey(): Query;
       orderByValue(): Query;
@@ -110,9 +138,19 @@ declare namespace firebase {
 
     interface Query {
       ref: Reference;
-      once(eventType: string, successCallback?: (snapshot: DataSnapshot) => void): Promise<DataSnapshot>;
-      on(eventType: string, callback: (snapshot: DataSnapshot) => void, cancelCallbackOrContext?: object): () => void;
-      off(eventType?: string, callback?: (snapshot: DataSnapshot) => void): void;
+      once(
+        eventType: string,
+        successCallback?: (snapshot: DataSnapshot) => void,
+      ): Promise<DataSnapshot>;
+      on(
+        eventType: string,
+        callback: (snapshot: DataSnapshot) => void,
+        cancelCallbackOrContext?: object,
+      ): () => void;
+      off(
+        eventType?: string,
+        callback?: (snapshot: DataSnapshot) => void,
+      ): void;
       limitToFirst(limit: number): Query;
       limitToLast(limit: number): Query;
       startAt(value: unknown, key?: string): Query;
@@ -162,8 +200,18 @@ declare namespace firebase {
       parent: StorageReference | null;
       root: StorageReference;
       child(path: string): StorageReference;
-      put(data: Blob | Uint8Array | ArrayBuffer, metadata?: { contentType?: string; customMetadata?: Record<string, string> }): UploadTask;
-      putString(data: string, format?: string, metadata?: { contentType?: string }): UploadTask;
+      put(
+        data: Blob | Uint8Array | ArrayBuffer,
+        metadata?: {
+          contentType?: string;
+          customMetadata?: Record<string, string>;
+        },
+      ): UploadTask;
+      putString(
+        data: string,
+        format?: string,
+        metadata?: { contentType?: string },
+      ): UploadTask;
       getDownloadURL(): Promise<string>;
       delete(): Promise<void>;
       listAll(): Promise<ListResult>;
@@ -171,8 +219,15 @@ declare namespace firebase {
 
     interface UploadTask {
       snapshot: UploadTaskSnapshot;
-      on(event: string, next?: (snapshot: UploadTaskSnapshot) => void, error?: (error: Error) => void, complete?: () => void): () => void;
-      then(success: (snapshot: UploadTaskSnapshot) => void): Promise<UploadTaskSnapshot>;
+      on(
+        event: string,
+        next?: (snapshot: UploadTaskSnapshot) => void,
+        error?: (error: Error) => void,
+        complete?: () => void,
+      ): () => void;
+      then(
+        success: (snapshot: UploadTaskSnapshot) => void,
+      ): Promise<UploadTaskSnapshot>;
       cancel(): boolean;
       pause(): boolean;
       resume(): boolean;
