@@ -1,74 +1,74 @@
 {
-    "name":  "mysetup",
-    "version":  "2.8.4",
-    "description":  "Envanter Sistemi",
-    "author":  "Karma shbkarma@gmail.com",
-    "main":  "dist/main.js",
-    "scripts":  {
-                    "start":  "electron .",
-                    "dev":  "node build.mjs \u0026\u0026 electron .",
-                    "build:ts":  "node build.mjs",
-                    "watch:ts":  "node build.mjs --watch",
-                    "build":  "node build.mjs \u0026\u0026 electron-builder",
-                    "build:full":  "npm run clean \u0026\u0026 node build.mjs \u0026\u0026 electron-builder",
-                    "update":  "node update.mjs",
-                    "clean":  "node -e \"require(\u0027fs\u0027).rmSync(\u0027dist\u0027,{recursive:true,force:true});require(\u0027fs\u0027).rmSync(\u0027release\u0027,{recursive:true,force:true})\""
-                },
-    "dependencies":  {
-                         "electron-updater":  "^6.8.3"
-                     },
-    "devDependencies":  {
-                            "@types/node":  "^25.6.2",
-                            "electron":  "^33.0.0",
-                            "electron-builder":  "^26.8.1",
-                            "esbuild":  "^0.28.0",
-                            "typescript":  "^6.0.3"
-                        },
-    "build":  {
-                  "appId":  "com.mysetup.app",
-                  "productName":  "MySetup",
-                  "artifactName":  "MySetup-Installer.exe",
-                  "copyright":  "Copyright 2026 Karma",
-                  "directories":  {
-                                      "output":  "release",
-                                      "buildResources":  "build"
-                                  },
-                  "afterPack":  "./scripts/clean-locales.js",
-                  "files":  [
-                                "dist/**/*",
-                                "index.html",
-                                "css/**/*",
-                                "assets/**/*",
-                                "js/firebase-config.js"
-                            ],
-                  "publish":  [
-                                  {
-                                      "provider":  "github",
-                                      "owner":  "karmaqq",
-                                      "repo":  "MySetup",
-                                      "releaseType":  "release"
-                                  }
-                              ],
-                  "win":  {
-                              "target":  [
-                                             "nsis"
-                                         ],
-                              "icon":  "assets/icon.ico",
-                              "requestedExecutionLevel":  "asInvoker"
-                          },
-                  "nsis":  {
-                               "oneClick":  false,
-                               "allowToChangeInstallationDirectory":  true,
-                               "perMachine":  false,
-                               "allowElevation":  true,
-                               "runAfterFinish":  true,
-                               "installerIcon":  "assets/icon.ico",
-                               "uninstallerIcon":  "assets/icon.ico",
-                               "shortcutName":  "MySetup",
-                               "deleteAppDataOnUninstall":  true,
-                               "warningsAsErrors":  false,
-                               "createDesktopShortcut":  true,
-                               "createStartMenuShortcut":  true
-                           }
-              }
+  "name": "mysetup",
+  "version": "2.8.5",
+  "description": "Envanter Sistemi",
+  "author": "Karma shbkarma@gmail.com",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "node build.mjs && electron .",
+    "build:ts": "node build.mjs",
+    "watch:ts": "node build.mjs --watch",
+    "build": "node build.mjs && electron-builder",
+    "build:full": "npm run clean && node build.mjs && electron-builder",
+    "update": "node update.mjs",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true});require('fs').rmSync('release',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.2",
+    "electron": "^33.0.0",
+    "electron-builder": "^26.8.1",
+    "esbuild": "^0.28.0",
+    "typescript": "^6.0.3"
+  },
+  "build": {
+    "appId": "com.mysetup.app",
+    "productName": "MySetup",
+    "artifactName": "MySetup-Installer.exe",
+    "copyright": "Copyright 2026 Karma",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "afterPack": "./scripts/clean-locales.js",
+    "files": [
+      "dist/**/*",
+      "index.html",
+      "css/**/*",
+      "assets/**/*",
+      "js/firebase-config.js"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "karmaqq",
+        "repo": "MySetup",
+        "releaseType": "release"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "allowElevation": true,
+      "runAfterFinish": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "shortcutName": "MySetup",
+      "deleteAppDataOnUninstall": true,
+      "warningsAsErrors": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
 }
