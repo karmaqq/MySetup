@@ -5,5 +5,7 @@ OPTIMIZATIONS.md
 dist/
 release/
 node_modules/
+.VSCodeCounter/
+.vscode/
 js/firebase-config.js
 src/renderer/firebase-config.ts
