@@ -1,22 +1,14 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          ELECTRON ANA SÜREÇ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const {
-  app,
-  BrowserWindow,
-  shell,
-  session,
-  ipcMain,
-  globalShortcut,
-} = require("electron");
-const path = require("path");
-const { setupUpdater, checkForUpdates } = require("./js/updater.js");
-let mainWindow;
+import { app, BrowserWindow, shell, session, ipcMain, globalShortcut } from "electron";
+import * as path from "path";
+const { setupUpdater, checkForUpdates } = require("./updater") as { setupUpdater: (w: BrowserWindow) => void; checkForUpdates: () => void; };
 
-/* ------------------- CSP Başlık Tanımlaması ------------------- */
+let mainWindow: BrowserWindow | null;
+
+/* ─────────────────── CSP Başlık Tanımlaması ─────────────────── */
 
 const APP_CSP = [
   "default-src 'self'",
@@ -30,19 +22,19 @@ const APP_CSP = [
   "base-uri 'self'",
 ].join("; ");
 
-/* ------------------- CSP Header Kurulumu ------------------- */
+/* ─────────────────── CSP Header Kurulumu ─────────────────── */
 
-function setupCspHeaders() {
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+function setupCspHeaders(): void {
+  session.defaultSession.webRequest.onHeadersReceived((details: Electron.OnHeadersReceivedListenerDetails, callback: (response: Electron.HeadersReceivedResponse) => void) => {
     const responseHeaders = details.responseHeaders || {};
 
     responseHeaders["Content-Security-Policy"] = [APP_CSP];
 
     if (details.url.includes("firebasestorage.googleapis.com")) {
-      var origin = details.requestHeaders
-        ? details.requestHeaders.Origin || ""
+      const origin = (details as any).requestHeaders
+        ? (details as any).requestHeaders["Origin"] || ""
         : "";
-      var allowed = [
+      const allowed = [
         "file://",
         "app://",
         "https://mysetup-8dcd5.firebaseapp.com",
@@ -62,9 +54,9 @@ function setupCspHeaders() {
   });
 }
 
-/* ------------------- Pencere Oluşturma ------------------- */
+/* ─────────────────── Pencere Oluşturma ─────────────────── */
 
-function createWindow() {
+function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1250,
     height: 900,
@@ -85,16 +77,16 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadFile(path.join(__dirname, "index.html"));
-  mainWindow.setMenu(null);
+  mainWindow!.loadFile(path.join(__dirname, "..", "index.html"));
+  mainWindow!.setMenu(null);
 
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+  mainWindow!.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("http")) shell.openExternal(url);
     return { action: "deny" };
   });
 
-  mainWindow.webContents.on("did-finish-load", () => {
-    mainWindow.webContents.send("app_version", app.getVersion());
+  mainWindow!.webContents.on("did-finish-load", () => {
+    mainWindow!.webContents.send("app_version", app.getVersion());
     checkForUpdates();
   });
 
@@ -107,7 +99,7 @@ function createWindow() {
   setupUpdater(mainWindow);
 }
 
-/* ------------------- UYGULAMA YAŞAM DÖNGÜSÜ ------------------- */
+/* ─────────────────── UYGULAMA YAŞAM DÖNGÜSÜ ─────────────────── */
 
 app.whenReady().then(() => {
   setupCspHeaders();

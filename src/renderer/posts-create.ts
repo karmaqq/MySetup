@@ -1,29 +1,28 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                        POST OLUŞTURMA SİSTEMİ                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { POST_PHRASES } from "./utils";
+import { addPostToFirebase } from "./firebase-post";
+import { showToast } from "./io";
+
 /* ─────────────────── DOM Referansları ─────────────────── */
 
-const postText = document.getElementById("postText");
-const postImageInput = document.getElementById("postImageInput");
-const postImageBtn = document.getElementById("postImageBtn");
-const publishPostBtn = document.getElementById("publishPostBtn");
-const postImagePreviewEl = document.getElementById("postImagePreview");
-const postsFeed = document.getElementById("postsFeed");
+const postText = document.getElementById("postText") as HTMLTextAreaElement | null;
+const postImageInput = document.getElementById("postImageInput") as HTMLInputElement | null;
+const postImageBtn = document.getElementById("postImageBtn") as HTMLElement | null;
+const publishPostBtn = document.getElementById("publishPostBtn") as HTMLElement | null;
+const postImagePreviewEl = document.getElementById("postImagePreview") as HTMLElement | null;
 
 /* ─────────────────── Seçili Görsel ─────────────────── */
 
-let selectedPostImage = null;
+let selectedPostImage: File | null = null;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                           POST OLUŞTURMA                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Yayınla butonuna basıldığında ─────────────────── */
-
-function createPost() {
+export function createPost(): void {
   const text = (postText ? postText.value : "").trim();
   if (!text && !selectedPostImage) {
     showToast("Lütfen bir metin yazın veya görsel seçin.", "warn");
@@ -34,11 +33,11 @@ function createPost() {
   if (!user) return;
 
   if (publishPostBtn) {
-    publishPostBtn.disabled = true;
+    (publishPostBtn as HTMLButtonElement).disabled = true;
     publishPostBtn.textContent = "Yayınlanıyor...";
   }
 
-  const postData = {
+  const postData: Record<string, any> = {
     uid: user.uid,
     username: user.displayName || "Kullanici",
     content: text,
@@ -57,8 +56,8 @@ function createPost() {
 
 /* ─────────────────── Görsel varsa önce yükle, sonra kaydet ─────────────────── */
 
-function _uploadAndSavePost(postData, file) {
-  const user = firebase.auth().currentUser;
+function _uploadAndSavePost(postData: Record<string, any>, file: File): void {
+  const user = firebase.auth().currentUser!;
   const ref = firebase
     .storage()
     .ref()
@@ -66,16 +65,17 @@ function _uploadAndSavePost(postData, file) {
 
   ref
     .put(file)
-    .then(function (snap) {
+    .then(function (snap: firebase.storage.UploadTaskSnapshot) {
       return snap.ref.getDownloadURL();
     })
     .then(function (url) {
       postData.imageUrl = url;
       _savePost(postData);
+      return;
     })
     .catch(function () {
       if (publishPostBtn) {
-        publishPostBtn.disabled = false;
+        (publishPostBtn as HTMLButtonElement).disabled = false;
         publishPostBtn.textContent = "Yayınla";
       }
       showToast("Görsel yüklenemedi.", "error");
@@ -84,7 +84,7 @@ function _uploadAndSavePost(postData, file) {
 
 /* ─────────────────── Firebase'e post yazar, formu sıfırlar ─────────────────── */
 
-function _savePost(postData) {
+function _savePost(postData: Record<string, any>): void {
   addPostToFirebase(postData)
     .then(function () {
       if (postText) postText.value = "";
@@ -94,7 +94,7 @@ function _savePost(postData) {
         postImagePreviewEl.innerHTML = "";
       }
       if (publishPostBtn) {
-        publishPostBtn.disabled = false;
+        (publishPostBtn as HTMLButtonElement).disabled = false;
         publishPostBtn.textContent = "Yayınla";
       }
       if (postImageInput) postImageInput.value = "";
@@ -102,7 +102,7 @@ function _savePost(postData) {
     })
     .catch(function () {
       if (publishPostBtn) {
-        publishPostBtn.disabled = false;
+        (publishPostBtn as HTMLButtonElement).disabled = false;
         publishPostBtn.textContent = "Yayınla";
       }
       showToast("Gönderi yayınlanamadı.", "error");
@@ -111,8 +111,8 @@ function _savePost(postData) {
 
 /* ─────────────────── Görsel seçildiğinde önizleme ─────────────────── */
 
-function _handlePostImageSelect(e) {
-  const file = e.target.files[0];
+function _handlePostImageSelect(e: Event): void {
+  const file = (e.target as HTMLInputElement).files?.[0];
   if (!file) return;
   if (!file.type.startsWith("image/")) {
     showToast("Lütfen geçerli bir görsel seçin.", "warn");
@@ -125,7 +125,7 @@ function _handlePostImageSelect(e) {
     postImagePreviewEl.innerHTML =
       '<div class="post-preview-wrapper">' +
       '<img src="' +
-      ev.target.result +
+      (ev.target as any).result +
       '" class="post-preview-img" />' +
       '<button class="remove-post-image-btn">✕</button>' +
       "</div>";
@@ -136,7 +136,7 @@ function _handlePostImageSelect(e) {
 
 /* ─────────────────── Seçili görseli kaldır ─────────────────── */
 
-function _removePostImage() {
+export function _removePostImage(): void {
   selectedPostImage = null;
   if (postImagePreviewEl) {
     postImagePreviewEl.classList.add("hidden");
@@ -147,7 +147,8 @@ function _removePostImage() {
 
 /* ─────────────────── Post taslağını temizle ─────────────────── */
 
-function clearPostDraft() {
+export function clearPostDraft(): void {
+  (window as any).clearPostDraft = clearPostDraft;
   if (postText) postText.value = "";
   selectedPostImage = null;
   if (postImagePreviewEl) {
@@ -155,4 +156,32 @@ function clearPostDraft() {
     postImagePreviewEl.innerHTML = "";
   }
   if (postImageInput) postImageInput.value = "";
+}
+
+/* ─────────────────── Event Bağlantıları ─────────────────── */
+
+if (postImageBtn && postImageInput) {
+  postImageBtn.addEventListener("click", () => postImageInput!.click());
+  postImageInput.addEventListener("change", _handlePostImageSelect);
+}
+
+if (postImagePreviewEl) {
+  postImagePreviewEl.addEventListener("click", (e) => {
+    if ((e.target as HTMLElement).classList.contains("remove-post-image-btn")) {
+      _removePostImage();
+    }
+  });
+}
+
+if (publishPostBtn) {
+  publishPostBtn.addEventListener("click", createPost);
+}
+
+if (postText) {
+  postText.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      createPost();
+    }
+  });
 }

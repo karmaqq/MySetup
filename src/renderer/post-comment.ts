@@ -1,13 +1,13 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                       YORUM VE YANIT RENDER                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { escHtml, escAttr, formatTimeAgo, buildAvatarHTML } from "./utils";
+
 /* ─────────────────── Ortak silme dropdown HTML ─────────────────── */
 
-function _buildDeleteDropdownHTML(action, attrs) {
-  var attrStr = Object.keys(attrs)
+function _buildDeleteDropdownHTML(action: string, attrs: Record<string, string>): string {
+  const attrStr = Object.keys(attrs)
     .map(function (k) {
       return `data-${k}="${attrs[k]}"`;
     })
@@ -20,16 +20,15 @@ function _buildDeleteDropdownHTML(action, attrs) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                       YORUM THREAD HTML                                   */
+/*                       YORUM HTML                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Yorum + yanıtları kapsayan blok HTML ─────────────────── */
-
-function _renderCommentThreadHTML(postId, commentId, commentData, user) {
+export function _renderCommentThreadHTML(postId: string, commentId: string, commentData: any, user: firebase.auth.User | null): string {
   const pid = escAttr(postId);
   const cid = escAttr(commentId);
   const isOwn = user && user.uid === commentData.uid;
-  const postData = allPosts[postId];
+  const allPostsGlobal = (window as any).allPosts || {};
+  const postData = allPostsGlobal[postId];
   const isPostOwner = user && postData && user.uid === postData.uid;
   const liked = user && commentData.likes && commentData.likes[user.uid];
   const likeCount = commentData.likes
@@ -105,14 +104,13 @@ function _renderCommentThreadHTML(postId, commentId, commentData, user) {
 /*                          YANIT HTML                                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Tek yanıt satırı HTML ─────────────────── */
-
-function _renderReplyHTML(postId, commentId, replyId, replyData, user) {
+export function _renderReplyHTML(postId: string, commentId: string, replyId: string, replyData: any, user: firebase.auth.User | null): string {
   const pid = escAttr(postId);
   const cid = escAttr(commentId);
   const rid = escAttr(replyId);
   const isOwn = user && user.uid === replyData.uid;
-  const postData = allPosts[postId];
+  const allPostsGlobal = (window as any).allPosts || {};
+  const postData = allPostsGlobal[postId];
   const isPostOwner = user && postData && user.uid === postData.uid;
   const liked = user && replyData.likes && replyData.likes[user.uid];
   const likeCount = replyData.likes ? Object.keys(replyData.likes).length : 0;
@@ -146,37 +144,49 @@ function _renderReplyHTML(postId, commentId, replyId, replyData, user) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                      YORUM/YANIT BEĞENI DOM                                */
+/*                      YORUM/YANIT BEĞENİ DOM GÜNCELLEME                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Yorum beğeni butonunu DOM'da günceller ─────────────────── */
-
-function _patchCommentLikeBtn(postId, commentId, likes, user) {
+export function _patchCommentLikeBtn(postId: string, commentId: string, likes: Record<string, any> | null, user: firebase.auth.User | null): void {
   const count = likes ? Object.keys(likes).length : 0;
   const liked = user && likes && likes[user.uid];
   const btn = document.querySelector(
     `[data-action="like-comment"][data-post-id="${postId}"][data-comment-id="${commentId}"]`,
-  );
+  ) as HTMLElement | null;
   if (!btn) return;
   btn.classList.toggle("liked", !!liked);
   const svg = btn.querySelector("svg");
   if (svg) svg.setAttribute("fill", liked ? "currentColor" : "none");
-  const span = btn.querySelector(`.like-count-c-${commentId}`);
-  if (span) span.textContent = count;
+  const span = document.querySelector(`.like-count-c-${commentId}`);
+  if (span) span.textContent = String(count);
 }
 
-/* ─────────────────── Yanıt beğeni butonunu DOM'da günceller ─────────────────── */
-
-function _patchReplyLikeBtn(postId, commentId, replyId, likes, user) {
+export function _patchReplyLikeBtn(postId: string, commentId: string, replyId: string, likes: Record<string, any> | null, user: firebase.auth.User | null): void {
   const count = likes ? Object.keys(likes).length : 0;
   const liked = user && likes && likes[user.uid];
   const btn = document.querySelector(
     `[data-action="like-reply"][data-post-id="${postId}"][data-comment-id="${commentId}"][data-reply-id="${replyId}"]`,
-  );
+  ) as HTMLElement | null;
   if (!btn) return;
   btn.classList.toggle("liked", !!liked);
   const svg = btn.querySelector("svg");
   if (svg) svg.setAttribute("fill", liked ? "currentColor" : "none");
   const span = btn.querySelector("span");
-  if (span) span.textContent = count;
+  if (span) span.textContent = String(count);
+}
+
+/* ─────────────────── Yorum Composer HTML ─────────────────── */
+
+export function _renderCommentComposerHTML(postId: string): string {
+  return (
+    `<div class="comment-composer" data-composer-post-id="${postId}">` +
+    `<div class="comment-composer-reply-target hidden"></div>` +
+    `<div class="comment-input-row">` +
+    `<div class="comment-input-wrapper">` +
+    `<textarea class="comment-input-field thin-scrollbar" placeholder="Yorum yaz..." maxlength="500" rows="1"></textarea>` +
+    `<button class="comment-send-btn">` +
+    `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">` +
+    `<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>` +
+    `</svg></button></div></div></div>`
+  );
 }

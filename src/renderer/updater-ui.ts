@@ -1,15 +1,15 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                     GÜNCELLEME ARAYÜZÜ YÖNETİMİ                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { showToast } from "./io";
+
 /* ─────────────────── Electron Ortam Kontrolü ─────────────────── */
 
 if (window.electronAPI) {
-  const updateBtn = document.getElementById("updateBtn");
-  const updateBtnSpan = updateBtn?.querySelector("span");
-  let dotInterval = null;
+  const updateBtn = document.getElementById("updateBtn") as HTMLElement | null;
+  const updateBtnSpan = updateBtn?.querySelector("span") as HTMLElement | null;
+  let dotInterval: number | null = null;
 
   /* ─────────────────── Versiyon Gösterimi ─────────────────── */
 
@@ -24,7 +24,7 @@ if (window.electronAPI) {
     if (dotInterval) clearInterval(dotInterval);
     let step = 0;
     const steps = ["", ".", "..", "..."];
-    dotInterval = setInterval(() => {
+    dotInterval = window.setInterval(() => {
       if (updateBtnSpan) {
         updateBtnSpan.textContent = `Yeniden Başlatılıyor${steps[step % 4]}`;
       }
@@ -86,13 +86,11 @@ if (window.electronAPI) {
     updateBtnSpan.textContent = "Güncelleme Hatası";
     document.getElementById("userInfo")?.classList.remove("has-update");
 
-    if (typeof showToast === "function") {
-      showToast(
-        "Güncelleme başarısız: " + (errMessage || "Bilinmeyen hata"),
-        "error",
-        4000,
-      );
-    }
+    showToast(
+      "Güncelleme başarısız: " + (errMessage || "Bilinmeyen hata"),
+      "error",
+      4000,
+    );
   });
 
   /* ─────────────────── Güncelleme Butonu ─────────────────── */

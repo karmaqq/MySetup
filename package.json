@@ -1,19 +1,26 @@
 {
     "name":  "mysetup",
-    "version":  "2.7.6",
+    "version":  "2.7.7",
     "description":  "Envanter Sistemi",
     "author":  "Karma shbkarma@gmail.com",
-    "main":  "main.js",
+    "main":  "dist/main.js",
     "scripts":  {
                     "start":  "electron .",
-                    "build":  "electron-builder"
+                    "dev":  "node build.mjs \u0026\u0026 electron .",
+                    "build:ts":  "node build.mjs",
+                    "watch:ts":  "node build.mjs --watch",
+                    "build":  "node build.mjs \u0026\u0026 electron-builder",
+                    "clean":  "node -e \"require(\u0027fs\u0027).rmSync(\u0027dist\u0027,{recursive:true,force:true})\""
                 },
     "dependencies":  {
                          "electron-updater":  "^6.8.3"
                      },
     "devDependencies":  {
+                            "@types/node":  "^25.6.2",
                             "electron":  "^33.0.0",
-                            "electron-builder":  "^26.8.1"
+                            "electron-builder":  "^26.8.1",
+                            "esbuild":  "^0.28.0",
+                            "typescript":  "^6.0.3"
                         },
     "build":  {
                   "appId":  "com.mysetup.app",
@@ -21,9 +28,17 @@
                   "artifactName":  "MySetup-Installer.exe",
                   "copyright":  "Copyright 2026 Karma",
                   "directories":  {
-                                      "output":  "dist",
+                                      "output":  "release",
                                       "buildResources":  "build"
                                   },
+                  "files":  [
+                                "dist/**/*",
+                                "index.html",
+                                "css/**/*",
+                                "assets/**/*",
+                                "js/firebase-config.js",
+                                "node_modules/**/*"
+                            ],
                   "publish":  [
                                   {
                                       "provider":  "github",

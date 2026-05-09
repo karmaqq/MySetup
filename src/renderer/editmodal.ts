@@ -1,52 +1,61 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                       DÜZENLEME MODALI YÖNETİMİ                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import {
+  allData,
+  editingId,
+  setEditingId,
+  escAttr,
+  safeExternalUrl,
+  parseDateInput,
+  parsePriceInput,
+  applyPriceFormat,
+  editModal,
+  editDate,
+  editDatePicker,
+  editCalIcon,
+  editComponent,
+  editBrand,
+  editSpecs,
+  editUrl,
+  editPrice,
+  editVendor,
+  editStatus,
+  modalClose,
+  modalCancel,
+  modalSave,
+} from "./utils";
+import { uploadImageToFirebase, updateComponentInFirebase } from "./firebase-inv";
+import { showToast, showConfirm } from "./io";
+import { getFilteredSortedList } from "./table";
+
 /* ─────────────────── Global Durum Değişkenleri ─────────────────── */
 
-let _resetRafId = null;
+let _resetRafId: number | null = null;
 let currentRating = 0;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          GÖRSEL YÖNETİMİ                                 */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Görsele Uyarlanabilir Boyut Uygula ─────────────────── */
-
-function applyAdaptiveSize(imgEl, imagePreview) {
-  const MIN_W = 180,
-    MIN_H = 140,
-    MAX_W = 340,
-    MAX_H = 260;
+function applyAdaptiveSize(imgEl: HTMLImageElement, imagePreview: HTMLElement): void {
+  const MIN_W = 180, MIN_H = 140, MAX_W = 340, MAX_H = 260;
   const nw = imgEl.naturalWidth || 1;
   const nh = imgEl.naturalHeight || 1;
   const ratio = nw / nh;
-  let w, h;
+  let w: number, h: number;
 
   if (ratio >= 1) {
     w = MAX_W;
     h = Math.round(w / ratio);
-    if (h < MIN_H) {
-      h = MIN_H;
-      w = Math.round(h * ratio);
-    }
-    if (w > MAX_W) {
-      w = MAX_W;
-      h = Math.round(w / ratio);
-    }
+    if (h < MIN_H) { h = MIN_H; w = Math.round(h * ratio); }
+    if (w > MAX_W) { w = MAX_W; h = Math.round(w / ratio); }
   } else {
     h = MAX_H;
     w = Math.round(h * ratio);
-    if (w < MIN_W) {
-      w = MIN_W;
-      h = Math.round(w / ratio);
-    }
-    if (h > MAX_H) {
-      h = MAX_H;
-      w = Math.round(h * ratio);
-    }
+    if (w < MIN_W) { w = MIN_W; h = Math.round(w / ratio); }
+    if (h > MAX_H) { h = MAX_H; w = Math.round(h * ratio); }
   }
 
   w = Math.max(MIN_W, Math.min(MAX_W, w));
@@ -55,9 +64,7 @@ function applyAdaptiveSize(imgEl, imagePreview) {
   imagePreview.style.height = h + "px";
 }
 
-/* ─────────────────── Görsel Önizlemeyi Güncelle ─────────────────── */
-
-function refreshPreview(url, imagePreview, imageUploadBtn) {
+function refreshPreview(url: string, imagePreview: HTMLElement, imageUploadBtn: HTMLElement | null): void {
   if (url) {
     imagePreview.innerHTML = `
       <img src="${escAttr(url)}" alt="Ürün görseli" id="editImagePreviewImg" />
@@ -65,32 +72,25 @@ function refreshPreview(url, imagePreview, imageUploadBtn) {
     imagePreview.classList.remove("hidden");
     if (imageUploadBtn) imageUploadBtn.classList.add("has-image");
 
-    const imgEl = document.getElementById("editImagePreviewImg");
+    const imgEl = document.getElementById("editImagePreviewImg") as HTMLImageElement | null;
     if (imgEl) {
-      imgEl.addEventListener(
-        "load",
-        () => applyAdaptiveSize(imgEl, imagePreview),
-        { once: true },
-      );
+      imgEl.addEventListener("load", () => applyAdaptiveSize(imgEl, imagePreview), { once: true });
       if (imgEl.complete) applyAdaptiveSize(imgEl, imagePreview);
     }
 
-    document.getElementById("previewDeleteBtn").onclick = () => {
+    document.getElementById("previewDeleteBtn")!.onclick = () => {
       const idToDelete = editingId;
       if (!idToDelete) return;
       showConfirm("Görsel kalıcı olarak silinsin mi?", async () => {
         try {
           const user = firebase.auth().currentUser;
           if (user) {
-            const ref = firebase
-              .storage()
-              .ref(`users/${user.uid}/components/${idToDelete}/image`);
+            const ref = firebase.storage().ref(`users/${user.uid}/components/${idToDelete}/image`);
             await ref.delete().catch(() => {});
           }
           await updateComponentInFirebase(idToDelete, { imageUrl: "" });
           if (allData[idToDelete]) allData[idToDelete].imageUrl = "";
-          if (editingId === idToDelete)
-            refreshPreview("", imagePreview, imageUploadBtn);
+          if (editingId === idToDelete) refreshPreview("", imagePreview, imageUploadBtn);
           showToast("Görsel silindi", "success");
         } catch (_) {
           showToast("Görsel silinemedi", "error");
@@ -104,9 +104,7 @@ function refreshPreview(url, imagePreview, imageUploadBtn) {
   }
 }
 
-/* ─────────────────── Görsel Dosyası İşle ve Yükle ─────────────────── */
-
-function handleImageFile(file, imagePreview, id, imageUploadBtn) {
+function handleImageFile(file: File, imagePreview: HTMLElement, id: string, imageUploadBtn: HTMLElement | null): void {
   if (!file || !file.type.startsWith("image/")) return;
   imagePreview.classList.remove("hidden");
   imagePreview.style.width = "200px";
@@ -126,8 +124,7 @@ function handleImageFile(file, imagePreview, id, imageUploadBtn) {
     })
     .catch(() => {
       imagePreview.classList.add("hidden");
-      if (typeof showToast === "function")
-        showToast("Yükleme başarısız", "error");
+      showToast("Yükleme başarısız", "error");
     });
 }
 
@@ -135,10 +132,8 @@ function handleImageFile(file, imagePreview, id, imageUploadBtn) {
 /*                          ARAYÜZ YARDIMCILARI                             */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Önizlemeyi Anında Sıfırla ─────────────────── */
-
-function _resetPreviewInstant() {
-  const imagePreview = document.getElementById("editImagePreview");
+function _resetPreviewInstant(): void {
+  const imagePreview = document.getElementById("editImagePreview") as HTMLElement | null;
   if (!imagePreview) return;
 
   if (_resetRafId !== null) {
@@ -154,19 +149,16 @@ function _resetPreviewInstant() {
 
   _resetRafId = requestAnimationFrame(() => {
     _resetRafId = requestAnimationFrame(() => {
-      imagePreview.style.transition = "";
+      imagePreview!.style.transition = "";
       _resetRafId = null;
     });
   });
 }
 
-/* ─────────────────── Yıldız Arayüzünü Güncelle ─────────────────── */
-
-function updateStars(rating) {
+function updateStars(rating: number): void {
   const stars = document.querySelectorAll("#editStarRating .star");
-  if (!stars) return;
   stars.forEach((s) => {
-    s.classList.toggle("active", parseInt(s.dataset.value) <= rating);
+    (s as HTMLElement).classList.toggle("active", parseInt((s as HTMLElement).dataset.value!) <= rating);
   });
 }
 
@@ -174,122 +166,94 @@ function updateStars(rating) {
 /*                          MODAL YÖNETİMİ                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Düzenleme Modalını Aç ─────────────────── */
-
-window.openEditModal = function (id, focusTarget = "component") {
+export function openEditModal(id: string, focusTarget: string = "component"): void {
   const item = allData[id];
   if (!item) return;
 
   _resetPreviewInstant();
-  editingId = id;
+  setEditingId(id);
 
   const parts = (item.date || "").split("-");
-  if (editDate) {
-    editDate.value =
-      parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : "";
-  }
+  if (editDate) editDate.value = parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : "";
   if (editDatePicker) editDatePicker.value = item.date || "";
   if (editComponent) editComponent.value = item.component || "";
   if (editBrand) editBrand.value = item.brand === "-" ? "" : item.brand || "";
   if (editSpecs) editSpecs.value = item.specs === "-" ? "" : item.specs || "";
   if (editUrl) editUrl.value = item.url || "";
-  if (editVendor)
-    editVendor.value = item.vendor === "-" ? "" : item.vendor || "";
+  if (editVendor) editVendor.value = item.vendor === "-" ? "" : item.vendor || "";
   if (editStatus) editStatus.value = item.status || "sağlıklı";
 
   if (editPrice) {
     let dPrice = (item.price || 0).toString().replace(".", ",");
     let [iPart, dPart] = dPrice.split(",");
     if (iPart) iPart = iPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    editPrice.value =
-      dPart !== undefined ? `${iPart},${dPart}` : item.price ? iPart : "";
+    editPrice.value = dPart !== undefined ? `${iPart},${dPart}` : item.price ? iPart : "";
   }
 
   currentRating = item.star || 0;
   updateStars(currentRating);
 
-  const opinionInput = document.getElementById("editOpinionText");
+  const opinionInput = document.getElementById("editOpinionText") as HTMLTextAreaElement | null;
   if (opinionInput) opinionInput.value = item.opinion || "";
 
   if (editModal) editModal.classList.add("active");
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      const imagePreview = document.getElementById("editImagePreview");
-      const imageUploadBtn = document.getElementById("imageUploadBtn");
-      const imageFileInput = document.getElementById("imageFileInput");
+      const imagePreview = document.getElementById("editImagePreview") as HTMLElement | null;
+      const imageUploadBtn = document.getElementById("imageUploadBtn") as HTMLElement | null;
+      const imageFileInput = document.getElementById("imageFileInput") as HTMLInputElement | null;
 
-      refreshPreview(item.imageUrl || "", imagePreview, imageUploadBtn);
+      refreshPreview(item.imageUrl || "", imagePreview!, imageUploadBtn);
 
-      if (imageUploadBtn) {
-        imageUploadBtn.onclick = () => imageFileInput && imageFileInput.click();
-      }
+      if (imageUploadBtn) imageUploadBtn.onclick = () => imageFileInput && imageFileInput.click();
       if (imageFileInput) {
         imageFileInput.value = "";
         imageFileInput.onchange = (e) => {
-          const file = e.target.files[0];
-          if (file)
-            handleImageFile(file, imagePreview, editingId, imageUploadBtn);
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (file) handleImageFile(file, imagePreview!, editingId!, imageUploadBtn);
         };
       }
 
-      switch (focusTarget) {
-        case "date":
-          if (editDate) editDate.focus();
-          break;
-        case "brand":
-          if (editBrand) editBrand.focus();
-          break;
-        case "specs":
-          if (editSpecs) editSpecs.focus();
-          break;
-        case "price":
-          if (editPrice) editPrice.focus();
-          break;
-        case "vendor":
-          if (editVendor) editVendor.focus();
-          break;
-        default:
-          if (editComponent) editComponent.focus();
-          break;
-      }
+      const el = focusTarget === "date" ? editDate
+        : focusTarget === "brand" ? editBrand
+        : focusTarget === "specs" ? editSpecs
+        : focusTarget === "price" ? editPrice
+        : focusTarget === "vendor" ? editVendor
+        : editComponent;
+      if (el) el.focus();
     });
   });
-};
+}
 
-/* ─────────────────── Düzenleme Modalını Kapat ─────────────────── */
-
-window.closeEditModal = function () {
+export function closeEditModal(): void {
   if (editModal) editModal.classList.remove("active");
-  editingId = null;
-};
+  setEditingId(null);
+}
 
-/* ─────────────────── Düzenleme Kaydını Kaydet ─────────────────── */
-
-window.saveEditModal = function () {
+export function saveEditModal(): void {
   if (!editingId) return;
 
-  const component = editComponent.value.trim();
+  const component = editComponent!.value.trim();
   if (!component) {
     showToast("Bileşen adı zorunludur", "error");
-    editComponent.focus();
+    editComponent!.focus();
     return;
   }
 
-  const finalDate = parseDateInput(editDate.value);
-
-  const rawEditPrice = parsePriceInput(editPrice.value);
-  const opinionInput = document.getElementById("editOpinionText");
+  const finalDate = parseDateInput(editDate!.value);
+  const rawEditPrice = parsePriceInput(editPrice!.value);
+  const opinionInput = document.getElementById("editOpinionText") as HTMLTextAreaElement | null;
 
   const itemData = {
     date: finalDate,
     component,
-    brand: editBrand.value.trim() || "-",
-    specs: editSpecs.value.trim() || "-",
-    price: parseFloat(rawEditPrice) || 0,
-    vendor: editVendor.value.trim() || "-",
-    status: editStatus.value,
-    url: safeExternalUrl(editUrl.value.trim()),
+    brand: editBrand!.value.trim() || "-",
+    specs: editSpecs!.value.trim() || "-",
+    price: rawEditPrice,
+    vendor: editVendor!.value.trim() || "-",
+    status: editStatus!.value,
+    url: safeExternalUrl(editUrl!.value.trim()),
     star: currentRating,
     opinion: opinionInput ? opinionInput.value.trim() : "",
   };
@@ -300,19 +264,15 @@ window.saveEditModal = function () {
       closeEditModal();
     })
     .catch(() => showToast("Güncelleme başarısız", "error"));
-};
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          MODAL OLAY DİNLEYİCİLERİ                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Modal Kapat / Kaydet Butonları ─────────────────── */
-
 if (modalClose) modalClose.onclick = closeEditModal;
 if (modalCancel) modalCancel.onclick = closeEditModal;
 if (modalSave) modalSave.onclick = saveEditModal;
-
-/* ─────────────────── Modal Dış Tıklama ile Kapatma ─────────────────── */
 
 if (editModal) {
   editModal.addEventListener("click", (e) => {
@@ -320,32 +280,25 @@ if (editModal) {
   });
 }
 
-/* ─────────────────── Takvim İkonu Tarih Seçici ─────────────────── */
-
 if (editCalIcon && editDatePicker) {
-  editCalIcon.onclick = () => editDatePicker.showPicker();
-
+  editCalIcon.onclick = () => editDatePicker!.showPicker();
   editDatePicker.onchange = (e) => {
-    const [y, m, d] = e.target.value.split("-");
+    const [y, m, d] = (e.target as HTMLInputElement).value.split("-");
     if (editDate) editDate.value = `${d}.${m}.${y}`;
   };
 }
 
-/* ─────────────────── Modal Fiyat Formatlama ─────────────────── */
-
 if (editPrice) {
   editPrice.addEventListener("input", function () {
-    if (typeof applyPriceFormat === "function") applyPriceFormat(this);
+    applyPriceFormat(this);
   });
 }
 
-/* ─────────────────── Yıldız Tıklama Delegasyonu ─────────────────── */
-
-const editStarRating = document.getElementById("editStarRating");
+const editStarRating = document.getElementById("editStarRating") as HTMLElement | null;
 if (editStarRating) {
   editStarRating.addEventListener("click", (e) => {
-    if (e.target.classList.contains("star")) {
-      currentRating = parseInt(e.target.dataset.value);
+    if ((e.target as HTMLElement).classList.contains("star")) {
+      currentRating = parseInt((e.target as HTMLElement).dataset.value!);
       updateStars(currentRating);
     }
   });
@@ -355,15 +308,10 @@ if (editStarRating) {
 /*                          MODAL KLAVYE KISAYOLLARI                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Escape / Ctrl+Enter / Shift+Ok Tuşları ─────────────────── */
-
 document.addEventListener("keydown", (e) => {
   if (!editModal || !editModal.classList.contains("active")) return;
 
-  if (e.key === "Escape") {
-    closeEditModal();
-    return;
-  }
+  if (e.key === "Escape") { closeEditModal(); return; }
 
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
     e.preventDefault();
@@ -377,23 +325,14 @@ document.addEventListener("keydown", (e) => {
     if (!isNext && !isPrev) return;
 
     e.preventDefault();
-    if (!editingId || typeof getFilteredSortedList !== "function") return;
+    if (!editingId) return;
 
     const list = getFilteredSortedList();
-    const currentIdx = list.findIndex((item) => item.id === editingId);
-    if (currentIdx === -1) {
-      showToast("Kayıt listesi henüz yüklenmedi", "warn");
-      return;
-    }
+    const currentIdx = list.findIndex((item: any) => item.id === editingId);
+    if (currentIdx === -1) { showToast("Kayıt listesi henüz yüklenmedi", "warn"); return; }
 
-    let targetIdx;
-    if (isNext) {
-      targetIdx = currentIdx + 1;
-      if (targetIdx >= list.length) targetIdx = 0;
-    } else {
-      targetIdx = currentIdx - 1;
-      if (targetIdx < 0) targetIdx = list.length - 1;
-    }
+    let targetIdx = isNext ? (currentIdx + 1) % list.length
+      : (currentIdx - 1 + list.length) % list.length;
 
     const targetItem = list[targetIdx];
     if (!targetItem) return;

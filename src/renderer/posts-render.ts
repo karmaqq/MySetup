@@ -1,24 +1,36 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                            POST RENDER + FEED YÖNETİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { db } from "./firebase-init";
+import { showToast } from "./io";
+import { _renderCommentThreadHTML, _renderCommentComposerHTML } from "./post-comment";
+import {
+  postsFeed, _commentListenerRefs, formatTimeAgo, formatDateTime, escHtml, escAttr, escUrl,
+  getPostCards, buildAvatarHTML, buildPostMenuHTML, PAGE_SIZE, mainScroll
+} from "./utils";
+import { renderLoadMoreBtn, removeLoadMoreBtn } from "./utils";
+import {
+  initUserLikesListener, initUserPostsListener, removeUserPostsListener, removeUserLikesListener
+} from "./firebase-post";
+
 /* ─────────────────── Feed Durum Değişkenleri ─────────────────── */
 
-let allPosts = {};
-let _postsListenerActive = false;
-let _postsQuery = null;
+export let allPosts: Record<string, any> = {};
+(window as any).allPosts = allPosts;
 
-let _oldestLoadedKey = null;
+let _postsListenerActive = false;
+(window as any)._postsListenerActive = _postsListenerActive;
+let _postsQuery: firebase.database.Query | null = null;
+let _oldestLoadedKey: string | null = null;
 let _hasMorePosts = false;
 let _loadingMore = false;
 
 /* ─────────────────── Post Kartı HTML Döndürür ─────────────────── */
 
-function _renderPostHTML(postId, postData) {
+export function _renderPostHTML(postId: string, postData: any): string {
   const user = firebase.auth().currentUser;
-  const isOwn = user && user.uid === postData.uid;
+  const isOwn = !!(user && user.uid === postData.uid);
   const liked = postData.likes && user && postData.likes[user.uid];
   const likeCount = postData.likes ? Object.keys(postData.likes).length : 0;
   const commentCount = postData.comments
@@ -26,7 +38,6 @@ function _renderPostHTML(postId, postData) {
     : 0;
 
   const timeText = formatTimeAgo(postData.createdAt, postData.phraseIndex);
-
   const pid = escAttr(postId);
 
   let html = `<div class="post-card" data-post-id="${pid}">`;
@@ -37,7 +48,6 @@ function _renderPostHTML(postId, postData) {
   html += `<span class="post-username">${escHtml(postData.username || "Kullanici")}</span>`;
   html += `<span class="post-time">${escHtml(timeText)}</span>`;
   html += "</div>";
-
   html += buildPostMenuHTML(pid, isOwn);
   html += "</div>";
 
@@ -45,7 +55,7 @@ function _renderPostHTML(postId, postData) {
   if (postData.content)
     html += `<div class="post-text">${escHtml(postData.content)}</div>`;
   if (postData.imageUrl) {
-    html += `<div class="post-image"><img src="${escUrl(postData.imageUrl)}" alt="" class="post-img-lazy"></div>`;
+    html += `<div class="post-image"><img src="${escUrl(String(postData.imageUrl))}" alt="" class="post-img-lazy"></div>`;
   }
   html += "</div>";
 
@@ -69,7 +79,7 @@ function _renderPostHTML(postId, postData) {
 
 /* ─────────────────── Görsel yüklendiğinde aspect ratio ayarla ─────────────────── */
 
-function _initPostImage(img) {
+export function _initPostImage(img: HTMLImageElement | null): void {
   if (!img) return;
   if (img.complete) {
     _handlePostImageLoad(img);
@@ -80,7 +90,7 @@ function _initPostImage(img) {
   }
 }
 
-function _handlePostImageLoad(img) {
+function _handlePostImageLoad(img: HTMLImageElement): void {
   var r = img.naturalWidth / img.naturalHeight;
   var p = img.parentElement;
   if (!p) return;
@@ -91,11 +101,12 @@ function _handlePostImageLoad(img) {
 
 /* ─────────────────── Post ekle (prepend/append, animasyonlu) ─────────────────── */
 
-function _insertPostToFeed(postId, postData, prepend) {
+function _insertPostToFeed(postId: string, postData: any, prepend: boolean): void {
   if (!postsFeed) return;
   const wrapper = document.createElement("div");
   wrapper.innerHTML = _renderPostHTML(postId, postData);
-  const el = wrapper.firstElementChild;
+  const el = wrapper.firstElementChild as HTMLElement;
+  if (!el) return;
   el.style.cssText =
     "opacity:0;transform:translateY(" +
     (prepend ? "-" : "") +
@@ -105,7 +116,7 @@ function _insertPostToFeed(postId, postData, prepend) {
   } else {
     postsFeed.appendChild(el);
   }
-  _initPostImage(el.querySelector(".post-img-lazy"));
+  _initPostImage(el.querySelector(".post-img-lazy") as HTMLImageElement | null);
   requestAnimationFrame(function () {
     el.style.opacity = "1";
     el.style.transform = "translateY(0)";
@@ -114,49 +125,50 @@ function _insertPostToFeed(postId, postData, prepend) {
 
 /* ─────────────────── Mevcut kart varsa yerinde günceller ─────────────────── */
 
-function _patchPostCard(postId, postData) {
+export function _patchPostCard(postId: string, postData: any): void {
   const el =
     postsFeed && postsFeed.querySelector('[data-post-id="' + postId + '"]');
   if (!el) return;
   const wrapper = document.createElement("div");
   wrapper.innerHTML = _renderPostHTML(postId, postData);
   const newEl = wrapper.firstElementChild;
+  if (!newEl) return;
   const oldSection = el.querySelector(".comment-section");
   const wasOpen = oldSection && oldSection.classList.contains("visible");
   el.replaceWith(newEl);
-  _initPostImage(newEl.querySelector(".post-img-lazy"));
+  _initPostImage(newEl.querySelector(".post-img-lazy") as HTMLImageElement | null);
   if (wasOpen) {
     const newSection = newEl.querySelector(".comment-section");
     if (newSection) newSection.classList.add("visible");
-    const btn = newEl.querySelector(".comment-btn");
+    const btn = newEl.querySelector(".comment-btn") as HTMLElement | null;
     if (btn) btn.classList.add("active");
   }
 }
 
 /* ─────────────────── Sadece beğeni sayacını günceller ─────────────────── */
 
-function _patchPostLikes(postId, likes, user) {
+export function _patchPostLikes(postId: string, likes: Record<string, any> | null, user: firebase.User | null): void {
   const likeCount = likes ? Object.keys(likes).length : 0;
   const liked = user && likes && likes[user.uid];
   const cards = getPostCards(postId);
   cards.forEach(function (card) {
-    const btn = card.querySelector('[data-action="like-post"]');
+    const btn = card.querySelector('[data-action="like-post"]') as HTMLElement | null;
     if (!btn) return;
     btn.classList.toggle("liked", !!liked);
     const svg = btn.querySelector("svg");
     if (svg) svg.setAttribute("fill", liked ? "currentColor" : "none");
     const span = btn.querySelector(".post-like-count-" + postId);
-    if (span) span.textContent = likeCount;
+    if (span) span.textContent = String(likeCount);
   });
 }
 
 /* ─────────────────── Postu animasyonla kaldırır ─────────────────── */
 
-function _softRemovePost(postId) {
+function _softRemovePost(postId: string): void {
   getPostCards(postId).forEach(function (el) {
-    el.style.transition = "opacity 0.3s, transform 0.3s";
-    el.style.opacity = "0";
-    el.style.transform = "translateY(4px)";
+    (el as HTMLElement).style.transition = "opacity 0.3s, transform 0.3s";
+    (el as HTMLElement).style.opacity = "0";
+    (el as HTMLElement).style.transform = "translateY(4px)";
     setTimeout(function () {
       el.remove();
     }, 320);
@@ -166,7 +178,7 @@ function _softRemovePost(postId) {
 
 /* ─────────────────── Boş feed mesajı ─────────────────── */
 
-function _renderEmptyFeed() {
+function _renderEmptyFeed(): void {
   if (!postsFeed) return;
   postsFeed.innerHTML =
     '<div class="posts-empty">Henüz gönderi yok. İlk gönderiyi sen yap!</div>';
@@ -178,7 +190,7 @@ function _renderEmptyFeed() {
 
 /* ─────────────────── Giriş yapıldığında çağrılır ─────────────────── */
 
-function initPosts() {
+export function initPosts(): void {
   _teardownPosts();
   allPosts = {};
   _oldestLoadedKey = null;
@@ -187,49 +199,51 @@ function initPosts() {
 
   if (postsFeed) postsFeed.innerHTML = "";
   _removeLoadMoreBtn();
+  (window as any)._postsListenerActive = false;
   _startPostsListener();
 
-  if (typeof _startTimeUpdateInterval === "function") {
-    _startTimeUpdateInterval();
+  if (typeof (window as any)._startTimeUpdateInterval === "function") {
+    (window as any)._startTimeUpdateInterval();
   }
 
   const user = firebase.auth().currentUser;
   if (user) {
-    initUserLikesListener(user.uid, _onUserLikesChanged);
-    initUserPostsListener(user.uid, _onUserPostsChanged);
+    initUserLikesListener(user.uid, (window as any)._onUserLikesChanged);
+    initUserPostsListener(user.uid, (window as any)._onUserPostsChanged);
   }
 
-  if (typeof _restorePostViewOnLoad === "function") {
-    _restorePostViewOnLoad();
+  if (typeof (window as any)._restorePostViewOnLoad === "function") {
+    (window as any)._restorePostViewOnLoad();
   }
 }
 
 /* ─────────────────── Çıkış yapıldığında çağrılır ─────────────────── */
 
-function _teardownPosts() {
+export function _teardownPosts(): void {
   if (_postsQuery) {
     _postsQuery.off();
     _postsQuery = null;
   }
-  if (postsRef) {
-    postsRef.off("child_changed", _onPostChanged);
-    postsRef.off("child_removed", _onPostRemoved);
+  if (db.postsRef) {
+    db.postsRef.off("child_changed", _onPostChanged);
+    db.postsRef.off("child_removed", _onPostRemoved);
   }
   _postsListenerActive = false;
-  window._postsReadyFired = false;
+  (window as any)._postsListenerActive = false;
+  (window as any)._postsReadyFired = false;
   allPosts = {};
   if (postsFeed) postsFeed.innerHTML = "";
   _removeLoadMoreBtn();
 
-  Object.values(_commentListenerRefs).forEach(function (ref) {
+  Object.values(_commentListenerRefs).forEach(function (ref: any) {
     ref.off();
   });
   for (var k in _commentListenerRefs) delete _commentListenerRefs[k];
   removeUserPostsListener();
   removeUserLikesListener();
 
-  if (typeof _stopTimeUpdateInterval === "function") {
-    _stopTimeUpdateInterval();
+  if (typeof (window as any)._stopTimeUpdateInterval === "function") {
+    (window as any)._stopTimeUpdateInterval();
   }
 }
 
@@ -239,12 +253,12 @@ function _teardownPosts() {
 
 /* ─────────────────── İlk 20 postu yükler, listener başlatır ─────────────────── */
 
-function _startPostsListener() {
-  if (postsRef) postsRef.off();
-  const ref = postsRef.orderByChild("createdAt");
+function _startPostsListener(): void {
+  if (db.postsRef) db.postsRef.off();
+  const ref = db.postsRef!.orderByChild("createdAt");
 
-  ref.limitToLast(PAGE_SIZE).once("value", function (snap) {
-    const raw = snap.val() || {};
+  ref.limitToLast(PAGE_SIZE).once("value", function (snap: firebase.database.DataSnapshot) {
+    const raw = (snap.val() || {}) as Record<string, any>;
     const keys = Object.keys(raw).sort(function (a, b) {
       return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);
     });
@@ -267,28 +281,28 @@ function _startPostsListener() {
     }
 
     _checkHasMorePosts(
-      raw[_oldestLoadedKey] ? raw[_oldestLoadedKey].createdAt : null,
+      raw[_oldestLoadedKey!] ? raw[_oldestLoadedKey!].createdAt : null,
     );
 
     _listenForNewPosts(ref);
-    window._postsReadyFired = true;
+    (window as any)._postsReadyFired = true;
     document.dispatchEvent(new CustomEvent("postsReady"));
   });
 }
 
 /* ─────────────────── Veritabanında daha fazla post var mı kontrol eder ─────────────────── */
 
-function _checkHasMorePosts(oldestTs) {
+function _checkHasMorePosts(oldestTs: number | null): void {
   if (!oldestTs) {
     _hasMorePosts = false;
     _removeLoadMoreBtn();
     return;
   }
-  postsRef
+  db.postsRef!
     .orderByChild("createdAt")
     .endAt(oldestTs - 1)
     .limitToLast(1)
-    .once("value", function (snap) {
+    .once("value", function (snap: firebase.database.DataSnapshot) {
       _hasMorePosts = snap.exists();
       if (_hasMorePosts) {
         _renderLoadMoreBtn();
@@ -300,37 +314,40 @@ function _checkHasMorePosts(oldestTs) {
 
 /* ─────────────────── Yeni gelen postları gerçek zamanlı dinler ─────────────────── */
 
-function _onPostChanged(s) {
+function _onPostChanged(s: firebase.database.DataSnapshot): void {
   const id = s.key;
-  if (!allPosts[id]) return;
+  if (!id || !allPosts[id]) return;
   const oldData = allPosts[id];
   allPosts[id] = s.val();
   const user = firebase.auth().currentUser;
-  if (_onlyLikesChanged(oldData, s.val())) {
-    _patchPostLikes(id, s.val().likes, user);
+  const newVal = s.val() as any;
+  if (_onlyLikesChanged(oldData, newVal)) {
+    _patchPostLikes(id, newVal.likes, user);
   } else {
     _patchPostCard(id, s.val());
   }
 }
 
-function _onPostRemoved(s) {
+function _onPostRemoved(s: firebase.database.DataSnapshot): void {
   const id = s.key;
+  if (!id) return;
   if (_commentListenerRefs[id]) {
-    _commentListenerRefs[id].off();
+    (_commentListenerRefs[id] as any).off();
     delete _commentListenerRefs[id];
   }
   delete allPosts[id];
   _softRemovePost(id);
-  if (typeof _viewingPostId !== "undefined" && _viewingPostId === id) {
-    if (typeof _handleDeletedPostView === "function") {
-      _handleDeletedPostView();
+  if ((window as any)._viewingPostId === id) {
+    if (typeof (window as any)._handleDeletedPostView === "function") {
+      (window as any)._handleDeletedPostView();
     }
   }
 }
 
-function _listenForNewPosts(ref) {
+function _listenForNewPosts(ref: firebase.database.Query): void {
   if (_postsListenerActive) return;
   _postsListenerActive = true;
+  (window as any)._postsListenerActive = true;
 
   const newestTs = _getNewestTimestamp();
   const liveQuery = ref.startAt(newestTs + 1);
@@ -339,21 +356,22 @@ function _listenForNewPosts(ref) {
   liveQuery.on("child_added", function (s) {
     const id = s.key;
     const data = s.val();
+    if (!id) return;
     allPosts[id] = data;
     const empty = postsFeed && postsFeed.querySelector(".posts-empty");
     if (empty) empty.remove();
     _insertPostToFeed(id, data, true);
   });
 
-  postsRef.on("child_changed", _onPostChanged);
-  postsRef.on("child_removed", _onPostRemoved);
+  db.postsRef!.on("child_changed", _onPostChanged);
+  db.postsRef!.on("child_removed", _onPostRemoved);
 }
 
 /* ─────────────────── En yeni yüklü postun timestamp'i ─────────────────── */
 
-function _getNewestTimestamp() {
+function _getNewestTimestamp(): number {
   let max = 0;
-  Object.values(allPosts).forEach(function (p) {
+  Object.values(allPosts).forEach(function (p: any) {
     if ((p.createdAt || 0) > max) max = p.createdAt;
   });
   return max;
@@ -361,11 +379,11 @@ function _getNewestTimestamp() {
 
 /* ─────────────────── Daha fazla post yükle (sayfalama) ─────────────────── */
 
-function _loadMorePosts() {
+function _loadMorePosts(): void {
   if (_loadingMore || !_hasMorePosts || !_oldestLoadedKey) return;
   _loadingMore = true;
 
-  const btn = document.getElementById("loadMoreBtn");
+  const btn = document.getElementById("loadMoreBtn") as HTMLButtonElement | null;
   if (btn) {
     btn.disabled = true;
     btn.textContent = "Yükleniyor...";
@@ -378,12 +396,12 @@ function _loadMorePosts() {
     return;
   }
 
-  postsRef
+  db.postsRef!
     .orderByChild("createdAt")
     .endAt(oldestTs - 1)
     .limitToLast(PAGE_SIZE)
-    .once("value", function (snap) {
-      const raw = snap.val() || {};
+    .once("value", function (snap: firebase.database.DataSnapshot) {
+      const raw = (snap.val() || {}) as Record<string, any>;
       const keys = Object.keys(raw).sort(function (a, b) {
         return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);
       });
@@ -417,11 +435,30 @@ function _loadMorePosts() {
 
 /* ─────────────────── Daha fazla yükle butonunu render eder ─────────────────── */
 
-function _renderLoadMoreBtn() {
+function _renderLoadMoreBtn(): void {
   if (!postsFeed) return;
   renderLoadMoreBtn(postsFeed, "loadMoreBtn", _loadMorePosts);
 }
 
-function _removeLoadMoreBtn() {
+function _removeLoadMoreBtn(): void {
   removeLoadMoreBtn("loadMoreBtn");
+}
+
+/* ─────────────────── Sadece beğeni değişimi mi kontrol et ─────────────────── */
+
+function _onlyLikesChanged(oldPost: any, newPost: any): boolean {
+  const primitiveFields = [
+    "content",
+    "imageUrl",
+    "username",
+    "uid",
+    "createdAt",
+  ];
+  for (let i = 0; i < primitiveFields.length; i++) {
+    if (oldPost[primitiveFields[i]] !== newPost[primitiveFields[i]])
+      return false;
+  }
+  const oldCC = oldPost.comments ? Object.keys(oldPost.comments).length : 0;
+  const newCC = newPost.comments ? Object.keys(newPost.comments).length : 0;
+  return oldCC === newCC;
 }

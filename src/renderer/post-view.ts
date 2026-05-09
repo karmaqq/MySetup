@@ -1,36 +1,46 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                              POST VIEW                                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { allPosts } from "./posts-render";
+import { _initPostImage } from "./posts-render";
+import { _renderCommentThreadHTML } from "./post-comment";
+import { addCommentToFirebase, addReplyToFirebase } from "./firebase-post";
+import { showToast } from "./io";
+import {
+  _currentPage, mainScroll, _commentListenerRefs,
+  escHtml, escAttr, escUrl, formatTimeAgo, formatDateTime, _onlyCommentLikesChanged,
+  buildAvatarHTML, buildPostMenuHTML, showPage
+} from "./utils";
+import { _patchCommentLikeBtn } from "./post-comment";
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          AÇMA / KAPAMA                                 */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 /* ─────────────────── Modül Durum Değişkenleri ─────────────────── */
 
-let _previousPage = null;
+let _previousPage: string | null = null;
 let _previousScrollTop = 0;
-let _previousProfileTab = null;
-let _replyTargetCommentId = null;
-let _replyTargetUsername = null;
-let _pvActiveNavBtn = null;
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                              AÇMA / KAPAMA                                 */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+let _previousProfileTab: string | null = null;
+let _replyTargetCommentId: string | null = null;
+let _replyTargetUsername: string | null = null;
+let _pvActiveNavBtn: Element | null = null;
 
 /* ─────────────────── Post View'i açar ─────────────────── */
 
-function openPostView(postId, fromCommentBtn) {
+function openPostView(postId: string, fromCommentBtn?: boolean): void {
   var postData = allPosts[postId];
   if (!postData) return;
 
   var composerBar = document.getElementById("postViewComposerBar");
   if (composerBar) composerBar.style.display = "";
 
-  _viewingPostId = postId;
+  (window as any)._viewingPostId = postId;
   _previousPage = _currentPage;
-  _previousProfileTab = _currentPage === "profile" ? _profileTab : null;
-  sessionStorage.setItem("_pvPreviousPage", _previousPage);
-  sessionStorage.setItem("_pvScrollTop", mainScroll ? mainScroll.scrollTop : 0);
+  _previousProfileTab = _currentPage === "profile" ? (window as any)._profileTab : null;
+  sessionStorage.setItem("_pvPreviousPage", _previousPage || "home");
+  sessionStorage.setItem("_pvScrollTop", String(mainScroll ? mainScroll.scrollTop : 0));
   _previousScrollTop = mainScroll ? mainScroll.scrollTop : 0;
 
   var authorLabel = document.getElementById("postViewAuthorLabel");
@@ -58,13 +68,14 @@ function openPostView(postId, fromCommentBtn) {
     }, 350);
   }
 }
+(window as any).openPostView = openPostView;
 
 /* ─────────────────── Post View'i kapatır ve geri döner ─────────────────── */
 
-function closePostView() {
-  if (_viewingPostId && _commentListenerRefs[_viewingPostId]) {
-    _commentListenerRefs[_viewingPostId].off();
-    delete _commentListenerRefs[_viewingPostId];
+function closePostView(): void {
+  if ((window as any)._viewingPostId && _commentListenerRefs[(window as any)._viewingPostId]) {
+    (_commentListenerRefs[(window as any)._viewingPostId] as any).off();
+    delete _commentListenerRefs[(window as any)._viewingPostId];
   }
 
   var targetPage = _previousPage || "home";
@@ -72,7 +83,7 @@ function closePostView() {
   var savedNavBtn = _pvActiveNavBtn;
   var savedProfileTab = _previousProfileTab;
 
-  _viewingPostId = null;
+  (window as any)._viewingPostId = null;
   sessionStorage.removeItem("_pvPreviousPage");
   sessionStorage.removeItem("_pvScrollTop");
   _previousPage = null;
@@ -88,7 +99,7 @@ function closePostView() {
   if (mainScroll) mainScroll.classList.remove("pv-active");
 
   if (targetPage === "profile" && savedProfileTab) {
-    window._pendingProfileTab = savedProfileTab;
+    (window as any)._pendingProfileTab = savedProfileTab;
   }
 
   showPage(targetPage);
@@ -101,6 +112,7 @@ function closePostView() {
     if (mainScroll) mainScroll.scrollTop = savedScroll;
   }, 320);
 }
+(window as any).closePostView = closePostView;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                                RENDER                                      */
@@ -108,12 +120,12 @@ function closePostView() {
 
 /* ─────────────────── Post + yorumları render eder ─────────────────── */
 
-function _renderPostViewContent(postId, postData) {
+function _renderPostViewContent(postId: string, postData: any): void {
   var container = document.getElementById("postViewContent");
   if (!container) return;
 
   var user = firebase.auth().currentUser;
-  var isOwn = user && user.uid === postData.uid;
+  var isOwn = !!(user && user.uid === postData.uid);
   var liked = postData.likes && user && postData.likes[user.uid];
   var likeCount = postData.likes ? Object.keys(postData.likes).length : 0;
   var commentCount = postData.comments
@@ -129,7 +141,6 @@ function _renderPostViewContent(postId, postData) {
   html += `<span class="post-username">${escHtml(postData.username || "Kullanici")}</span>`;
   html += `<span class="post-time">${escHtml(formatTimeAgo(postData.createdAt, postData.phraseIndex))}</span>`;
   html += "</div>";
-
   html += buildPostMenuHTML(pid, isOwn);
   html += "</div>";
 
@@ -182,7 +193,7 @@ function _renderPostViewContent(postId, postData) {
 
   container.innerHTML = html;
 
-  var lazyImg = container.querySelector(".post-img-lazy");
+  var lazyImg = container.querySelector(".post-img-lazy") as HTMLImageElement | null;
   if (lazyImg) _initPostImage(lazyImg);
 
   _initPostViewCommentListener(postId);
@@ -194,20 +205,22 @@ function _renderPostViewContent(postId, postData) {
 
 /* ─────────────────── Firebase yorum listener'ını başlatır ─────────────────── */
 
-function _initPostViewCommentListener(postId) {
+function _initPostViewCommentListener(postId: string): void {
   if (_commentListenerRefs[postId]) {
-    _commentListenerRefs[postId].off();
+    (_commentListenerRefs[postId] as any).off();
     delete _commentListenerRefs[postId];
   }
 
+  var postsRef = firebase.database().ref("posts");
   var ref = postsRef.child(postId).child("comments").orderByChild("createdAt");
-  _commentListenerRefs[postId] = ref;
+  _commentListenerRefs[postId] = ref as any;
   var _currentUser = firebase.auth().currentUser;
 
-  ref.on("child_added", function (s) {
-    if (_viewingPostId !== postId) return;
+  ref.on("child_added", function (s: firebase.database.DataSnapshot) {
+    if ((window as any)._viewingPostId !== postId) return;
     var cid = s.key;
     var data = s.val();
+    if (!cid) return;
     var post = allPosts[postId];
     if (!post) return;
     if (!post.comments) post.comments = {};
@@ -223,15 +236,17 @@ function _initPostViewCommentListener(postId) {
         data,
         _currentUser,
       );
-      commentList.appendChild(wrapper.firstElementChild);
+      var child = wrapper.firstElementChild;
+      if (child) commentList.appendChild(child);
     }
     _updatePostViewCommentCount(postId);
   });
 
-  ref.on("child_changed", function (s) {
-    if (_viewingPostId !== postId) return;
+  ref.on("child_changed", function (s: firebase.database.DataSnapshot) {
+    if ((window as any)._viewingPostId !== postId) return;
     var cid = s.key;
-    var newData = s.val();
+    var newData = s.val() as any;
+    if (!cid) return;
     var post = allPosts[postId];
     if (!post) return;
     var oldData = post.comments ? post.comments[cid] : null;
@@ -259,18 +274,20 @@ function _initPostViewCommentListener(postId) {
       _currentUser,
     );
     var newEl = wrapper.firstElementChild;
+    if (!newEl) return;
     var repliesSec = thread.querySelector(".replies-section");
     var wasOpen = repliesSec && !repliesSec.classList.contains("hidden");
     thread.replaceWith(newEl);
     if (wasOpen) {
-      var newRepliesSec = newEl.querySelector(".replies-section");
+      var newRepliesSec = newEl.querySelector(".replies-section") as HTMLElement | null;
       if (newRepliesSec) newRepliesSec.classList.remove("hidden");
     }
   });
 
-  ref.on("child_removed", function (s) {
-    if (_viewingPostId !== postId) return;
+  ref.on("child_removed", function (s: firebase.database.DataSnapshot) {
+    if ((window as any)._viewingPostId !== postId) return;
     var cid = s.key;
+    if (!cid) return;
     var post = allPosts[postId];
     if (post && post.comments) delete post.comments[cid];
 
@@ -282,11 +299,11 @@ function _initPostViewCommentListener(postId) {
 
 /* ─────────────────── Yorum sayacını günceller ─────────────────── */
 
-function _updatePostViewCommentCount(postId) {
+function _updatePostViewCommentCount(postId: string): void {
   var post = allPosts[postId];
   var count = post && post.comments ? Object.keys(post.comments).length : 0;
   document.querySelectorAll(".comment-count-" + postId).forEach(function (el) {
-    el.textContent = count;
+    el.textContent = String(count);
   });
 }
 
@@ -296,7 +313,7 @@ function _updatePostViewCommentCount(postId) {
 
 /* ─────────────────── Yanıt hedefini ayarlar ─────────────────── */
 
-function _setPostViewReplyTarget(commentId, username) {
+function _setPostViewReplyTarget(commentId: string, username: string): void {
   _replyTargetCommentId = commentId;
   _replyTargetUsername = username;
 
@@ -307,7 +324,7 @@ function _setPostViewReplyTarget(commentId, username) {
     target.classList.add("visible");
   }
 
-  var input = document.getElementById("postViewCommentInput");
+  var input = document.getElementById("postViewCommentInput") as HTMLTextAreaElement | null;
   if (input) {
     input.placeholder = "@" + username + " kişisine yanıtla...";
     input.focus();
@@ -316,14 +333,14 @@ function _setPostViewReplyTarget(commentId, username) {
 
 /* ─────────────────── Yanıt hedefini temizler ─────────────────── */
 
-function _clearPostViewReplyTarget() {
+function _clearPostViewReplyTarget(): void {
   _replyTargetCommentId = null;
   _replyTargetUsername = null;
 
   var target = document.getElementById("postViewReplyTarget");
   if (target) target.classList.remove("visible");
 
-  var input = document.getElementById("postViewCommentInput");
+  var input = document.getElementById("postViewCommentInput") as HTMLTextAreaElement | null;
   if (input) input.placeholder = "Yorum yaz...";
 }
 
@@ -333,10 +350,10 @@ function _clearPostViewReplyTarget() {
 
 /* ─────────────────── Yorum veya yanıt gönderir ─────────────────── */
 
-function _submitPostViewComment() {
-  var input = document.getElementById("postViewCommentInput");
-  if (!input || !_viewingPostId) return;
-  if (!allPosts[_viewingPostId]) {
+function _submitPostViewComment(): void {
+  var input = document.getElementById("postViewCommentInput") as HTMLTextAreaElement | null;
+  if (!input || !(window as any)._viewingPostId) return;
+  if (!allPosts[(window as any)._viewingPostId]) {
     showToast("Bu gönderi artık mevcut değil", "warn");
     return;
   }
@@ -350,7 +367,7 @@ function _submitPostViewComment() {
   var sendBtn = document.getElementById("postViewSendBtn");
   if (sendBtn) sendBtn.classList.remove("visible");
 
-  var baseData = {
+  var baseData: Record<string, any> = {
     uid: user.uid,
     username: user.displayName || "Kullanici",
     text: text,
@@ -360,13 +377,13 @@ function _submitPostViewComment() {
 
   if (_replyTargetCommentId) {
     var targetCid = _replyTargetCommentId;
-    addReplyToFirebase(_viewingPostId, targetCid, baseData)
+    addReplyToFirebase((window as any)._viewingPostId, targetCid, baseData)
       .then(function () {
-        input.value = "";
+        input!.value = "";
         _clearPostViewReplyTarget();
         showToast("Yanıt eklendi", "success");
         var repliesSec = document.getElementById(
-          "replies-" + _viewingPostId + "-" + targetCid,
+          "replies-" + (window as any)._viewingPostId + "-" + targetCid,
         );
         if (repliesSec) repliesSec.classList.remove("hidden");
       })
@@ -374,9 +391,9 @@ function _submitPostViewComment() {
         showToast("Yanıt eklenemedi", "error");
       });
   } else {
-    addCommentToFirebase(_viewingPostId, baseData)
+    addCommentToFirebase((window as any)._viewingPostId, baseData)
       .then(function () {
-        input.value = "";
+        input!.value = "";
         showToast("Yorum eklendi", "success");
       })
       .catch(function () {
@@ -389,7 +406,7 @@ function _submitPostViewComment() {
 /*                       SİLİNEN POST YÖNETİMİ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-function _handleDeletedPostView() {
+function _handleDeletedPostView(): void {
   var composerBar = document.getElementById("postViewComposerBar");
   if (composerBar) composerBar.style.display = "none";
 
@@ -412,6 +429,7 @@ function _handleDeletedPostView() {
   var backBtn = document.getElementById("deletedPostBackBtn");
   if (backBtn) backBtn.addEventListener("click", closePostView);
 }
+(window as any)._handleDeletedPostView = _handleDeletedPostView;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          OLAY DİNLEYİCİLERİ                                */
@@ -430,15 +448,15 @@ if (_pvReplyCancel)
 
 /* ─────────────────── Composer input ─────────────────── */
 
-var _pvInput = document.getElementById("postViewCommentInput");
+  var _pvInput = document.getElementById("postViewCommentInput") as HTMLTextAreaElement | null;
 if (_pvInput) {
-  _pvInput.addEventListener("input", function () {
+  _pvInput.addEventListener("input", function (this: HTMLTextAreaElement) {
     var sendBtn = document.getElementById("postViewSendBtn");
     if (sendBtn)
       sendBtn.classList.toggle("visible", this.value.trim().length > 0);
   });
 
-  _pvInput.addEventListener("keydown", function (e) {
+  _pvInput.addEventListener("keydown", function (e: KeyboardEvent) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       _submitPostViewComment();
@@ -455,19 +473,19 @@ if (_pvSendBtn) _pvSendBtn.addEventListener("click", _submitPostViewComment);
 
 var _pvContent = document.getElementById("postViewContent");
 if (_pvContent) {
-  _pvContent.addEventListener("click", function (e) {
-    var btn = e.target.closest("[data-action]");
+  _pvContent.addEventListener("click", function (e: MouseEvent) {
+    var btn = (e.target as HTMLElement).closest("[data-action]") as HTMLElement | null;
     if (!btn) return;
     var action = btn.dataset.action;
 
     if (action === "pv-focus-composer") {
-      var input = document.getElementById("postViewCommentInput");
+      var input = document.getElementById("postViewCommentInput") as HTMLElement | null;
       if (input) input.focus();
       return;
     }
 
     if (action === "start-reply") {
-      _setPostViewReplyTarget(btn.dataset.commentId, btn.dataset.username);
+      _setPostViewReplyTarget(btn.dataset.commentId!, btn.dataset.username!);
       return;
     }
   });
@@ -477,24 +495,24 @@ if (_pvContent) {
 /*                          F5 / RELOAD KORUMASI                           */
 /* ================================================================= */
 
-function _restorePostViewOnLoad() {
+function _restorePostViewOnLoad(): void {
   var savedPid = sessionStorage.getItem("_viewingPostId");
   if (!savedPid) return;
 
-  var _fallbackTimer = setTimeout(function () {
+  var _fallbackTimer = window.setTimeout(function () {
     document.removeEventListener("postsReady", _onPostsReady);
-    if (typeof allPosts !== "undefined" && allPosts[savedPid]) {
+    if (savedPid && allPosts[savedPid]) {
       _onPostsReady();
-    } else {
+    } else if (!savedPid) {
       sessionStorage.removeItem("_viewingPostId");
     }
   }, 2000);
 
-  function _onPostsReady() {
+  function _onPostsReady(): void {
     clearTimeout(_fallbackTimer);
     document.removeEventListener("postsReady", _onPostsReady);
-    if (!allPosts[savedPid]) return;
-    _viewingPostId = savedPid;
+    if (!savedPid || !allPosts[savedPid]) return;
+    (window as any)._viewingPostId = savedPid;
     var postData = allPosts[savedPid];
     var authorLabel = document.getElementById("postViewAuthorLabel");
     if (authorLabel) {
@@ -502,11 +520,11 @@ function _restorePostViewOnLoad() {
         escHtml(postData.username || "Kullanıcı") + " gönderisi";
     }
     _previousPage = sessionStorage.getItem("_pvPreviousPage") || "home";
-    _previousScrollTop = parseInt(sessionStorage.getItem("_pvScrollTop")) || 0;
+    _previousScrollTop = parseInt(sessionStorage.getItem("_pvScrollTop") || "0", 10) || 0;
     _pvActiveNavBtn = document.querySelector(
       '.sidebar-nav-btn[data-page="' + _previousPage + '"]',
     );
-    _renderPostViewContent(savedPid, postData);
+    _renderPostViewContent(savedPid!, postData);
     showPage("postView");
     if (mainScroll) mainScroll.classList.add("pv-active");
     if (_pvActiveNavBtn) {
@@ -514,12 +532,10 @@ function _restorePostViewOnLoad() {
     }
   }
 
-  if (
-    (typeof allPosts !== "undefined" && allPosts[savedPid]) ||
-    window._postsReadyFired
-  ) {
+  if (savedPid && (allPosts[savedPid] || (window as any)._postsReadyFired)) {
     _onPostsReady();
-  } else {
+  } else if (savedPid) {
     document.addEventListener("postsReady", _onPostsReady);
   }
 }
+(window as any)._restorePostViewOnLoad = _restorePostViewOnLoad;

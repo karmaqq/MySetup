@@ -1,5 +1,3 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                     DURUM DEĞİŞKENLERİ VE KONTROL                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -8,11 +6,48 @@
 
 const VSCROLL_INITIAL = 40;
 
+import {
+  allData,
+  currentSearch,
+  currentStatusFilter,
+  currentSort,
+  _statsCache,
+  isAnyModalOpen,
+  scheduleRender,
+  normalizeTr,
+  STATUS_MAP,
+  DATE_FORMAT,
+  CURRENCY_FORMAT,
+  escHtml,
+  escAttr,
+  mainScroll,
+  tableBody,
+  statTotal,
+  statCount,
+  statHealthy,
+  statExpensive,
+  totalCostDisplay,
+  resultCount,
+  addItemBtn,
+  editModal,
+} from "./utils";
+import {
+  addComponentToFirebase,
+  deleteComponentFromFirebase,
+  updateComponentStatusInFirebase,
+} from "./firebase-inv";
+import { applyPriceFormat, parseDateInput, parsePriceInput } from "./utils";
+import { showToast, showConfirm } from "./io";
+import { openEditModal } from "./editmodal";
+import { StatsCache } from "./utils";
+
+/* ─────────────────── MutationObserver ─────────────────── */
+
 (function () {
   const observer = new MutationObserver(function () {
-    if (!isAnyModalOpen() && _pendingRender) {
-      _pendingRender = false;
-      if (typeof renderAll === "function") renderAll();
+    if (!isAnyModalOpen() && (_pendingRender as boolean)) {
+      (_pendingRender as boolean) = false;
+      renderAll();
     }
   });
   observer.observe(document.body, {
@@ -22,13 +57,14 @@ const VSCROLL_INITIAL = 40;
   });
 })();
 
+let _pendingRender: boolean = false;
+let _vsRafId: number | null = null;
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          FİLTRELEME VE SIRALAMA                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Filtrelenmiş ve Sıralanmış Liste ─────────────────── */
-
-function getFilteredSortedList() {
+export function getFilteredSortedList(): any[] {
   let list = Object.keys(allData)
     .map((id) => ({ id, ...allData[id] }))
     .filter(isItemVisible);
@@ -62,9 +98,7 @@ function getFilteredSortedList() {
 /*                       İSTATİSTİK HESAPLAMA                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Tüm Veriyi Tarayarak Önbelleği Yeniden Kur ─────────────────── */
-
-function rebuildStatsCache() {
+export function rebuildStatsCache(): void {
   _statsCache.total = 0;
   _statsCache.count = 0;
   _statsCache.healthy = 0;
@@ -83,9 +117,7 @@ function rebuildStatsCache() {
   }
 }
 
-/* ─────────────────── Tek Kayıt Değişiminde Önbelleği Güncelle ─────────────────── */
-
-function updateStatsCacheOnChange(item, oldItem, isRemove) {
+export function updateStatsCacheOnChange(item: any, oldItem: any | undefined, isRemove: boolean): void {
   const newPrice = parseFloat(item.price) || 0;
   const oldPrice = oldItem ? parseFloat(oldItem.price) || 0 : 0;
 
@@ -107,7 +139,7 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
       if (newPrice > _statsCache.mostExpPrice) {
         _statsCache.mostExpPrice = newPrice;
         _statsCache.mostExpId = item.id;
-        const mostExpItem = allData[_statsCache.mostExpId];
+        const mostExpItem = _statsCache.mostExpId ? allData[_statsCache.mostExpId] : null;
         if (statExpensive)
           statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
       }
@@ -131,16 +163,14 @@ function updateStatsCacheOnChange(item, oldItem, isRemove) {
   }
 }
 
-/* ─────────────────── İstatistik Kartlarını Güncelle ─────────────────── */
-
-function updateStats(filteredList) {
+function updateStats(filteredList: any[]): void {
   const isFiltered = currentSearch || currentStatusFilter !== "all";
-  let filteredTotal, filteredHealthy, mostExpItem, filteredLength;
+  let filteredTotal: number, filteredHealthy: number, mostExpItem: any, filteredLength: number;
 
   if (!isFiltered) {
     filteredTotal = _statsCache.total;
     filteredHealthy = _statsCache.healthy;
-    mostExpItem = allData[_statsCache.mostExpId] || null;
+    mostExpItem = _statsCache.mostExpId ? allData[_statsCache.mostExpId] : null;
     filteredLength = Object.keys(allData).length;
   } else if (filteredList) {
     let mostExpPrice = -Infinity;
@@ -163,14 +193,14 @@ function updateStats(filteredList) {
 
   if (statTotal)
     statTotal.textContent = CURRENCY_FORMAT.format(filteredTotal) + " ₺";
-  if (statCount) statCount.textContent = filteredLength;
-  if (statHealthy) statHealthy.textContent = filteredHealthy;
+  if (statCount) statCount.textContent = String(filteredLength);
+  if (statHealthy) statHealthy.textContent = String(filteredHealthy);
 
   if (statExpensive) {
     statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
     const statCard = statExpensive.closest(".stat-card");
     if (statCard) {
-      const statIcon = statCard.querySelector(".stat-icon");
+      const statIcon = statCard.querySelector(".stat-icon") as HTMLElement | null;
       if (statIcon) {
         statIcon.classList.remove(
           "status-broken",
@@ -197,9 +227,7 @@ function updateStats(filteredList) {
     totalCostDisplay.textContent = CURRENCY_FORMAT.format(filteredTotal) + " ₺";
 }
 
-/* ─────────────────── Sonuç Sayısını Güncelle ─────────────────── */
-
-function updateResultCount(filteredCount) {
+function updateResultCount(filteredCount: number): void {
   const total = Object.keys(allData).length;
   const isFiltered = currentSearch || currentStatusFilter !== "all";
   if (resultCount) {
@@ -209,12 +237,10 @@ function updateResultCount(filteredCount) {
   }
 }
 
-/* ─────────────────── Sıralama İkonlarını Güncelle ─────────────────── */
-
-function updateSortIcons() {
+export function updateSortIcons(): void {
   document.querySelectorAll(".sortable").forEach((th) => {
-    const icon = th.querySelector(".sort-icon");
-    const col = th.dataset.sort || th.dataset.col;
+    const icon = th.querySelector(".sort-icon") as HTMLElement | null;
+    const col = (th as HTMLElement).dataset.sort || (th as HTMLElement).dataset.col;
 
     if (col === currentSort.col) {
       if (icon) icon.textContent = currentSort.dir === "asc" ? "↑" : "↓";
@@ -232,9 +258,7 @@ function updateSortIcons() {
 /*                          SATIR VE HÜCRE OLUŞTURMA                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Durum CSS Sınıfı ─────────────────── */
-
-function getStatusClassName(statusValue) {
+function getStatusClassName(statusValue: string): string {
   const key = normalizeTr(statusValue);
   for (const [k, v] of Object.entries(STATUS_MAP)) {
     if (key.includes(k)) return v;
@@ -242,9 +266,7 @@ function getStatusClassName(statusValue) {
   return "status-healthy";
 }
 
-/* ─────────────────── Durum Hücresi HTML ─────────────────── */
-
-function buildStatusCellInnerHTML(item) {
+function buildStatusCellInnerHTML(item: any): string {
   const statusClass = getStatusClassName(item.status);
   const safeId = escAttr(item.id);
   const safeStatus = escHtml(item.status);
@@ -265,9 +287,7 @@ function buildStatusCellInnerHTML(item) {
   </div></td>`;
 }
 
-/* ─────────────────── Birleşik Marka/Özellik Hücresi HTML ─────────────────── */
-
-function buildCombinedSpecsCellHTML(item) {
+function buildCombinedSpecsCellHTML(item: any): string {
   const brandText = item.brand && item.brand !== "-" ? escHtml(item.brand) : "";
   const specsText = item.specs && item.specs !== "-" ? escHtml(item.specs) : "";
 
@@ -293,35 +313,29 @@ function buildCombinedSpecsCellHTML(item) {
   return `<div class="combined-specs-cell">${contentHtml}</div>`;
 }
 
-/* ─────────────────── Standart Satır HTML ─────────────────── */
-
-function buildRowHTML(item) {
+function buildRowHTML(item: any): string {
   return `
     <td class="col-date">${DATE_FORMAT(item.date)}</td>
     <td class="col-component">${escHtml(item.component)}</td>
     <td class="col-specs">${buildCombinedSpecsCellHTML(item)}</td>
-    <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
+    <td class="col-price">` + CURRENCY_FORMAT.format(item.price) + ` ₺</td>
     <td class="col-vendor">${escHtml(item.vendor)}</td>
     ${buildStatusCellInnerHTML(item)}
   `;
 }
 
-/* ─────────────────── Gruplama Modunda Satır HTML ─────────────────── */
-
-function buildGroupRowHTML(item, dateCell, vendorCell) {
+function buildGroupRowHTML(item: any, dateCell: string, vendorCell: string): string {
   return `
     ${dateCell}
     <td class="col-component">${escHtml(item.component)}</td>
     <td class="col-specs">${buildCombinedSpecsCellHTML(item)}</td>
-    <td class="col-price">${CURRENCY_FORMAT.format(item.price)} ₺</td>
+    <td class="col-price">` + CURRENCY_FORMAT.format(item.price) + ` ₺</td>
     ${vendorCell}
     ${buildStatusCellInnerHTML(item)}
   `;
 }
 
-/* ─────────────────── Satır DOM Elemanı Oluştur ─────────────────── */
-
-function createRowEl(item) {
+function createRowEl(item: any): HTMLTableRowElement {
   const tr = document.createElement("tr");
   tr.dataset.id = item.id;
   return tr;
@@ -331,15 +345,13 @@ function createRowEl(item) {
 /*                       FRAGMENT OLUŞTURUCU                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Satır Listesinden Fragment Derle ─────────────────── */
-
-function buildRowsFragment(list) {
+function buildRowsFragment(list: any[]): DocumentFragment {
   const fragment = document.createDocumentFragment();
   const groupByDate = currentSort.col === "date";
 
   if (groupByDate) {
-    const dateGroups = [];
-    let currentDateGroup = null;
+    const dateGroups: { label: string; items: any[] }[] = [];
+    let currentDateGroup: { label: string; items: any[] } | null = null;
 
     list.forEach((item) => {
       const formattedDate = DATE_FORMAT(item.date);
@@ -356,8 +368,8 @@ function buildRowsFragment(list) {
       sep.innerHTML = `<td colspan="6"></td>`;
       fragment.appendChild(sep);
 
-      const vendorGroups = [];
-      let currentVendorGroup = null;
+      const vendorGroups: { name: string; items: any[] }[] = [];
+      let currentVendorGroup: { name: string; items: any[] } | null = null;
 
       group.items.forEach((item) => {
         if (!currentVendorGroup || currentVendorGroup.name !== item.vendor) {
@@ -405,17 +417,13 @@ function buildRowsFragment(list) {
 /*                       RENDER MOTORU + VIRTUAL SCROLL                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Tablo Satırlarını Render Et ─────────────────── */
-
-let _vsRafId = null;
-
-function renderTableRows(list, scrollY) {
+function renderTableRows(list: any[], scrollY?: number): void {
   if (_vsRafId) {
     cancelAnimationFrame(_vsRafId);
     _vsRafId = null;
   }
 
-  const unsavedRows = Array.from(tableBody.querySelectorAll(".new-item-row"));
+  const unsavedRows = Array.from(tableBody!.querySelectorAll(".new-item-row"));
 
   if (!list.length) {
     const emptyRow = document.createElement("tr");
@@ -430,18 +438,18 @@ function renderTableRows(list, scrollY) {
           }</span>
         </div>
       </td>`;
-    tableBody.replaceChildren(emptyRow, ...unsavedRows);
+    tableBody!.replaceChildren(emptyRow, ...unsavedRows);
     return;
   }
 
   if (currentSort.col === "date" || list.length <= VSCROLL_INITIAL) {
-    tableBody.replaceChildren(buildRowsFragment(list), ...unsavedRows);
+    tableBody!.replaceChildren(buildRowsFragment(list), ...unsavedRows);
     if (mainScroll && scrollY !== undefined) mainScroll.scrollTop = scrollY;
     return;
   }
 
   const firstChunk = list.slice(0, VSCROLL_INITIAL);
-  tableBody.replaceChildren(buildRowsFragment(firstChunk), ...unsavedRows);
+  tableBody!.replaceChildren(buildRowsFragment(firstChunk), ...unsavedRows);
 
   const restList = list.slice(VSCROLL_INITIAL);
 
@@ -454,20 +462,21 @@ function renderTableRows(list, scrollY) {
       tr.innerHTML = buildRowHTML(item);
       restFrag.appendChild(tr);
     });
-    const saved = tableBody.querySelectorAll(".new-item-row");
+    const saved = tableBody!.querySelectorAll(".new-item-row");
     if (saved.length) {
-      tableBody.insertBefore(restFrag, saved[0]);
+      tableBody!.insertBefore(restFrag, saved[0]);
     } else {
-      tableBody.appendChild(restFrag);
+      tableBody!.appendChild(restFrag);
     }
 
     if (mainScroll && scrollY !== undefined) mainScroll.scrollTop = scrollY;
   });
 }
 
-/* ─────────────────── Tam Render (Filtre + Tablo + İstatistik) ─────────────────── */
+/* ─────────────────── Tam Render ─────────────────── */
 
-function renderAll() {
+export function renderAll(): void {
+  (window as any).renderAll = renderAll;
   const scrollY = mainScroll ? mainScroll.scrollTop : 0;
   const list = getFilteredSortedList();
   updateStats(list);
@@ -479,15 +488,7 @@ function renderAll() {
 /*                      CRUD VE VERİ GÜNCELLEMELERİ                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Görünür Öğe Sayısını Hesapla ─────────────────── */
-
-function _countVisibleItems() {
-  return Object.values(allData).filter(isItemVisible).length;
-}
-
-/* ─────────────────── Öğe Filtre Kriterlerine Uyuyor Mu ─────────────────── */
-
-function isItemVisible(item) {
+function isItemVisible(item: any): boolean {
   if (currentSearch) {
     const q = normalizeTr(currentSearch);
     if (!item._searchTag || !item._searchTag.includes(q)) return false;
@@ -506,16 +507,14 @@ function isItemVisible(item) {
   return true;
 }
 
-/* ─────────────────── Satır Ekle veya Güncelle ─────────────────── */
-
-function addOrUpdateTableRow(id, item) {
+export function addOrUpdateTableRow(id: string, item: any): void {
   if (currentSort.col === "date") {
     scheduleRender();
     return;
   }
 
   const visible = isItemVisible(item);
-  const row = tableBody.querySelector(`tr[data-id="${id}"]`);
+  const row = tableBody!.querySelector(`tr[data-id="${id}"]`) as HTMLTableRowElement | null;
   const newItem = { ...item, id };
 
   if (!visible) {
@@ -529,19 +528,17 @@ function addOrUpdateTableRow(id, item) {
   if (row) {
     row.replaceWith(newRow);
   } else {
-    const topSep = tableBody.querySelector(".group-separator");
+    const topSep = tableBody!.querySelector(".group-separator");
     if (topSep && topSep.nextSibling) {
-      tableBody.insertBefore(newRow, topSep.nextSibling);
+      tableBody!.insertBefore(newRow, topSep.nextSibling);
     } else {
-      tableBody.appendChild(newRow);
+      tableBody!.appendChild(newRow);
     }
   }
 }
 
-/* ─────────────────── Satır Kaldır ─────────────────── */
-
-function removeTableRow(id) {
-  const row = tableBody.querySelector(`tr[data-id="${id}"]`);
+export function removeTableRow(id: string): void {
+  const row = tableBody!.querySelector(`tr[data-id="${id}"]`);
   if (row) row.remove();
 
   if (Object.keys(allData).length === 0) {
@@ -550,9 +547,7 @@ function removeTableRow(id) {
   }
 }
 
-/* ─────────────────── Kayıt Durumunu Güncelle (Optimistic) ─────────────────── */
-
-function updateItemStatus(itemId, newStatus) {
+function updateItemStatus(itemId: string, newStatus: string): void {
   const currentItem = allData[itemId];
   if (!currentItem) return;
   if (currentItem._statusNorm === normalizeTr(newStatus)) return;
@@ -586,7 +581,7 @@ function updateItemStatus(itemId, newStatus) {
     })
     .catch(() => {
       currentItem.status = oldItem.status;
-      currentItem._statusNorm = oldItem._statusNorm;
+      currentItem._statusNorm = oldStatusNorm;
       rebuildStatsCache();
       updateStats(getFilteredSortedList());
       applyToDOM();
@@ -594,19 +589,13 @@ function updateItemStatus(itemId, newStatus) {
     });
 }
 
-/* ─────────────────── Kaydı Sil ─────────────────── */
-
-function deleteItem(itemId) {
+function deleteItem(itemId: string): void {
   if (!allData[itemId]) {
     showToast("Hata: Silinecek öğe bulunamadı!", "error");
     return;
   }
 
   const performDelete = () => {
-    if (typeof deleteComponentFromFirebase !== "function") {
-      showToast("Silme fonksiyonu bulunamadı", "error");
-      return;
-    }
     deleteComponentFromFirebase(itemId)
       .then(() => {
         showToast("Kayıt silindi", "success", 2200);
@@ -616,20 +605,14 @@ function deleteItem(itemId) {
       });
   };
 
-  if (typeof showConfirm === "function") {
-    showConfirm("Bu kaydı silmek istediğinize emin misiniz?", performDelete);
-    return;
-  }
-  performDelete();
+  showConfirm("Bu kaydı silmek istediğinize emin misiniz?", performDelete);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                        YENİ KAYIT EKLEME                                 */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Satır İçi Yeni Kayıt Satırı Oluştur ─────────────────── */
-
-function initiateAddRow() {
+function initiateAddRow(): HTMLTableRowElement {
   const tr = document.createElement("tr");
   tr.className = "new-item-row";
   tr.innerHTML = `
@@ -654,84 +637,89 @@ function initiateAddRow() {
     </td>
   `;
 
-  const dateInput = tr.querySelector(".date-input");
-  const hiddenPicker = tr.querySelector(".hidden-picker");
-  const calendarIcon = tr.querySelector(".calendar-icon");
-  const componentInput = tr.querySelector(".component-input");
-  const brandInput = tr.querySelector(".brand-input");
-  const specsInput = tr.querySelector(".specs-input");
-  const priceInput = tr.querySelector(".price-input");
-  const vendorInput = tr.querySelector(".vendor-input");
-  const saveBtn = tr.querySelector(".save-btn");
+  const dateInput = tr.querySelector(".date-input") as HTMLInputElement | null;
+  const hiddenPicker = tr.querySelector(".hidden-picker") as HTMLInputElement | null;
+  const calendarIcon = tr.querySelector(".calendar-icon") as HTMLElement | null;
+  const componentInput = tr.querySelector(".component-input") as HTMLInputElement | null;
+  const brandInput = tr.querySelector(".brand-input") as HTMLInputElement | null;
+  const specsInput = tr.querySelector(".specs-input") as HTMLInputElement | null;
+  const priceInput = tr.querySelector(".price-input") as HTMLInputElement | null;
+  const vendorInput = tr.querySelector(".vendor-input") as HTMLInputElement | null;
+  const saveBtn = tr.querySelector(".save-btn") as HTMLElement | null;
 
-  calendarIcon.onclick = () => hiddenPicker.showPicker();
+  if (calendarIcon && hiddenPicker) {
+    calendarIcon.onclick = () => hiddenPicker.showPicker();
+  }
 
-  hiddenPicker.onchange = (e) => {
-    const [y, m, d] = e.target.value.split("-");
-    dateInput.value = `${d}.${m}.${y}`;
-  };
+  if (hiddenPicker) {
+    hiddenPicker.onchange = (e) => {
+      const [y, m, d] = (e.target as HTMLInputElement).value.split("-");
+      if (dateInput) dateInput.value = `${d}.${m}.${y}`;
+    };
+  }
 
-  priceInput.addEventListener("input", function () {
-    if (typeof applyPriceFormat === "function") applyPriceFormat(this);
-  });
+  if (priceInput) {
+    priceInput.addEventListener("input", function () {
+      applyPriceFormat(this);
+    });
+  }
 
-  componentInput.addEventListener("input", () => {
-    saveBtn.classList.toggle("visible", !!componentInput.value.trim());
-  });
+  if (componentInput) {
+    componentInput.addEventListener("input", () => {
+      if (saveBtn) saveBtn.classList.toggle("visible", !!componentInput.value.trim());
+    });
+  }
 
-  vendorInput.addEventListener("keydown", (e) => {
-    if (e.key === "Tab" && !e.shiftKey && componentInput.value.trim()) {
-      e.preventDefault();
-      submitNewItem(tr);
-    }
-  });
+  if (vendorInput && componentInput) {
+    vendorInput.addEventListener("keydown", (e) => {
+      if (e.key === "Tab" && !e.shiftKey && componentInput.value.trim()) {
+        e.preventDefault();
+        submitNewItem(tr);
+      }
+    });
+  }
 
   tr.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && componentInput.value.trim()) submitNewItem(tr);
+    if (e.key === "Enter" && componentInput?.value.trim()) submitNewItem(tr);
   });
 
-  saveBtn.onclick = () => submitNewItem(tr);
+  if (saveBtn) saveBtn.onclick = () => submitNewItem(tr);
 
-  setTimeout(() => componentInput.focus(), 30);
+  setTimeout(() => componentInput?.focus(), 30);
   return tr;
 }
 
-/* ─────────────────── Yeni Kayıt Satırını Firebase'e Gönder ─────────────────── */
+function submitNewItem(tr: HTMLTableRowElement): void {
+  const dateInput = tr.querySelector(".date-input") as HTMLInputElement | null;
+  const componentInput = tr.querySelector(".component-input") as HTMLInputElement | null;
+  const brandInput = tr.querySelector(".brand-input") as HTMLInputElement | null;
+  const specsInput = tr.querySelector(".specs-input") as HTMLInputElement | null;
+  const priceInput = tr.querySelector(".price-input") as HTMLInputElement | null;
+  const vendorInput = tr.querySelector(".vendor-input") as HTMLInputElement | null;
 
-function submitNewItem(tr) {
-  const dateInput = tr.querySelector(".date-input");
-  const componentInput = tr.querySelector(".component-input");
-  const brandInput = tr.querySelector(".brand-input");
-  const specsInput = tr.querySelector(".specs-input");
-  const priceInput = tr.querySelector(".price-input");
-  const vendorInput = tr.querySelector(".vendor-input");
-
-  const component = componentInput.value.trim();
+  const component = componentInput?.value.trim();
   if (!component) return;
 
-  const finalDate = parseDateInput(dateInput.value);
-
-  const rawPrice = parsePriceInput(priceInput.value);
+  const finalDate = parseDateInput(dateInput?.value || "");
+  const rawPrice = parsePriceInput(priceInput?.value || "");
 
   const newItemData = {
     date: finalDate,
     component,
-    brand: brandInput.value.trim() || "-",
-    specs: specsInput.value.trim() || "-",
-    price: parseFloat(rawPrice) || 0,
-    vendor: vendorInput.value.trim() || "-",
+    brand: brandInput?.value.trim() || "-",
+    specs: specsInput?.value.trim() || "-",
+    price: rawPrice,
+    vendor: vendorInput?.value.trim() || "-",
     status: "sağlıklı",
     url: "",
   };
 
-  if (typeof addComponentToFirebase === "function") {
-    addComponentToFirebase(newItemData)
-      .then(() => {
-        tr.remove();
-        showToast(`"${component}" eklendi`, "success");
-      })
-      .catch(() => showToast("Kayıt eklenemedi", "error"));
-  }
+  addComponentToFirebase(newItemData)
+    .then(() => {
+      tr.remove();
+      showToast(`"${component}" eklendi`, "success");
+    })
+    .catch(() => showToast("Kayıt eklenemedi", "error"));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -742,14 +730,14 @@ function submitNewItem(tr) {
 
 document.querySelectorAll(".sortable").forEach((th) => {
   th.addEventListener("click", () => {
-    const col = th.dataset.sort || th.dataset.col;
+    const col = (th as HTMLElement).dataset.sort || (th as HTMLElement).dataset.col;
     if (!col) return;
 
     if (currentSort.col === col) {
-      currentSort.dir = currentSort.dir === "asc" ? "desc" : "asc";
+      (currentSort as any).dir = currentSort.dir === "asc" ? "desc" : "asc";
     } else {
-      currentSort.col = col;
-      currentSort.dir = "asc";
+      (currentSort as any).col = col;
+      (currentSort as any).dir = "asc";
     }
 
     updateSortIcons();
@@ -764,7 +752,7 @@ if (addItemBtn) {
     if (!tableBody) return;
     const existing = tableBody.querySelector(".new-item-row");
     if (existing) {
-      existing.querySelector(".component-input").focus();
+      (existing.querySelector(".component-input") as HTMLElement)?.focus();
       return;
     }
     tableBody.appendChild(initiateAddRow());
@@ -787,29 +775,29 @@ document.addEventListener("keydown", (e) => {
 
 /* ─────────────────── Tablo Gövdesi Olay Delegasyonu ─────────────────── */
 
-function initTableBodyEvents() {
+function initTableBodyEvents(): void {
   if (!tableBody) return;
 
   tableBody.addEventListener("click", function (e) {
-    const btn = e.target.closest("[data-action]");
+    const btn = (e.target as HTMLElement).closest("[data-action]") as HTMLElement | null;
     if (!btn) return;
     const action = btn.dataset.action;
     const id = btn.dataset.id;
 
-    if (action === "delete-item") deleteItem(id);
-    else if (action === "edit-item") openEditModal(id);
+    if (action === "delete-item") deleteItem(id!);
+    else if (action === "edit-item") openEditModal(id!);
     else if (action === "update-status")
-      updateItemStatus(id, btn.dataset.status);
+      updateItemStatus(id!, btn.dataset.status!);
   });
 
   tableBody.addEventListener("dblclick", function (e) {
-    const tr = e.target.closest("tr[data-id]");
+    const tr = (e.target as HTMLElement).closest("tr[data-id]") as HTMLTableRowElement | null;
     if (!tr) return;
-    if (e.target.closest(".status-menu") || e.target.closest(".row-actions"))
+    if ((e.target as HTMLElement).closest(".status-menu") || (e.target as HTMLElement).closest(".row-actions"))
       return;
 
     const id = tr.dataset.id;
-    const targetCell = e.target.closest("td");
+    const targetCell = (e.target as HTMLElement).closest("td") as HTMLElement | null;
     let focusTarget = "component";
 
     if (targetCell) {
@@ -822,12 +810,12 @@ function initTableBodyEvents() {
         focusTarget = "vendor";
     }
 
-    window.getSelection().removeAllRanges();
-    openEditModal(id, focusTarget);
+    window.getSelection()?.removeAllRanges();
+    openEditModal(id!, focusTarget);
   });
 }
 
-/* ─────────────────── DOM Hazır Kontrolü ve Başlatma ─────────────────── */
+/* ─────────────────── Başlatma ─────────────────── */
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initTableBodyEvents);

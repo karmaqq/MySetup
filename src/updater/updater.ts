@@ -1,17 +1,15 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          GÜNCELLEME YÖNETİCİSİ                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Modül İçe Aktarma ─────────────────── */
 
-const { ipcMain, app } = require("electron");
-const { autoUpdater } = require("electron-updater");
+import { ipcMain, app, BrowserWindow } from "electron";
+import { autoUpdater } from "electron-updater";
 
 /* ─────────────────── Durum Değişkenleri ─────────────────── */
 
-let _mainWindow = null;
+let _mainWindow: BrowserWindow | null = null;
 let _initialized = false;
 let _updateReady = false;
 
@@ -21,7 +19,7 @@ let _updateReady = false;
 
 /* ─────────────────── Güncelleyiciyi Başlat ─────────────────── */
 
-function setupUpdater(mainWindow) {
+function setupUpdater(mainWindow: BrowserWindow): void {
   _mainWindow = mainWindow;
   if (_initialized) return;
   _initialized = true;
@@ -32,27 +30,27 @@ function setupUpdater(mainWindow) {
 
   /* ─────────────────── Güncelleme Bulundu ─────────────────── */
 
-  autoUpdater.on("update-available", (info) => {
-    _mainWindow.webContents.send("update_available", info.version);
+  autoUpdater.on("update-available", (info: { version: string }) => {
+    _mainWindow!.webContents.send("update_available", info.version);
   });
 
   /* ─────────────────── İndirme İlerlemesi ─────────────────── */
 
-  autoUpdater.on("download-progress", (progressObj) => {
-    _mainWindow.webContents.send("update_progress", progressObj.percent);
+  autoUpdater.on("download-progress", (progressObj: { percent: number }) => {
+    _mainWindow!.webContents.send("update_progress", progressObj.percent);
   });
 
   /* ─────────────────── İndirme Tamamlandı ─────────────────── */
 
   autoUpdater.on("update-downloaded", () => {
     _updateReady = true;
-    _mainWindow.webContents.send("update_downloaded");
+    _mainWindow!.webContents.send("update_downloaded");
   });
 
   /* ─────────────────── Güncelleme Hatası ─────────────────── */
 
-  autoUpdater.on("error", (err) => {
-    _mainWindow.webContents.send("update_error", err.message);
+  autoUpdater.on("error", (err: Error) => {
+    _mainWindow!.webContents.send("update_error", err.message);
   });
 
   /* ─────────────────── IPC: İndirmeyi Başlat ─────────────────── */
@@ -68,17 +66,17 @@ function setupUpdater(mainWindow) {
 
 /* ─────────────────── Güncelleme Kontrolü ─────────────────── */
 
-function checkForUpdates() {
+function checkForUpdates(): void {
   if (!app.isPackaged) {
     console.log("[Updater] Development modunda, güncelleme kontrolü atlanıyor");
     return;
   }
   console.log("[Updater] GitHub'dan güncelleme kontrol ediliyor...");
-  autoUpdater.checkForUpdates().catch((err) => {
+  autoUpdater.checkForUpdates().catch((err: Error) => {
     console.error("[Updater] Hata:", err.message);
   });
 }
 
 /* ─────────────────── Dışa Aktarım ─────────────────── */
 
-module.exports = { setupUpdater, checkForUpdates };
+export { setupUpdater, checkForUpdates };

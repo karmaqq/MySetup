@@ -6,5 +6,7 @@ PLAN.md
 rtdb-rules-clean.json
 storage-rules-clean.rules
 dist/
+release/
 node_modules/
 js/firebase-config.js
+src/renderer/firebase-config.ts

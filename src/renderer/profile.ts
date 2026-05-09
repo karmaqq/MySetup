@@ -1,41 +1,45 @@
-/*--- zorunlu - agents.md yorum kurallarına uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                      PROFİL SEKMESİ YÜKLEME                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { allPosts, _renderPostHTML, _initPostImage } from "./posts-render";
+import { getUserPostsOnce, getUserLikesOnce, getPostsByIds } from "./firebase-post";
+import { PAGE_SIZE, renderLoadMoreBtn, removeLoadMoreBtn, _currentPage } from "./utils";
+import { showToast } from "./io";
+
 /* ─────────────────── Sabitler ─────────────────── */
 
-const TAB = {
+const TAB: Record<string, string> = {
   USER_POSTS: "userPostsTab",
   LIKED_POSTS: "likedPostsTab",
 };
 
-const EMPTY_STATE = {
+const EMPTY_STATE: Record<string, { emoji: string; text: string }> = {
   userPostsTab: { emoji: "📰", text: "Henüz Gönderi Yayınlamadın" },
   likedPostsTab: { emoji: "💔", text: "Henüz Kimseyi Beğenmedin" },
 };
 
 /* ─────────────────── Profil Durum Yönetimi ─────────────────── */
 
-let _profileTab = null;
+let _profileTab: string | null = null;
+(window as any)._profileTab = _profileTab;
 let _userPostsInitialized = false;
-let _userPostsVisible = new Set();
-let _userPostsOldestTs = null;
+let _userPostsVisible = new Set<string>();
+let _userPostsOldestTs: number | null = null;
 let _hasMoreUserPosts = false;
 let _loadingMoreUserPosts = false;
 
 let _likedPostsInitialized = false;
-let _likedPostsVisible = new Set();
-let _likedPostsOldestTs = null;
+let _likedPostsVisible = new Set<string>();
+let _likedPostsOldestTs: number | null = null;
 let _hasMoreLikedPosts = false;
 let _loadingMoreLikedPosts = false;
 
-function _showProfileLoading(tab) {
+function _showProfileLoading(tab: HTMLElement): void {
   tab.innerHTML = '<div class="posts-loading">Yükleniyor...</div>';
 }
 
-function _showProfileEmptyState(tab, tabId) {
+function _showProfileEmptyState(tab: HTMLElement, tabId: string): void {
   var s = EMPTY_STATE[tabId];
   tab.innerHTML =
     '<div class="empty-state profile-empty-state">' +
@@ -48,7 +52,7 @@ function _showProfileEmptyState(tab, tabId) {
     "</div>";
 }
 
-function _showProfileContent(tab) {
+function _showProfileContent(tab: HTMLElement): void {
   var loading = tab.querySelector(".posts-loading");
   var empty = tab.querySelector(".profile-empty-state");
   if (loading) loading.remove();
@@ -57,24 +61,26 @@ function _showProfileContent(tab) {
 
 /* ─────────────────── Profil sekmesi değiştğinde çağrılır ─────────────────── */
 
-function updateProfilePosts() {
-  if (window._pendingProfileTab) {
-    switchProfileTab(window._pendingProfileTab);
-    window._pendingProfileTab = null;
+function updateProfilePosts(): void {
+  if ((window as any)._pendingProfileTab) {
+    switchProfileTab((window as any)._pendingProfileTab);
+    (window as any)._pendingProfileTab = null;
   } else {
     switchProfileTab("user-posts");
   }
 }
+(window as any).updateProfilePosts = updateProfilePosts;
 
-function _syncNewProfileItems(tab, visibleSet) {
+function _syncNewProfileItems(tab: HTMLElement, visibleSet: Set<string>): void {
   if (!tab) return;
   visibleSet.forEach(function (postId) {
     _appendOrPrependToProfileTab(tab.id, postId);
   });
 }
 
-function switchProfileTab(tabName) {
+function switchProfileTab(tabName: string): void {
   _profileTab = tabName;
+  (window as any)._profileTab = tabName;
 
   if (tabName === "user-posts") {
     _initUserPostsTab();
@@ -85,8 +91,8 @@ function switchProfileTab(tabName) {
 
 /* ─────────────────── Gönderilerim sekmesini başlatır ─────────────────── */
 
-function _initUserPostsTab() {
-  const tab = document.getElementById("userPostsTab");
+function _initUserPostsTab(): void {
+  const tab = document.getElementById("userPostsTab") as HTMLElement | null;
   if (!tab) return;
 
   if (_userPostsInitialized && tab.children.length > 0) {
@@ -106,19 +112,19 @@ function _initUserPostsTab() {
   _removeProfileLoadMoreBtn("userPostsTab");
 
   _loadPostsChunk({
-    fetcher: (uid, size, ts) => getUserPostsOnce(uid, size, ts),
+    fetcher: (uid: string, size?: number, ts?: number | null) => getUserPostsOnce(uid, size, ts),
     tabId: "userPostsTab",
     btnId: "loadMoreUserPostsBtn",
     getVisible: () => _userPostsVisible,
-    setOldestTs: (ts) => {
+    setOldestTs: (ts: number | null) => {
       _userPostsOldestTs = ts;
     },
     getOldestTs: () => _userPostsOldestTs,
-    setHasMore: (v) => {
+    setHasMore: (v: boolean) => {
       _hasMoreUserPosts = v;
     },
     getHasMore: () => _hasMoreUserPosts,
-    setLoading: (v) => {
+    setLoading: (v: boolean) => {
       _loadingMoreUserPosts = v;
     },
     getLoading: () => _loadingMoreUserPosts,
@@ -130,8 +136,8 @@ function _initUserPostsTab() {
 
 /* ─────────────────── Beğenilerim sekmesini başlatır ─────────────────── */
 
-function _initLikedPostsTab() {
-  const tab = document.getElementById("likedPostsTab");
+function _initLikedPostsTab(): void {
+  const tab = document.getElementById("likedPostsTab") as HTMLElement | null;
   if (!tab) return;
 
   if (_likedPostsInitialized && tab.children.length > 0) {
@@ -151,19 +157,19 @@ function _initLikedPostsTab() {
   _removeProfileLoadMoreBtn("likedPostsTab");
 
   _loadPostsChunk({
-    fetcher: (uid, size, ts) => getUserLikesOnce(uid, size, ts),
+    fetcher: (uid: string, size?: number, ts?: number | null) => getUserLikesOnce(uid, size, ts),
     tabId: "likedPostsTab",
     btnId: "loadMoreLikedPostsBtn",
     getVisible: () => _likedPostsVisible,
-    setOldestTs: (ts) => {
+    setOldestTs: (ts: number | null) => {
       _likedPostsOldestTs = ts;
     },
     getOldestTs: () => _likedPostsOldestTs,
-    setHasMore: (v) => {
+    setHasMore: (v: boolean) => {
       _hasMoreLikedPosts = v;
     },
     getHasMore: () => _hasMoreLikedPosts,
-    setLoading: (v) => {
+    setLoading: (v: boolean) => {
       _loadingMoreLikedPosts = v;
     },
     getLoading: () => _loadingMoreLikedPosts,
@@ -179,14 +185,28 @@ function _initLikedPostsTab() {
 
 /* ─────────────────── Ortak yükleme fonksiyonu  ─────────────────── */
 
-function _loadPostsChunk(cfg) {
+interface PostsChunkConfig {
+  fetcher: (uid: string, size?: number, ts?: number | null) => Promise<Record<string, any>>;
+  tabId: string;
+  btnId: string;
+  getVisible: () => Set<string>;
+  setOldestTs: (ts: number | null) => void;
+  getOldestTs: () => number | null;
+  setHasMore: (v: boolean) => void;
+  getHasMore: () => boolean;
+  setLoading: (v: boolean) => void;
+  getLoading: () => boolean;
+  onInitDone?: () => void;
+}
+
+function _loadPostsChunk(cfg: PostsChunkConfig): void {
   if (cfg.getLoading()) return;
   const user = firebase.auth().currentUser;
   if (!user) return;
 
   cfg.setLoading(true);
-  const tab = document.getElementById(cfg.tabId);
-  const btn = document.getElementById(cfg.btnId);
+  const tab = document.getElementById(cfg.tabId) as HTMLElement | null;
+  const btn = document.getElementById(cfg.btnId) as HTMLButtonElement | null;
 
   if (btn) {
     btn.disabled = true;
@@ -223,9 +243,11 @@ function _loadPostsChunk(cfg) {
             if (tab) {
               const wrapper = document.createElement("div");
               wrapper.innerHTML = _renderPostHTML(id, posts[id]);
-              const el = wrapper.firstElementChild;
-              tab.appendChild(el);
-              _initPostImage(el.querySelector(".post-img-lazy"));
+              const el = wrapper.firstElementChild as HTMLElement;
+              if (el) {
+                tab.appendChild(el);
+                _initPostImage(el.querySelector(".post-img-lazy") as HTMLImageElement | null);
+              }
             }
           }
         });
@@ -255,13 +277,12 @@ function _loadPostsChunk(cfg) {
         btn.disabled = false;
         btn.textContent = "Daha Fazla Göster";
       }
-      if (typeof showToast === "function")
-        showToast(
-          cfg.tabId === "userPostsTab"
-            ? "Gönderiler yüklenemedi, lütfen tekrar deneyin."
-            : "Beğeniler yüklenemedi, lütfen tekrar deneyin.",
-          "error",
-        );
+      showToast(
+        cfg.tabId === "userPostsTab"
+          ? "Gönderiler yüklenemedi, lütfen tekrar deneyin."
+          : "Beğeniler yüklenemedi, lütfen tekrar deneyin.",
+        "error",
+      );
     });
 }
 
@@ -271,7 +292,7 @@ function _loadPostsChunk(cfg) {
 
 /* ─────────────────── UserLikes Değişikliği Callback ─────────────────── */
 
-function _onUserLikesChanged(postId, value, type) {
+function _onUserLikesChanged(postId: string, value: any, type: string): void {
   if (type === "added") {
     if (!_likedPostsVisible.has(postId)) {
       _likedPostsVisible.add(postId);
@@ -285,8 +306,8 @@ function _onUserLikesChanged(postId, value, type) {
       document
         .querySelectorAll('#likedPostsTab [data-post-id="' + postId + '"]')
         .forEach(function (el) {
-          el.style.opacity = "0";
-          el.style.transform = "translateY(4px)";
+          (el as HTMLElement).style.opacity = "0";
+          (el as HTMLElement).style.transform = "translateY(4px)";
           setTimeout(function () {
             el.remove();
             const tab = document.getElementById("likedPostsTab");
@@ -298,8 +319,9 @@ function _onUserLikesChanged(postId, value, type) {
     }
   }
 }
+(window as any)._onUserLikesChanged = _onUserLikesChanged;
 
-function _onUserPostsChanged(postId, value, type) {
+function _onUserPostsChanged(postId: string, value: any, type: string): void {
   if (type === "added") {
     if (!_userPostsVisible.has(postId)) {
       _userPostsVisible.add(postId);
@@ -313,8 +335,8 @@ function _onUserPostsChanged(postId, value, type) {
       document
         .querySelectorAll('#userPostsTab [data-post-id="' + postId + '"]')
         .forEach(function (el) {
-          el.style.opacity = "0";
-          el.style.transform = "translateY(4px)";
+          (el as HTMLElement).style.opacity = "0";
+          (el as HTMLElement).style.transform = "translateY(4px)";
           setTimeout(function () {
             el.remove();
             const tab = document.getElementById("userPostsTab");
@@ -326,18 +348,21 @@ function _onUserPostsChanged(postId, value, type) {
     }
   }
 }
+(window as any)._onUserPostsChanged = _onUserPostsChanged;
 
-function _appendOrPrependToProfileTab(tabId, postId) {
-  const tab = document.getElementById(tabId);
+function _appendOrPrependToProfileTab(tabId: string, postId: string): void {
+  const tab = document.getElementById(tabId) as HTMLElement | null;
   if (!tab) return;
   if (tab.querySelector('[data-post-id="' + postId + '"]')) return;
   if (allPosts[postId]) {
     _showProfileContent(tab);
     const wrapper = document.createElement("div");
     wrapper.innerHTML = _renderPostHTML(postId, allPosts[postId]);
-    const el = wrapper.firstElementChild;
-    tab.appendChild(el);
-    _initPostImage(el.querySelector(".post-img-lazy"));
+    const el = wrapper.firstElementChild as HTMLElement;
+    if (el) {
+      tab.appendChild(el);
+      _initPostImage(el.querySelector(".post-img-lazy") as HTMLImageElement | null);
+    }
     return;
   }
   getPostsByIds([postId], allPosts).then(function (posts) {
@@ -346,9 +371,11 @@ function _appendOrPrependToProfileTab(tabId, postId) {
       _showProfileContent(tab);
       const wrapper = document.createElement("div");
       wrapper.innerHTML = _renderPostHTML(postId, posts[postId]);
-      const el = wrapper.firstElementChild;
-      tab.appendChild(el);
-      _initPostImage(el.querySelector(".post-img-lazy"));
+      const el = wrapper.firstElementChild as HTMLElement;
+      if (el) {
+        tab.appendChild(el);
+        _initPostImage(el.querySelector(".post-img-lazy") as HTMLImageElement | null);
+      }
     }
   });
 }
@@ -359,15 +386,15 @@ function _appendOrPrependToProfileTab(tabId, postId) {
 
 /* ─────────────────── Profil sekmesi için "Daha Fazla" butonu ─────────────────── */
 
-function _renderProfileLoadMoreBtn(tabId, onClick) {
-  const btnId =
+function _renderProfileLoadMoreBtn(tabId: string, onClick: () => void): void {
+  const btnId: string =
     tabId === TAB.USER_POSTS ? "loadMoreUserPostsBtn" : "loadMoreLikedPostsBtn";
-  const tab = document.getElementById(tabId);
+  const tab = document.getElementById(tabId) as HTMLElement | null;
   if (tab) renderLoadMoreBtn(tab, btnId, onClick);
 }
 
-function _removeProfileLoadMoreBtn(tabId) {
-  const btnId =
+function _removeProfileLoadMoreBtn(tabId: string): void {
+  const btnId: string =
     tabId === TAB.USER_POSTS ? "loadMoreUserPostsBtn" : "loadMoreLikedPostsBtn";
   removeLoadMoreBtn(btnId);
 }
@@ -378,19 +405,21 @@ function _removeProfileLoadMoreBtn(tabId) {
 
 /* ─────────────────── Sayfa değiştğinde profil sekmelerini temizle ─────────────────── */
 
-function _onPageChange(pageName) {
+function _onPageChange(pageName: string): void {
   if (pageName !== "profile") {
     _profileTab = null;
+    (window as any)._profileTab = null;
   }
 }
+(window as any)._onPageChange = _onPageChange;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                    PROFİL SEKME BUTONLARI                             */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 document.querySelectorAll(".profile-tabs .tab-btn").forEach(function (btn) {
-  btn.addEventListener("click", function () {
-    const tab = this.dataset.tab;
+  btn.addEventListener("click", function (this: HTMLElement) {
+    const tab = this.dataset.tab!;
     document.querySelectorAll(".profile-tabs .tab-btn").forEach(function (b) {
       b.classList.remove("active");
     });

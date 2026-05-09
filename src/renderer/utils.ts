@@ -1,5 +1,3 @@
-﻿/*--- zorunlu - agents.md yorum kurallarina uy ---*/
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          GENEL YARDIMCI ARAÇLAR                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -10,27 +8,27 @@
 
 /* ─────────────────── Sayfa Geçişi (Animasyonlu) ─────────────────── */
 
-let _currentPage = sessionStorage.getItem("_lastPage") || "home";
-let _isAnimating = false;
-let _pendingPageQueue = [];
-let _commentListenerRefs = {};
-var _viewingPostIdVal = null;
+export let _currentPage: string = sessionStorage.getItem("_lastPage") || "home";
+export let _isAnimating = false;
+export let _pendingPageQueue: string[] = [];
+export let _commentListenerRefs: Record<string, () => void> = {};
+let _viewingPostIdVal: string | null = null;
 Object.defineProperty(window, "_viewingPostId", {
   get() {
     return _viewingPostIdVal;
   },
-  set(v) {
+  set(v: string | null) {
     _viewingPostIdVal = v;
     if (v) sessionStorage.setItem("_viewingPostId", v);
     else sessionStorage.removeItem("_viewingPostId");
   },
   configurable: true,
 });
-const mainScroll = document.getElementById("mainScroll");
+export const mainScroll = document.getElementById("mainScroll") as HTMLElement | null;
 
-const PAGE_SIZE = 20;
+export const PAGE_SIZE = 20;
 
-function showPage(pageName) {
+export function showPage(pageName: string): void {
   if (_isAnimating) {
     _pendingPageQueue = [pageName];
     return;
@@ -40,8 +38,8 @@ function showPage(pageName) {
   const pages = document.querySelectorAll(".page-content");
   const navBtns = document.querySelectorAll(".sidebar-nav-btn");
 
-  const oldPage = document.querySelector(".page-content.active");
-  const newPage = document.getElementById(pageName + "Page");
+  const oldPage = document.querySelector(".page-content.active") as HTMLElement | null;
+  const newPage = document.getElementById(pageName + "Page") as HTMLElement | null;
 
   if (!newPage || oldPage === newPage) {
     _isAnimating = false;
@@ -55,7 +53,7 @@ function showPage(pageName) {
   navBtns.forEach((b) => b.classList.remove("active"));
   const activeNavBtn = document.querySelector(
     `.sidebar-nav-btn[data-page="${pageName}"]`,
-  );
+  ) as HTMLElement | null;
   if (activeNavBtn) activeNavBtn.classList.add("active");
 
   if (oldPage) {
@@ -80,17 +78,17 @@ function showPage(pageName) {
     _isAnimating = false;
     _currentPage = pageName;
     sessionStorage.setItem("_lastPage", pageName);
-    if (pageName === "profile" && typeof updateProfilePosts === "function") {
-      updateProfilePosts();
+    if (pageName === "profile" && typeof (window as any).updateProfilePosts === "function") {
+      (window as any).updateProfilePosts();
     }
-    if (pageName !== "home" && typeof clearPostDraft === "function") {
-      clearPostDraft();
+    if (pageName !== "home" && typeof (window as any).clearPostDraft === "function") {
+      (window as any).clearPostDraft();
     }
-    if (typeof _onPageChange === "function") {
-      _onPageChange(pageName);
+    if (typeof (window as any)._onPageChange === "function") {
+      (window as any)._onPageChange(pageName);
     }
     if (_pendingPageQueue.length) {
-      const next = _pendingPageQueue.pop();
+      const next = _pendingPageQueue.pop()!;
       _pendingPageQueue = [];
       showPage(next);
     }
@@ -103,20 +101,20 @@ function showPage(pageName) {
 
 /* ─────────────────── Para Birimi Formatlayıcı ─────────────────── */
 
-const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
+export const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
 /* ─────────────────── Tarih Formatlayıcı ─────────────────── */
 
-const _dateCache = new Map();
+const _dateCache = new Map<string, string>();
 const _DATECACHE_MAX = 1000;
 
-const DATE_FORMAT = (dateString) => {
+export const DATE_FORMAT = (dateString: string): string => {
   if (!dateString) return "-";
   if (_dateCache.has(dateString)) {
-    const val = _dateCache.get(dateString);
+    const val = _dateCache.get(dateString)!;
     _dateCache.delete(dateString);
     _dateCache.set(dateString, val);
     return val;
@@ -127,7 +125,7 @@ const DATE_FORMAT = (dateString) => {
     : date.toLocaleDateString("tr-TR");
   if (_dateCache.size >= _DATECACHE_MAX) {
     const firstKey = _dateCache.keys().next().value;
-    _dateCache.delete(firstKey);
+    if (firstKey !== undefined) _dateCache.delete(firstKey);
   }
   _dateCache.set(dateString, result);
   return result;
@@ -135,7 +133,7 @@ const DATE_FORMAT = (dateString) => {
 
 /* ─────────────────── Durum Sınıfı Haritası ─────────────────── */
 
-const STATUS_MAP = {
+export const STATUS_MAP: Record<string, string> = {
   bozuk: "status-broken",
   yedek: "status-reserve",
   atildi: "status-discarded",
@@ -144,26 +142,39 @@ const STATUS_MAP = {
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          GLOBAL DURUM DEĞİŞKENLERİ                       */
-/* ========================================================================= */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Uygulama Durumu ─────────────────── */
 
-let allData = {};
-let currentSearch = "";
-let currentStatusFilter = "all";
-let currentSort = { col: "date", dir: "asc" };
-let editingId = null;
+export let allData: Record<string, any> = {};
+let _currentSearchVal = "";
+export let currentSearch = _currentSearchVal;
+export function setCurrentSearch(v: string): void {
+  _currentSearchVal = v;
+  currentSearch = v;
+}
+export let currentStatusFilter = "all";
+export function setCurrentStatusFilter(v: string): void {
+  currentStatusFilter = v;
+}
+export let currentSort: { col: string; dir: string } = { col: "date", dir: "asc" };
+let _editingIdVal: string | null = null;
+export let editingId: string | null = _editingIdVal;
+export function setEditingId(v: string | null): void {
+  _editingIdVal = v;
+  editingId = v;
+}
 
 /* ─────────────────── Render Yönetimi ─────────────────── */
 
-function isAnyModalOpen() {
+export function isAnyModalOpen(): boolean {
   return !!document.querySelector(".modal-overlay.active");
 }
 
-var _renderRafId = null;
-var _pendingRender = false;
+let _renderRafId: number | null = null;
+let _pendingRender = false;
 
-function scheduleRender() {
+export function scheduleRender(): void {
   if (isAnyModalOpen()) {
     _pendingRender = true;
     return;
@@ -171,13 +182,21 @@ function scheduleRender() {
   if (_renderRafId) cancelAnimationFrame(_renderRafId);
   _renderRafId = requestAnimationFrame(function () {
     _renderRafId = null;
-    if (typeof renderAll === "function") renderAll();
+    if (typeof (window as any).renderAll === "function") (window as any).renderAll();
   });
 }
 
 /* ─────────────────── İstatistik Önbelleği ─────────────────── */
 
-let _statsCache = {
+export interface StatsCache {
+  total: number;
+  count: number;
+  healthy: number;
+  mostExpId: string | null;
+  mostExpPrice: number;
+}
+
+export let _statsCache: StatsCache = {
   total: 0,
   count: 0,
   healthy: 0,
@@ -191,44 +210,48 @@ let _statsCache = {
 
 /* ─────────────────── Bildirim ─────────────────── */
 
-const toastContainer = document.getElementById("toastContainer");
+export const toastContainer = document.getElementById("toastContainer");
 
 /* ─────────────────── Sürüm ve Güncelleme ─────────────────── */
 
-const versionDisplay = document.getElementById("versionDisplay");
+export const versionDisplay = document.getElementById("versionDisplay");
+
+/* ─────────────────── Post Sistemi ─────────────────── */
+
+export const postsFeed = document.getElementById("postsFeed") as HTMLElement | null;
 
 /* ─────────────────── Arama ─────────────────── */
 
-const searchInput = document.getElementById("searchInput");
-const clearSearch = document.getElementById("clearSearch");
+export const searchInput = document.getElementById("searchInput") as HTMLInputElement | null;
+export const clearSearch = document.getElementById("clearSearch") as HTMLElement | null;
 
 /* ─────────────────── Tablo ve İstatistikler ─────────────────── */
 
-const tableBody = document.getElementById("tableBody");
-const addItemBtn = document.getElementById("addItemBtn");
-const resultCount = document.getElementById("resultCount");
-const statTotal = document.getElementById("statTotal");
-const statCount = document.getElementById("statCount");
-const statHealthy = document.getElementById("statHealthy");
-const statExpensive = document.getElementById("statExpensive");
-const totalCostDisplay = document.getElementById("totalCostDisplay");
+export const tableBody = document.getElementById("tableBody") as HTMLElement | null;
+export const addItemBtn = document.getElementById("addItemBtn") as HTMLElement | null;
+export const resultCount = document.getElementById("resultCount") as HTMLElement | null;
+export const statTotal = document.getElementById("statTotal") as HTMLElement | null;
+export const statCount = document.getElementById("statCount") as HTMLElement | null;
+export const statHealthy = document.getElementById("statHealthy") as HTMLElement | null;
+export const statExpensive = document.getElementById("statExpensive") as HTMLElement | null;
+export const totalCostDisplay = document.getElementById("totalCostDisplay") as HTMLElement | null;
 
 /* ─────────────────── Düzenleme Modali ─────────────────── */
 
-const editModal = document.getElementById("editModal");
-const modalClose = document.getElementById("modalClose");
-const modalCancel = document.getElementById("modalCancel");
-const modalSave = document.getElementById("modalSave");
-const editDate = document.getElementById("editDate");
-const editDatePicker = document.getElementById("editDatePicker");
-const editCalIcon = document.getElementById("editCalIcon");
-const editComponent = document.getElementById("editComponent");
-const editBrand = document.getElementById("editBrand");
-const editUrl = document.getElementById("editUrl");
-const editSpecs = document.getElementById("editSpecs");
-const editPrice = document.getElementById("editPrice");
-const editVendor = document.getElementById("editVendor");
-const editStatus = document.getElementById("editStatus");
+export const editModal = document.getElementById("editModal") as HTMLElement | null;
+export const modalClose = document.getElementById("modalClose") as HTMLElement | null;
+export const modalCancel = document.getElementById("modalCancel") as HTMLElement | null;
+export const modalSave = document.getElementById("modalSave") as HTMLElement | null;
+export const editDate = document.getElementById("editDate") as HTMLInputElement | null;
+export const editDatePicker = document.getElementById("editDatePicker") as HTMLInputElement | null;
+export const editCalIcon = document.getElementById("editCalIcon") as HTMLElement | null;
+export const editComponent = document.getElementById("editComponent") as HTMLInputElement | null;
+export const editBrand = document.getElementById("editBrand") as HTMLInputElement | null;
+export const editUrl = document.getElementById("editUrl") as HTMLInputElement | null;
+export const editSpecs = document.getElementById("editSpecs") as HTMLInputElement | null;
+export const editPrice = document.getElementById("editPrice") as HTMLInputElement | null;
+export const editVendor = document.getElementById("editVendor") as HTMLInputElement | null;
+export const editStatus = document.getElementById("editStatus") as HTMLSelectElement | null;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          YARDIMCI FONKSİYONLAR                           */
@@ -236,7 +259,7 @@ const editStatus = document.getElementById("editStatus");
 
 /* ─────────────────── Türkçe Karakter Normalizasyonu ─────────────────── */
 
-function normalizeTr(s) {
+export function normalizeTr(s: string): string {
   return (s || "")
     .toLowerCase()
     .replace(/ı/g, "i")
@@ -249,28 +272,22 @@ function normalizeTr(s) {
 
 /* ─────────────────── HTML Karakter Kaçışı ─────────────────── */
 
-function escHtml(str) {
+export function escHtml(str: string): string {
   return (str || "").replace(/[&<>"']/g, (c) => {
     switch (c) {
-      case "&":
-        return "&amp;";
-      case "<":
-        return "&lt;";
-      case ">":
-        return "&gt;";
-      case '"':
-        return "&quot;";
-      case "'":
-        return "&#39;";
-      default:
-        return c;
+      case "&": return "&amp;";
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case '"': return "&quot;";
+      case "'": return "&#39;";
+      default: return c;
     }
   });
 }
 
 /* ─────────────────── Attribute Karakter Kaçışı ─────────────────── */
 
-function escAttr(str) {
+export function escAttr(str: string): string {
   try {
     const s = str == null ? "" : String(str);
     return s
@@ -279,17 +296,17 @@ function escAttr(str) {
       .replace(/'/g, "&#39;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
-  } catch (e) {
+  } catch (_e) {
     return "";
   }
 }
 
 /* ─────────────────── Güvenli Harici URL Doğrulama ─────────────────── */
 
-function escUrl(url) {
+export function escUrl(url: string): string {
   if (!url) return "";
   try {
-    var p = new URL(url);
+    const p = new URL(url);
     if (p.protocol !== "http:" && p.protocol !== "https:") return "";
     return escAttr(p.toString());
   } catch (_) {
@@ -297,7 +314,7 @@ function escUrl(url) {
   }
 }
 
-function safeExternalUrl(value) {
+export function safeExternalUrl(value: string): string {
   if (!value) return "";
   try {
     const parsed = new URL(value);
@@ -312,7 +329,7 @@ function safeExternalUrl(value) {
 
 /* ─────────────────── Fiyat Giriş Formatlama ─────────────────── */
 
-function applyPriceFormat(inputEl) {
+export function applyPriceFormat(inputEl: HTMLInputElement): void {
   if (!inputEl) return;
   let value = inputEl.value.replace(/[^0-9,]/g, "");
   const parts = value.split(",");
@@ -331,9 +348,9 @@ function applyPriceFormat(inputEl) {
 
 /* ─────────────────── Tarih Giriş Parse ─────────────────── */
 
-function parseDateInput(raw) {
+export function parseDateInput(raw: string): string {
   const parts = (raw || "").trim().split(/[./-]/);
-  let result;
+  let result: string | undefined;
   if (parts.length === 3) {
     result =
       parts[0].length <= 2
@@ -348,7 +365,7 @@ function parseDateInput(raw) {
 
 /* ─────────────────── Fiyat Giriş Parse ─────────────────── */
 
-function parsePriceInput(value) {
+export function parsePriceInput(value: string): number {
   return parseFloat((value || "").replace(/\./g, "").replace(",", ".")) || 0;
 }
 
@@ -356,7 +373,7 @@ function parsePriceInput(value) {
 /*                          POST SİSTEMİ YARDIMCILARI                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const POST_PHRASES = [
+export const POST_PHRASES = [
   "dedi ki;",
   "şöyle düşündü;",
   "demişti ki;",
@@ -375,7 +392,7 @@ const POST_PHRASES = [
   "fikrini beyan etti;",
 ];
 
-function formatTimeAgo(timestamp, phraseIndex, skipPhrase) {
+export function formatTimeAgo(timestamp: number, phraseIndex?: number, skipPhrase?: boolean): string {
   if (!timestamp) return "";
   const diff = Date.now() - timestamp;
   const minutes = Math.floor(diff / 60000);
@@ -391,49 +408,49 @@ function formatTimeAgo(timestamp, phraseIndex, skipPhrase) {
   else if (days >= 365) timeText = Math.floor(days / 365) + " yıl önce";
 
   if (skipPhrase) return timeText;
-  var idx =
+  const idx =
     phraseIndex !== undefined && phraseIndex !== null
       ? phraseIndex
       : Math.floor(Math.random() * POST_PHRASES.length);
   return timeText + " " + POST_PHRASES[idx];
 }
 
-function formatDateTime(timestamp) {
+export function formatDateTime(timestamp: number): string {
   if (!timestamp) return "";
-  var date = new Date(timestamp);
-  var day = String(date.getDate()).padStart(2, "0");
-  var month = String(date.getMonth() + 1).padStart(2, "0");
-  var year = date.getFullYear();
-  var hours = String(date.getHours()).padStart(2, "0");
-  var minutes = String(date.getMinutes()).padStart(2, "0");
+  const date = new Date(timestamp);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
   return day + "." + month + "." + year + " " + hours + ":" + minutes;
 }
 
-/* ─────────────────── Avatar Harfini Güncelle (Yardımcı) ─────────────────── */
+/* ─────────────────── Avatar Yardımcıları ─────────────────── */
 
-function updateAvatarLetter(elementId, name) {
-  var el = document.getElementById(elementId);
+export function updateAvatarLetter(elementId: string, name: string): void {
+  const el = document.getElementById(elementId);
   if (el) el.textContent = (name || "?").charAt(0).toUpperCase();
 }
 
-function getAvatarLetter(name) {
+export function getAvatarLetter(name: string): string {
   return (name || "?").charAt(0).toUpperCase();
 }
 
-function refreshAllAvatars(name) {
+export function refreshAllAvatars(name: string): void {
   updateAvatarLetter("profileAvatarLetter", name);
   updateAvatarLetter("sidebarAvatar", name);
 }
 
-function getPostCards(postId) {
+export function getPostCards(postId: string): NodeListOf<Element> {
   return document.querySelectorAll('[data-post-id="' + postId + '"]');
 }
 
-function buildAvatarHTML(name, cssClass) {
+export function buildAvatarHTML(name: string, cssClass: string): string {
   return '<div class="' + cssClass + '">' + getAvatarLetter(name) + "</div>";
 }
 
-function buildPostMenuHTML(pid, isOwn) {
+export function buildPostMenuHTML(pid: string, isOwn: boolean): string {
   if (!isOwn) return "";
   return (
     '<button class="post-menu-btn" data-action="post-menu" data-id="' +
@@ -452,27 +469,27 @@ function buildPostMenuHTML(pid, isOwn) {
   );
 }
 
-function renderLoadMoreBtn(afterEl, btnId, onClick) {
+export function renderLoadMoreBtn(afterEl: Element, btnId: string, onClick: () => void): void {
   if (document.getElementById(btnId)) return;
   const btn = document.createElement("button");
   btn.id = btnId;
   btn.className = "load-more-btn";
   btn.textContent = "Daha Fazla Göster";
   btn.onclick = onClick;
-  afterEl.parentNode.insertBefore(btn, afterEl.nextSibling);
+  afterEl.parentNode!.insertBefore(btn, afterEl.nextSibling);
 }
 
-function removeLoadMoreBtn(btnId) {
+export function removeLoadMoreBtn(btnId: string): void {
   const btn = document.getElementById(btnId);
   if (btn) btn.remove();
 }
 
-function _onlyCommentLikesChanged(oldComment, newComment) {
+export function _onlyCommentLikesChanged(oldComment: any, newComment: any): boolean {
   if (!oldComment || !newComment) return false;
   if (oldComment.text !== newComment.text) return false;
   if (oldComment.uid !== newComment.uid) return false;
-  var oldRC = oldComment.replies ? Object.keys(oldComment.replies).length : 0;
-  var newRC = newComment.replies ? Object.keys(newComment.replies).length : 0;
+  const oldRC = oldComment.replies ? Object.keys(oldComment.replies).length : 0;
+  const newRC = newComment.replies ? Object.keys(newComment.replies).length : 0;
   if (oldRC !== newRC) return false;
   return true;
 }
