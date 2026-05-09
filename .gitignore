@@ -1,10 +1,7 @@
 .env.bat
 update.bat
+update.mjs
 OPTIMIZATIONS.md
-VIEW.md
-PLAN.md
-rtdb-rules-clean.json
-storage-rules-clean.rules
 dist/
 release/
 node_modules/
