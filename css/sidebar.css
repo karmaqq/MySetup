@@ -206,6 +206,12 @@
   z-index: 1;
 }
 
+.sidebar-update-btn .update-dots {
+  display: inline-block;
+  min-width: 0.7em;
+  text-align: left;
+}
+
 .sidebar-update-btn.downloading {
   background: rgba(107, 114, 128, 0.2);
   border-color: var(--border2);

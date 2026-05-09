@@ -24,12 +24,21 @@ if (window.electronAPI) {
     if (dotInterval) clearInterval(dotInterval);
     let step = 0;
     const steps = ["", ".", "..", "..."];
-    dotInterval = window.setInterval(() => {
-      if (updateBtnSpan) {
-        updateBtnSpan.textContent = `Yeniden Başlatılıyor${steps[step % 4]}`;
+
+    if (updateBtnSpan) {
+      let dotsEl = updateBtnSpan.querySelector(".update-dots") as HTMLElement | null;
+      if (!dotsEl) {
+        updateBtnSpan.textContent = "Yeniden Başlatılıyor";
+        dotsEl = document.createElement("span");
+        dotsEl.className = "update-dots";
+        updateBtnSpan.appendChild(dotsEl);
       }
-      step++;
-    }, 250);
+
+      dotInterval = window.setInterval(() => {
+        if (dotsEl) dotsEl.textContent = steps[step % 4];
+        step++;
+      }, 250);
+    }
   }
 
   /* ─────────────────── Nokta Animasyonunu Durdur ─────────────────── */
@@ -65,10 +74,10 @@ if (window.electronAPI) {
 
   window.electronAPI.onUpdateDownloaded?.(() => {
     if (!updateBtn || !updateBtnSpan) return;
-    updateBtn.classList.add("visible", "ready");
-    updateBtn.classList.remove("downloading");
-    updateBtn.style.setProperty("--progress", "100%");
+    updateBtnSpan.textContent = "Yeniden Başlatılıyor";
+    updateBtn.style.pointerEvents = "none";
     startDotAnimation();
+    window.electronAPI.launchUpdater();
   });
 
   /* ─────────────────── Güncelleme Hatası ─────────────────── */
