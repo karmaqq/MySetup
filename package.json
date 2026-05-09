@@ -1,6 +1,6 @@
 {
     "name":  "mysetup",
-    "version":  "2.7.7",
+    "version":  "2.7.8",
     "description":  "Envanter Sistemi",
     "author":  "Karma shbkarma@gmail.com",
     "main":  "dist/main.js",
@@ -10,7 +10,8 @@
                     "build:ts":  "node build.mjs",
                     "watch:ts":  "node build.mjs --watch",
                     "build":  "node build.mjs \u0026\u0026 electron-builder",
-                    "clean":  "node -e \"require(\u0027fs\u0027).rmSync(\u0027dist\u0027,{recursive:true,force:true})\""
+                    "build:full":  "npm run clean \u0026\u0026 node build.mjs \u0026\u0026 electron-builder",
+                    "clean":  "node -e \"require(\u0027fs\u0027).rmSync(\u0027dist\u0027,{recursive:true,force:true});require(\u0027fs\u0027).rmSync(\u0027release\u0027,{recursive:true,force:true})\""
                 },
     "dependencies":  {
                          "electron-updater":  "^6.8.3"
@@ -31,13 +32,13 @@
                                       "output":  "release",
                                       "buildResources":  "build"
                                   },
+                  "afterPack":  "./scripts/clean-locales.js",
                   "files":  [
                                 "dist/**/*",
                                 "index.html",
                                 "css/**/*",
                                 "assets/**/*",
-                                "js/firebase-config.js",
-                                "node_modules/**/*"
+                                "js/firebase-config.js"
                             ],
                   "publish":  [
                                   {
