@@ -163,14 +163,14 @@ mysetup/
 | `src/renderer/posts-actions.ts` | 12 |
 | `src/renderer/posts-create.ts` | 6 |
 | `src/renderer/posts-render.ts` | 20 |
-| `src/renderer/profile.ts` | 15 |
+| `src/renderer/profile.ts` | 19 |
 | `src/renderer/table.ts` | 19 |
 | `src/renderer/toolbar.ts` | 6 |
 | `src/renderer/updater-ui.ts` | 2 |
 | `src/renderer/userset.ts` | 8 |
 | `src/renderer/utils.ts` | 26 |
 | `src/updater/updater.ts` | 2 |
-| **Toplam** | **191** |
+| **Toplam** | **195** |
 
 ---
 

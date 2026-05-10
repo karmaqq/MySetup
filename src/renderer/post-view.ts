@@ -8,9 +8,19 @@ import { _renderCommentThreadHTML } from "./post-comment";
 import { addCommentToFirebase, addReplyToFirebase } from "./firebase-post";
 import { showToast } from "./io";
 import {
-  _currentPage, mainScroll, _commentListenerRefs,
-  escHtml, escAttr, escUrl, formatTimeAgo, formatDateTime, _onlyCommentLikesChanged,
-  buildAvatarHTML, buildPostMenuHTML, showPage
+  _currentPage,
+  mainScroll,
+  _commentListenerRefs,
+  escHtml,
+  escAttr,
+  escUrl,
+  formatTimeAgo,
+  formatDateTime,
+  _onlyCommentLikesChanged,
+  buildAvatarHTML,
+  buildPostMenuHTML,
+  showPage,
+  getTotalCommentCount,
 } from "./utils";
 import { _patchCommentLikeBtn } from "./post-comment";
 
@@ -38,9 +48,13 @@ function openPostView(postId: string, fromCommentBtn?: boolean): void {
 
   (window as any)._viewingPostId = postId;
   _previousPage = _currentPage;
-  _previousProfileTab = _currentPage === "profile" ? (window as any)._profileTab : null;
+  _previousProfileTab =
+    _currentPage === "profile" ? (window as any)._profileTab : null;
   sessionStorage.setItem("_pvPreviousPage", _previousPage || "home");
-  sessionStorage.setItem("_pvScrollTop", String(mainScroll ? mainScroll.scrollTop : 0));
+  sessionStorage.setItem(
+    "_pvScrollTop",
+    String(mainScroll ? mainScroll.scrollTop : 0),
+  );
   _previousScrollTop = mainScroll ? mainScroll.scrollTop : 0;
 
   var authorLabel = document.getElementById("postViewAuthorLabel");
@@ -73,7 +87,10 @@ function openPostView(postId: string, fromCommentBtn?: boolean): void {
 /* ─────────────────── Post View'i kapatır ve geri döner ─────────────────── */
 
 function closePostView(): void {
-  if ((window as any)._viewingPostId && _commentListenerRefs[(window as any)._viewingPostId]) {
+  if (
+    (window as any)._viewingPostId &&
+    _commentListenerRefs[(window as any)._viewingPostId]
+  ) {
     (_commentListenerRefs[(window as any)._viewingPostId] as any).off();
     delete _commentListenerRefs[(window as any)._viewingPostId];
   }
@@ -128,9 +145,7 @@ function _renderPostViewContent(postId: string, postData: any): void {
   var isOwn = !!(user && user.uid === postData.uid);
   var liked = postData.likes && user && postData.likes[user.uid];
   var likeCount = postData.likes ? Object.keys(postData.likes).length : 0;
-  var commentCount = postData.comments
-    ? Object.keys(postData.comments).length
-    : 0;
+  var commentCount = getTotalCommentCount(postData);
   var pid = escAttr(postId);
 
   var html = `<div class="post-card" data-post-id="${pid}">`;
@@ -193,7 +208,9 @@ function _renderPostViewContent(postId: string, postData: any): void {
 
   container.innerHTML = html;
 
-  var lazyImg = container.querySelector(".post-img-lazy") as HTMLImageElement | null;
+  var lazyImg = container.querySelector(
+    ".post-img-lazy",
+  ) as HTMLImageElement | null;
   if (lazyImg) _initPostImage(lazyImg);
 
   _initPostViewCommentListener(postId);
@@ -279,8 +296,14 @@ function _initPostViewCommentListener(postId: string): void {
     var wasOpen = repliesSec && !repliesSec.classList.contains("hidden");
     thread.replaceWith(newEl);
     if (wasOpen) {
-      var newRepliesSec = newEl.querySelector(".replies-section") as HTMLElement | null;
+      var newRepliesSec = newEl.querySelector(
+        ".replies-section",
+      ) as HTMLElement | null;
       if (newRepliesSec) newRepliesSec.classList.remove("hidden");
+      var newToggleBtn = newEl.querySelector(
+        ".toggle-replies-btn",
+      ) as HTMLElement | null;
+      if (newToggleBtn) newToggleBtn.textContent = "yanıtları gizle";
     }
   });
 
@@ -301,7 +324,7 @@ function _initPostViewCommentListener(postId: string): void {
 
 function _updatePostViewCommentCount(postId: string): void {
   var post = allPosts[postId];
-  var count = post && post.comments ? Object.keys(post.comments).length : 0;
+  var count = getTotalCommentCount(post);
   document.querySelectorAll(".comment-count-" + postId).forEach(function (el) {
     el.textContent = String(count);
   });
@@ -324,7 +347,9 @@ function _setPostViewReplyTarget(commentId: string, username: string): void {
     target.classList.add("visible");
   }
 
-  var input = document.getElementById("postViewCommentInput") as HTMLTextAreaElement | null;
+  var input = document.getElementById(
+    "postViewCommentInput",
+  ) as HTMLTextAreaElement | null;
   if (input) {
     input.placeholder = "@" + username + " kişisine yanıtla...";
     input.focus();
@@ -340,7 +365,9 @@ function _clearPostViewReplyTarget(): void {
   var target = document.getElementById("postViewReplyTarget");
   if (target) target.classList.remove("visible");
 
-  var input = document.getElementById("postViewCommentInput") as HTMLTextAreaElement | null;
+  var input = document.getElementById(
+    "postViewCommentInput",
+  ) as HTMLTextAreaElement | null;
   if (input) input.placeholder = "Yorum yaz...";
 }
 
@@ -351,7 +378,9 @@ function _clearPostViewReplyTarget(): void {
 /* ─────────────────── Yorum veya yanıt gönderir ─────────────────── */
 
 function _submitPostViewComment(): void {
-  var input = document.getElementById("postViewCommentInput") as HTMLTextAreaElement | null;
+  var input = document.getElementById(
+    "postViewCommentInput",
+  ) as HTMLTextAreaElement | null;
   if (!input || !(window as any)._viewingPostId) return;
   if (!allPosts[(window as any)._viewingPostId]) {
     showToast("Bu gönderi artık mevcut değil", "warn");
@@ -385,7 +414,13 @@ function _submitPostViewComment(): void {
         var repliesSec = document.getElementById(
           "replies-" + (window as any)._viewingPostId + "-" + targetCid,
         );
-        if (repliesSec) repliesSec.classList.remove("hidden");
+        if (repliesSec && repliesSec.classList.contains("hidden")) {
+          repliesSec.classList.remove("hidden");
+          var toggleBtn = document.getElementById(
+            "toggleReplies-" + (window as any)._viewingPostId + "-" + targetCid,
+          ) as HTMLElement | null;
+          if (toggleBtn) toggleBtn.textContent = "yanıtları gizle";
+        }
       })
       .catch(function () {
         showToast("Yanıt eklenemedi", "error");
@@ -448,7 +483,9 @@ if (_pvReplyCancel)
 
 /* ─────────────────── Composer input ─────────────────── */
 
-  var _pvInput = document.getElementById("postViewCommentInput") as HTMLTextAreaElement | null;
+var _pvInput = document.getElementById(
+  "postViewCommentInput",
+) as HTMLTextAreaElement | null;
 if (_pvInput) {
   _pvInput.addEventListener("input", function (this: HTMLTextAreaElement) {
     var sendBtn = document.getElementById("postViewSendBtn");
@@ -474,12 +511,16 @@ if (_pvSendBtn) _pvSendBtn.addEventListener("click", _submitPostViewComment);
 var _pvContent = document.getElementById("postViewContent");
 if (_pvContent) {
   _pvContent.addEventListener("click", function (e: MouseEvent) {
-    var btn = (e.target as HTMLElement).closest("[data-action]") as HTMLElement | null;
+    var btn = (e.target as HTMLElement).closest(
+      "[data-action]",
+    ) as HTMLElement | null;
     if (!btn) return;
     var action = btn.dataset.action;
 
     if (action === "pv-focus-composer") {
-      var input = document.getElementById("postViewCommentInput") as HTMLElement | null;
+      var input = document.getElementById(
+        "postViewCommentInput",
+      ) as HTMLElement | null;
       if (input) input.focus();
       return;
     }
@@ -520,7 +561,8 @@ function _restorePostViewOnLoad(): void {
         escHtml(postData.username || "Kullanıcı") + " gönderisi";
     }
     _previousPage = sessionStorage.getItem("_pvPreviousPage") || "home";
-    _previousScrollTop = parseInt(sessionStorage.getItem("_pvScrollTop") || "0", 10) || 0;
+    _previousScrollTop =
+      parseInt(sessionStorage.getItem("_pvScrollTop") || "0", 10) || 0;
     _pvActiveNavBtn = document.querySelector(
       '.sidebar-nav-btn[data-page="' + _previousPage + '"]',
     );

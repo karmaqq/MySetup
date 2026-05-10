@@ -178,6 +178,32 @@
   border-top: 1px solid var(--border);
 }
 
+/* ─────────────────── Tarih Ayracı ─────────────────── */
+
+.profile-date-sep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.profile-date-sep span {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profile-date-sep::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border2);
+}
+
 /* ─────────────────── Sekme İçi Post Akışı ─────────────────── */
 
 #userPostsTab,

@@ -4,14 +4,28 @@
 
 import { db } from "./firebase-init";
 import { showToast } from "./io";
-import { _renderCommentThreadHTML, _renderCommentComposerHTML } from "./post-comment";
+import { _renderCommentThreadHTML } from "./post-comment";
 import {
-  postsFeed, _commentListenerRefs, formatTimeAgo, formatDateTime, escHtml, escAttr, escUrl,
-  getPostCards, buildAvatarHTML, buildPostMenuHTML, PAGE_SIZE, mainScroll
+  postsFeed,
+  _commentListenerRefs,
+  formatTimeAgo,
+  formatDateTime,
+  escHtml,
+  escAttr,
+  escUrl,
+  getPostCards,
+  buildAvatarHTML,
+  buildPostMenuHTML,
+  PAGE_SIZE,
+  mainScroll,
+  getTotalCommentCount,
 } from "./utils";
 import { renderLoadMoreBtn, removeLoadMoreBtn } from "./utils";
 import {
-  initUserLikesListener, initUserPostsListener, removeUserPostsListener, removeUserLikesListener
+  initUserLikesListener,
+  initUserPostsListener,
+  removeUserPostsListener,
+  removeUserLikesListener,
 } from "./firebase-post";
 
 /* ─────────────────── Feed Durum Değişkenleri ─────────────────── */
@@ -33,9 +47,7 @@ export function _renderPostHTML(postId: string, postData: any): string {
   const isOwn = !!(user && user.uid === postData.uid);
   const liked = postData.likes && user && postData.likes[user.uid];
   const likeCount = postData.likes ? Object.keys(postData.likes).length : 0;
-  const commentCount = postData.comments
-    ? Object.keys(postData.comments).length
-    : 0;
+  const commentCount = getTotalCommentCount(postData);
 
   const timeText = formatTimeAgo(postData.createdAt, postData.phraseIndex);
   const pid = escAttr(postId);
@@ -101,7 +113,11 @@ function _handlePostImageLoad(img: HTMLImageElement): void {
 
 /* ─────────────────── Post ekle (prepend/append, animasyonlu) ─────────────────── */
 
-function _insertPostToFeed(postId: string, postData: any, prepend: boolean): void {
+function _insertPostToFeed(
+  postId: string,
+  postData: any,
+  prepend: boolean,
+): void {
   if (!postsFeed) return;
   const wrapper = document.createElement("div");
   wrapper.innerHTML = _renderPostHTML(postId, postData);
@@ -136,7 +152,9 @@ export function _patchPostCard(postId: string, postData: any): void {
   const oldSection = el.querySelector(".comment-section");
   const wasOpen = oldSection && oldSection.classList.contains("visible");
   el.replaceWith(newEl);
-  _initPostImage(newEl.querySelector(".post-img-lazy") as HTMLImageElement | null);
+  _initPostImage(
+    newEl.querySelector(".post-img-lazy") as HTMLImageElement | null,
+  );
   if (wasOpen) {
     const newSection = newEl.querySelector(".comment-section");
     if (newSection) newSection.classList.add("visible");
@@ -147,12 +165,18 @@ export function _patchPostCard(postId: string, postData: any): void {
 
 /* ─────────────────── Sadece beğeni sayacını günceller ─────────────────── */
 
-export function _patchPostLikes(postId: string, likes: Record<string, any> | null, user: firebase.User | null): void {
+export function _patchPostLikes(
+  postId: string,
+  likes: Record<string, any> | null,
+  user: firebase.User | null,
+): void {
   const likeCount = likes ? Object.keys(likes).length : 0;
   const liked = user && likes && likes[user.uid];
   const cards = getPostCards(postId);
   cards.forEach(function (card) {
-    const btn = card.querySelector('[data-action="like-post"]') as HTMLElement | null;
+    const btn = card.querySelector(
+      '[data-action="like-post"]',
+    ) as HTMLElement | null;
     if (!btn) return;
     btn.classList.toggle("liked", !!liked);
     const svg = btn.querySelector("svg");
@@ -257,37 +281,39 @@ function _startPostsListener(): void {
   if (db.postsRef) db.postsRef.off();
   const ref = db.postsRef!.orderByChild("createdAt");
 
-  ref.limitToLast(PAGE_SIZE).once("value", function (snap: firebase.database.DataSnapshot) {
-    const raw = (snap.val() || {}) as Record<string, any>;
-    const keys = Object.keys(raw).sort(function (a, b) {
-      return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);
+  ref
+    .limitToLast(PAGE_SIZE)
+    .once("value", function (snap: firebase.database.DataSnapshot) {
+      const raw = (snap.val() || {}) as Record<string, any>;
+      const keys = Object.keys(raw).sort(function (a, b) {
+        return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);
+      });
+
+      keys.forEach(function (id) {
+        allPosts[id] = raw[id];
+      });
+
+      if (keys.length > 0) {
+        _oldestLoadedKey = keys[keys.length - 1];
+      }
+
+      if (postsFeed) postsFeed.innerHTML = "";
+      keys.forEach(function (id) {
+        _insertPostToFeed(id, raw[id], false);
+      });
+
+      if (keys.length === 0) {
+        _renderEmptyFeed();
+      }
+
+      _checkHasMorePosts(
+        raw[_oldestLoadedKey!] ? raw[_oldestLoadedKey!].createdAt : null,
+      );
+
+      _listenForNewPosts(ref);
+      (window as any)._postsReadyFired = true;
+      document.dispatchEvent(new CustomEvent("postsReady"));
     });
-
-    keys.forEach(function (id) {
-      allPosts[id] = raw[id];
-    });
-
-    if (keys.length > 0) {
-      _oldestLoadedKey = keys[keys.length - 1];
-    }
-
-    if (postsFeed) postsFeed.innerHTML = "";
-    keys.forEach(function (id) {
-      _insertPostToFeed(id, raw[id], false);
-    });
-
-    if (keys.length === 0) {
-      _renderEmptyFeed();
-    }
-
-    _checkHasMorePosts(
-      raw[_oldestLoadedKey!] ? raw[_oldestLoadedKey!].createdAt : null,
-    );
-
-    _listenForNewPosts(ref);
-    (window as any)._postsReadyFired = true;
-    document.dispatchEvent(new CustomEvent("postsReady"));
-  });
 }
 
 /* ─────────────────── Veritabanında daha fazla post var mı kontrol eder ─────────────────── */
@@ -298,8 +324,7 @@ function _checkHasMorePosts(oldestTs: number | null): void {
     _removeLoadMoreBtn();
     return;
   }
-  db.postsRef!
-    .orderByChild("createdAt")
+  db.postsRef!.orderByChild("createdAt")
     .endAt(oldestTs - 1)
     .limitToLast(1)
     .once("value", function (snap: firebase.database.DataSnapshot) {
@@ -383,7 +408,9 @@ function _loadMorePosts(): void {
   if (_loadingMore || !_hasMorePosts || !_oldestLoadedKey) return;
   _loadingMore = true;
 
-  const btn = document.getElementById("loadMoreBtn") as HTMLButtonElement | null;
+  const btn = document.getElementById(
+    "loadMoreBtn",
+  ) as HTMLButtonElement | null;
   if (btn) {
     btn.disabled = true;
     btn.textContent = "Yükleniyor...";
@@ -396,8 +423,7 @@ function _loadMorePosts(): void {
     return;
   }
 
-  db.postsRef!
-    .orderByChild("createdAt")
+  db.postsRef!.orderByChild("createdAt")
     .endAt(oldestTs - 1)
     .limitToLast(PAGE_SIZE)
     .once("value", function (snap: firebase.database.DataSnapshot) {
@@ -458,7 +484,5 @@ function _onlyLikesChanged(oldPost: any, newPost: any): boolean {
     if (oldPost[primitiveFields[i]] !== newPost[primitiveFields[i]])
       return false;
   }
-  const oldCC = oldPost.comments ? Object.keys(oldPost.comments).length : 0;
-  const newCC = newPost.comments ? Object.keys(newPost.comments).length : 0;
-  return oldCC === newCC;
+  return getTotalCommentCount(oldPost) === getTotalCommentCount(newPost);
 }

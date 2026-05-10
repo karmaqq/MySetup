@@ -24,7 +24,9 @@ Object.defineProperty(window, "_viewingPostId", {
   },
   configurable: true,
 });
-export const mainScroll = document.getElementById("mainScroll") as HTMLElement | null;
+export const mainScroll = document.getElementById(
+  "mainScroll",
+) as HTMLElement | null;
 
 export const PAGE_SIZE = 20;
 
@@ -38,8 +40,12 @@ export function showPage(pageName: string): void {
   const pages = document.querySelectorAll(".page-content");
   const navBtns = document.querySelectorAll(".sidebar-nav-btn");
 
-  const oldPage = document.querySelector(".page-content.active") as HTMLElement | null;
-  const newPage = document.getElementById(pageName + "Page") as HTMLElement | null;
+  const oldPage = document.querySelector(
+    ".page-content.active",
+  ) as HTMLElement | null;
+  const newPage = document.getElementById(
+    pageName + "Page",
+  ) as HTMLElement | null;
 
   if (!newPage || oldPage === newPage) {
     _isAnimating = false;
@@ -78,10 +84,16 @@ export function showPage(pageName: string): void {
     _isAnimating = false;
     _currentPage = pageName;
     sessionStorage.setItem("_lastPage", pageName);
-    if (pageName === "profile" && typeof (window as any).updateProfilePosts === "function") {
+    if (
+      pageName === "profile" &&
+      typeof (window as any).updateProfilePosts === "function"
+    ) {
       (window as any).updateProfilePosts();
     }
-    if (pageName !== "home" && typeof (window as any).clearPostDraft === "function") {
+    if (
+      pageName !== "home" &&
+      typeof (window as any).clearPostDraft === "function"
+    ) {
       (window as any).clearPostDraft();
     }
     if (typeof (window as any)._onPageChange === "function") {
@@ -157,7 +169,10 @@ export let currentStatusFilter = "all";
 export function setCurrentStatusFilter(v: string): void {
   currentStatusFilter = v;
 }
-export let currentSort: { col: string; dir: string } = { col: "date", dir: "asc" };
+export let currentSort: { col: string; dir: string } = {
+  col: "date",
+  dir: "asc",
+};
 let _editingIdVal: string | null = null;
 export let editingId: string | null = _editingIdVal;
 export function setEditingId(v: string | null): void {
@@ -182,7 +197,8 @@ export function scheduleRender(): void {
   if (_renderRafId) cancelAnimationFrame(_renderRafId);
   _renderRafId = requestAnimationFrame(function () {
     _renderRafId = null;
-    if (typeof (window as any).renderAll === "function") (window as any).renderAll();
+    if (typeof (window as any).renderAll === "function")
+      (window as any).renderAll();
   });
 }
 
@@ -218,40 +234,90 @@ export const versionDisplay = document.getElementById("versionDisplay");
 
 /* ─────────────────── Post Sistemi ─────────────────── */
 
-export const postsFeed = document.getElementById("postsFeed") as HTMLElement | null;
+export const postsFeed = document.getElementById(
+  "postsFeed",
+) as HTMLElement | null;
 
 /* ─────────────────── Arama ─────────────────── */
 
-export const searchInput = document.getElementById("searchInput") as HTMLInputElement | null;
-export const clearSearch = document.getElementById("clearSearch") as HTMLElement | null;
+export const searchInput = document.getElementById(
+  "searchInput",
+) as HTMLInputElement | null;
+export const clearSearch = document.getElementById(
+  "clearSearch",
+) as HTMLElement | null;
 
 /* ─────────────────── Tablo ve İstatistikler ─────────────────── */
 
-export const tableBody = document.getElementById("tableBody") as HTMLElement | null;
-export const addItemBtn = document.getElementById("addItemBtn") as HTMLElement | null;
-export const resultCount = document.getElementById("resultCount") as HTMLElement | null;
-export const statTotal = document.getElementById("statTotal") as HTMLElement | null;
-export const statCount = document.getElementById("statCount") as HTMLElement | null;
-export const statHealthy = document.getElementById("statHealthy") as HTMLElement | null;
-export const statExpensive = document.getElementById("statExpensive") as HTMLElement | null;
-export const totalCostDisplay = document.getElementById("totalCostDisplay") as HTMLElement | null;
+export const tableBody = document.getElementById(
+  "tableBody",
+) as HTMLElement | null;
+export const addItemBtn = document.getElementById(
+  "addItemBtn",
+) as HTMLElement | null;
+export const resultCount = document.getElementById(
+  "resultCount",
+) as HTMLElement | null;
+export const statTotal = document.getElementById(
+  "statTotal",
+) as HTMLElement | null;
+export const statCount = document.getElementById(
+  "statCount",
+) as HTMLElement | null;
+export const statHealthy = document.getElementById(
+  "statHealthy",
+) as HTMLElement | null;
+export const statExpensive = document.getElementById(
+  "statExpensive",
+) as HTMLElement | null;
+export const totalCostDisplay = document.getElementById(
+  "totalCostDisplay",
+) as HTMLElement | null;
 
 /* ─────────────────── Düzenleme Modali ─────────────────── */
 
-export const editModal = document.getElementById("editModal") as HTMLElement | null;
-export const modalClose = document.getElementById("modalClose") as HTMLElement | null;
-export const modalCancel = document.getElementById("modalCancel") as HTMLElement | null;
-export const modalSave = document.getElementById("modalSave") as HTMLElement | null;
-export const editDate = document.getElementById("editDate") as HTMLInputElement | null;
-export const editDatePicker = document.getElementById("editDatePicker") as HTMLInputElement | null;
-export const editCalIcon = document.getElementById("editCalIcon") as HTMLElement | null;
-export const editComponent = document.getElementById("editComponent") as HTMLInputElement | null;
-export const editBrand = document.getElementById("editBrand") as HTMLInputElement | null;
-export const editUrl = document.getElementById("editUrl") as HTMLInputElement | null;
-export const editSpecs = document.getElementById("editSpecs") as HTMLInputElement | null;
-export const editPrice = document.getElementById("editPrice") as HTMLInputElement | null;
-export const editVendor = document.getElementById("editVendor") as HTMLInputElement | null;
-export const editStatus = document.getElementById("editStatus") as HTMLSelectElement | null;
+export const editModal = document.getElementById(
+  "editModal",
+) as HTMLElement | null;
+export const modalClose = document.getElementById(
+  "modalClose",
+) as HTMLElement | null;
+export const modalCancel = document.getElementById(
+  "modalCancel",
+) as HTMLElement | null;
+export const modalSave = document.getElementById(
+  "modalSave",
+) as HTMLElement | null;
+export const editDate = document.getElementById(
+  "editDate",
+) as HTMLInputElement | null;
+export const editDatePicker = document.getElementById(
+  "editDatePicker",
+) as HTMLInputElement | null;
+export const editCalIcon = document.getElementById(
+  "editCalIcon",
+) as HTMLElement | null;
+export const editComponent = document.getElementById(
+  "editComponent",
+) as HTMLInputElement | null;
+export const editBrand = document.getElementById(
+  "editBrand",
+) as HTMLInputElement | null;
+export const editUrl = document.getElementById(
+  "editUrl",
+) as HTMLInputElement | null;
+export const editSpecs = document.getElementById(
+  "editSpecs",
+) as HTMLInputElement | null;
+export const editPrice = document.getElementById(
+  "editPrice",
+) as HTMLInputElement | null;
+export const editVendor = document.getElementById(
+  "editVendor",
+) as HTMLInputElement | null;
+export const editStatus = document.getElementById(
+  "editStatus",
+) as HTMLSelectElement | null;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          YARDIMCI FONKSİYONLAR                           */
@@ -275,12 +341,18 @@ export function normalizeTr(s: string): string {
 export function escHtml(str: string): string {
   return (str || "").replace(/[&<>"']/g, (c) => {
     switch (c) {
-      case "&": return "&amp;";
-      case "<": return "&lt;";
-      case ">": return "&gt;";
-      case '"': return "&quot;";
-      case "'": return "&#39;";
-      default: return c;
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      case "'":
+        return "&#39;";
+      default:
+        return c;
     }
   });
 }
@@ -392,7 +464,11 @@ export const POST_PHRASES = [
   "fikrini beyan etti;",
 ];
 
-export function formatTimeAgo(timestamp: number, phraseIndex?: number, skipPhrase?: boolean): string {
+export function formatTimeAgo(
+  timestamp: number,
+  phraseIndex?: number,
+  skipPhrase?: boolean,
+): string {
   if (!timestamp) return "";
   const diff = Date.now() - timestamp;
   const minutes = Math.floor(diff / 60000);
@@ -469,7 +545,11 @@ export function buildPostMenuHTML(pid: string, isOwn: boolean): string {
   );
 }
 
-export function renderLoadMoreBtn(afterEl: Element, btnId: string, onClick: () => void): void {
+export function renderLoadMoreBtn(
+  afterEl: Element,
+  btnId: string,
+  onClick: () => void,
+): void {
   if (document.getElementById(btnId)) return;
   const btn = document.createElement("button");
   btn.id = btnId;
@@ -484,7 +564,20 @@ export function removeLoadMoreBtn(btnId: string): void {
   if (btn) btn.remove();
 }
 
-export function _onlyCommentLikesChanged(oldComment: any, newComment: any): boolean {
+export function getTotalCommentCount(post: any): number {
+  if (!post || !post.comments) return 0;
+  var total = Object.keys(post.comments).length;
+  Object.keys(post.comments).forEach(function (cid) {
+    if (post.comments[cid].replies)
+      total += Object.keys(post.comments[cid].replies).length;
+  });
+  return total;
+}
+
+export function _onlyCommentLikesChanged(
+  oldComment: any,
+  newComment: any,
+): boolean {
   if (!oldComment || !newComment) return false;
   if (oldComment.text !== newComment.text) return false;
   if (oldComment.uid !== newComment.uid) return false;

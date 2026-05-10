@@ -6,7 +6,10 @@ import { escHtml, escAttr, formatTimeAgo, buildAvatarHTML } from "./utils";
 
 /* ─────────────────── Ortak silme dropdown HTML ─────────────────── */
 
-function _buildDeleteDropdownHTML(action: string, attrs: Record<string, string>): string {
+function _buildDeleteDropdownHTML(
+  action: string,
+  attrs: Record<string, string>,
+): string {
   const attrStr = Object.keys(attrs)
     .map(function (k) {
       return `data-${k}="${attrs[k]}"`;
@@ -23,7 +26,12 @@ function _buildDeleteDropdownHTML(action: string, attrs: Record<string, string>)
 /*                       YORUM HTML                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-export function _renderCommentThreadHTML(postId: string, commentId: string, commentData: any, user: firebase.auth.User | null): string {
+export function _renderCommentThreadHTML(
+  postId: string,
+  commentId: string,
+  commentData: any,
+  user: firebase.auth.User | null,
+): string {
   const pid = escAttr(postId);
   const cid = escAttr(commentId);
   const isOwn = user && user.uid === commentData.uid;
@@ -104,7 +112,13 @@ export function _renderCommentThreadHTML(postId: string, commentId: string, comm
 /*                          YANIT HTML                                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-export function _renderReplyHTML(postId: string, commentId: string, replyId: string, replyData: any, user: firebase.auth.User | null): string {
+export function _renderReplyHTML(
+  postId: string,
+  commentId: string,
+  replyId: string,
+  replyData: any,
+  user: firebase.auth.User | null,
+): string {
   const pid = escAttr(postId);
   const cid = escAttr(commentId);
   const rid = escAttr(replyId);
@@ -147,7 +161,12 @@ export function _renderReplyHTML(postId: string, commentId: string, replyId: str
 /*                      YORUM/YANIT BEĞENİ DOM GÜNCELLEME                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-export function _patchCommentLikeBtn(postId: string, commentId: string, likes: Record<string, any> | null, user: firebase.auth.User | null): void {
+export function _patchCommentLikeBtn(
+  postId: string,
+  commentId: string,
+  likes: Record<string, any> | null,
+  user: firebase.auth.User | null,
+): void {
   const count = likes ? Object.keys(likes).length : 0;
   const liked = user && likes && likes[user.uid];
   const btn = document.querySelector(
@@ -161,7 +180,13 @@ export function _patchCommentLikeBtn(postId: string, commentId: string, likes: R
   if (span) span.textContent = String(count);
 }
 
-export function _patchReplyLikeBtn(postId: string, commentId: string, replyId: string, likes: Record<string, any> | null, user: firebase.auth.User | null): void {
+export function _patchReplyLikeBtn(
+  postId: string,
+  commentId: string,
+  replyId: string,
+  likes: Record<string, any> | null,
+  user: firebase.auth.User | null,
+): void {
   const count = likes ? Object.keys(likes).length : 0;
   const liked = user && likes && likes[user.uid];
   const btn = document.querySelector(
@@ -173,20 +198,4 @@ export function _patchReplyLikeBtn(postId: string, commentId: string, replyId: s
   if (svg) svg.setAttribute("fill", liked ? "currentColor" : "none");
   const span = btn.querySelector("span");
   if (span) span.textContent = String(count);
-}
-
-/* ─────────────────── Yorum Composer HTML ─────────────────── */
-
-export function _renderCommentComposerHTML(postId: string): string {
-  return (
-    `<div class="comment-composer" data-composer-post-id="${postId}">` +
-    `<div class="comment-composer-reply-target hidden"></div>` +
-    `<div class="comment-input-row">` +
-    `<div class="comment-input-wrapper">` +
-    `<textarea class="comment-input-field thin-scrollbar" placeholder="Yorum yaz..." maxlength="500" rows="1"></textarea>` +
-    `<button class="comment-send-btn">` +
-    `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">` +
-    `<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>` +
-    `</svg></button></div></div></div>`
-  );
 }

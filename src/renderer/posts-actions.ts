@@ -4,19 +4,31 @@
 
 import { allPosts } from "./posts-render";
 import { showToast } from "./io";
-import { _confirmDeletePost, _confirmDeleteComment, _confirmDeleteReply } from "./io";
 import {
-  togglePostLike, addCommentToFirebase, addReplyToFirebase,
-  toggleCommentLike, toggleReplyLike
+  _confirmDeletePost,
+  _confirmDeleteComment,
+  _confirmDeleteReply,
+} from "./io";
+import {
+  togglePostLike,
+  addCommentToFirebase,
+  toggleCommentLike,
+  toggleReplyLike,
 } from "./firebase-post";
+import { _patchPostLikes } from "./posts-render";
 import {
-  _patchPostLikes
-} from "./posts-render";
-import {
-  _patchCommentLikeBtn, _patchReplyLikeBtn, _renderCommentThreadHTML
+  _patchCommentLikeBtn,
+  _patchReplyLikeBtn,
+  _renderCommentThreadHTML,
 } from "./post-comment";
 import {
-  getPostCards, _commentListenerRefs, _currentPage, escHtml, formatTimeAgo, _onlyCommentLikesChanged
+  getPostCards,
+  _commentListenerRefs,
+  _currentPage,
+  escHtml,
+  formatTimeAgo,
+  _onlyCommentLikesChanged,
+  getTotalCommentCount,
 } from "./utils";
 import { _removePostImage } from "./posts-create";
 
@@ -62,7 +74,11 @@ function _toggleCommentLike(postId: string, commentId: string): void {
 
 /* ─────────────────── Yanıt beğeni toggle (optimistic) ─────────────────── */
 
-function _toggleReplyLike(postId: string, commentId: string, replyId: string): void {
+function _toggleReplyLike(
+  postId: string,
+  commentId: string,
+  replyId: string,
+): void {
   const user = firebase.auth().currentUser;
   if (!user) return;
   const post = allPosts[postId];
@@ -96,12 +112,6 @@ function _toggleReplyLike(postId: string, commentId: string, replyId: string): v
 /*                       YORUM / YANIT GÖNDERİMİ                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────── Composer Durum Değişkenleri ─────────────────── */
-
-let _composerTargetPostId: string | null = null;
-let _composerReplyCommentId: string | null = null;
-let _composerReplyUsername: string | null = null;
-
 /* ─────────────────── Composer'daki mesajı gönderir ─────────────────── */
 
 function _submitComposer(btn: HTMLElement): void {
@@ -109,7 +119,9 @@ function _submitComposer(btn: HTMLElement): void {
   if (!postCard) return;
   const postId = postCard.dataset.postId;
   if (!postId) return;
-  const input = postCard.querySelector(".comment-input-field") as HTMLTextAreaElement | null;
+  const input = postCard.querySelector(
+    ".comment-input-field",
+  ) as HTMLTextAreaElement | null;
   if (!input) return;
   const text = input.value.trim();
   if (!text) return;
@@ -125,77 +137,14 @@ function _submitComposer(btn: HTMLElement): void {
     likes: {},
   };
 
-  const isReply = _composerTargetPostId === postId && _composerReplyCommentId;
-
-  if (isReply) {
-    const targetCommentId = _composerReplyCommentId;
-    addReplyToFirebase(postId, targetCommentId!, baseData)
-      .then(function () {
-        input.value = "";
-        _cancelReplyMode(postId);
-        showToast("Yanıt eklendi", "success");
-        _openRepliesSection(postId, targetCommentId!);
-      })
-      .catch(function () {
-        showToast("Yanıt eklenemedi", "error");
-      });
-  } else {
-    addCommentToFirebase(postId, baseData)
-      .then(function () {
-        input.value = "";
-        showToast("Yorum eklendi", "success");
-      })
-      .catch(function () {
-        showToast("Yorum eklenemedi", "error");
-      });
-  }
-}
-
-/* ─────────────────── Yanıt modunu başlatır ─────────────────── */
-
-function _startReplyMode(postId: string, commentId: string, username: string): void {
-  _composerTargetPostId = postId;
-  _composerReplyCommentId = commentId;
-  _composerReplyUsername = username;
-
-  var activePage = document.querySelector(".page-content.active") as HTMLElement | null;
-  var card = activePage
-    ? activePage.querySelector('[data-post-id="' + postId + '"]')
-    : document.querySelector('[data-post-id="' + postId + '"]');
-  if (!card) return;
-
-  const target = card.querySelector("#replyTarget-" + postId) as HTMLElement | null;
-  const targetText = card.querySelector("#replyTargetText-" + postId) as HTMLElement | null;
-  if (target && targetText) {
-    targetText.textContent = "@" + username + " yanıtlanıyor";
-    target.classList.add("visible");
-  }
-
-  const input = card.querySelector("#commentInput-" + postId) as HTMLTextAreaElement | null;
-  if (input) {
-    input.placeholder = "@" + username + " kişisine yanıtla...";
-    input.focus();
-  }
-}
-
-/* ─────────────────── Yanıt modunu iptal eder ─────────────────── */
-
-function _cancelReplyMode(postId: string): void {
-  _composerTargetPostId = null;
-  _composerReplyCommentId = null;
-  _composerReplyUsername = null;
-
-  var activePage = document.querySelector(".page-content.active") as HTMLElement | null;
-  var card = activePage
-    ? activePage.querySelector('[data-post-id="' + postId + '"]')
-    : document.querySelector('[data-post-id="' + postId + '"]');
-  if (!card) return;
-
-  const target = card.querySelector("#replyTarget-" + postId) as HTMLElement | null;
-  if (target) target.classList.remove("visible");
-
-  const input = card.querySelector("#commentInput-" + postId) as HTMLTextAreaElement | null;
-  if (input) input.placeholder = "Yorum yaz...";
+  addCommentToFirebase(postId, baseData)
+    .then(function () {
+      input.value = "";
+      showToast("Yorum eklendi", "success");
+    })
+    .catch(function () {
+      showToast("Yorum eklenemedi", "error");
+    });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -205,13 +154,19 @@ function _cancelReplyMode(postId: string): void {
 /* ─────────────────── Yanıtlar bölümünü aç/kapat ─────────────────── */
 
 function _openRepliesSection(postId: string, commentId: string): void {
-  var activePage = document.querySelector(".page-content.active") as HTMLElement | null;
+  var activePage = document.querySelector(
+    ".page-content.active",
+  ) as HTMLElement | null;
   var card = activePage
     ? activePage.querySelector('[data-post-id="' + postId + '"]')
     : document.querySelector('[data-post-id="' + postId + '"]');
   if (!card) return;
-  const sec = card.querySelector("#replies-" + postId + "-" + commentId) as HTMLElement | null;
-  const btn = card.querySelector("#toggleReplies-" + postId + "-" + commentId) as HTMLElement | null;
+  const sec = card.querySelector(
+    "#replies-" + postId + "-" + commentId,
+  ) as HTMLElement | null;
+  const btn = card.querySelector(
+    "#toggleReplies-" + postId + "-" + commentId,
+  ) as HTMLElement | null;
   if (!sec || !btn) return;
 
   const isOpen = !sec.classList.contains("hidden");
@@ -240,10 +195,7 @@ function _initCommentListener(postId: string): void {
     delete _commentListenerRefs[oldest];
   }
   const postsRef = firebase.database().ref("posts");
-  const q = postsRef
-    .child(postId)
-    .child("comments")
-    .orderByChild("createdAt");
+  const q = postsRef.child(postId).child("comments").orderByChild("createdAt");
   _commentListenerRefs[postId] = q as any;
   const _currentUser = firebase.auth().currentUser;
 
@@ -258,7 +210,9 @@ function _initCommentListener(postId: string): void {
     post.comments[cid] = data;
 
     getPostCards(postId).forEach(function (card) {
-      const list = card.querySelector("#commentList-" + postId) as HTMLElement | null;
+      const list = card.querySelector(
+        "#commentList-" + postId,
+      ) as HTMLElement | null;
       if (list) {
         const wrapper = document.createElement("div");
         wrapper.innerHTML = _renderCommentThreadHTML(
@@ -283,10 +237,7 @@ function _initCommentListener(postId: string): void {
     const oldData = post.comments ? post.comments[cid] : null;
     if (!post.comments) post.comments = {};
     post.comments[cid] = data;
-    if (
-      oldData &&
-      _onlyCommentLikesChanged(oldData, data)
-    ) {
+    if (oldData && _onlyCommentLikesChanged(oldData, data)) {
       getPostCards(postId).forEach(function (card) {
         _patchCommentLikeBtn(postId, cid, data.likes, _currentUser);
       });
@@ -351,9 +302,13 @@ function _refreshCommentThread(
   const wasOpen = repliesSec && !repliesSec.classList.contains("hidden");
   existingEl.replaceWith(newEl);
   if (wasOpen && card) {
-    const newRepliesSec = newEl.querySelector(".replies-section") as HTMLElement | null;
+    const newRepliesSec = newEl.querySelector(
+      ".replies-section",
+    ) as HTMLElement | null;
     if (newRepliesSec) newRepliesSec.classList.remove("hidden");
-    const btn = newEl.querySelector(".toggle-replies-btn") as HTMLElement | null;
+    const btn = newEl.querySelector(
+      ".toggle-replies-btn",
+    ) as HTMLElement | null;
     if (btn) {
       btn.style.display = "inline-flex";
       btn.textContent = "yanıtları gizle";
@@ -365,7 +320,7 @@ function _refreshCommentThread(
 
 function _updateCommentCount(postId: string): void {
   const post = allPosts[postId];
-  const count = post && post.comments ? Object.keys(post.comments).length : 0;
+  const count = getTotalCommentCount(post);
   getPostCards(postId).forEach(function (card) {
     const spans = card.querySelectorAll('[class*="comment-count-"]');
     spans.forEach(function (s) {
@@ -453,13 +408,15 @@ document.addEventListener("click", function (e: MouseEvent) {
 
   if (action === "delete-post") {
     const postCard = btn.closest(".post-card") as HTMLElement | null;
-    if (postCard && postCard.dataset.postId) _confirmDeletePost(postCard.dataset.postId);
+    if (postCard && postCard.dataset.postId)
+      _confirmDeletePost(postCard.dataset.postId);
     return;
   }
 
   if (action === "like-post") {
     const postCard = btn.closest(".post-card") as HTMLElement | null;
-    if (postCard && postCard.dataset.postId) _togglePostLike(postCard.dataset.postId);
+    if (postCard && postCard.dataset.postId)
+      _togglePostLike(postCard.dataset.postId);
     return;
   }
 
@@ -495,7 +452,11 @@ document.addEventListener("click", function (e: MouseEvent) {
   }
 
   if (action === "delete-reply") {
-    _confirmDeleteReply(btn.dataset.postId!, btn.dataset.commentId!, btn.dataset.replyId!);
+    _confirmDeleteReply(
+      btn.dataset.postId!,
+      btn.dataset.commentId!,
+      btn.dataset.replyId!,
+    );
     return;
   }
 });
@@ -521,7 +482,11 @@ document.addEventListener("input", function (e: Event) {
   const postCard = target.closest(".post-card") as HTMLElement | null;
   if (!postCard) return;
   const btn = postCard.querySelector(".comment-send-btn") as HTMLElement | null;
-  if (btn) btn.classList.toggle("visible", (target as HTMLTextAreaElement).value.trim().length > 0);
+  if (btn)
+    btn.classList.toggle(
+      "visible",
+      (target as HTMLTextAreaElement).value.trim().length > 0,
+    );
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
