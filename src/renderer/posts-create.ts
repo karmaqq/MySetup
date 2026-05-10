@@ -5,14 +5,16 @@
 import { POST_PHRASES } from "./utils";
 import { addPostToFirebase } from "./firebase-post";
 import { showToast } from "./io";
+import { initMdToolbar, editorToMd, clearEditor } from "./md-toolbar";
 
 /* ─────────────────── DOM Referansları ─────────────────── */
 
-const postText = document.getElementById("postText") as HTMLTextAreaElement | null;
+const postEditor = document.getElementById("postEditor") as HTMLElement | null;
 const postImageInput = document.getElementById("postImageInput") as HTMLInputElement | null;
 const postImageBtn = document.getElementById("postImageBtn") as HTMLElement | null;
 const publishPostBtn = document.getElementById("publishPostBtn") as HTMLElement | null;
 const postImagePreviewEl = document.getElementById("postImagePreview") as HTMLElement | null;
+const postMdToolbar = document.getElementById("postMdToolbar") as HTMLElement | null;
 
 /* ─────────────────── Seçili Görsel ─────────────────── */
 
@@ -23,7 +25,7 @@ let selectedPostImage: File | null = null;
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 export function createPost(): void {
-  const text = (postText ? postText.value : "").trim();
+  const text = postEditor ? editorToMd(postEditor) : "";
   if (!text && !selectedPostImage) {
     showToast("Lütfen bir metin yazın veya görsel seçin.", "warn");
     return;
@@ -87,7 +89,7 @@ function _uploadAndSavePost(postData: Record<string, any>, file: File): void {
 function _savePost(postData: Record<string, any>): void {
   addPostToFirebase(postData)
     .then(function () {
-      if (postText) postText.value = "";
+      if (postEditor) clearEditor(postEditor);
       selectedPostImage = null;
       if (postImagePreviewEl) {
         postImagePreviewEl.classList.add("hidden");
@@ -149,7 +151,7 @@ export function _removePostImage(): void {
 
 export function clearPostDraft(): void {
   (window as any).clearPostDraft = clearPostDraft;
-  if (postText) postText.value = "";
+  if (postEditor) clearEditor(postEditor);
   selectedPostImage = null;
   if (postImagePreviewEl) {
     postImagePreviewEl.classList.add("hidden");
@@ -177,11 +179,17 @@ if (publishPostBtn) {
   publishPostBtn.addEventListener("click", createPost);
 }
 
-if (postText) {
-  postText.addEventListener("keydown", (e) => {
+if (postEditor) {
+  postEditor.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
       createPost();
     }
   });
+}
+
+/* ─────────────────── Toolbar'ı başlat ─────────────────── */
+
+if (postMdToolbar && postEditor) {
+  initMdToolbar(postMdToolbar, postEditor);
 }

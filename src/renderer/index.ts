@@ -26,6 +26,7 @@ import "./userset";
 import "./updater-ui";
 
 /* Post sistemi */
+import "./md-toolbar";
 import "./post-comment";
 import "./posts-create";
 import "./posts-render";

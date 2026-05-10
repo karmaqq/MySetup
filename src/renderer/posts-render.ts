@@ -5,6 +5,7 @@
 import { db } from "./firebase-init";
 import { showToast } from "./io";
 import { _renderCommentThreadHTML } from "./post-comment";
+import { mdToHtml } from "./md-parse";
 import {
   postsFeed,
   _commentListenerRefs,
@@ -65,7 +66,7 @@ export function _renderPostHTML(postId: string, postData: any): string {
 
   html += `<div class="post-body post-body-link" data-action="open-post-view" data-id="${pid}">`;
   if (postData.content)
-    html += `<div class="post-text">${escHtml(postData.content)}</div>`;
+    html += `<div class="post-text md-render">${mdToHtml(postData.content)}</div>`;
   if (postData.imageUrl) {
     html += `<div class="post-image"><img src="${escUrl(String(postData.imageUrl))}" alt="" class="post-img-lazy"></div>`;
   }

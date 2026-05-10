@@ -7,6 +7,8 @@ import { _initPostImage } from "./posts-render";
 import { _renderCommentThreadHTML } from "./post-comment";
 import { addCommentToFirebase, addReplyToFirebase } from "./firebase-post";
 import { showToast } from "./io";
+import { mdToHtml } from "./md-parse";
+import { initMdToolbar, editorToMd, clearEditor } from "./md-toolbar";
 import {
   _currentPage,
   mainScroll,
@@ -161,7 +163,7 @@ function _renderPostViewContent(postId: string, postData: any): void {
 
   html += '<div class="post-body">';
   if (postData.content) {
-    html += `<div class="post-text">${escHtml(postData.content)}</div>`;
+    html += `<div class="post-text md-render">${mdToHtml(postData.content)}</div>`;
   }
   if (postData.imageUrl) {
     html += `<div class="post-image"><img src="${escUrl(postData.imageUrl)}" alt="" class="post-img-lazy"></div>`;
@@ -380,14 +382,14 @@ function _clearPostViewReplyTarget(): void {
 function _submitPostViewComment(): void {
   var input = document.getElementById(
     "postViewCommentInput",
-  ) as HTMLTextAreaElement | null;
+  ) as HTMLElement | null;
   if (!input || !(window as any)._viewingPostId) return;
   if (!allPosts[(window as any)._viewingPostId]) {
     showToast("Bu gönderi artık mevcut değil", "warn");
     return;
   }
 
-  var text = input.value.trim();
+  var text = editorToMd(input).trim();
   if (!text) return;
 
   var user = firebase.auth().currentUser;
@@ -408,7 +410,7 @@ function _submitPostViewComment(): void {
     var targetCid = _replyTargetCommentId;
     addReplyToFirebase((window as any)._viewingPostId, targetCid, baseData)
       .then(function () {
-        input!.value = "";
+        clearEditor(input!);
         _clearPostViewReplyTarget();
         showToast("Yanıt eklendi", "success");
         var repliesSec = document.getElementById(
@@ -428,7 +430,7 @@ function _submitPostViewComment(): void {
   } else {
     addCommentToFirebase((window as any)._viewingPostId, baseData)
       .then(function () {
-        input!.value = "";
+        clearEditor(input!);
         showToast("Yorum eklendi", "success");
       })
       .catch(function () {
@@ -485,26 +487,25 @@ if (_pvReplyCancel)
 
 var _pvInput = document.getElementById(
   "postViewCommentInput",
-) as HTMLTextAreaElement | null;
+) as HTMLElement | null;
 if (_pvInput) {
-  _pvInput.addEventListener("input", function (this: HTMLTextAreaElement) {
+  _pvInput.addEventListener("input", function () {
     var sendBtn = document.getElementById("postViewSendBtn");
     if (sendBtn)
-      sendBtn.classList.toggle("visible", this.value.trim().length > 0);
+      sendBtn.classList.toggle("visible", editorToMd(_pvInput!).length > 0);
   });
-
-  _pvInput.addEventListener("keydown", function (e: KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      _submitPostViewComment();
-    }
-  });
+  _pvInput.addEventListener("submit-md", _submitPostViewComment);
 }
 
 /* ─────────────────── Gönder butonu ─────────────────── */
 
 var _pvSendBtn = document.getElementById("postViewSendBtn");
 if (_pvSendBtn) _pvSendBtn.addEventListener("click", _submitPostViewComment);
+
+/* ─────────────────── Post-view toolbar'ı başlat ─────────────────── */
+
+var _pvMdToolbar = document.getElementById("pvMdToolbar");
+if (_pvMdToolbar && _pvInput) initMdToolbar(_pvMdToolbar, _pvInput, true);
 
 /* ─────────────────── Post View içi delegasyon ─────────────────── */
 
