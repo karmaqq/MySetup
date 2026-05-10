@@ -1,4 +1,4 @@
-// Yanıt ekleme ve silme işlemleri için commentData.replies child_added/child_removed listener'ı ekle
+
 /* ─────────────────── Yanıt Listener Başlatıcı ─────────────────── */
 function _initReplyListener(postId: string, commentId: string): void {
   const post = allPosts[postId];
@@ -44,7 +44,6 @@ import {
   _commentListenerRefs,
   _commentListenerOrder,
   _currentPage,
-  escHtml,
   formatTimeAgo,
   _onlyCommentLikesChanged,
   getTotalCommentCount,

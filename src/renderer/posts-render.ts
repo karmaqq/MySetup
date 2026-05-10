@@ -18,7 +18,6 @@ import {
   buildAvatarHTML,
   buildPostMenuHTML,
   PAGE_SIZE,
-  mainScroll,
   getTotalCommentCount,
 } from "./utils";
 import { renderLoadMoreBtn, removeLoadMoreBtn } from "./utils";
@@ -27,7 +26,6 @@ import {
   initUserPostsListener,
   removeUserPostsListener,
   removeUserLikesListener,
-  togglePostLike,
 } from "./firebase-post";
 
 /* ─────────────────── Feed Durum Değişkenleri ─────────────────── */
@@ -264,7 +262,6 @@ export function _teardownPosts(): void {
     _postsQuery.off();
     _postsQuery = null;
   }
-  // Artık db.postsRef üzerinde global listener yok, sadece aktif query'de dinleniyor
   _postsListenerActive = false;
   (window as any)._postsListenerActive = false;
   (window as any)._postsReadyFired = false;

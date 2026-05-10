@@ -1,10 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          CSS BUNDLE GİRİŞİ                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*  Bu dosya tüm CSS dosyalarını esbuild ile bundle etmek içindir.           */
-/*  Yeni bir CSS dosyası eklendiğinde buraya @import satırı eklenmelidir.    */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
 @import "base.css";
 @import "sidebar.css";
 @import "home.css";

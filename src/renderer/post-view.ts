@@ -29,12 +29,7 @@ import {
   _commentListenerRefs,
   escHtml,
   escAttr,
-  escUrl,
-  formatTimeAgo,
-  formatDateTime,
   _onlyCommentLikesChanged,
-  buildAvatarHTML,
-  buildPostMenuHTML,
   showPage,
   getTotalCommentCount,
 } from "./utils";
