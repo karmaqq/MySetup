@@ -18,3 +18,8 @@ interface Window {
   __FB_CONFIG__?: Record<string, string>;
   _viewingPostId: string | null;
 }
+
+/* ─────────────────── esbuild define (web build) ─────────────────── */
+
+declare var __APP_VERSION__: string | undefined;
+declare var __IS_WEB__: boolean | undefined;

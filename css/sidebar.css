@@ -6,7 +6,7 @@
 
 .sidebar {
   position: fixed;
-  top: var(--content-margin);
+  top: calc(var(--title-bar-height) + var(--content-margin));
   left: 0;
   bottom: calc(var(--footer-height) + var(--content-margin));
   width: 250px;

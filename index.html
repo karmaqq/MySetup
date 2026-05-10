@@ -57,6 +57,12 @@
   <!--                              SAYFA GÖVDE                             -->
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <body>
+    <!-- ─────────────────── Web/Electron Algılama ─────────────────── -->
+    <script>if (!window.electronAPI) document.documentElement.classList.add("web");</script>
+
+    <!-- ─────────────────── Electron Başlık Çubuğu ─────────────────── -->
+    <div class="title-bar-drag"></div>
+
     <!-- ═════════════════════════════════════════════════════════════════ -->
     <!--                             SIDEBAR                                 -->
     <!-- ═════════════════════════════════════════════════════════════════ -->
@@ -64,7 +70,7 @@
       <!-- Logo ve Versiyon -->
       <div class="sidebar-brand">
         <h1>Karma<span class="accent-text">Q</span></h1>
-        <span id="versionDisplay" class="sidebar-version">Web v3.1.3</span>
+        <span id="versionDisplay" class="sidebar-version">v0.0.0</span>
       </div>
 
       <!-- Divider -->
@@ -79,10 +85,10 @@
         </button>
       </nav>
 
-      <!-- Güncelleme Butonu (web'de gizli) -->
+      <!-- Güncelleme Butonu -->
       <button
         id="updateBtn"
-        class="sidebar-update-btn hidden"
+        class="sidebar-update-btn"
         title="Güncelleme Mevcut"
       >
         <span></span>

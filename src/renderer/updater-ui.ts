@@ -4,19 +4,24 @@
 
 import { showToast } from "./io";
 
+/* ─────────────────── Versiyon Gösterimi ─────────────────── */
+
+const vEl = document.getElementById("versionDisplay");
+if (window.electronAPI) {
+  window.electronAPI.onAppVersion?.((version) => {
+    if (vEl) vEl.textContent = "v" + version;
+  });
+} else {
+  /* Web: bundle'a gömülü versiyon */
+  if (vEl) vEl.textContent = "" + (typeof __APP_VERSION__ !== "undefined" ? "Web v" + __APP_VERSION__ : "");
+}
+
 /* ─────────────────── Electron Ortam Kontrolü ─────────────────── */
 
 if (window.electronAPI) {
   const updateBtn = document.getElementById("updateBtn") as HTMLElement | null;
   const updateBtnSpan = updateBtn?.querySelector("span") as HTMLElement | null;
   let dotInterval: number | null = null;
-
-  /* ─────────────────── Versiyon Gösterimi ─────────────────── */
-
-  window.electronAPI.onAppVersion?.((version) => {
-    const vEl = document.getElementById("versionDisplay");
-    if (vEl) vEl.textContent = `v${version}`;
-  });
 
   /* ─────────────────── Nokta Animasyonunu Başlat ─────────────────── */
 

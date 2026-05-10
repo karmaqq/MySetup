@@ -44,7 +44,7 @@
   --col-price: 120px;
   --col-vendor: 120px;
   --col-status: 170px;
-  --title-bar-height: 0px; /* web'de kullanılmaz */
+  --title-bar-height: 35px;
   --sidebar-width: 250px;
   --text-btn: #000;
   --sidebar-gap: 10px;
@@ -169,7 +169,28 @@ body {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Üst Sürükleme Çubuğu ─────────────────── */
-/*  Electron'da pencere sürükleme için. Web'de kullanılmaz.     */
+
+.title-bar-drag {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--title-bar-height);
+  -webkit-app-region: drag;
+  background: rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(126, 126, 126, 0.096);
+  z-index: 10000;
+}
+
+/* Web'de title bar gizlenir, layout buna göre ayarlanır */
+.web .title-bar-drag {
+  display: none;
+}
+
+.web {
+  --title-bar-height: 0px;
+}
 
 /* ─────────────────── Alt Bilgi ─────────────────── */
 
@@ -201,7 +222,7 @@ body {
 
 .main-scroll {
   position: fixed;
-  top: var(--content-margin);
+  top: calc(var(--title-bar-height) + var(--content-margin));
   bottom: calc(var(--footer-height) + var(--content-margin));
   left: calc(var(--sidebar-width) + var(--sidebar-gap));
   right: 0;
@@ -255,7 +276,7 @@ body {
 
 .auth-loading {
   position: fixed;
-  top: 0;
+  top: var(--title-bar-height);
   left: 0;
   right: 0;
   bottom: 0;

@@ -5,6 +5,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import * as esbuild from "esbuild";
+import { readFileSync } from "fs";
+
+const pkg = JSON.parse(readFileSync("./package.json", "utf-8"));
 
 async function buildWeb() {
   const start = Date.now();
@@ -22,6 +25,10 @@ async function buildWeb() {
       tsconfig: "tsconfig.json",
       minify: true,
       sourcemap: false,
+      define: {
+        __APP_VERSION__: JSON.stringify(pkg.version),
+        __IS_WEB__: "true",
+      },
     }),
     esbuild.build({
       entryPoints: ["css/index.css"],
