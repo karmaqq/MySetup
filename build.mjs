@@ -20,8 +20,21 @@ const rendererConfig = {
   platform: "browser",
   target: "es2020",
   tsconfig: "tsconfig.json",
-  minify: false,
-  sourcemap: true,
+  minify: !isWatch,
+  sourcemap: isWatch,
+};
+
+/* ─────────────────── CSS Bundle ─────────────────── */
+
+const cssConfig = {
+  entryPoints: ["css/index.css"],
+  outfile: "dist/styles.css",
+  bundle: true,
+  minify: !isWatch,
+  loader: {
+    ".woff2": "file",
+  },
+  assetNames: "[name]",
 };
 
 /* ─────────────────── Main Process (CJS, transpile only) ─────────────────── */
@@ -49,8 +62,9 @@ const updaterConfig = cjsConfig("src/updater/updater.ts", "dist/updater.js");
 async function buildAll() {
   console.log("🔨 Building...");
   const start = Date.now();
-  await esbuild.build(rendererConfig);
   await Promise.all([
+    esbuild.build(rendererConfig),
+    esbuild.build(cssConfig),
     esbuild.build(mainConfig),
     esbuild.build(preloadConfig),
     esbuild.build(updaterConfig),
@@ -63,6 +77,7 @@ async function watchAll() {
   console.log("👀 Watching for changes...");
   const ctxs = await Promise.all([
     esbuild.context(rendererConfig),
+    esbuild.context(cssConfig),
     esbuild.context(mainConfig),
     esbuild.context(preloadConfig),
     esbuild.context(updaterConfig),

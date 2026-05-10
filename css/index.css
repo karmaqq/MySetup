@@ -1,0 +1,19 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          CSS BUNDLE GİRİŞİ                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*  Bu dosya tüm CSS dosyalarını esbuild ile bundle etmek içindir.           */
+/*  Yeni bir CSS dosyası eklendiğinde buraya @import satırı eklenmelidir.    */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+@import "base.css";
+@import "sidebar.css";
+@import "home.css";
+@import "profile.css";
+@import "toolbar.css";
+@import "table.css";
+@import "editmodal.css";
+@import "posts.css";
+@import "auth.css";
+@import "userset.css";
+@import "post-view.css";
+@import "post-comment.css";

@@ -18,6 +18,7 @@ import "./firebase-post";
 
 /* UI işlemleri */
 import "./io";
+import "./toolbar";
 import "./table";
 import "./editmodal";
 import "./auth";

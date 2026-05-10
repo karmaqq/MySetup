@@ -27,10 +27,9 @@ export function enrichItem(item: any): any {
 /*  Bu fonksiyon table.ts'deki fonksiyonlara ihtiyaç duyar. import edilen  */
 /*  referanslar runtime'da çözümlenir (esbuild circular dep desteği).        */
 
+import { rebuildStatsCache, updateStatsCacheOnChange } from "./toolbar";
 import {
   renderAll,
-  rebuildStatsCache,
-  updateStatsCacheOnChange,
   addOrUpdateTableRow,
   removeTableRow,
 } from "./table";

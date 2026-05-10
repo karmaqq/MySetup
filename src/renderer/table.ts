@@ -11,7 +11,6 @@ import {
   currentSearch,
   currentStatusFilter,
   currentSort,
-  _statsCache,
   isAnyModalOpen,
   scheduleRender,
   normalizeTr,
@@ -22,24 +21,20 @@ import {
   escAttr,
   mainScroll,
   tableBody,
-  statTotal,
-  statCount,
-  statHealthy,
-  statExpensive,
-  totalCostDisplay,
-  resultCount,
   addItemBtn,
   editModal,
+  applyPriceFormat,
+  parseDateInput,
+  parsePriceInput,
 } from "./utils";
 import {
   addComponentToFirebase,
   deleteComponentFromFirebase,
   updateComponentStatusInFirebase,
 } from "./firebase-inv";
-import { applyPriceFormat, parseDateInput, parsePriceInput } from "./utils";
 import { showToast, showConfirm } from "./io";
 import { openEditModal } from "./editmodal";
-import { StatsCache } from "./utils";
+import { updateStats, updateResultCount, rebuildStatsCache, updateStatsCacheOnChange } from "./toolbar";
 
 /* ─────────────────── MutationObserver ─────────────────── */
 
@@ -92,149 +87,6 @@ export function getFilteredSortedList(): any[] {
   });
 
   return list;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                       İSTATİSTİK HESAPLAMA                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-export function rebuildStatsCache(): void {
-  _statsCache.total = 0;
-  _statsCache.count = 0;
-  _statsCache.healthy = 0;
-  _statsCache.mostExpId = null;
-  _statsCache.mostExpPrice = 0;
-
-  for (const [id, i] of Object.entries(allData)) {
-    const price = parseFloat(i.price) || 0;
-    _statsCache.total += price;
-    _statsCache.count++;
-    if ((i._statusNorm || "").includes("saglikli")) _statsCache.healthy++;
-    if (price > _statsCache.mostExpPrice) {
-      _statsCache.mostExpPrice = price;
-      _statsCache.mostExpId = id;
-    }
-  }
-}
-
-export function updateStatsCacheOnChange(item: any, oldItem: any | undefined, isRemove: boolean): void {
-  const newPrice = parseFloat(item.price) || 0;
-  const oldPrice = oldItem ? parseFloat(oldItem.price) || 0 : 0;
-
-  if (isRemove) {
-    _statsCache.total -= oldPrice;
-    _statsCache.count--;
-    if (oldItem && (oldItem._statusNorm || "").includes("saglikli")) {
-      _statsCache.healthy--;
-    }
-    if (_statsCache.mostExpId === item.id) {
-      rebuildStatsCache();
-      scheduleRender();
-    }
-  } else {
-    if (!oldItem) {
-      _statsCache.total += newPrice;
-      _statsCache.count++;
-      if ((item._statusNorm || "").includes("saglikli")) _statsCache.healthy++;
-      if (newPrice > _statsCache.mostExpPrice) {
-        _statsCache.mostExpPrice = newPrice;
-        _statsCache.mostExpId = item.id;
-        const mostExpItem = _statsCache.mostExpId ? allData[_statsCache.mostExpId] : null;
-        if (statExpensive)
-          statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
-      }
-    } else {
-      const priceDiff = newPrice - oldPrice;
-      if (priceDiff !== 0) _statsCache.total += priceDiff;
-
-      const oldHealthy = (oldItem._statusNorm || "").includes("saglikli");
-      const newHealthy = (item._statusNorm || "").includes("saglikli");
-      if (!oldHealthy && newHealthy) _statsCache.healthy++;
-      else if (oldHealthy && !newHealthy) _statsCache.healthy--;
-
-      if (
-        _statsCache.mostExpId === item.id ||
-        newPrice > _statsCache.mostExpPrice
-      ) {
-        rebuildStatsCache();
-        scheduleRender();
-      }
-    }
-  }
-}
-
-function updateStats(filteredList: any[]): void {
-  const isFiltered = currentSearch || currentStatusFilter !== "all";
-  let filteredTotal: number, filteredHealthy: number, mostExpItem: any, filteredLength: number;
-
-  if (!isFiltered) {
-    filteredTotal = _statsCache.total;
-    filteredHealthy = _statsCache.healthy;
-    mostExpItem = _statsCache.mostExpId ? allData[_statsCache.mostExpId] : null;
-    filteredLength = Object.keys(allData).length;
-  } else if (filteredList) {
-    let mostExpPrice = -Infinity;
-    filteredTotal = 0;
-    filteredHealthy = 0;
-
-    for (const i of filteredList) {
-      const price = parseFloat(i.price) || 0;
-      filteredTotal += price;
-      if ((i._statusNorm || "").includes("saglikli")) filteredHealthy++;
-      if (price > mostExpPrice) {
-        mostExpPrice = price;
-        mostExpItem = i;
-      }
-    }
-    filteredLength = filteredList.length;
-  } else {
-    return;
-  }
-
-  if (statTotal)
-    statTotal.textContent = CURRENCY_FORMAT.format(filteredTotal) + " ₺";
-  if (statCount) statCount.textContent = String(filteredLength);
-  if (statHealthy) statHealthy.textContent = String(filteredHealthy);
-
-  if (statExpensive) {
-    statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
-    const statCard = statExpensive.closest(".stat-card");
-    if (statCard) {
-      const statIcon = statCard.querySelector(".stat-icon") as HTMLElement | null;
-      if (statIcon) {
-        statIcon.classList.remove(
-          "status-broken",
-          "status-reserve",
-          "status-discarded",
-          "status-healthy",
-        );
-        if (currentStatusFilter !== "all" && mostExpItem) {
-          const statusNorm = mostExpItem._statusNorm || "";
-          if (statusNorm.includes("bozuk"))
-            statIcon.classList.add("status-broken");
-          else if (statusNorm.includes("yedek"))
-            statIcon.classList.add("status-reserve");
-          else if (statusNorm.includes("atildi"))
-            statIcon.classList.add("status-discarded");
-          else if (statusNorm.includes("saglikli"))
-            statIcon.classList.add("status-healthy");
-        }
-      }
-    }
-  }
-
-  if (totalCostDisplay)
-    totalCostDisplay.textContent = CURRENCY_FORMAT.format(filteredTotal) + " ₺";
-}
-
-function updateResultCount(filteredCount: number): void {
-  const total = Object.keys(allData).length;
-  const isFiltered = currentSearch || currentStatusFilter !== "all";
-  if (resultCount) {
-    resultCount.textContent = isFiltered
-      ? `${filteredCount} / ${total} kayıt`
-      : "";
-  }
 }
 
 export function updateSortIcons(): void {
