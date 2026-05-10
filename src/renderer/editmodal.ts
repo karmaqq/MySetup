@@ -26,7 +26,10 @@ import {
   modalCancel,
   modalSave,
 } from "./utils";
-import { uploadImageToFirebase, updateComponentInFirebase } from "./firebase-inv";
+import {
+  uploadImageToFirebase,
+  updateComponentInFirebase,
+} from "./firebase-inv";
 import { showToast, showConfirm } from "./io";
 import { getFilteredSortedList } from "./table";
 
@@ -39,8 +42,14 @@ let currentRating = 0;
 /*                          GÖRSEL YÖNETİMİ                                 */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-function applyAdaptiveSize(imgEl: HTMLImageElement, imagePreview: HTMLElement): void {
-  const MIN_W = 180, MIN_H = 140, MAX_W = 340, MAX_H = 260;
+function applyAdaptiveSize(
+  imgEl: HTMLImageElement,
+  imagePreview: HTMLElement,
+): void {
+  const MIN_W = 180,
+    MIN_H = 140,
+    MAX_W = 340,
+    MAX_H = 260;
   const nw = imgEl.naturalWidth || 1;
   const nh = imgEl.naturalHeight || 1;
   const ratio = nw / nh;
@@ -49,13 +58,25 @@ function applyAdaptiveSize(imgEl: HTMLImageElement, imagePreview: HTMLElement): 
   if (ratio >= 1) {
     w = MAX_W;
     h = Math.round(w / ratio);
-    if (h < MIN_H) { h = MIN_H; w = Math.round(h * ratio); }
-    if (w > MAX_W) { w = MAX_W; h = Math.round(w / ratio); }
+    if (h < MIN_H) {
+      h = MIN_H;
+      w = Math.round(h * ratio);
+    }
+    if (w > MAX_W) {
+      w = MAX_W;
+      h = Math.round(w / ratio);
+    }
   } else {
     h = MAX_H;
     w = Math.round(h * ratio);
-    if (w < MIN_W) { w = MIN_W; h = Math.round(w / ratio); }
-    if (h > MAX_H) { h = MAX_H; w = Math.round(h * ratio); }
+    if (w < MIN_W) {
+      w = MIN_W;
+      h = Math.round(w / ratio);
+    }
+    if (h > MAX_H) {
+      h = MAX_H;
+      w = Math.round(h * ratio);
+    }
   }
 
   w = Math.max(MIN_W, Math.min(MAX_W, w));
@@ -64,7 +85,11 @@ function applyAdaptiveSize(imgEl: HTMLImageElement, imagePreview: HTMLElement): 
   imagePreview.style.height = h + "px";
 }
 
-function refreshPreview(url: string, imagePreview: HTMLElement, imageUploadBtn: HTMLElement | null): void {
+function refreshPreview(
+  url: string,
+  imagePreview: HTMLElement,
+  imageUploadBtn: HTMLElement | null,
+): void {
   if (url) {
     imagePreview.innerHTML = `
       <img src="${escAttr(url)}" alt="Ürün görseli" id="editImagePreviewImg" />
@@ -72,9 +97,15 @@ function refreshPreview(url: string, imagePreview: HTMLElement, imageUploadBtn: 
     imagePreview.classList.remove("hidden");
     if (imageUploadBtn) imageUploadBtn.classList.add("has-image");
 
-    const imgEl = document.getElementById("editImagePreviewImg") as HTMLImageElement | null;
+    const imgEl = document.getElementById(
+      "editImagePreviewImg",
+    ) as HTMLImageElement | null;
     if (imgEl) {
-      imgEl.addEventListener("load", () => applyAdaptiveSize(imgEl, imagePreview), { once: true });
+      imgEl.addEventListener(
+        "load",
+        () => applyAdaptiveSize(imgEl, imagePreview),
+        { once: true },
+      );
       if (imgEl.complete) applyAdaptiveSize(imgEl, imagePreview);
     }
 
@@ -85,12 +116,15 @@ function refreshPreview(url: string, imagePreview: HTMLElement, imageUploadBtn: 
         try {
           const user = firebase.auth().currentUser;
           if (user) {
-            const ref = firebase.storage().ref(`users/${user.uid}/components/${idToDelete}/image`);
+            const ref = firebase
+              .storage()
+              .ref(`users/${user.uid}/components/${idToDelete}/image`);
             await ref.delete().catch(() => {});
           }
           await updateComponentInFirebase(idToDelete, { imageUrl: "" });
           if (allData[idToDelete]) allData[idToDelete].imageUrl = "";
-          if (editingId === idToDelete) refreshPreview("", imagePreview, imageUploadBtn);
+          if (editingId === idToDelete)
+            refreshPreview("", imagePreview, imageUploadBtn);
           showToast("Görsel silindi", "success");
         } catch (_) {
           showToast("Görsel silinemedi", "error");
@@ -104,7 +138,12 @@ function refreshPreview(url: string, imagePreview: HTMLElement, imageUploadBtn: 
   }
 }
 
-function handleImageFile(file: File, imagePreview: HTMLElement, id: string, imageUploadBtn: HTMLElement | null): void {
+function handleImageFile(
+  file: File,
+  imagePreview: HTMLElement,
+  id: string,
+  imageUploadBtn: HTMLElement | null,
+): void {
   if (!file || !file.type.startsWith("image/")) return;
   imagePreview.classList.remove("hidden");
   imagePreview.style.width = "200px";
@@ -133,7 +172,9 @@ function handleImageFile(file: File, imagePreview: HTMLElement, id: string, imag
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 function _resetPreviewInstant(): void {
-  const imagePreview = document.getElementById("editImagePreview") as HTMLElement | null;
+  const imagePreview = document.getElementById(
+    "editImagePreview",
+  ) as HTMLElement | null;
   if (!imagePreview) return;
 
   if (_resetRafId !== null) {
@@ -158,7 +199,10 @@ function _resetPreviewInstant(): void {
 function updateStars(rating: number): void {
   const stars = document.querySelectorAll("#editStarRating .star");
   stars.forEach((s) => {
-    (s as HTMLElement).classList.toggle("active", parseInt((s as HTMLElement).dataset.value!) <= rating);
+    (s as HTMLElement).classList.toggle(
+      "active",
+      parseInt((s as HTMLElement).dataset.value!) <= rating,
+    );
   });
 }
 
@@ -166,7 +210,10 @@ function updateStars(rating: number): void {
 /*                          MODAL YÖNETİMİ                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-export function openEditModal(id: string, focusTarget: string = "component"): void {
+export function openEditModal(
+  id: string,
+  focusTarget: string = "component",
+): void {
   const item = allData[id];
   if (!item) return;
 
@@ -174,53 +221,73 @@ export function openEditModal(id: string, focusTarget: string = "component"): vo
   setEditingId(id);
 
   const parts = (item.date || "").split("-");
-  if (editDate) editDate.value = parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : "";
+  if (editDate)
+    editDate.value =
+      parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : "";
   if (editDatePicker) editDatePicker.value = item.date || "";
   if (editComponent) editComponent.value = item.component || "";
   if (editBrand) editBrand.value = item.brand === "-" ? "" : item.brand || "";
   if (editSpecs) editSpecs.value = item.specs === "-" ? "" : item.specs || "";
   if (editUrl) editUrl.value = item.url || "";
-  if (editVendor) editVendor.value = item.vendor === "-" ? "" : item.vendor || "";
+  if (editVendor)
+    editVendor.value = item.vendor === "-" ? "" : item.vendor || "";
   if (editStatus) editStatus.value = item.status || "sağlıklı";
 
   if (editPrice) {
     let dPrice = (item.price || 0).toString().replace(".", ",");
     let [iPart, dPart] = dPrice.split(",");
     if (iPart) iPart = iPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    editPrice.value = dPart !== undefined ? `${iPart},${dPart}` : item.price ? iPart : "";
+    editPrice.value =
+      dPart !== undefined ? `${iPart},${dPart}` : item.price ? iPart : "";
   }
 
   currentRating = item.star || 0;
   updateStars(currentRating);
 
-  const opinionInput = document.getElementById("editOpinionText") as HTMLTextAreaElement | null;
+  const opinionInput = document.getElementById(
+    "editOpinionText",
+  ) as HTMLTextAreaElement | null;
   if (opinionInput) opinionInput.value = item.opinion || "";
 
   if (editModal) editModal.classList.add("active");
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      const imagePreview = document.getElementById("editImagePreview") as HTMLElement | null;
-      const imageUploadBtn = document.getElementById("imageUploadBtn") as HTMLElement | null;
-      const imageFileInput = document.getElementById("imageFileInput") as HTMLInputElement | null;
+      const imagePreview = document.getElementById(
+        "editImagePreview",
+      ) as HTMLElement | null;
+      const imageUploadBtn = document.getElementById(
+        "imageUploadBtn",
+      ) as HTMLElement | null;
+      const imageFileInput = document.getElementById(
+        "imageFileInput",
+      ) as HTMLInputElement | null;
 
       refreshPreview(item.imageUrl || "", imagePreview!, imageUploadBtn);
 
-      if (imageUploadBtn) imageUploadBtn.onclick = () => imageFileInput && imageFileInput.click();
+      if (imageUploadBtn)
+        imageUploadBtn.onclick = () => imageFileInput && imageFileInput.click();
       if (imageFileInput) {
         imageFileInput.value = "";
         imageFileInput.onchange = (e) => {
           const file = (e.target as HTMLInputElement).files?.[0];
-          if (file) handleImageFile(file, imagePreview!, editingId!, imageUploadBtn);
+          if (file)
+            handleImageFile(file, imagePreview!, editingId!, imageUploadBtn);
         };
       }
 
-      const el = focusTarget === "date" ? editDate
-        : focusTarget === "brand" ? editBrand
-        : focusTarget === "specs" ? editSpecs
-        : focusTarget === "price" ? editPrice
-        : focusTarget === "vendor" ? editVendor
-        : editComponent;
+      const el =
+        focusTarget === "date"
+          ? editDate
+          : focusTarget === "brand"
+            ? editBrand
+            : focusTarget === "specs"
+              ? editSpecs
+              : focusTarget === "price"
+                ? editPrice
+                : focusTarget === "vendor"
+                  ? editVendor
+                  : editComponent;
       if (el) el.focus();
     });
   });
@@ -229,6 +296,9 @@ export function openEditModal(id: string, focusTarget: string = "component"): vo
 export function closeEditModal(): void {
   if (editModal) editModal.classList.remove("active");
   setEditingId(null);
+  if ((window as any)._flushPendingRender) {
+    (window as any)._flushPendingRender();
+  }
 }
 
 export function saveEditModal(): void {
@@ -243,7 +313,9 @@ export function saveEditModal(): void {
 
   const finalDate = parseDateInput(editDate!.value);
   const rawEditPrice = parsePriceInput(editPrice!.value);
-  const opinionInput = document.getElementById("editOpinionText") as HTMLTextAreaElement | null;
+  const opinionInput = document.getElementById(
+    "editOpinionText",
+  ) as HTMLTextAreaElement | null;
 
   const itemData = {
     date: finalDate,
@@ -294,7 +366,9 @@ if (editPrice) {
   });
 }
 
-const editStarRating = document.getElementById("editStarRating") as HTMLElement | null;
+const editStarRating = document.getElementById(
+  "editStarRating",
+) as HTMLElement | null;
 if (editStarRating) {
   editStarRating.addEventListener("click", (e) => {
     if ((e.target as HTMLElement).classList.contains("star")) {
@@ -311,7 +385,10 @@ if (editStarRating) {
 document.addEventListener("keydown", (e) => {
   if (!editModal || !editModal.classList.contains("active")) return;
 
-  if (e.key === "Escape") { closeEditModal(); return; }
+  if (e.key === "Escape") {
+    closeEditModal();
+    return;
+  }
 
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
     e.preventDefault();
@@ -329,9 +406,13 @@ document.addEventListener("keydown", (e) => {
 
     const list = getFilteredSortedList();
     const currentIdx = list.findIndex((item: any) => item.id === editingId);
-    if (currentIdx === -1) { showToast("Kayıt listesi henüz yüklenmedi", "warn"); return; }
+    if (currentIdx === -1) {
+      showToast("Kayıt listesi henüz yüklenmedi", "warn");
+      return;
+    }
 
-    let targetIdx = isNext ? (currentIdx + 1) % list.length
+    let targetIdx = isNext
+      ? (currentIdx + 1) % list.length
       : (currentIdx - 1 + list.length) % list.length;
 
     const targetItem = list[targetIdx];

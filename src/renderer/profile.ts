@@ -420,13 +420,25 @@ function _onUserLikesChanged(postId: string, value: any, type: string): void {
           (el as HTMLElement).style.opacity = "0";
           (el as HTMLElement).style.transform = "translateY(4px)";
           setTimeout(function () {
+            const prev = el.previousElementSibling;
             el.remove();
             const tab = document.getElementById("likedPostsTab");
-            if (tab) {
-              _cleanOrphanSep(tab);
-              if (tab.children.length === 0) {
-                _showProfileEmptyState(tab, "likedPostsTab");
+
+            if (tab && prev && prev.classList.contains("profile-date-sep")) {
+              let cursor = prev.nextElementSibling;
+              let hasPost = false;
+              while (cursor) {
+                if (cursor.classList.contains("profile-date-sep")) break;
+                if (cursor.classList.contains("post-card")) {
+                  hasPost = true;
+                  break;
+                }
+                cursor = cursor.nextElementSibling;
               }
+              if (!hasPost) prev.remove();
+            }
+            if (tab && tab.children.length === 0) {
+              _showProfileEmptyState(tab, "likedPostsTab");
             }
           }, 320);
         });
@@ -454,13 +466,24 @@ function _onUserPostsChanged(postId: string, value: any, type: string): void {
           (el as HTMLElement).style.opacity = "0";
           (el as HTMLElement).style.transform = "translateY(4px)";
           setTimeout(function () {
+            const prev = el.previousElementSibling;
             el.remove();
             const tab = document.getElementById("userPostsTab");
-            if (tab) {
-              _cleanOrphanSep(tab);
-              if (tab.children.length === 0) {
-                _showProfileEmptyState(tab, "userPostsTab");
+            if (tab && prev && prev.classList.contains("profile-date-sep")) {
+              let cursor = prev.nextElementSibling;
+              let hasPost = false;
+              while (cursor) {
+                if (cursor.classList.contains("profile-date-sep")) break;
+                if (cursor.classList.contains("post-card")) {
+                  hasPost = true;
+                  break;
+                }
+                cursor = cursor.nextElementSibling;
               }
+              if (!hasPost) prev.remove();
+            }
+            if (tab && tab.children.length === 0) {
+              _showProfileEmptyState(tab, "userPostsTab");
             }
           }, 320);
         });

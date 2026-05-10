@@ -67,9 +67,22 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow-y: overlay;
   overflow-x: hidden;
   scrollbar-gutter: stable;
+}
+
+/* ─────────────────── Custom Scrollbar (Overlay) ─────────────────── */
+.post-view-scroll::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+.post-view-scroll::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 8px;
+}
+.post-view-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
 #postViewContent {
@@ -79,7 +92,7 @@
 }
 
 #postViewContent .post-card {
-  flex: 1;
+  flex: unset;
   display: flex;
   flex-direction: column;
   background: transparent;
@@ -146,6 +159,20 @@
   background: var(--surface);
   padding: 10px;
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* ─────────────────── Gönder Butonu Görünürlük ─────────────────── */
+.comment-send-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.comment-send-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* ─────────────────── Yanıt Hedefi ─────────────────── */

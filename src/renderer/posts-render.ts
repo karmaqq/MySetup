@@ -27,6 +27,7 @@ import {
   initUserPostsListener,
   removeUserPostsListener,
   removeUserLikesListener,
+  togglePostLike,
 } from "./firebase-post";
 
 /* ─────────────────── Feed Durum Değişkenleri ─────────────────── */
@@ -43,19 +44,23 @@ let _loadingMore = false;
 
 /* ─────────────────── Post Kartı HTML Döndürür ─────────────────── */
 
-export function _renderPostHTML(postId: string, postData: any): string {
+export function _renderPostHTML(
+  postId: string,
+  postData: any,
+  opts?: { inPostView?: boolean },
+): string {
   const user = firebase.auth().currentUser;
   const isOwn = !!(user && user.uid === postData.uid);
   const liked = postData.likes && user && postData.likes[user.uid];
   const likeCount = postData.likes ? Object.keys(postData.likes).length : 0;
   const commentCount = getTotalCommentCount(postData);
-
   const timeText = formatTimeAgo(postData.createdAt, postData.phraseIndex);
   const pid = escAttr(postId);
+  const inPostView = opts && opts.inPostView;
 
   let html = `<div class="post-card" data-post-id="${pid}">`;
 
-  html += `<div class="post-header post-header-link" data-action="open-post-view" data-id="${pid}">`;
+  html += `<div class="post-header${inPostView ? "" : " post-header-link"}"${inPostView ? "" : ` data-action="open-post-view" data-id="${pid}"`}>`;
   html += buildAvatarHTML(postData.username, "post-avatar");
   html += '<div class="post-user-info">';
   html += `<span class="post-username">${escHtml(postData.username || "Kullanici")}</span>`;
@@ -64,7 +69,7 @@ export function _renderPostHTML(postId: string, postData: any): string {
   html += buildPostMenuHTML(pid, isOwn);
   html += "</div>";
 
-  html += `<div class="post-body post-body-link" data-action="open-post-view" data-id="${pid}">`;
+  html += `<div class="post-body${inPostView ? "" : " post-body-link"}"${inPostView ? "" : ` data-action="open-post-view" data-id="${pid}"`}>`;
   if (postData.content)
     html += `<div class="post-text">${escHtml(postData.content)}</div>`;
   if (postData.imageUrl) {
@@ -76,7 +81,11 @@ export function _renderPostHTML(postId: string, postData: any): string {
   html += `<button class="post-action-btn like-btn${liked ? " liked" : ""}" data-action="like-post" data-id="${pid}">`;
   html += `<svg viewBox="0 0 24 24" width="15" height="15" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/></svg>`;
   html += ` <span class="post-like-count-${pid}">${likeCount}</span></button>`;
-  html += `<button class="post-action-btn comment-btn" data-action="open-post-view" data-id="${pid}">`;
+  if (inPostView) {
+    html += `<button class="post-action-btn comment-btn" data-action="pv-focus-composer">`;
+  } else {
+    html += `<button class="post-action-btn comment-btn" data-action="open-post-view" data-id="${pid}">`;
+  }
   html += `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
   html += ` <span class="comment-count-${pid}">${commentCount}</span></button>`;
   html += `<span class="post-date">${escHtml(formatDateTime(postData.createdAt))}</span>`;
@@ -255,10 +264,7 @@ export function _teardownPosts(): void {
     _postsQuery.off();
     _postsQuery = null;
   }
-  if (db.postsRef) {
-    db.postsRef.off("child_changed", _onPostChanged);
-    db.postsRef.off("child_removed", _onPostRemoved);
-  }
+  // Artık db.postsRef üzerinde global listener yok, sadece aktif query'de dinleniyor
   _postsListenerActive = false;
   (window as any)._postsListenerActive = false;
   (window as any)._postsReadyFired = false;
@@ -403,8 +409,8 @@ function _listenForNewPosts(ref: firebase.database.Query): void {
     _insertPostToFeed(id, data, true);
   });
 
-  db.postsRef!.on("child_changed", _onPostChanged);
-  db.postsRef!.on("child_removed", _onPostRemoved);
+  liveQuery.on("child_changed", _onPostChanged);
+  liveQuery.on("child_removed", _onPostRemoved);
 }
 
 /* ─────────────────── En yeni yüklü postun timestamp'i ─────────────────── */

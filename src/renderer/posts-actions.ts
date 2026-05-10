@@ -1,3 +1,22 @@
+// Yanıt ekleme ve silme işlemleri için commentData.replies child_added/child_removed listener'ı ekle
+/* ─────────────────── Yanıt Listener Başlatıcı ─────────────────── */
+function _initReplyListener(postId: string, commentId: string): void {
+  const post = allPosts[postId];
+  if (!post || !post.comments || !post.comments[commentId]) return;
+  const repliesRef = firebase
+    .database()
+    .ref("posts")
+    .child(postId)
+    .child("comments")
+    .child(commentId)
+    .child("replies");
+  repliesRef.on("child_added", function (s) {
+    if (!s.key) return;
+  });
+  repliesRef.on("child_removed", function (s) {
+    if (!s.key) return;
+  });
+}
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          BEĞENİ İŞLEMLERİ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -37,7 +56,23 @@ import { _removePostImage } from "./posts-create";
 function _togglePostLike(postId: string): void {
   const user = firebase.auth().currentUser;
   if (!user) return;
+  const post = allPosts[postId];
+  if (!post) return;
+  if (!post.likes) post.likes = {};
+  const had = !!post.likes[user.uid];
+  if (had) {
+    delete post.likes[user.uid];
+  } else {
+    post.likes[user.uid] = true;
+  }
+  _patchPostLikes(postId, post.likes, user);
   togglePostLike(postId, user.uid).catch(function () {
+    if (had) {
+      post.likes[user.uid] = true;
+    } else {
+      delete post.likes[user.uid];
+    }
+    _patchPostLikes(postId, post.likes, user);
     showToast("Beğeni kaydedilemedi.", "error");
   });
 }
@@ -179,8 +214,12 @@ function _initCommentListener(postId: string): void {
     if (!post) return;
     if (!post.comments) post.comments = {};
     if (post.comments[cid]) return;
+
     post.comments[cid] = data;
 
+    _initReplyListener(postId, cid);
+
+    const isPostOwner = _currentUser && post && _currentUser.uid === post.uid;
     getPostCards(postId).forEach(function (card) {
       const list = card.querySelector(
         "#commentList-" + postId,
@@ -192,6 +231,7 @@ function _initCommentListener(postId: string): void {
           cid,
           data,
           _currentUser,
+          isPostOwner,
         );
         const child = wrapper.firstElementChild;
         if (child) list.appendChild(child);
@@ -212,6 +252,7 @@ function _initCommentListener(postId: string): void {
     if (oldData && _onlyCommentLikesChanged(oldData, data)) {
       getPostCards(postId).forEach(function (card) {
         _patchCommentLikeBtn(postId, cid, data.likes, _currentUser);
+        _initReplyListener(postId, cid);
       });
       return;
     }
@@ -233,7 +274,9 @@ function _initCommentListener(postId: string): void {
     const cid = s.key;
     if (!cid) return;
     const post = allPosts[postId];
-    if (post && post.comments) delete post.comments[cid];
+    if (post && post.comments) {
+      delete post.comments[cid];
+    }
     const threads = document.querySelectorAll(
       '[data-post-id="' +
         postId +
@@ -261,11 +304,14 @@ function _refreshCommentThread(
 ): void {
   if (!existingEl || !existingEl.isConnected) return;
   const wrapper = document.createElement("div");
+  const post = allPosts[postId];
+  const isPostOwner = user && post && user.uid === post.uid;
   wrapper.innerHTML = _renderCommentThreadHTML(
     postId,
     commentId,
     commentData,
     user,
+    isPostOwner,
   );
   const newEl = wrapper.firstElementChild;
   if (!newEl) return;
@@ -439,74 +485,87 @@ document.addEventListener("click", function (e: MouseEvent) {
 
 /* ─────────────────── Zaman güncelleme interval kontrolü ─────────────────── */
 
-let _timeUpdateInterval: number | null = null;
+let _timeUpdateIdleHandle: number | null = null;
+let _timeUpdateTimeout: number | null = null;
 let _visibilityListenerRegistered = false;
 
-function _startTimeUpdateInterval(): void {
-  if (_timeUpdateInterval) clearInterval(_timeUpdateInterval);
-  _timeUpdateInterval = window.setInterval(
-    function () {
-      if (
-        _currentPage !== "home" &&
-        _currentPage !== "profile" &&
-        _currentPage !== "postView"
-      )
-        return;
-
-      if (document.hidden) return;
-
-      const postCards = document.querySelectorAll("[data-post-id]");
-      if (!postCards.length) return;
-      postCards.forEach(function (card) {
-        const post = allPosts[(card as HTMLElement).dataset.postId!];
-        if (!post) return;
-
-        const postTimeEl = card.querySelector(
-          ":scope > .post-header .post-time",
+function _runTimeUpdateBatch() {
+  if (
+    _currentPage !== "home" &&
+    _currentPage !== "profile" &&
+    _currentPage !== "postView"
+  )
+    return;
+  if (document.hidden) return;
+  const postCards = document.querySelectorAll("[data-post-id]");
+  if (!postCards.length) return;
+  postCards.forEach(function (card) {
+    const post = allPosts[(card as HTMLElement).dataset.postId!];
+    if (!post) return;
+    const postTimeEl = card.querySelector(":scope > .post-header .post-time");
+    if (postTimeEl) {
+      postTimeEl.textContent = formatTimeAgo(post.createdAt, post.phraseIndex);
+    }
+    const comments = post.comments || {};
+    Object.keys(comments).forEach(function (cid) {
+      const commentEl = card.querySelector(`[data-comment-id="${cid}"]`);
+      if (!commentEl) return;
+      const commentTimeEl = commentEl.querySelector(".comment-time");
+      if (commentTimeEl) {
+        commentTimeEl.textContent = formatTimeAgo(
+          comments[cid].createdAt,
+          undefined,
+          true,
         );
-        if (postTimeEl) {
-          postTimeEl.textContent = formatTimeAgo(
-            post.createdAt,
-            post.phraseIndex,
+      }
+      const replies = comments[cid].replies || {};
+      Object.keys(replies).forEach(function (rid) {
+        const replyTimeEl = commentEl.querySelector(
+          `[data-reply-id="${rid}"] .reply-time`,
+        );
+        if (replyTimeEl) {
+          replyTimeEl.textContent = formatTimeAgo(
+            replies[rid].createdAt,
+            undefined,
+            true,
           );
         }
-
-        const comments = post.comments || {};
-        Object.keys(comments).forEach(function (cid) {
-          const commentEl = card.querySelector(`[data-comment-id="${cid}"]`);
-          if (!commentEl) return;
-          const commentTimeEl = commentEl.querySelector(".comment-time");
-          if (commentTimeEl) {
-            commentTimeEl.textContent = formatTimeAgo(
-              comments[cid].createdAt,
-              undefined,
-              true,
-            );
-          }
-          const replies = comments[cid].replies || {};
-          Object.keys(replies).forEach(function (rid) {
-            const replyTimeEl = commentEl.querySelector(
-              `[data-reply-id="${rid}"] .reply-time`,
-            );
-            if (replyTimeEl) {
-              replyTimeEl.textContent = formatTimeAgo(
-                replies[rid].createdAt,
-                undefined,
-                true,
-              );
-            }
-          });
-        });
       });
-    },
-    5 * 60 * 1000,
-  );
+    });
+  });
+}
+
+function _scheduleTimeUpdateIdle() {
+  if (_timeUpdateIdleHandle) {
+    cancelIdleCallback(_timeUpdateIdleHandle);
+    _timeUpdateIdleHandle = null;
+  }
+  _timeUpdateIdleHandle = requestIdleCallback(_runTimeUpdateBatch, {
+    timeout: 2000,
+  });
+}
+
+function _startTimeUpdateInterval(): void {
+  if (_timeUpdateTimeout) {
+    clearTimeout(_timeUpdateTimeout);
+    _timeUpdateTimeout = null;
+  }
+
+  const scheduleNext = () => {
+    _scheduleTimeUpdateIdle();
+    _timeUpdateTimeout = window.setTimeout(scheduleNext, 2 * 60 * 1000);
+  };
+  scheduleNext();
 }
 
 function _stopTimeUpdateInterval(): void {
-  if (_timeUpdateInterval) {
-    clearInterval(_timeUpdateInterval);
-    _timeUpdateInterval = null;
+  if (_timeUpdateTimeout) {
+    clearTimeout(_timeUpdateTimeout);
+    _timeUpdateTimeout = null;
+  }
+  if (_timeUpdateIdleHandle) {
+    cancelIdleCallback(_timeUpdateIdleHandle);
+    _timeUpdateIdleHandle = null;
   }
 }
 

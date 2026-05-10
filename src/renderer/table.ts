@@ -34,26 +34,22 @@ import {
 } from "./firebase-inv";
 import { showToast, showConfirm } from "./io";
 import { openEditModal } from "./editmodal";
-import { updateStats, updateResultCount, rebuildStatsCache, updateStatsCacheOnChange } from "./toolbar";
+import {
+  updateStats,
+  updateResultCount,
+  rebuildStatsCache,
+  updateStatsCacheOnChange,
+} from "./toolbar";
 
-/* ─────────────────── MutationObserver ─────────────────── */
-
-(function () {
-  const observer = new MutationObserver(function () {
-    if (!isAnyModalOpen() && (_pendingRender as boolean)) {
-      (_pendingRender as boolean) = false;
-      renderAll();
-    }
-  });
-  observer.observe(document.body, {
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["class"],
-  });
-})();
-
-let _pendingRender: boolean = false;
+let _pendingRender = false;
 let _vsRafId: number | null = null;
+
+(window as any)._flushPendingRender = function () {
+  if (_pendingRender) {
+    _pendingRender = false;
+    renderAll();
+  }
+};
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          FİLTRELEME VE SIRALAMA                          */
@@ -92,7 +88,8 @@ export function getFilteredSortedList(): any[] {
 export function updateSortIcons(): void {
   document.querySelectorAll(".sortable").forEach((th) => {
     const icon = th.querySelector(".sort-icon") as HTMLElement | null;
-    const col = (th as HTMLElement).dataset.sort || (th as HTMLElement).dataset.col;
+    const col =
+      (th as HTMLElement).dataset.sort || (th as HTMLElement).dataset.col;
 
     if (col === currentSort.col) {
       if (icon) icon.textContent = currentSort.dir === "asc" ? "↑" : "↓";
@@ -166,25 +163,37 @@ function buildCombinedSpecsCellHTML(item: any): string {
 }
 
 function buildRowHTML(item: any): string {
-  return `
+  return (
+    `
     <td class="col-date">${DATE_FORMAT(item.date)}</td>
     <td class="col-component">${escHtml(item.component)}</td>
     <td class="col-specs">${buildCombinedSpecsCellHTML(item)}</td>
-    <td class="col-price">` + CURRENCY_FORMAT.format(item.price) + ` ₺</td>
+    <td class="col-price">` +
+    CURRENCY_FORMAT.format(item.price) +
+    ` ₺</td>
     <td class="col-vendor">${escHtml(item.vendor)}</td>
     ${buildStatusCellInnerHTML(item)}
-  `;
+  `
+  );
 }
 
-function buildGroupRowHTML(item: any, dateCell: string, vendorCell: string): string {
-  return `
+function buildGroupRowHTML(
+  item: any,
+  dateCell: string,
+  vendorCell: string,
+): string {
+  return (
+    `
     ${dateCell}
     <td class="col-component">${escHtml(item.component)}</td>
     <td class="col-specs">${buildCombinedSpecsCellHTML(item)}</td>
-    <td class="col-price">` + CURRENCY_FORMAT.format(item.price) + ` ₺</td>
+    <td class="col-price">` +
+    CURRENCY_FORMAT.format(item.price) +
+    ` ₺</td>
     ${vendorCell}
     ${buildStatusCellInnerHTML(item)}
-  `;
+  `
+  );
 }
 
 function createRowEl(item: any): HTMLTableRowElement {
@@ -366,7 +375,9 @@ export function addOrUpdateTableRow(id: string, item: any): void {
   }
 
   const visible = isItemVisible(item);
-  const row = tableBody!.querySelector(`tr[data-id="${id}"]`) as HTMLTableRowElement | null;
+  const row = tableBody!.querySelector(
+    `tr[data-id="${id}"]`,
+  ) as HTMLTableRowElement | null;
   const newItem = { ...item, id };
 
   if (!visible) {
@@ -490,13 +501,25 @@ function initiateAddRow(): HTMLTableRowElement {
   `;
 
   const dateInput = tr.querySelector(".date-input") as HTMLInputElement | null;
-  const hiddenPicker = tr.querySelector(".hidden-picker") as HTMLInputElement | null;
+  const hiddenPicker = tr.querySelector(
+    ".hidden-picker",
+  ) as HTMLInputElement | null;
   const calendarIcon = tr.querySelector(".calendar-icon") as HTMLElement | null;
-  const componentInput = tr.querySelector(".component-input") as HTMLInputElement | null;
-  const brandInput = tr.querySelector(".brand-input") as HTMLInputElement | null;
-  const specsInput = tr.querySelector(".specs-input") as HTMLInputElement | null;
-  const priceInput = tr.querySelector(".price-input") as HTMLInputElement | null;
-  const vendorInput = tr.querySelector(".vendor-input") as HTMLInputElement | null;
+  const componentInput = tr.querySelector(
+    ".component-input",
+  ) as HTMLInputElement | null;
+  const brandInput = tr.querySelector(
+    ".brand-input",
+  ) as HTMLInputElement | null;
+  const specsInput = tr.querySelector(
+    ".specs-input",
+  ) as HTMLInputElement | null;
+  const priceInput = tr.querySelector(
+    ".price-input",
+  ) as HTMLInputElement | null;
+  const vendorInput = tr.querySelector(
+    ".vendor-input",
+  ) as HTMLInputElement | null;
   const saveBtn = tr.querySelector(".save-btn") as HTMLElement | null;
 
   if (calendarIcon && hiddenPicker) {
@@ -518,7 +541,8 @@ function initiateAddRow(): HTMLTableRowElement {
 
   if (componentInput) {
     componentInput.addEventListener("input", () => {
-      if (saveBtn) saveBtn.classList.toggle("visible", !!componentInput.value.trim());
+      if (saveBtn)
+        saveBtn.classList.toggle("visible", !!componentInput.value.trim());
     });
   }
 
@@ -543,11 +567,21 @@ function initiateAddRow(): HTMLTableRowElement {
 
 function submitNewItem(tr: HTMLTableRowElement): void {
   const dateInput = tr.querySelector(".date-input") as HTMLInputElement | null;
-  const componentInput = tr.querySelector(".component-input") as HTMLInputElement | null;
-  const brandInput = tr.querySelector(".brand-input") as HTMLInputElement | null;
-  const specsInput = tr.querySelector(".specs-input") as HTMLInputElement | null;
-  const priceInput = tr.querySelector(".price-input") as HTMLInputElement | null;
-  const vendorInput = tr.querySelector(".vendor-input") as HTMLInputElement | null;
+  const componentInput = tr.querySelector(
+    ".component-input",
+  ) as HTMLInputElement | null;
+  const brandInput = tr.querySelector(
+    ".brand-input",
+  ) as HTMLInputElement | null;
+  const specsInput = tr.querySelector(
+    ".specs-input",
+  ) as HTMLInputElement | null;
+  const priceInput = tr.querySelector(
+    ".price-input",
+  ) as HTMLInputElement | null;
+  const vendorInput = tr.querySelector(
+    ".vendor-input",
+  ) as HTMLInputElement | null;
 
   const component = componentInput?.value.trim();
   if (!component) return;
@@ -582,7 +616,8 @@ function submitNewItem(tr: HTMLTableRowElement): void {
 
 document.querySelectorAll(".sortable").forEach((th) => {
   th.addEventListener("click", () => {
-    const col = (th as HTMLElement).dataset.sort || (th as HTMLElement).dataset.col;
+    const col =
+      (th as HTMLElement).dataset.sort || (th as HTMLElement).dataset.col;
     if (!col) return;
 
     if (currentSort.col === col) {
@@ -631,7 +666,9 @@ function initTableBodyEvents(): void {
   if (!tableBody) return;
 
   tableBody.addEventListener("click", function (e) {
-    const btn = (e.target as HTMLElement).closest("[data-action]") as HTMLElement | null;
+    const btn = (e.target as HTMLElement).closest(
+      "[data-action]",
+    ) as HTMLElement | null;
     if (!btn) return;
     const action = btn.dataset.action;
     const id = btn.dataset.id;
@@ -643,13 +680,20 @@ function initTableBodyEvents(): void {
   });
 
   tableBody.addEventListener("dblclick", function (e) {
-    const tr = (e.target as HTMLElement).closest("tr[data-id]") as HTMLTableRowElement | null;
+    const tr = (e.target as HTMLElement).closest(
+      "tr[data-id]",
+    ) as HTMLTableRowElement | null;
     if (!tr) return;
-    if ((e.target as HTMLElement).closest(".status-menu") || (e.target as HTMLElement).closest(".row-actions"))
+    if (
+      (e.target as HTMLElement).closest(".status-menu") ||
+      (e.target as HTMLElement).closest(".row-actions")
+    )
       return;
 
     const id = tr.dataset.id;
-    const targetCell = (e.target as HTMLElement).closest("td") as HTMLElement | null;
+    const targetCell = (e.target as HTMLElement).closest(
+      "td",
+    ) as HTMLElement | null;
     let focusTarget = "component";
 
     if (targetCell) {

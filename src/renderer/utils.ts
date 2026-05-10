@@ -6,7 +6,7 @@
 
 export let _currentPage: string = sessionStorage.getItem("_lastPage") || "home";
 export let _isAnimating = false;
-export let _pendingPageQueue: string[] = [];
+export let _pendingPage: string | null = null;
 export let _commentListenerRefs: Record<string, () => void> = {};
 export const _commentListenerOrder: string[] = [];
 let _viewingPostIdVal: string | null = null;
@@ -29,7 +29,7 @@ export const PAGE_SIZE = 20;
 
 export function showPage(pageName: string): void {
   if (_isAnimating) {
-    _pendingPageQueue = [pageName];
+    _pendingPage = pageName;
     return;
   }
   _isAnimating = true;
@@ -96,9 +96,9 @@ export function showPage(pageName: string): void {
     if (typeof (window as any)._onPageChange === "function") {
       (window as any)._onPageChange(pageName);
     }
-    if (_pendingPageQueue.length) {
-      const next = _pendingPageQueue.pop()!;
-      _pendingPageQueue = [];
+    if (_pendingPage) {
+      const next = _pendingPage;
+      _pendingPage = null;
       showPage(next);
     }
   }, 320);
@@ -225,10 +225,6 @@ export let _statsCache: StatsCache = {
 
 export const toastContainer = document.getElementById("toastContainer");
 
-/* ─────────────────── Sürüm ve Güncelleme ─────────────────── */
-
-export const versionDisplay = document.getElementById("versionDisplay");
-
 /* ─────────────────── Post Sistemi ─────────────────── */
 
 export const postsFeed = document.getElementById(
@@ -333,10 +329,11 @@ export function normalizeTr(s: string): string {
     .replace(/ç/g, "c");
 }
 
-/* ─────────────────── HTML Karakter Kaçışı ─────────────────── */
+/* ─────────────────── Ortak Karakter Kaçış Fonksiyonu ─────────────────── */
 
-export function escHtml(str: string): string {
-  return (str || "").replace(/[&<>"']/g, (c) => {
+function _escapeChars(str: string, mode: "html" | "attr" = "html"): string {
+  if (str == null) return "";
+  return String(str).replace(/[&<>"]|'?/g, (c) => {
     switch (c) {
       case "&":
         return "&amp;";
@@ -354,20 +351,12 @@ export function escHtml(str: string): string {
   });
 }
 
-/* ─────────────────── Attribute Karakter Kaçışı ─────────────────── */
+export function escHtml(str: string): string {
+  return _escapeChars(str, "html");
+}
 
 export function escAttr(str: string): string {
-  try {
-    const s = str == null ? "" : String(str);
-    return s
-      .replace(/&/g, "&amp;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-  } catch (_e) {
-    return "";
-  }
+  return _escapeChars(str, "attr");
 }
 
 /* ─────────────────── Güvenli Harici URL Doğrulama ─────────────────── */
@@ -488,10 +477,6 @@ export function formatTimeAgo(
   return timeText + " " + POST_PHRASES[idx];
 }
 
-export function formatRelativeTime(timestamp: number): string {
-  return formatTimeAgo(timestamp, undefined, true);
-}
-
 export function formatDateTime(timestamp: number): string {
   if (!timestamp) return "";
   const date = new Date(timestamp);
@@ -567,7 +552,7 @@ export function removeLoadMoreBtn(btnId: string): void {
 
 export function getTotalCommentCount(post: any): number {
   if (!post || !post.comments) return 0;
-  var total = Object.keys(post.comments).length;
+  let total = Object.keys(post.comments).length;
   Object.keys(post.comments).forEach(function (cid) {
     if (post.comments[cid].replies)
       total += Object.keys(post.comments[cid].replies).length;

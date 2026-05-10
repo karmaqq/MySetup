@@ -1,9 +1,25 @@
+/* ─────────────────── Yanıt Listener Başlatıcı (Post View) ─────────────────── */
+function _initReplyListenerPV(postId: string, commentId: string): void {
+  var post = allPosts[postId];
+  if (!post || !post.comments || !post.comments[commentId]) return;
+  var repliesRef = db
+    .postsRef!.child(postId)
+    .child("comments")
+    .child(commentId)
+    .child("replies");
+  repliesRef.on("child_added", function (s) {
+    if (!s.key) return;
+  });
+  repliesRef.on("child_removed", function (s) {
+    if (!s.key) return;
+  });
+}
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                              POST VIEW                                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { allPosts } from "./posts-render";
-import { _initPostImage } from "./posts-render";
+import { allPosts, _renderPostHTML, _initPostImage } from "./posts-render";
+import { db } from "./firebase-init";
 import { _renderCommentThreadHTML } from "./post-comment";
 import { addCommentToFirebase, addReplyToFirebase } from "./firebase-post";
 import { showToast } from "./io";
@@ -87,12 +103,11 @@ function openPostView(postId: string, fromCommentBtn?: boolean): void {
 /* ─────────────────── Post View'i kapatır ve geri döner ─────────────────── */
 
 function closePostView(): void {
-  if (
-    (window as any)._viewingPostId &&
-    _commentListenerRefs[(window as any)._viewingPostId]
-  ) {
-    (_commentListenerRefs[(window as any)._viewingPostId] as any).off();
-    delete _commentListenerRefs[(window as any)._viewingPostId];
+  /* ─────────────────── Güvenli Listener Temizliği ─────────────────── */
+  const pidToClean = (window as any)._viewingPostId as string | null;
+  if (pidToClean && _commentListenerRefs[pidToClean]) {
+    (_commentListenerRefs[pidToClean] as any).off();
+    delete _commentListenerRefs[pidToClean];
   }
 
   var targetPage = _previousPage || "home";
@@ -140,51 +155,11 @@ function closePostView(): void {
 function _renderPostViewContent(postId: string, postData: any): void {
   var container = document.getElementById("postViewContent");
   if (!container) return;
-
   var user = firebase.auth().currentUser;
-  var isOwn = !!(user && user.uid === postData.uid);
-  var liked = postData.likes && user && postData.likes[user.uid];
-  var likeCount = postData.likes ? Object.keys(postData.likes).length : 0;
-  var commentCount = getTotalCommentCount(postData);
   var pid = escAttr(postId);
-
-  var html = `<div class="post-card" data-post-id="${pid}">`;
-
-  html += '<div class="post-header">';
-  html += buildAvatarHTML(postData.username, "post-avatar");
-  html += '<div class="post-user-info">';
-  html += `<span class="post-username">${escHtml(postData.username || "Kullanici")}</span>`;
-  html += `<span class="post-time">${escHtml(formatTimeAgo(postData.createdAt, postData.phraseIndex))}</span>`;
-  html += "</div>";
-  html += buildPostMenuHTML(pid, isOwn);
-  html += "</div>";
-
-  html += '<div class="post-body">';
-  if (postData.content) {
-    html += `<div class="post-text">${escHtml(postData.content)}</div>`;
-  }
-  if (postData.imageUrl) {
-    html += `<div class="post-image"><img src="${escUrl(postData.imageUrl)}" alt="" class="post-img-lazy"></div>`;
-  }
-  html += "</div>";
-
-  html += '<div class="post-actions">';
-  html += `<button class="post-action-btn like-btn${liked ? " liked" : ""}" data-action="like-post" data-id="${pid}">`;
-  html += `<svg viewBox="0 0 24 24" width="15" height="15" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2">`;
-  html += `<path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/>`;
-  html += `</svg> <span class="post-like-count-${pid}">${likeCount}</span></button>`;
-
-  html += `<button class="post-action-btn comment-btn" data-action="pv-focus-composer">`;
-  html += `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">`;
-  html += `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`;
-  html += `</svg> <span class="comment-count-${pid}">${commentCount}</span></button>`;
-
-  html += `<span class="post-date">${escHtml(formatDateTime(postData.createdAt))}</span>`;
-  html += "</div>";
-
+  let html = _renderPostHTML(postId, postData, { inPostView: true });
   html += `<div class="comment-section visible" id="commentSection-${pid}">`;
   html += `<div class="comment-list" id="commentList-${pid}">`;
-
   if (postData.comments) {
     var sorted = Object.keys(postData.comments).sort(function (a, b) {
       return (
@@ -192,28 +167,53 @@ function _renderPostViewContent(postId: string, postData: any): void {
         (postData.comments[b].createdAt || 0)
       );
     });
+    const isPostOwner = !!(user && user.uid === postData.uid);
     sorted.forEach(function (cid) {
       html += _renderCommentThreadHTML(
         postId,
         cid,
         postData.comments[cid],
         user,
+        isPostOwner,
       );
     });
   }
-
   html += "</div>";
   html += "</div>";
-  html += "</div>";
-
   container.innerHTML = html;
-
   var lazyImg = container.querySelector(
     ".post-img-lazy",
   ) as HTMLImageElement | null;
   if (lazyImg) _initPostImage(lazyImg);
-
   _initPostViewCommentListener(postId);
+
+  var input = document.getElementById(
+    "postViewCommentInput",
+  ) as HTMLTextAreaElement | null;
+  var sendBtn = document.getElementById("postViewSendBtn");
+  if (input && sendBtn) {
+    sendBtn.classList.toggle("visible", input.value.trim().length > 0);
+    input.addEventListener("input", function (this: HTMLTextAreaElement) {
+      var sendBtn = document.getElementById("postViewSendBtn");
+      if (sendBtn)
+        sendBtn.classList.toggle("visible", this.value.trim().length > 0);
+    });
+    input.addEventListener("keydown", function (e: KeyboardEvent) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        _submitPostViewComment();
+      }
+    });
+  }
+  if (sendBtn) sendBtn.addEventListener("click", _submitPostViewComment);
+
+  var input = document.getElementById(
+    "postViewCommentInput",
+  ) as HTMLTextAreaElement | null;
+  var sendBtn = document.getElementById("postViewSendBtn");
+  if (input && sendBtn) {
+    sendBtn.classList.toggle("visible", input.value.trim().length > 0);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -228,8 +228,10 @@ function _initPostViewCommentListener(postId: string): void {
     delete _commentListenerRefs[postId];
   }
 
-  var postsRef = firebase.database().ref("posts");
-  var ref = postsRef.child(postId).child("comments").orderByChild("createdAt");
+  var ref = db
+    .postsRef!.child(postId)
+    .child("comments")
+    .orderByChild("createdAt");
   _commentListenerRefs[postId] = ref as any;
   var _currentUser = firebase.auth().currentUser;
 
@@ -242,16 +244,26 @@ function _initPostViewCommentListener(postId: string): void {
     if (!post) return;
     if (!post.comments) post.comments = {};
     if (post.comments[cid]) return;
+
     post.comments[cid] = data;
+
+    _initReplyListenerPV(postId, cid);
 
     var commentList = document.getElementById("commentList-" + postId);
     if (commentList) {
       var wrapper = document.createElement("div");
+      var post = allPosts[postId];
+      var isPostOwner = !!(
+        _currentUser &&
+        post &&
+        _currentUser.uid === post.uid
+      );
       wrapper.innerHTML = _renderCommentThreadHTML(
         postId,
         cid,
         data,
         _currentUser,
+        isPostOwner,
       );
       var child = wrapper.firstElementChild;
       if (child) commentList.appendChild(child);
@@ -273,6 +285,8 @@ function _initPostViewCommentListener(postId: string): void {
     var thread = document.getElementById("commentThread-" + postId + "-" + cid);
     if (!thread) return;
 
+    _initReplyListenerPV(postId, cid);
+
     if (
       oldData &&
       typeof _onlyCommentLikesChanged === "function" &&
@@ -284,11 +298,14 @@ function _initPostViewCommentListener(postId: string): void {
     }
 
     var wrapper = document.createElement("div");
+    var post = allPosts[postId];
+    var isPostOwner = !!(_currentUser && post && _currentUser.uid === post.uid);
     wrapper.innerHTML = _renderCommentThreadHTML(
       postId,
       cid,
       newData,
       _currentUser,
+      isPostOwner,
     );
     var newEl = wrapper.firstElementChild;
     if (!newEl) return;
@@ -312,12 +329,33 @@ function _initPostViewCommentListener(postId: string): void {
     var cid = s.key;
     if (!cid) return;
     var post = allPosts[postId];
-    if (post && post.comments) delete post.comments[cid];
+    if (post && post.comments) {
+      delete post.comments[cid];
+    }
 
     var thread = document.getElementById("commentThread-" + postId + "-" + cid);
     if (thread) thread.remove();
     _updatePostViewCommentCount(postId);
   });
+  function _initReplyListenerPV(postId: string, commentId: string): void {
+    var post = allPosts[postId];
+    if (!post || !post.comments || !post.comments[commentId]) return;
+    var repliesRef = db
+      .postsRef!.child(postId)
+      .child("comments")
+      .child(commentId)
+      .child("replies");
+    repliesRef.on("child_added", function (s) {
+      if (!s.key) return;
+      if (typeof post._commentCount !== "number") post._commentCount = 0;
+      post._commentCount++;
+    });
+    repliesRef.on("child_removed", function (s) {
+      if (!s.key) return;
+      if (typeof post._commentCount === "number" && post._commentCount > 0)
+        post._commentCount--;
+    });
+  }
 }
 
 /* ─────────────────── Yorum sayacını günceller ─────────────────── */
@@ -417,6 +455,12 @@ function _submitPostViewComment(): void {
           ) as HTMLElement | null;
           if (toggleBtn) toggleBtn.textContent = "yanıtları gizle";
         }
+        var input = document.getElementById(
+          "postViewCommentInput",
+        ) as HTMLTextAreaElement | null;
+        if (input) input.value = "";
+        var sendBtn = document.getElementById("postViewSendBtn");
+        if (sendBtn) sendBtn.classList.remove("visible");
       })
       .catch(function () {
         showToast("Yanıt eklenemedi", "error");
@@ -425,6 +469,12 @@ function _submitPostViewComment(): void {
     addCommentToFirebase((window as any)._viewingPostId, baseData)
       .then(function () {
         showToast("Yorum eklendi", "success");
+        var input = document.getElementById(
+          "postViewCommentInput",
+        ) as HTMLTextAreaElement | null;
+        if (input) input.value = "";
+        var sendBtn = document.getElementById("postViewSendBtn");
+        if (sendBtn) sendBtn.classList.remove("visible");
       })
       .catch(function () {
         showToast("Yorum eklenemedi", "error");

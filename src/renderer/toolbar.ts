@@ -49,7 +49,11 @@ export function rebuildStatsCache(): void {
   }
 }
 
-export function updateStatsCacheOnChange(item: any, oldItem: any | undefined, isRemove: boolean): void {
+export function updateStatsCacheOnChange(
+  item: any,
+  oldItem: any | undefined,
+  isRemove: boolean,
+): void {
   const newPrice = parseFloat(item.price) || 0;
   const oldPrice = oldItem ? parseFloat(oldItem.price) || 0 : 0;
 
@@ -61,7 +65,8 @@ export function updateStatsCacheOnChange(item: any, oldItem: any | undefined, is
     }
     if (_statsCache.mostExpId === item.id) {
       rebuildStatsCache();
-      scheduleRender();
+      updateStats(getFilteredSortedList());
+      return;
     }
   } else {
     if (!oldItem) {
@@ -71,7 +76,9 @@ export function updateStatsCacheOnChange(item: any, oldItem: any | undefined, is
       if (newPrice > _statsCache.mostExpPrice) {
         _statsCache.mostExpPrice = newPrice;
         _statsCache.mostExpId = item.id;
-        const mostExpItem = _statsCache.mostExpId ? allData[_statsCache.mostExpId] : null;
+        const mostExpItem = _statsCache.mostExpId
+          ? allData[_statsCache.mostExpId]
+          : null;
         if (statExpensive)
           statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
       }
@@ -89,7 +96,8 @@ export function updateStatsCacheOnChange(item: any, oldItem: any | undefined, is
         newPrice > _statsCache.mostExpPrice
       ) {
         rebuildStatsCache();
-        scheduleRender();
+        updateStats(getFilteredSortedList());
+        return;
       }
     }
   }
@@ -97,7 +105,10 @@ export function updateStatsCacheOnChange(item: any, oldItem: any | undefined, is
 
 export function updateStats(filteredList: any[]): void {
   const isFiltered = currentSearch || currentStatusFilter !== "all";
-  let filteredTotal: number, filteredHealthy: number, mostExpItem: any, filteredLength: number;
+  let filteredTotal: number,
+    filteredHealthy: number,
+    mostExpItem: any,
+    filteredLength: number;
 
   if (!isFiltered) {
     filteredTotal = _statsCache.total;
@@ -132,7 +143,9 @@ export function updateStats(filteredList: any[]): void {
     statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
     const statCard = statExpensive.closest(".stat-card");
     if (statCard) {
-      const statIcon = statCard.querySelector(".stat-icon") as HTMLElement | null;
+      const statIcon = statCard.querySelector(
+        ".stat-icon",
+      ) as HTMLElement | null;
       if (statIcon) {
         statIcon.classList.remove(
           "status-broken",
@@ -250,6 +263,24 @@ function parseCsvLine(line: string): string[] {
   return result;
 }
 
+/* ─────────────────── Firebase Key Üretici ─────────────────── */
+function generateFirebaseKey(): string {
+  /*
+    Firebase push key algoritmasına benzer şekilde, timestamp tabanlı ve random ekli local key üretir.
+    Çakışma riski yok denecek kadar azdır.
+  */
+  const now = Date.now();
+  const chars =
+    "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
+  let key = "";
+  let time = now;
+  for (let i = 7; i >= 0; i--) {
+    key = chars[time % 64] + key;
+    time = Math.floor(time / 64);
+  }
+  return key + Math.random().toString(36).substr(2, 12);
+}
+
 function processCsv(csvText: string): void {
   const lines = csvText.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) {
@@ -264,9 +295,7 @@ function processCsv(csvText: string): void {
     const row = parseCsvLine(line);
     if (row.length < 2 || !row[1]) return;
 
-    const entryId = db.database?.ref(db.activeBasePath!).push().key;
-    if (!entryId) return;
-
+    const entryId = generateFirebaseKey();
     importPayload[entryId] = {
       date: row[0] || new Date().toISOString().split("T")[0],
       component: row[1],
@@ -304,8 +333,12 @@ function processCsv(csvText: string): void {
 
 /* ─────────────────── CSV Dosya Seçici ─────────────────── */
 
-const importCsvBtn = document.getElementById("importCsvBtn") as HTMLElement | null;
-const importCsvInput = document.getElementById("importCsvInput") as HTMLInputElement | null;
+const importCsvBtn = document.getElementById(
+  "importCsvBtn",
+) as HTMLElement | null;
+const importCsvInput = document.getElementById(
+  "importCsvInput",
+) as HTMLInputElement | null;
 
 if (importCsvBtn && importCsvInput) {
   importCsvBtn.addEventListener("click", () => importCsvInput.click());
@@ -323,7 +356,9 @@ if (importCsvBtn && importCsvInput) {
 /*                          CSV DIŞA AKTARMA                                 */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const exportCsvBtn = document.getElementById("exportCsvBtn") as HTMLElement | null;
+const exportCsvBtn = document.getElementById(
+  "exportCsvBtn",
+) as HTMLElement | null;
 
 if (exportCsvBtn) {
   exportCsvBtn.addEventListener("click", () => {
@@ -390,7 +425,9 @@ if (exportCsvBtn) {
 /*                          TÜM LİSTEYİ SİL                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const deleteAllBtn = document.getElementById("deleteAllBtn") as HTMLElement | null;
+const deleteAllBtn = document.getElementById(
+  "deleteAllBtn",
+) as HTMLElement | null;
 
 if (deleteAllBtn) {
   deleteAllBtn.addEventListener("click", () => {

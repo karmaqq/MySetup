@@ -31,13 +31,11 @@ export function _renderCommentThreadHTML(
   commentId: string,
   commentData: any,
   user: firebase.auth.User | null,
+  isPostOwner?: boolean,
 ): string {
   const pid = escAttr(postId);
   const cid = escAttr(commentId);
   const isOwn = user && user.uid === commentData.uid;
-  const allPostsGlobal = (window as any).allPosts || {};
-  const postData = allPostsGlobal[postId];
-  const isPostOwner = user && postData && user.uid === postData.uid;
   const liked = user && commentData.likes && commentData.likes[user.uid];
   const likeCount = commentData.likes
     ? Object.keys(commentData.likes).length
@@ -118,14 +116,12 @@ export function _renderReplyHTML(
   replyId: string,
   replyData: any,
   user: firebase.auth.User | null,
+  isPostOwner?: boolean,
 ): string {
   const pid = escAttr(postId);
   const cid = escAttr(commentId);
   const rid = escAttr(replyId);
   const isOwn = user && user.uid === replyData.uid;
-  const allPostsGlobal = (window as any).allPosts || {};
-  const postData = allPostsGlobal[postId];
-  const isPostOwner = user && postData && user.uid === postData.uid;
   const liked = user && replyData.likes && replyData.likes[user.uid];
   const likeCount = replyData.likes ? Object.keys(replyData.likes).length : 0;
   const timeAgo = replyData.createdAt
