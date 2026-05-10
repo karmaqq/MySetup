@@ -2,16 +2,13 @@
 /*                          GENEL YARDIMCI ARAÇLAR                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          SPA SAYFA YÖNETİMİ                            */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
 /* ─────────────────── Sayfa Geçişi (Animasyonlu) ─────────────────── */
 
 export let _currentPage: string = sessionStorage.getItem("_lastPage") || "home";
 export let _isAnimating = false;
 export let _pendingPageQueue: string[] = [];
 export let _commentListenerRefs: Record<string, () => void> = {};
+export const _commentListenerOrder: string[] = [];
 let _viewingPostIdVal: string | null = null;
 Object.defineProperty(window, "_viewingPostId", {
   get() {
@@ -489,6 +486,10 @@ export function formatTimeAgo(
       ? phraseIndex
       : Math.floor(Math.random() * POST_PHRASES.length);
   return timeText + " " + POST_PHRASES[idx];
+}
+
+export function formatRelativeTime(timestamp: number): string {
+  return formatTimeAgo(timestamp, undefined, true);
 }
 
 export function formatDateTime(timestamp: number): string {

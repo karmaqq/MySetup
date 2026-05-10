@@ -11,7 +11,6 @@ import {
 } from "./io";
 import {
   togglePostLike,
-  addCommentToFirebase,
   toggleCommentLike,
   toggleReplyLike,
 } from "./firebase-post";
@@ -24,6 +23,7 @@ import {
 import {
   getPostCards,
   _commentListenerRefs,
+  _commentListenerOrder,
   _currentPage,
   escHtml,
   formatTimeAgo,
@@ -109,45 +109,6 @@ function _toggleReplyLike(
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                       YORUM / YANIT GÖNDERİMİ                         */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Composer'daki mesajı gönderir ─────────────────── */
-
-function _submitComposer(btn: HTMLElement): void {
-  const postCard = btn.closest(".post-card") as HTMLElement | null;
-  if (!postCard) return;
-  const postId = postCard.dataset.postId;
-  if (!postId) return;
-  const input = postCard.querySelector(
-    ".comment-input-field",
-  ) as HTMLTextAreaElement | null;
-  if (!input) return;
-  const text = input.value.trim();
-  if (!text) return;
-
-  const user = firebase.auth().currentUser;
-  if (!user) return;
-
-  const baseData: Record<string, any> = {
-    uid: user.uid,
-    username: user.displayName || "Kullanici",
-    text: text,
-    createdAt: firebase.database.ServerValue.TIMESTAMP,
-    likes: {},
-  };
-
-  addCommentToFirebase(postId, baseData)
-    .then(function () {
-      input.value = "";
-      showToast("Yorum eklendi", "success");
-    })
-    .catch(function () {
-      showToast("Yorum eklenemedi", "error");
-    });
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                         YORUM BÖLÜMÜ AÇ / KAPAT                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -185,15 +146,26 @@ function _openRepliesSection(postId: string, commentId: string): void {
 
 /* ─────────────────── Yorum bölümü açıldığında Firebase'i dinler ─────────────────── */
 
+function _touchListener(postId: string): void {
+  var idx = _commentListenerOrder.indexOf(postId);
+  if (idx > -1) _commentListenerOrder.splice(idx, 1);
+  _commentListenerOrder.push(postId);
+}
+
 function _initCommentListener(postId: string): void {
   if ((window as any)._viewingPostId === postId) return;
-  if (_commentListenerRefs[postId]) return;
-  const keys = Object.keys(_commentListenerRefs);
-  if (keys.length >= 10) {
-    const oldest = keys[0];
-    (_commentListenerRefs[oldest] as any).off();
-    delete _commentListenerRefs[oldest];
+  if (_commentListenerRefs[postId]) {
+    _touchListener(postId);
+    return;
   }
+  if (_commentListenerOrder.length >= 10) {
+    var lru = _commentListenerOrder.shift();
+    if (lru && _commentListenerRefs[lru]) {
+      (_commentListenerRefs[lru] as any).off();
+      delete _commentListenerRefs[lru];
+    }
+  }
+  _touchListener(postId);
   const postsRef = firebase.database().ref("posts");
   const q = postsRef.child(postId).child("comments").orderByChild("createdAt");
   _commentListenerRefs[postId] = q as any;
@@ -459,34 +431,6 @@ document.addEventListener("click", function (e: MouseEvent) {
     );
     return;
   }
-});
-
-/* ─────────────────── Textarea Enter ile gönder ─────────────────── */
-
-document.addEventListener("keydown", function (e: KeyboardEvent) {
-  if (e.key !== "Enter" || e.shiftKey) return;
-  const target = e.target as HTMLElement;
-  if (!target.classList.contains("comment-input-field")) return;
-  const postCard = target.closest(".post-card") as HTMLElement | null;
-  if (!postCard) return;
-  e.preventDefault();
-  const btn = postCard.querySelector(".comment-send-btn") as HTMLElement | null;
-  if (btn) _submitComposer(btn);
-});
-
-/* ─────────────────── Textarea içeriğine göre gönder butonu göster/gizle ─────────────────── */
-
-document.addEventListener("input", function (e: Event) {
-  const target = e.target as HTMLElement;
-  if (!target.classList.contains("comment-input-field")) return;
-  const postCard = target.closest(".post-card") as HTMLElement | null;
-  if (!postCard) return;
-  const btn = postCard.querySelector(".comment-send-btn") as HTMLElement | null;
-  if (btn)
-    btn.classList.toggle(
-      "visible",
-      (target as HTMLTextAreaElement).value.trim().length > 0,
-    );
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

@@ -3,7 +3,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { escHtml, escAttr, formatTimeAgo, buildAvatarHTML } from "./utils";
-import { mdToHtml } from "./md-parse";
 
 /* ─────────────────── Ortak silme dropdown HTML ─────────────────── */
 
@@ -68,7 +67,7 @@ export function _renderCommentThreadHTML(
     });
   }
   html += "</div>";
-  html += `<div class="comment-text md-render">${mdToHtml(commentData.text || "")}</div>`;
+  html += `<div class="comment-text">${escHtml(commentData.text || "")}</div>`;
   html += '<div class="comment-actions">';
   html += `<button class="comment-action-btn${liked ? " liked" : ""}" data-action="like-comment" data-post-id="${pid}" data-comment-id="${cid}">`;
   html += `<svg viewBox="0 0 24 24" width="12" height="12" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/></svg>`;
@@ -148,7 +147,7 @@ export function _renderReplyHTML(
     });
   }
   html += "</div>";
-  html += `<div class="reply-text md-render">${mdToHtml(replyData.text || "")}</div>`;
+  html += `<div class="reply-text">${escHtml(replyData.text || "")}</div>`;
   html += '<div class="reply-actions">';
   html += `<button class="comment-action-btn${liked ? " liked" : ""}" data-action="like-reply" data-post-id="${pid}" data-comment-id="${cid}" data-reply-id="${rid}">`;
   html += `<svg viewBox="0 0 24 24" width="11" height="11" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/></svg>`;

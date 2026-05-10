@@ -120,12 +120,11 @@
   font-family: var(--font-ui);
   font-size: 13.5px;
   line-height: 1.5;
+  resize: none;
   outline: none;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 
 .comment-input-wrapper .comment-input-field:empty:before {
@@ -137,13 +136,6 @@
 .comment-input-row .comment-input-field:focus {
   border-color: var(--accent);
 }
-
-.comment-input-wrapper .comment-input-field :where(strong, em, s, a) {
-  display: inline;
-}
-.comment-input-wrapper .comment-input-field strong { font-weight: 700; color: var(--text-bright); }
-.comment-input-wrapper .comment-input-field em { font-style: italic; }
-.comment-input-wrapper .comment-input-field a { color: var(--accent); text-decoration: underline; }
 
 .comment-input-row .comment-input-field::placeholder {
   color: var(--text-dim);
@@ -166,7 +158,9 @@
 }
 
 .comment-send-btn.visible {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .comment-send-btn:hover {
@@ -246,6 +240,7 @@
   gap: 8px;
   margin-bottom: 4px;
   position: relative;
+  z-index: 1;
 }
 
 .comment-username {
@@ -339,9 +334,8 @@
   border: 1px solid var(--border2);
   border-radius: var(--radius);
   min-width: 100px;
-  z-index: 100;
+  z-index: 200;
   display: none;
-  margin-top: 4px;
 }
 
 .comment-dropdown.active {
@@ -432,10 +426,6 @@
 .reply-body {
   flex: 1;
   min-width: 0;
-  padding-bottom: 6px;
-}
-
-.reply-item:last-child .reply-body {
   padding-bottom: 4px;
 }
 

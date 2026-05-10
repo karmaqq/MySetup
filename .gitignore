@@ -7,5 +7,4 @@ release/
 node_modules/
 .VSCodeCounter/
 .vscode/
-# js/firebase-config.js — kaldırıldı (Firebase public config, repo'da versiyonlanır)
 src/renderer/firebase-config.ts

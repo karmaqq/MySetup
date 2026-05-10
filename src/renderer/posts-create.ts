@@ -5,16 +5,24 @@
 import { POST_PHRASES } from "./utils";
 import { addPostToFirebase } from "./firebase-post";
 import { showToast } from "./io";
-import { initMdToolbar, editorToMd, clearEditor } from "./md-toolbar";
 
 /* ─────────────────── DOM Referansları ─────────────────── */
 
-const postEditor = document.getElementById("postEditor") as HTMLElement | null;
-const postImageInput = document.getElementById("postImageInput") as HTMLInputElement | null;
-const postImageBtn = document.getElementById("postImageBtn") as HTMLElement | null;
-const publishPostBtn = document.getElementById("publishPostBtn") as HTMLElement | null;
-const postImagePreviewEl = document.getElementById("postImagePreview") as HTMLElement | null;
-const postMdToolbar = document.getElementById("postMdToolbar") as HTMLElement | null;
+const postText = document.getElementById(
+  "postText",
+) as HTMLTextAreaElement | null;
+const postImageInput = document.getElementById(
+  "postImageInput",
+) as HTMLInputElement | null;
+const postImageBtn = document.getElementById(
+  "postImageBtn",
+) as HTMLElement | null;
+const publishPostBtn = document.getElementById(
+  "publishPostBtn",
+) as HTMLElement | null;
+const postImagePreviewEl = document.getElementById(
+  "postImagePreview",
+) as HTMLElement | null;
 
 /* ─────────────────── Seçili Görsel ─────────────────── */
 
@@ -25,11 +33,12 @@ let selectedPostImage: File | null = null;
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 export function createPost(): void {
-  const text = postEditor ? editorToMd(postEditor) : "";
+  const text = (postText ? postText.value : "").trim();
   if (!text && !selectedPostImage) {
     showToast("Lütfen bir metin yazın veya görsel seçin.", "warn");
     return;
   }
+
 
   const user = firebase.auth().currentUser;
   if (!user) return;
@@ -89,7 +98,7 @@ function _uploadAndSavePost(postData: Record<string, any>, file: File): void {
 function _savePost(postData: Record<string, any>): void {
   addPostToFirebase(postData)
     .then(function () {
-      if (postEditor) clearEditor(postEditor);
+      if (postText) postText.value = "";
       selectedPostImage = null;
       if (postImagePreviewEl) {
         postImagePreviewEl.classList.add("hidden");
@@ -150,8 +159,7 @@ export function _removePostImage(): void {
 /* ─────────────────── Post taslağını temizle ─────────────────── */
 
 export function clearPostDraft(): void {
-  (window as any).clearPostDraft = clearPostDraft;
-  if (postEditor) clearEditor(postEditor);
+  if (postText) postText.value = "";
   selectedPostImage = null;
   if (postImagePreviewEl) {
     postImagePreviewEl.classList.add("hidden");
@@ -179,8 +187,8 @@ if (publishPostBtn) {
   publishPostBtn.addEventListener("click", createPost);
 }
 
-if (postEditor) {
-  postEditor.addEventListener("keydown", (e) => {
+if (postText) {
+  postText.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
       createPost();
@@ -188,8 +196,6 @@ if (postEditor) {
   });
 }
 
-/* ─────────────────── Toolbar'ı başlat ─────────────────── */
+/* ─── clearPostDraft'i window'a erken register et (BUG-05 fix) ─── */
 
-if (postMdToolbar && postEditor) {
-  initMdToolbar(postMdToolbar, postEditor);
-}
+(window as any).clearPostDraft = clearPostDraft;

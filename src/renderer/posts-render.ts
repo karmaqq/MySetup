@@ -5,10 +5,10 @@
 import { db } from "./firebase-init";
 import { showToast } from "./io";
 import { _renderCommentThreadHTML } from "./post-comment";
-import { mdToHtml } from "./md-parse";
 import {
   postsFeed,
   _commentListenerRefs,
+  _commentListenerOrder,
   formatTimeAgo,
   formatDateTime,
   escHtml,
@@ -66,7 +66,7 @@ export function _renderPostHTML(postId: string, postData: any): string {
 
   html += `<div class="post-body post-body-link" data-action="open-post-view" data-id="${pid}">`;
   if (postData.content)
-    html += `<div class="post-text md-render">${mdToHtml(postData.content)}</div>`;
+    html += `<div class="post-text">${escHtml(postData.content)}</div>`;
   if (postData.imageUrl) {
     html += `<div class="post-image"><img src="${escUrl(String(postData.imageUrl))}" alt="" class="post-img-lazy"></div>`;
   }
@@ -97,9 +97,13 @@ export function _initPostImage(img: HTMLImageElement | null): void {
   if (img.complete) {
     _handlePostImageLoad(img);
   } else {
-    img.addEventListener("load", function () {
-      _handlePostImageLoad(img);
-    });
+    img.addEventListener(
+      "load",
+      function () {
+        _handlePostImageLoad(img);
+      },
+      { once: true },
+    );
   }
 }
 
@@ -217,7 +221,9 @@ function _renderEmptyFeed(): void {
 
 export function initPosts(): void {
   _teardownPosts();
-  allPosts = {};
+  Object.keys(allPosts).forEach(function (k) {
+    delete allPosts[k];
+  });
   _oldestLoadedKey = null;
   _hasMorePosts = false;
   _loadingMore = false;
@@ -256,7 +262,9 @@ export function _teardownPosts(): void {
   _postsListenerActive = false;
   (window as any)._postsListenerActive = false;
   (window as any)._postsReadyFired = false;
-  allPosts = {};
+  Object.keys(allPosts).forEach(function (k) {
+    delete allPosts[k];
+  });
   if (postsFeed) postsFeed.innerHTML = "";
   _removeLoadMoreBtn();
 
@@ -264,6 +272,7 @@ export function _teardownPosts(): void {
     ref.off();
   });
   for (var k in _commentListenerRefs) delete _commentListenerRefs[k];
+  _commentListenerOrder.length = 0;
   removeUserPostsListener();
   removeUserLikesListener();
 
@@ -307,9 +316,14 @@ function _startPostsListener(): void {
         _renderEmptyFeed();
       }
 
-      _checkHasMorePosts(
-        raw[_oldestLoadedKey!] ? raw[_oldestLoadedKey!].createdAt : null,
-      );
+      if (keys.length >= PAGE_SIZE) {
+        _checkHasMorePosts(
+          raw[_oldestLoadedKey!] ? raw[_oldestLoadedKey!].createdAt : null,
+        );
+      } else {
+        _hasMorePosts = false;
+        _removeLoadMoreBtn();
+      }
 
       _listenForNewPosts(ref);
       (window as any)._postsReadyFired = true;
@@ -484,6 +498,12 @@ function _onlyLikesChanged(oldPost: any, newPost: any): boolean {
   for (let i = 0; i < primitiveFields.length; i++) {
     if (oldPost[primitiveFields[i]] !== newPost[primitiveFields[i]])
       return false;
+  }
+  var oldComments = oldPost.comments || {};
+  var newComments = newPost.comments || {};
+  for (var cid of Object.keys(newComments)) {
+    if (!oldComments[cid]) return false;
+    if (oldComments[cid].text !== newComments[cid].text) return false;
   }
   return getTotalCommentCount(oldPost) === getTotalCommentCount(newPost);
 }

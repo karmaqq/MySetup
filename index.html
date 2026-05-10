@@ -12,7 +12,18 @@
     <title>Karma Q</title>
     <link rel="icon" type="image/x-icon" href="assets/icon.ico" />
 
-    <link rel="stylesheet" href="dist/styles.css" />
+    
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/sidebar.css" />
+    <link rel="stylesheet" href="css/home.css" />
+    <link rel="stylesheet" href="css/profile.css" />
+    <link rel="stylesheet" href="css/inventory.css" />
+    <link rel="stylesheet" href="css/editmodal.css" />
+    <link rel="stylesheet" href="css/posts.css" />
+    <link rel="stylesheet" href="css/auth.css" />
+    <link rel="stylesheet" href="css/userset.css" />
+    <link rel="stylesheet" href="css/post-view.css" />
+    <link rel="stylesheet" href="css/post-comment.css" />
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -57,9 +68,6 @@
   <!--                              SAYFA GÖVDE                             -->
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <body>
-    <!-- ─────────────────── Web/Electron Algılama ─────────────────── -->
-    <script>if (!window.electronAPI) document.documentElement.classList.add("web");</script>
-
     <!-- ─────────────────── Electron Başlık Çubuğu ─────────────────── -->
     <div class="title-bar-drag"></div>
 
@@ -280,12 +288,12 @@
         <section class="page-content page-650 active" id="homePage">
           <!-- Post Oluşturma -->
           <div class="create-post">
-            <div
-              id="postEditor"
-              class="post-editor thin-scrollbar"
-              contenteditable="true"
-              data-placeholder="Bir şeyler yayınla..."
-            ></div>
+            <textarea
+              id="postText"
+              class="post-textarea thin-scrollbar"
+              placeholder="Bir şeyler yayınla..."
+              rows="4"
+            ></textarea>
             <div class="create-post-actions">
               <input type="file" id="postImageInput" accept="image/*" hidden />
               <button
@@ -308,7 +316,6 @@
                   <polyline points="21 15 16 10 5 21"></polyline>
                 </svg>
               </button>
-              <div class="md-toolbar" id="postMdToolbar"></div>
               <button class="publish-btn" id="publishPostBtn">Yayınla</button>
             </div>
             <div id="postImagePreview" class="post-image-preview hidden"></div>
@@ -391,13 +398,13 @@
               </div>
               <div class="comment-input-row">
                 <div class="comment-input-wrapper">
-                  <div
+                  <textarea
                     class="comment-input-field thin-scrollbar"
                     id="postViewCommentInput"
-                    contenteditable="true"
-                    data-placeholder="Yorum yaz..."
-                    data-submit-on-enter="true"
-                  ></div>
+                    placeholder="Yorum yaz..."
+                    maxlength="500"
+                    rows="1"
+                  ></textarea>
                   <button class="comment-send-btn" id="postViewSendBtn">
                     <svg
                       viewBox="0 0 24 24"
@@ -413,7 +420,6 @@
                   </button>
                 </div>
               </div>
-              <div class="md-toolbar md-toolbar-mini" id="pvMdToolbar"></div>
             </div>
           </div>
         </section>
