@@ -3,48 +3,21 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { db } from "./firebase-init";
-import { deleteUserAccount } from "./firebase-user";
 import { initUserDataRef } from "./firebase-core";
-import { refreshAllAvatars } from "./utils";
-import { showToast } from "./io";
+import { refreshAllAvatars } from "./global-fn";
+import { showToast } from "./global-fn";
+import { closeChangePassModal } from "./pass-change";
+import { closeDeleteModal } from "./delete-account-ui";
 
 /* ─────────────────── Modal Referansları ─────────────────── */
 
 const settingsModal = document.getElementById("userSettingsModal") as HTMLElement | null;
-const changePasswordModal = document.getElementById("changePasswordModal") as HTMLElement | null;
-const deleteAccountModal = document.getElementById("deleteAccountModal") as HTMLElement | null;
 
 /* ─────────────────── Modal Kapatma Fonksiyonları ─────────────────── */
 
 export function closeSettingsModal(): void {
   resetUsernameEditState();
   if (settingsModal) settingsModal.classList.remove("active");
-}
-
-export function closeChangePassModal(): void {
-  const form = document.getElementById("changePasswordForm") as HTMLFormElement | null;
-  if (form) form.reset();
-  const errEl = document.getElementById("changePassError");
-  if (errEl) errEl.textContent = "";
-  const submitBtn = document.getElementById("changePassSubmitBtn") as HTMLButtonElement | null;
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Şifreyi Kaydet"; }
-  ["oldPassword", "newPassword", "newPasswordConfirm"].forEach(function (id) {
-    const el = document.getElementById(id) as HTMLInputElement | null;
-    if (el) el.classList.remove("input-error");
-  });
-  if (changePasswordModal) changePasswordModal.classList.remove("active");
-}
-
-export function closeDeleteModal(): void {
-  const form = document.getElementById("deleteAccountForm") as HTMLFormElement | null;
-  if (form) form.reset();
-  const errEl = document.getElementById("deleteAccountError");
-  if (errEl) errEl.textContent = "";
-  const checkEl = document.getElementById("deleteConfirmCheck") as HTMLInputElement | null;
-  if (checkEl) checkEl.checked = false;
-  const submitBtn = document.getElementById("finalDeleteBtn") as HTMLButtonElement | null;
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Hesabı Kalıcı Olarak Sil"; }
-  if (deleteAccountModal) deleteAccountModal.classList.remove("active");
 }
 
 export function closeAllModals(): void {
@@ -74,17 +47,9 @@ function openSettingsModal(): void {
 /* ─────────────────── Modal Kapatma Olayları ─────────────────── */
 
 document.getElementById("closeSettingsBtn")?.addEventListener("click", closeSettingsModal);
-document.getElementById("closeChangePassBtn")?.addEventListener("click", closeChangePassModal);
-document.getElementById("closeDeleteBtn")?.addEventListener("click", closeDeleteModal);
 
 settingsModal?.addEventListener("click", (e) => {
   if (e.target === settingsModal) closeSettingsModal();
-});
-changePasswordModal?.addEventListener("click", (e) => {
-  if (e.target === changePasswordModal) closeChangePassModal();
-});
-deleteAccountModal?.addEventListener("click", (e) => {
-  if (e.target === deleteAccountModal) closeDeleteModal();
 });
 
 /* ─────────────────── Çıkış Yap ─────────────────── */
@@ -230,151 +195,5 @@ saveBtn?.addEventListener("click", async () => {
       : err.message || "Hata oluştu";
     if (usernameErrEl) { usernameErrEl.textContent = msg; usernameErrEl.style.color = "var(--red)"; }
     saveBtn!.disabled = false;
-  }
-});
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                         ŞİFRE DEĞİŞTİRME                               */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-document.getElementById("openChangePassBtn")?.addEventListener("click", () => {
-  closeSettingsModal();
-  closeChangePassModal();
-  if (changePasswordModal) changePasswordModal.classList.add("active");
-});
-
-(function () {
-  const oldPassEl = document.getElementById("oldPassword") as HTMLInputElement | null;
-  const newPassEl = document.getElementById("newPassword") as HTMLInputElement | null;
-  const newPassConfEl = document.getElementById("newPasswordConfirm") as HTMLInputElement | null;
-  const submitBtn = document.getElementById("changePassSubmitBtn") as HTMLButtonElement | null;
-  const errEl = document.getElementById("changePassError") as HTMLElement | null;
-
-  function validate() {
-    if (!oldPassEl || !newPassEl || !newPassConfEl || !submitBtn) return;
-    const oldVal = oldPassEl.value;
-    const newVal = newPassEl.value;
-    const confirmVal = newPassConfEl.value;
-    let errorMsg = "";
-    let newPassInvalid = false;
-    let confirmInvalid = false;
-
-    if (newVal.length > 0 && newVal.length < 6) { errorMsg = "Yeni şifre en az 6 karakter olmalıdır."; newPassInvalid = true; }
-    else if (confirmVal.length > 0 && newVal.length >= 6 && newVal !== confirmVal) { errorMsg = "Yeni şifreler uyuşmuyor."; confirmInvalid = true; }
-
-    newPassEl.classList.toggle("input-error", newPassInvalid);
-    newPassConfEl.classList.toggle("input-error", confirmInvalid);
-    if (errEl) { errEl.textContent = errorMsg; errEl.style.color = errorMsg ? "var(--red)" : ""; }
-
-    submitBtn.disabled = !(oldVal.length > 0 && newVal.length >= 6 && confirmVal.length >= 6 && newVal === confirmVal);
-  }
-
-  oldPassEl?.addEventListener("input", validate);
-  newPassEl?.addEventListener("input", validate);
-  newPassConfEl?.addEventListener("input", validate);
-})();
-
-document.getElementById("changePasswordForm")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const oldPass = (document.getElementById("oldPassword") as HTMLInputElement).value;
-  const newPass = (document.getElementById("newPassword") as HTMLInputElement).value;
-  const newPassConfirm = (document.getElementById("newPasswordConfirm") as HTMLInputElement).value;
-  const errEl = document.getElementById("changePassError") as HTMLElement;
-  const submitBtn = (e.currentTarget as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = "Kaydediliyor...";
-
-  if (newPass !== newPassConfirm) {
-    errEl.style.color = "var(--red)";
-    errEl.textContent = "Yeni şifreler uyuşmuyor.";
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Şifreyi Kaydet";
-    return;
-  }
-
-  try {
-    const user = firebase.auth().currentUser!;
-    const credential = firebase.auth.EmailAuthProvider.credential(user.email!, oldPass);
-    await user.reauthenticateWithCredential(credential);
-    await user.updatePassword(newPass);
-    await user.reload();
-
-    errEl.style.color = "var(--green)";
-    errEl.textContent = "Şifre başarıyla değiştirildi.";
-
-    setTimeout(() => {
-      closeChangePassModal();
-  var cpForm = document.getElementById("changePasswordForm") as HTMLFormElement | null;
-  if (cpForm) cpForm.reset();
-  errEl.textContent = "";
-  submitBtn.disabled = false;
-  submitBtn.textContent = "Şifreyi Kaydet";
-  showToast("Şifre güncellendi", "success");
-    }, 900);
-  } catch (err: any) {
-    errEl.style.color = "var(--red)";
-    errEl.textContent = err.code === "auth/wrong-password" || err.code === "auth/invalid-credential"
-      ? "Mevcut şifre hatalı."
-      : "Bir hata oluştu.";
-    const oldPassInput = document.getElementById("oldPassword") as HTMLInputElement | null;
-    if (oldPassInput) { oldPassInput.value = ""; oldPassInput.focus(); }
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Şifreyi Kaydet";
-  }
-});
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                            HESAP SILME                                   */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-document.getElementById("openDeleteAccountBtn")?.addEventListener("click", () => {
-  closeSettingsModal();
-  closeDeleteModal();
-  if (deleteAccountModal) deleteAccountModal.classList.add("active");
-});
-
-document.getElementById("deleteConfirmCheck")?.addEventListener("change", (e) => {
-  (document.getElementById("finalDeleteBtn") as HTMLButtonElement).disabled = !(e.target as HTMLInputElement).checked;
-});
-
-document.getElementById("deleteAccountForm")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const email = (document.getElementById("deleteEmail") as HTMLInputElement).value;
-  const pass = (document.getElementById("deletePassword") as HTMLInputElement).value;
-  const errEl = document.getElementById("deleteAccountError") as HTMLElement;
-  const submitBtn = (e.currentTarget as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = "Siliniyor...";
-
-  try {
-    const user = firebase.auth().currentUser;
-    if (!user) throw new Error("Oturum bulunamadı, lütfen yeniden giriş yapın.");
-
-    const credential = firebase.auth.EmailAuthProvider.credential(email, pass);
-    await user.reauthenticateWithCredential(credential);
-
-    const result = await deleteUserAccount(user);
-    if (!result.success) throw result.error;
-
-    showToast("Hesabınız kalıcı olarak silindi.", "info");
-    closeDeleteModal();
-  } catch (err: any) {
-    errEl.style.color = "var(--red)";
-    const code = err?.code || "";
-    if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
-      errEl.textContent = "E-posta veya şifre hatalı.";
-    } else if (code === "auth/too-many-requests") {
-      errEl.textContent = "Çok fazla deneme. Lütfen bekleyin.";
-    } else if (code === "auth/requires-recent-login") {
-      errEl.textContent = "Yeniden giriş yapmanız gerekiyor.";
-    } else {
-      errEl.textContent = err?.message || "Bir hata oluştu. Lütfen tekrar deneyin.";
-    }
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Hesabı Kalıcı Olarak Sil";
   }
 });

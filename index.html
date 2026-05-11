@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="tr">
-  <!-- zorunlu - agents.md yorum kurallarına uy --- -->
+  <!-- ─────────────────── HTML Yorum Standartları ─────────────────── -->
 
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <!--                              SAYFA BAŞLIĞI                           -->
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!--                              SAYFA BAŞLIĞI                                -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -53,27 +53,27 @@
     </template>
   </head>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <!--                              SAYFA GÖVDE                             -->
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!--                              SAYFA GÖVDE                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
   <body>
     <!-- ─────────────────── Electron Başlık Çubuğu ─────────────────── -->
     <div class="title-bar-drag"></div>
 
-    <!-- ═════════════════════════════════════════════════════════════════ -->
-    <!--                             SIDEBAR                                 -->
-    <!-- ═════════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--                              KENAR ÇUBUĞU                                -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
     <aside class="sidebar hidden" id="sidebar">
-      <!-- Logo ve Versiyon -->
+      <!-- ─────────────────── Logo ve Versiyon ─────────────────── -->
       <div class="sidebar-brand">
         <h1>Karma<span class="accent-text">Q</span></h1>
         <span id="versionDisplay" class="sidebar-version">v0.0.0</span>
       </div>
 
-      <!-- Divider -->
+      <!-- ─────────────────── Ayraç ─────────────────── -->
       <div class="sidebar-divider"></div>
 
-      <!-- Navigasyon Menüsü -->
+      <!-- ─────────────────── Navigasyon Menüsü ─────────────────── -->
       <nav class="sidebar-nav">
         <button class="sidebar-nav-btn active" data-page="home">Akış</button>
         <button class="sidebar-nav-btn" data-page="profile">Profil</button>
@@ -82,7 +82,7 @@
         </button>
       </nav>
 
-      <!-- Güncelleme Butonu -->
+      <!-- ─────────────────── Güncelleme Butonu ─────────────────── -->
       <button
         id="updateBtn"
         class="sidebar-update-btn"
@@ -91,7 +91,7 @@
         <span></span>
       </button>
 
-      <!-- Alt Kısım: Kullanıcı ve Çıkış -->
+      <!-- ─────────────────── Kullanıcı ve Çıkış ─────────────────── -->
       <div class="sidebar-footer">
         <div class="sidebar-user-info hidden" id="userInfo">
           <div class="sidebar-avatar" id="sidebarAvatar">?</div>
@@ -117,9 +117,9 @@
       </div>
     </aside>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!--                      KİMLİK DOĞRULAMA YÜKLENİYOR                 -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--                      KİMLİK DOĞRULAMA YÜKLENİYOR                          -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
     <div class="auth-loading" id="authLoading">
       <div class="loading-content">
         <h1 class="loading-brand">My<span class="accent-text">SETUP</span></h1>
@@ -127,14 +127,14 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!--                      BİLDİRİM KAPSAYICI                        -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--                      BİLDİRİM KAPSAYICI                                    -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!--                      KİMLİK DOĞRULAMA OVERLAY                    -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--                      KİMLİK DOĞRULAMA KATMANI                              -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
     <div class="auth-overlay" id="authOverlay">
       <div class="auth-container">
         <!-- ─────────────────── Marka Alanı ─────────────────── -->
@@ -267,15 +267,15 @@
       </div>
     </div>
 
-    <!-- ═════════════════════════════════════════════════════════════════ -->
-    <!--                           ALT BİLGİ                              -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--                              ALT BİLGİ                                     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
     <div class="main-scroll hidden" id="mainScroll">
       <div class="pages-container" id="pagesContainer">
         <!-- ─────────────────── Ana Sayfa (650px) ─────────────────── -->
         <section class="page-content page-650 active" id="homePage">
-          <!-- Post Oluşturma -->
+          <!-- ─────────────────── Gönderi Oluşturma ─────────────────── -->
           <div class="create-post">
             <textarea
               id="postText"
@@ -309,7 +309,7 @@
             </div>
             <div id="postImagePreview" class="post-image-preview hidden"></div>
           </div>
-          <!-- Post Akışı -->
+          <!-- ─────────────────── Gönderi Akışı ─────────────────── -->
           <div class="posts-feed" id="postsFeed"></div>
         </section>
 
@@ -334,7 +334,7 @@
             </div>
           </div>
 
-          <!-- Profil Sekmeleri -->
+          <!-- ─────────────────── Profil Sekmeleri ─────────────────── -->
           <div class="profile-tabs">
             <button class="tab-btn active" data-tab="user-posts">
               Gönderilerim
@@ -342,17 +342,17 @@
             <button class="tab-btn" data-tab="liked-posts">Beğenilenler</button>
           </div>
 
-          <!-- Sekme İçerikleri -->
+          <!-- ─────────────────── Sekme İçerikleri ─────────────────── -->
           <div class="tab-content active" id="userPostsTab"></div>
           <div class="tab-content" id="likedPostsTab"></div>
         </section>
 
-        <!-- ═══════════════════════════════════════════════════════════════════ -->
-        <!--                        POST VIEW SAYFASI                          -->
-        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+        <!--                          GÖNDERİ GÖRÜNTÜLEME                              -->
+        <!-- ═══════════════════════════════════════════════════════════════════════════ -->
         <section class="page-content page-650" id="postViewPage">
           <div class="post-view-container">
-            <!-- Geri Çubuğu -->
+            <!-- ─────────────────── Geri Çubuğu ─────────────────── -->
             <div class="post-view-back-bar">
               <button class="post-view-back-btn" id="postViewBackBtn">
                 <svg
@@ -372,12 +372,12 @@
               </button>
             </div>
 
-            <!-- Kaydırılabilir Alan: Post + Yorumlar -->
+            <!-- ─────────────────── Gönderi ve Yorum Alanı ─────────────────── -->
             <div class="post-view-scroll" id="postViewScroll">
               <div id="postViewContent"></div>
             </div>
 
-            <!-- Sticky Composer (Flex Bottom) -->
+            <!-- ─────────────────── Yapışkan Yorum Kutusu ─────────────────── -->
             <div class="post-view-composer-bar" id="postViewComposerBar">
               <div class="post-view-reply-target" id="postViewReplyTarget">
                 <span id="postViewReplyTargetText"></span>
@@ -394,17 +394,18 @@
                     maxlength="500"
                     rows="1"
                   ></textarea>
-                  <button class="comment-send-btn" id="postViewSendBtn">
+                  <button id="postViewSendBtn">
                     <svg
-                      viewBox="0 0 24 24"
+                      viewBox="0 0 16 16"
                       width="14"
                       height="14"
                       fill="none"
                       stroke="currentColor"
-                      stroke-width="2"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
                     >
-                      <line x1="22" y1="2" x2="11" y2="13" />
-                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                      <polyline points="4 2, 12 8, 4 14" />
                     </svg>
                   </button>
                 </div>
@@ -449,7 +450,7 @@
 
           <!-- ─────────────────── Araç Çubuğu ─────────────────── -->
           <div class="toolbar">
-            <!-- Arama -->
+            <!-- ─────────────────── Arama ─────────────────── -->
             <div class="search-wrapper">
               <span class="search-icon">⌕</span>
               <input
@@ -463,7 +464,7 @@
               </button>
             </div>
 
-            <!-- Durum Filtreleri -->
+            <!-- ─────────────────── Durum Filtreleri ─────────────────── -->
             <div class="filter-group">
               <button class="filter-btn active" data-status="all">Tümü</button>
               <button class="filter-btn" data-status="saglikli">
@@ -474,7 +475,7 @@
               <button class="filter-btn" data-status="atildi">Atıldı</button>
             </div>
 
-            <!-- CSV İçe / Dışa Aktarma -->
+            <!-- ─────────────────── CSV İçe / Dışa Aktarma ─────────────────── -->
             <div class="action-group">
               <input type="file" id="importCsvInput" accept=".csv" />
               <button id="importCsvBtn" class="export-btn btn-import">
@@ -544,7 +545,7 @@
                 <col class="col-status" />
               </colgroup>
 
-              <!-- Tablo Başlıkları -->
+              <!-- ─────────────────── Tablo Başlıkları ─────────────────── -->
               <thead>
                 <tr>
                   <th class="sortable" data-col="date">
@@ -568,10 +569,10 @@
                 </tr>
               </thead>
 
-              <!-- Tablo Gövdesi -->
+              <!-- ─────────────────── Tablo Gövdesi ─────────────────── -->
               <tbody id="tableBody"></tbody>
 
-              <!-- Tablo Alt Bilgi -->
+              <!-- ─────────────────── Tablo Alt Bilgi ─────────────────── -->
               <tfoot class="control-panel-footer">
                 <tr>
                   <td colspan="2" class="footer-left">
@@ -598,9 +599,9 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!--                          ANA KAYDIRMA ALANI                         -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--                            ANA KAYDIRMA ALANI                              -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 
     <!-- ─────────────────── Kayıt Düzenleme Modali ─────────────────── -->
     <div class="modal-overlay" id="editModal">
@@ -1042,16 +1043,16 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!--                           ALT BİLGİ                              -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--                              ALT BİLGİ                                     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
     <footer class="app-footer hidden" id="appFooter">
       <span>© 2026 | <b>Karma Q</b> tarafından oluşturuldu.</span>
     </footer>
 
-    <!-- =================================================================== -->
-    <!--        JAVASCRIPT — firebase-config → dist/renderer.js (bundle)      -->
-    <!-- =================================================================== -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--     JAVASCRIPT — firebase-config ile başlat, dist/renderer.js (paket)     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
     <script src="js/firebase-config.js"></script>
     <script src="dist/renderer.js"></script>
   </body>

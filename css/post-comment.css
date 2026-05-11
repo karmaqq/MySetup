@@ -7,7 +7,7 @@
 .comment-section {
   display: none;
   flex-direction: column;
-  padding: 0 16px 12px;
+  padding: 12px;
 }
 
 .comment-section.visible {
@@ -18,10 +18,9 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 6px 0;
 }
 
-/* ─────────────────── Yorum Composer ─────────────────── */
+/* ─────────────────── Yorum Kutusu ─────────────────── */
 
 .comment-composer {
   display: flex;
@@ -111,9 +110,9 @@
 
 .comment-input-wrapper .comment-input-field {
   width: 100%;
-  min-height: 24px;
-  max-height: 72px;
-  padding: 9px 40px 9px 12px;
+  min-height: 20px;
+  max-height: 81px;
+  padding: 10px 24px 10px 12px;
   background: transparent;
   border: none;
   color: var(--text);
@@ -139,11 +138,6 @@
 
 .comment-input-row .comment-input-field::placeholder {
   color: var(--text-dim);
-}
-
-.comment-send-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

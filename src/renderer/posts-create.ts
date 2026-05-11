@@ -2,9 +2,9 @@
 /*                        POST OLUŞTURMA SİSTEMİ                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { POST_PHRASES } from "./utils";
+import { POST_PHRASES } from "./global-ut";
 import { addPostToFirebase } from "./firebase-post";
-import { showToast } from "./io";
+import { showToast } from "./global-fn";
 
 /* ─────────────────── DOM Referansları ─────────────────── */
 
@@ -196,6 +196,6 @@ if (postText) {
   });
 }
 
-/* ─── clearPostDraft'i window'a erken register et (BUG-05 fix) ─── */
+/* ─────────────────── Taslak Temizleme Kaydı ─────────────────── */
 
 (window as any).clearPostDraft = clearPostDraft;

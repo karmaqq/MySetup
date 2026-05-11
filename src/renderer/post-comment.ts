@@ -2,7 +2,8 @@
 /*                       YORUM VE YANIT RENDER                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { escHtml, escAttr, formatTimeAgo, buildAvatarHTML } from "./utils";
+import { escHtml, escAttr, formatTimeAgo } from "./global-ut";
+import { buildAvatarHTML } from "./global-fn";
 
 /* ─────────────────── Ortak silme dropdown HTML ─────────────────── */
 

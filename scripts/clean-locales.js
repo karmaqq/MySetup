@@ -1,3 +1,7 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                       YEREL DOSYA TEMİZLEYİCİ                             */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 exports.default = async function (context) {
     const fs = require("fs");
     const path = require("path");

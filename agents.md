@@ -1,4 +1,4 @@
-# AGENTS.md — MySetup v3.2.0
+# AGENTS.md — MySetup v3.2.2
 
 **Yazar:** Karma (`shbkarma@gmail.com`) · Electron 33 + TypeScript + Firebase Compat SDK v9.22.1
 
@@ -21,8 +21,8 @@ Her `.ts` dosyasının en tepesinde, dosyanın ne işe yaradığını belirten b
 ```
 
 - Toplam: **3 satır**
-- Kullanılan karakterler: `=`, `*`
-- Üst ve alt çizgi: tam 90 karakter (`/* ` + 84 `=` + ` */` = 90)
+- Kullanılan karakter: `═` (U+2550)
+- Üst ve alt çizgi: tam 90 karakter (`/* ` + 75 `═` + ` */` = 90)
 - Orta satır: `/* ` + boşluk + metin + boşluk + `*/` — metin sağa yaslı olacak şekilde boşluklarla doldurulur
 - Metin uzunluğu max ~60 karakter, fazlası alt satıra geçer
 - **Her dosyada yalnızca 1 tane** — dosyanın ilk 3 satırı
@@ -50,10 +50,10 @@ Bir bölüm içindeki spesifik bir grubu veya fonksiyon grubunu ayırmak için k
 ```
 
 - Toplam: **1 satır**
-- Kullanılan karakter: `─`
-- Başlangıç: `/* ` + 18 tane `─`
-- Bitiş: 18 tane `─` + ` */`
-- Metin ortalanır: 18 boşluk + metin + 18 boşluk şeklinde değil, `─` karakterleri metnin etrafında simetrik olacak şekilde
+- Kullanılan karakter: `─` (U+2500)
+- Başlangıç: `/* ` + 19 tane `─`
+- Bitiş: 19 tane `─` + ` */`
+- Metin ortalanır: 19 boşluk + metin + 19 boşluk şeklinde değil, `─` karakterleri metnin etrafında simetrik olacak şekilde
 
 #### 4. Fonksiyon İçi Adım (Step Comment) — isteğe bağlı
 
@@ -83,7 +83,7 @@ function foo(): void {
 <!-- ─────────────────── Alt Başlık ─────────────────── -->
 ```
 
-- HTML yorumlarında `=` karakteri 66 adet kullanılır (CSS/TS'dekinden daha kısa)
+- HTML yorumlarında `═` karakteri 75 adet kullanılır (CSS/TS ile aynı)
 - Aynı 3 seviye hiyerarşisi geçerlidir
 
 ### Yasak Yorum Tipleri
@@ -170,12 +170,12 @@ KÖK (firebase.database().ref())
 
 ### Silme Cascade Kuralları (Firebase .remove())
 
-| Silinen | Cascade ile Otomatik Temizlenen | Manuel Temizlenen | Orphan Kalan |
-|---------|-------------------------------|-------------------|--------------|
-| `/posts/{id}` | `likes/*`, `comments/*`, `comments/*/likes/*`, `comments/*/replies/*`, `comments/*/replies/*/likes/*` | `userPosts/{uid}/{id}`, her liker için `userLikes/{uid}/{id}`, Storage image | `userLikes` race (açık beğeni eklenmişse) |
-| `/posts/{id}/comments/{cid}` | `likes/*`, `replies/*`, `replies/*/likes/*` | Yok | Yok |
-| `/posts/{id}/comments/{cid}/replies/{rid}` | `likes/*` | Yok | Yok |
-| Kullanıcı silindi | Yok | `userLikes/{uid}`, tüm postları (Storage+userLikes+post subtree), `userPosts/{uid}`, `users/{uid}`, `usernames/{key}`, Storage klasör | **Başkalarının postlarındaki yorumları** (uid/text kalır), **başkalarının postlarındaki beğenileri** (like marker'ları kalır) |
+| Silinen                                    | Cascade ile Otomatik Temizlenen                                                                       | Manuel Temizlenen                                                                                                                     | Orphan Kalan                                                                                                                  |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `/posts/{id}`                              | `likes/*`, `comments/*`, `comments/*/likes/*`, `comments/*/replies/*`, `comments/*/replies/*/likes/*` | `userPosts/{uid}/{id}`, her liker için `userLikes/{uid}/{id}`, Storage image                                                          | `userLikes` race (açık beğeni eklenmişse)                                                                                     |
+| `/posts/{id}/comments/{cid}`               | `likes/*`, `replies/*`, `replies/*/likes/*`                                                           | Yok                                                                                                                                   | Yok                                                                                                                           |
+| `/posts/{id}/comments/{cid}/replies/{rid}` | `likes/*`                                                                                             | Yok                                                                                                                                   | Yok                                                                                                                           |
+| Kullanıcı silindi                          | Yok                                                                                                   | `userLikes/{uid}`, tüm postları (Storage+userLikes+post subtree), `userPosts/{uid}`, `users/{uid}`, `usernames/{key}`, Storage klasör | **Başkalarının postlarındaki yorumları** (uid/text kalır), **başkalarının postlarındaki beğenileri** (like marker'ları kalır) |
 
 ### Önemli Notlar
 
@@ -191,18 +191,18 @@ Firebase Realtime Database kuralları `rules.json` dosyasında tanımlıdır. Fi
 
 **Önemli kural mantığı:**
 
-| Path | Kural | Sebep |
-|------|-------|-------|
-| `/users/{uid}` | Sadece kullanıcının kendisi | Kullanıcı verisi gizli |
-| `/posts/{pid}` | Yalnızca post sahibi silebilir / düzenleyebilir | Yetkisiz silme engeli |
-| `/posts/{pid}/comments/{cid}` | Yalnızca yorum sahibi silebilir | Yetkisiz yorum silme engeli |
-| `/posts/{pid}/likes/{uid}` | Yalnızca `$userId` == `auth.uid`, VE post henüz silinmemiş olmalı | Race condition: post yoksa beğeni eklenemez |
-| `/userLikes/{uid}/{pid}` | Sahibi yazabilir VEYA `newData.val() == null` | Başkasının `userLikes`'ına null yazılabilir (post silme cleanup) |
-| `/usernames/{key}` | `newData.val() == auth.uid` (yeni kayıt) VEYA `data.val() == auth.uid` (silme) | Username hijacking engeli |
+| Path                          | Kural                                                                          | Sebep                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `/users/{uid}`                | Sadece kullanıcının kendisi                                                    | Kullanıcı verisi gizli                                           |
+| `/posts/{pid}`                | Yalnızca post sahibi silebilir / düzenleyebilir                                | Yetkisiz silme engeli                                            |
+| `/posts/{pid}/comments/{cid}` | Yalnızca yorum sahibi silebilir                                                | Yetkisiz yorum silme engeli                                      |
+| `/posts/{pid}/likes/{uid}`    | Yalnızca `$userId` == `auth.uid`, VE post henüz silinmemiş olmalı              | Race condition: post yoksa beğeni eklenemez                      |
+| `/userLikes/{uid}/{pid}`      | Sahibi yazabilir VEYA `newData.val() == null`                                  | Başkasının `userLikes`'ına null yazılabilir (post silme cleanup) |
+| `/usernames/{key}`            | `newData.val() == auth.uid` (yeni kayıt) VEYA `data.val() == auth.uid` (silme) | Username hijacking engeli                                        |
 
 **Not:** `userLikes`'daki `newData.val() == null` kuralı, `deletePostFromFirebase`'in atomic multi-path `update()`'inin çalışması için zorunludur (Kullanıcı A, Kullanıcı B'nin `userLikes/{B}/{postId}`'ini null'layabilir).
 
-## Proje Yapısı
+## Proje Yapısı (27 → 36 dosya, Modular Restructure v3.3.1)
 
 ```
 mysetup/
@@ -228,40 +228,68 @@ mysetup/
     │   └── updater.ts        (2)  # electron-updater kurulumu (82 satır)
     └── renderer/
         ├── index.ts          (0)  # Entry point, tüm modülleri import eder
-        ├── utils.ts          (27) # Global değişkenler, yardımcılar (495 satır)
-        ├── firebase-init.ts  (1)  # Firebase başlatma, db referansları (43 satır)
-        ├── firebase-core.ts  (2)  # enrichItem, initUserDataRef (134 satır)
-        ├── firebase-inv.ts   (7)  # Envanter CRUD + Storage (61 satır)
-        ├── firebase-post.ts  (17) # Post/yorum/yanıt CRUD (257 satır)
-        ├── firebase-user.ts  (1)  # Hesap silme (79 satır)
-        ├── auth.ts           (6)  # Giriş/kayıt, oturum yönetimi (331 satır)
-        ├── io.ts             (7)  # Toast/confirm bildirimleri (156 satır)
-        ├── editmodal.ts      (8)  # Düzenleme modalı, görsel yükleme (343 satır)
-        ├── table.ts          (21) # Tablo render, sıralama, CRUD (676 satır)
-        ├── toolbar.ts        (6)  # İstatistik, arama, filtre, CSV (417 satır)
-        ├── profile.ts        (20) # Profil sekmeleri (438 satır)
-        ├── posts-create.ts   (6)  # Post oluşturma, görsel seçimi (187 satır)
-        ├── posts-render.ts   (20) # Post akışı render, sayfalama (464 satır)
-        ├── posts-actions.ts  (13) # Beğeni, yorum gönderme, event delegation (618 satır)
-        ├── post-view.ts      (11) # Post view aç/kapa, yorumlar (541 satır)
-        ├── post-comment.ts   (5)  # Yorum/yanıt HTML render (192 satır)
-        ├── updater-ui.ts     (2)  # Güncelleme butonu animasyonu (118 satır)
-        ├── userset.ts        (8)  # Hesap ayarları, şifre değiştirme (384 satır)
+        ├── global-ut.ts      (0)  # Saf araç fonksiyonları ~195 satır
+        ├── global-fn.ts      (0)  # Paylaşılan uygulama fonksiyonları ~180 satır
+        ├── app-state.ts      (0)  # Uygulama durumu + DOM referansları ~195 satır
+        ├── firebase-init.ts  (1)  # Firebase başlatma ~43 satır
+        ├── firebase-core.ts  (2)  # enrichItem, initUserDataRef ~134 satır
+        ├── firebase-inv.ts   (5)  # Envanter CRUD ~39 satır
+        ├── firebase-user.ts  (1)  # Hesap silme ~81 satır
+        ├── firebase-post.ts  (11) # Post CRUD + sorgular ~155 satır
+        ├── firebase-comment.ts (6)# Yorum/yanıt CRUD ~120 satır
+        ├── io.ts             (5)  # Silme onay diyalogları ~50 satır
+        ├── toolbar.ts        (5)  # İstatistik + arama + filtre ~234 satır
+        ├── csv.ts            (0)  # CSV içeri/dışarı aktarma ~200 satır
+        ├── table.ts          (13) # Tablo render + sıralama ~410 satır
+        ├── table-crud.ts     (0)  # Tablo CRUD + event delegation ~230 satır
+        ├── editmodal.ts      (6)  # Düzenleme modalı ~230 satır
+        ├── image-utils.ts    (0)  # Görsel yükleme + önizleme ~180 satır
+        ├── auth-nav.ts       (1)  # Navigasyon + session yönetimi ~100 satır
+        ├── auth.ts           (6)  # Giriş/kayıt formları ~175 satır
+        ├── pass-change.ts    (1)  # Şifre değiştirme ~120 satır
+        ├── delete-account-ui.ts (1)# Hesap silme UI ~100 satır
+        ├── userset.ts        (5)  # Hesap ayarları ~140 satır
+        ├── updater-ui.ts     (2)  # Güncelleme butonu ~122 satır
+        ├── post-comment.ts   (5)  # Yorum/yanıt HTML render ~197 satır
+        ├── posts-create.ts   (6)  # Post oluşturma ~201 satır
+        ├── posts-render.ts   (10) # Post kart HTML render ~260 satır
+        ├── posts-listener.ts (5)  # Post listener + sayfalama ~200 satır
+        ├── posts-timer.ts    (1)  # Zaman güncellemesi ~120 satır
+        ├── posts-actions.ts  (10) # Beğeni + event delegation ~380 satır
+        ├── profile-tabs.ts   (8)  # Profil sekme yükleme ~280 satır
+        ├── profile.ts        (5)  # Profil sekme yönetimi ~120 satır
+        ├── post-view.ts      (8)  # Post view aç/kapa ~300 satır
+        ├── post-view-comment.ts (4)# Post view yorum gönderimi ~240 satır
         └── types/
             ├── firebase.d.ts      # Firebase compat SDK tipleri
             └── global.d.ts        # Window interface genişletmesi
 ```
 
-## **Toplam: 193 fonksiyon** - **her eklemede güncelle**
+## **Toplam: ~200 fonksiyon** - **her eklemede güncelle**
 
-Import sırası `index.ts`'de sabittir — **asla değiştirilmez:**
+## Import Sırası (index.ts)
+
+**Kesin sıra — asla değiştirilmez:**
 
 ```
-firebase-init → utils → firebase-core → firebase-inv → firebase-user →
-firebase-post → io → toolbar → table → editmodal → auth → userset →
-updater-ui → post-comment → posts-create → posts-render → posts-actions →
-profile → post-view
+firebase-init → global-ut → global-fn → app-state →
+firebase-core → firebase-inv → firebase-user →
+firebase-post → firebase-comment →
+io → toolbar → csv → table → table-crud → editmodal → image-utils →
+auth-nav → auth → pass-change → delete-account-ui → userset → updater-ui →
+post-comment → posts-create →
+posts-render → posts-listener → posts-timer → posts-actions →
+profile-tabs → profile → post-view-comment → post-view
 ```
+
+### Kategori Bazında Gruplama
+
+| Sıra | Grup | Dosyalar | Toplam |
+|------|------|----------|:------:|
+| 1-10 | **Çekirdek** | firebase-init → global-ut → global-fn → app-state → firebase-core → firebase-inv → firebase-user → firebase-post → firebase-comment | 10 |
+| 11-19 | **Envanter** | io → toolbar → csv → table → table-crud → editmodal → image-utils | 9 |
+| 20-26 | **Kullanıcı** | auth-nav → auth → pass-change → delete-account-ui → userset → updater-ui | 7 |
+| 27-36 | **Post Sistemi** | post-comment → posts-create → posts-render → posts-listener → posts-timer → posts-actions → profile-tabs → profile → post-view-comment → post-view | 10 |
 
 ## Zorunlu Kısıtlar
 
@@ -284,7 +312,7 @@ profile → post-view
 - esbuild IIFE'de `export let` başka modülde read-only'dir. Mutasyon için setter veya `(window as any)` kullanılır.
 - `allPosts` → `(window as any).allPosts`
 - `renderAll` → `(window as any).renderAll`
-- `_viewingPostId` → `Object.defineProperty` ile tanımlı (`utils.ts`)
+- `_viewingPostId` → `Object.defineProperty` ile tanımlı (`app-state.ts`)
 
 ---
 
@@ -301,6 +329,7 @@ npx tsc --noEmit -p tsconfig.main.json    # main tip kontrolü
 **Kritik:** `deletePostFromFirebase`'de (`firebase-post.ts:44-61`) likes snapshot okuma ile post silme arasında yeni beğeni eklenirse `userLikes/{userId}/{postId}` orphan kalır. Aynı sorun `deleteUserAccount`'ta da var.
 
 **Çözüm:** Multi-path `update()` ile atomik cleanup:
+
 ```typescript
 // Tüm cleanup'leri tek updates objesinde topla:
 updates["posts/" + postId] = null;
@@ -321,6 +350,7 @@ return db.database!.ref().update(updates); // atomik
 Storage kuralları `storage.rules` dosyasında tanımlıdır. Firebase Console → Storage → Rules bölümüne kopyalanır.
 
 **Kural özeti:**
+
 ```
 /users/{uid}/{allPaths=**} → allow read, write: if request.auth.uid == uid
 ```

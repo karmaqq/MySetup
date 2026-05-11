@@ -8,6 +8,8 @@ import { db } from "./firebase-init";
 /*                          POST CRUD                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Post Oluşturma ─────────────────── */
+
 export function addPostToFirebase(postData: any): Promise<firebase.database.Reference> {
   const newRef = db.postsRef!.push();
   const updates: Record<string, any> = {};
@@ -25,6 +27,8 @@ export function addPostToFirebase(postData: any): Promise<firebase.database.Refe
       return newRef;
     }) as Promise<firebase.database.Reference>;
 }
+
+/* ─────────────────── Post Silme ─────────────────── */
 
 export function deletePostFromFirebase(postId: string, postData: any): Promise<any> {
   const uid = postData ? postData.uid : null;
@@ -47,8 +51,10 @@ export function deletePostFromFirebase(postId: string, postData: any): Promise<a
     return imagePromise.then(function () {
       return db.database!.ref().update(updates);
     });
-  });
+      });
 }
+
+/* ─────────────────── Post Beğeni ─────────────────── */
 
 export function togglePostLike(postId: string, userId: string): Promise<any> {
   const likeRef = db.postsRef!.child(postId).child("likes").child(userId);
@@ -72,6 +78,8 @@ export function togglePostLike(postId: string, userId: string): Promise<any> {
 /*                       POST SORGULARI                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Kullanıcı Gönderileri ─────────────────── */
+
 export function getUserPostsOnce(userId: string, limit?: number, endAt?: number | null): Promise<Record<string, any>> {
   let ref = db.userPostsRef!
     .child(userId)
@@ -85,6 +93,8 @@ export function getUserPostsOnce(userId: string, limit?: number, endAt?: number 
   });
 }
 
+/* ─────────────────── Kullanıcı Beğenileri ─────────────────── */
+
 export function getUserLikesOnce(userId: string, limit?: number, endAt?: number | null): Promise<Record<string, any>> {
   let ref = db.userLikesRef!
     .child(userId)
@@ -97,6 +107,8 @@ export function getUserLikesOnce(userId: string, limit?: number, endAt?: number 
     return snap.val() || {};
   });
 }
+
+/* ─────────────────── ID ile Gönderi Getirme ─────────────────── */
 
 export function getPostsByIds(postIds: string[], existing: Record<string, any>): Promise<Record<string, any>> {
   if (!postIds || !postIds.length) return Promise.resolve({});
@@ -152,72 +164,21 @@ export function getPostsByIds(postIds: string[], existing: Record<string, any>):
   });
 }
 
+/* ─────────────────── Posts Referansı ─────────────────── */
+
 export function getPostsRef(): firebase.database.Reference {
   return db.postsRef!;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          YORUM SİSTEMİ                                  */
-/* ═══════════════════════════════════════════════════════════════════════════ */
 
-export function addCommentToFirebase(postId: string, commentData: any): firebase.database.ThenableReference {
-  return db.postsRef!.child(postId).child("comments").push(commentData);
-}
-
-export function deleteCommentFromFirebase(postId: string, commentId: string): Promise<void> {
-  return db.postsRef!.child(postId).child("comments").child(commentId).remove();
-}
-
-export function toggleCommentLike(postId: string, commentId: string, userId: string): Promise<any> {
-  const likeRef = db.postsRef!
-    .child(postId)
-    .child("comments")
-    .child(commentId)
-    .child("likes")
-    .child(userId);
-  return likeRef.transaction(function (current) {
-    return current ? null : true;
-  });
-}
-
-export function addReplyToFirebase(postId: string, commentId: string, replyData: any): firebase.database.ThenableReference {
-  return db.postsRef!
-    .child(postId)
-    .child("comments")
-    .child(commentId)
-    .child("replies")
-    .push(replyData);
-}
-
-export function deleteReplyFromFirebase(postId: string, commentId: string, replyId: string): Promise<void> {
-  return db.postsRef!
-    .child(postId)
-    .child("comments")
-    .child(commentId)
-    .child("replies")
-    .child(replyId)
-    .remove();
-}
-
-export function toggleReplyLike(postId: string, commentId: string, replyId: string, userId: string): Promise<any> {
-  const likeRef = db.postsRef!
-    .child(postId)
-    .child("comments")
-    .child(commentId)
-    .child("replies")
-    .child(replyId)
-    .child("likes")
-    .child(userId);
-  return likeRef.transaction(function (current) {
-    return current ? null : true;
-  });
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                     USER LIKES / POSTS LİSTENER                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 let _userLikesListener: firebase.database.Reference | null = null;
+
+/* ─────────────────── Beğeni Dinleyici Başlat ─────────────────── */
 
 export function initUserLikesListener(userId: string, onLikesChanged: (key: string, val: any, type: string) => void): void {
   if (_userLikesListener) {
@@ -232,6 +193,8 @@ export function initUserLikesListener(userId: string, onLikesChanged: (key: stri
   });
 }
 
+/* ─────────────────── Beğeni Dinleyici Durdur ─────────────────── */
+
 export function removeUserLikesListener(): void {
   if (_userLikesListener) {
     _userLikesListener.off();
@@ -240,6 +203,8 @@ export function removeUserLikesListener(): void {
 }
 
 let _userPostsListener: firebase.database.Reference | null = null;
+
+/* ─────────────────── Gönderi Dinleyici Başlat ─────────────────── */
 
 export function initUserPostsListener(userId: string, onPostsChanged: (key: string, val: any, type: string) => void): void {
   if (_userPostsListener) {
@@ -253,6 +218,8 @@ export function initUserPostsListener(userId: string, onPostsChanged: (key: stri
     onPostsChanged(s.key!, null, "removed");
   });
 }
+
+/* ─────────────────── Gönderi Dinleyici Durdur ─────────────────── */
 
 export function removeUserPostsListener(): void {
   if (_userPostsListener) {

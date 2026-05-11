@@ -1,3 +1,7 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          FIREBASE API YAPILANDIRMASI                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 window.__FB_CONFIG__ = {
   apiKey: "AIzaSyDINeXkzy4JCwt9cSjII5Icm-x_NpmtmK4",
   authDomain: "mysetup-8dcd5.firebaseapp.com",

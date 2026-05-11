@@ -5,7 +5,9 @@
 import { allPosts } from "./posts-render";
 import { db } from "./firebase-init";
 import { getPostsByIds } from "./firebase-post";
-import { deleteAllInFolder } from "./firebase-inv";
+import { deleteAllInFolder } from "./global-ut";
+
+/* ─────────────────── Hesap Silme ─────────────────── */
 
 export async function deleteUserAccount(user: firebase.auth.User): Promise<{ success: boolean; error?: any }> {
   const uid = user.uid;
@@ -45,9 +47,9 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
               });
               try {
                 await db.database!.ref().update(updates);
-              } catch (_) {
-                /* post silme başarısız olsa bile devam et */
-              }
+      } catch (_) {
+        // 1. Post silme hatasını yoksay, kalanı temizlemeye devam et
+      }
             }),
           );
         }),

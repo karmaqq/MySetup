@@ -25,7 +25,7 @@ const cssConfig = {
   minify: !isWatch,
 };
 
-/* ─────────────────── Main Process (CJS, transpile only) ─────────────────── */
+/* ─────────────────── Ana Süreç (CJS, sadece dönüştür) ─────────────────── */
 
 function cjsConfig(entry, out) {
   return {
@@ -45,7 +45,7 @@ const mainConfig = cjsConfig("src/main/main.ts", "dist/main.js");
 const preloadConfig = cjsConfig("src/main/preload.ts", "dist/preload.js");
 const updaterConfig = cjsConfig("src/updater/updater.ts", "dist/updater.js");
 
-/* ─────────────────── Build / Watch ─────────────────── */
+/* ─────────────────── Derleme / İzleme ─────────────────── */
 
 async function buildAll() {
   console.log("🔨 Building...");

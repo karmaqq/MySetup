@@ -2,7 +2,8 @@
 /*                          FIREBASE ANA YAPISI                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { normalizeTr, allData, _statsCache } from "./utils";
+import { normalizeTr } from "./global-ut";
+import { allData, _statsCache } from "./app-state";
 import { db } from "./firebase-init";
 
 /* ─────────────────── Enrich Item ─────────────────── */
@@ -24,8 +25,8 @@ export function enrichItem(item: any): any {
 }
 
 /* ─────────────────── User Data Ref Yönetimi ─────────────────── */
-/*  Bu fonksiyon table.ts'deki fonksiyonlara ihtiyaç duyar. import edilen  */
-/*  referanslar runtime'da çözümlenir (esbuild circular dep desteği).        */
+/*  Bu fonksiyon table.ts'deki fonksiyonlara ihtiyaç duyar. içe aktarılan  */
+/*  referanslar çalışma anında çözümlenir (esbuild döngüsel bağımlılık).     */
 
 import { rebuildStatsCache, updateStatsCacheOnChange } from "./toolbar";
 import {

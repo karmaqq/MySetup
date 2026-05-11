@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                     WINDOW GLOBAL TIP TANIMLARI (Renderer)              */
+/*                     WINDOW GLOBAL TİP TANIMLARI                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Electron API (preload.js üzerinden) ─────────────────── */
@@ -19,7 +19,7 @@ interface Window {
   _viewingPostId: string | null;
 }
 
-/* ─────────────────── esbuild define (web build) ─────────────────── */
+/* ─────────────────── esbuild Tanımlamaları (Web) ─────────────────── */
 
 declare var __APP_VERSION__: string | undefined;
 declare var __IS_WEB__: boolean | undefined;

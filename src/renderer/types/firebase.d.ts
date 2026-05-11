@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                     FIREBASE COMPAT SDK TYPE STUBS                       */
+/*                    FIREBASE COMPAT SDK TİP TANIMLARI                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  Firebase Compat SDK v9.22.1 — CDN üzerinden yüklenir, global `firebase` */
 /*  Bu dosya compat SDK'nin kullanılan kısımları için tip tanımları sağlar. */

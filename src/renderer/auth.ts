@@ -2,31 +2,10 @@
 /*                  KİMLİK DOĞRULAMA VE OTURUM YÖNETİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { showPage, refreshAllAvatars, mainScroll } from "./utils";
-import { initUserDataRef } from "./firebase-core";
+import { onUserLoggedIn, onUserLoggedOut, getAuthErrorMessage, hideLoading } from "./auth-nav";
 import { db } from "./firebase-init";
-import { initPosts, _teardownPosts } from "./posts-render";
-import { closeAllModals } from "./userset";
 
 const auth = firebase.auth();
-
-/* ─────────────────── Navigasyon ve Sayfa Başlatma ─────────────────── */
-
-function initNavigation(): void {
-  const navBtns = document.querySelectorAll(".sidebar-nav-btn");
-  navBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const page = (btn as HTMLElement).dataset.page;
-      if (page) showPage(page);
-    });
-  });
-}
-
-initNavigation();
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                         OTURUM DURUMU YÖNETİMİ                            */
-/* ═══════════════════════════════════════════════════════════════════════════ */
 
 auth.onAuthStateChanged((user) => {
   hideLoading();
@@ -36,122 +15,6 @@ auth.onAuthStateChanged((user) => {
     onUserLoggedOut();
   }
 });
-
-/* ─────────────────── Giriş Yapıldığında ─────────────────── */
-
-function onUserLoggedIn(user: firebase.auth.User): void {
-  const authOverlay = document.getElementById("authOverlay");
-  if (authOverlay) authOverlay.classList.remove("active");
-
-  const sidebar = document.getElementById("sidebar");
-  const mainScroll = document.getElementById("mainScroll");
-  const appFooter = document.getElementById("appFooter");
-  if (sidebar) sidebar.classList.remove("hidden");
-  if (mainScroll) mainScroll.classList.remove("hidden");
-  if (appFooter) appFooter.classList.remove("hidden");
-
-  const userInfo = document.getElementById("userInfo");
-  const userEmailEl = document.getElementById("userEmail");
-  const profileUsername = document.getElementById("profileUsername");
-  const profileEmail = document.getElementById("profileEmail");
-  if (userInfo) userInfo.classList.remove("hidden");
-  if (userEmailEl) userEmailEl.textContent = user.displayName || "Kullanıcı";
-  if (profileUsername) profileUsername.textContent = user.displayName || "Kullanıcı";
-  if (profileEmail) profileEmail.textContent = user.email || "E-posta yok";
-
-  refreshAllAvatars(user.displayName || "");
-
-  initUserDataRef(user.uid);
-  initPosts();
-
-  const lastPage = sessionStorage.getItem("_lastPage");
-  if (lastPage && lastPage !== "home") {
-    showPage(lastPage);
-  }
-}
-
-/* ─────────────────── Çıkış Yapıldığında ─────────────────── */
-
-function onUserLoggedOut(): void {
-  const sidebar = document.getElementById("sidebar");
-  const appFooter = document.getElementById("appFooter");
-  const userInfo = document.getElementById("userInfo");
-  const authOverlay = document.getElementById("authOverlay");
-
-  if (sidebar) sidebar.classList.add("hidden");
-  if (mainScroll) mainScroll.classList.add("hidden");
-  if (appFooter) appFooter.classList.add("hidden");
-  if (userInfo) userInfo.classList.add("hidden");
-
-  showPage("home");
-  sessionStorage.removeItem("_lastPage");
-
-  const loginFormEl = document.getElementById("loginForm") as HTMLFormElement | null;
-  const registerFormEl = document.getElementById("registerForm") as HTMLFormElement | null;
-
-  if (loginFormEl) {
-    loginFormEl.reset();
-    const btn = loginFormEl.querySelector(".auth-submit-btn") as HTMLElement | null;
-    if (btn) { btn.textContent = "Giriş Yap"; (btn as HTMLButtonElement).disabled = false; }
-  }
-
-  if (registerFormEl) {
-    registerFormEl.reset();
-    const btn = registerFormEl.querySelector(".auth-submit-btn") as HTMLElement | null;
-    if (btn) { btn.textContent = "Kayıt Ol"; (btn as HTMLButtonElement).disabled = false; }
-    document.getElementById("regPassword")?.classList.remove("match-success", "match-error");
-    document.getElementById("regPasswordConfirm")?.classList.remove("match-success", "match-error");
-  }
-
-  const loginError = document.getElementById("loginError");
-  const regError = document.getElementById("regError");
-  if (loginError) loginError.textContent = "";
-  if (regError) regError.textContent = "";
-
-  document.querySelectorAll(".password-wrapper input").forEach((input) => {
-    (input as HTMLInputElement).type = "password";
-  });
-
-  document.querySelectorAll(".toggle-password").forEach((btn) => {
-    btn.innerHTML = "";
-    const eyeTmpl = document.getElementById("svg-eye") as HTMLTemplateElement | null;
-    if (eyeTmpl) btn.appendChild(eyeTmpl.content.cloneNode(true));
-  });
-
-  _teardownPosts();
-  closeAllModals();
-
-  if (authOverlay) authOverlay.classList.add("active");
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                         YARDIMCI FONKSİYONLAR                           */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-function hideLoading(): void {
-  const el = document.getElementById("authLoading");
-  if (!el) return;
-  el.style.opacity = "0";
-  el.style.transition = "opacity 0.25s ease";
-  setTimeout(() => { el.style.display = "none"; }, 260);
-}
-
-function getAuthErrorMessage(code: string): string {
-  const messages: Record<string, string> = {
-    "auth/user-not-found": "E-posta veya şifre hatalı.",
-    "auth/wrong-password": "E-posta veya şifre hatalı.",
-    "auth/invalid-credential": "E-posta veya şifre hatalı.",
-    "auth/invalid-login-credentials": "E-posta veya şifre hatalı.",
-    "auth/email-already-in-use": "Bu e-posta adresi zaten kullanımda.",
-    "auth/invalid-email": "Geçersiz e-posta adresi formatı.",
-    "auth/weak-password": "Şifre çok zayıf. En az 6 karakter kullanın.",
-    "auth/too-many-requests": "Çok fazla başarısız deneme. Lütfen bekleyin.",
-    "auth/network-request-failed": "Ağ bağlantısı hatası. İnterneti kontrol edin.",
-    "auth/user-disabled": "Bu hesap devre dışı bırakılmış.",
-    "auth/operation-not-allowed": "Bu giriş yöntemi etkinleştirilmemiş.",
-  };
-  return messages[code] || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.";
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                             GİRİŞ FORMU                                  */

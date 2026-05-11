@@ -2,6 +2,10 @@
 /*                               PROFİL                                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          PROFİL KARTI VE AVATAR                          */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 /* ─────────────────── Profil Kartı ─────────────────── */
 
 .profile-card {
@@ -71,26 +75,9 @@
   transform: translateY(-1px);
 }
 
-/* ─────────────────── Avatar ─────────────────── */
-
-.profile-avatar {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: var(--surface2);
-  border: 2px solid var(--border2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-dim);
-  flex-shrink: 0;
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--accent);
-}
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                         SEKMELER VE İÇERİK                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Sekmeler ─────────────────── */
 
@@ -141,7 +128,7 @@
   display: flex;
 }
 
-/* ─────────────────── Profil Post Kartı ─────────────────── */
+/* ─────────────────── Profil Gönderi Kartı ─────────────────── */
 
 .profile-post-card {
   background: var(--surface);
@@ -178,6 +165,10 @@
   border-top: 1px solid var(--border);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                        GÖNDERİ AKIŞI VE DURUMLAR                          */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 /* ─────────────────── Tarih Ayracı ─────────────────── */
 
 .profile-date-sep {
@@ -204,7 +195,7 @@
   background: var(--border2);
 }
 
-/* ─────────────────── Sekme İçi Post Akışı ─────────────────── */
+/* ─────────────────── Sekme İçi Gönderi Akışı ─────────────────── */
 
 #userPostsTab,
 #likedPostsTab {

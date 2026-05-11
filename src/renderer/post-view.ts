@@ -5,19 +5,11 @@
 import { allPosts, _renderPostHTML, _initPostImage } from "./posts-render";
 import { db } from "./firebase-init";
 import { _renderCommentThreadHTML } from "./post-comment";
-import { addCommentToFirebase, addReplyToFirebase } from "./firebase-post";
-import { showToast } from "./io";
-import {
-  _currentPage,
-  mainScroll,
-  _commentListenerRefs,
-  escHtml,
-  escAttr,
-  _onlyCommentLikesChanged,
-  showPage,
-  getTotalCommentCount,
-} from "./utils";
+import { _currentPage, mainScroll, _commentListenerRefs, showPage } from "./app-state";
+import { escHtml, escAttr, _onlyCommentLikesChanged } from "./global-ut";
+import { getTotalCommentCount } from "./global-fn";
 import { _patchCommentLikeBtn } from "./post-comment";
+import { _submitPostViewComment, _clearPostViewReplyTarget } from "./post-view-comment";
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          AÇMA / KAPAMA                                 */
@@ -28,8 +20,6 @@ import { _patchCommentLikeBtn } from "./post-comment";
 let _previousPage: string | null = null;
 let _previousScrollTop = 0;
 let _previousProfileTab: string | null = null;
-let _replyTargetCommentId: string | null = null;
-let _replyTargetUsername: string | null = null;
 let _pvActiveNavBtn: Element | null = null;
 
 /* ─────────────────── Post View'i açar ─────────────────── */
@@ -100,8 +90,7 @@ function closePostView(): void {
   _previousPage = null;
   _previousScrollTop = 0;
   _previousProfileTab = null;
-  _replyTargetCommentId = null;
-  _replyTargetUsername = null;
+  _clearPostViewReplyTarget();
   _pvActiveNavBtn = null;
 
   var postViewContent = document.getElementById("postViewContent");
@@ -305,132 +294,6 @@ function _updatePostViewCommentCount(postId: string): void {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          YANIT HEDEF YÖNETİMİ                              */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Yanıt hedefini ayarlar ─────────────────── */
-
-function _setPostViewReplyTarget(commentId: string, username: string): void {
-  _replyTargetCommentId = commentId;
-  _replyTargetUsername = username;
-
-  var target = document.getElementById("postViewReplyTarget");
-  var targetText = document.getElementById("postViewReplyTargetText");
-  if (target && targetText) {
-    targetText.textContent = "@" + username + " yanıtlanıyor";
-    target.classList.add("visible");
-  }
-
-  var input = document.getElementById(
-    "postViewCommentInput",
-  ) as HTMLTextAreaElement | null;
-  if (input) {
-    input.placeholder = "@" + username + " kişisine yanıtla...";
-    input.focus();
-  }
-}
-
-/* ─────────────────── Yanıt hedefini temizler ─────────────────── */
-
-function _clearPostViewReplyTarget(): void {
-  _replyTargetCommentId = null;
-  _replyTargetUsername = null;
-
-  var target = document.getElementById("postViewReplyTarget");
-  if (target) target.classList.remove("visible");
-
-  var input = document.getElementById(
-    "postViewCommentInput",
-  ) as HTMLTextAreaElement | null;
-  if (input) input.placeholder = "Yorum yaz...";
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*                            YORUM GÖNDERİMİ                                 */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────── Yorum veya yanıt gönderir ─────────────────── */
-
-function _submitPostViewComment(): void {
-  var input = document.getElementById(
-    "postViewCommentInput",
-  ) as HTMLElement | null;
-  if (!input || !(window as any)._viewingPostId) return;
-  if (!allPosts[(window as any)._viewingPostId]) {
-    showToast("Bu gönderi artık mevcut değil", "warn");
-    return;
-  }
-
-  var user = firebase.auth().currentUser;
-  if (!user) return;
-
-  var sendBtn = document.getElementById("postViewSendBtn");
-  if (sendBtn) sendBtn.classList.remove("visible");
-
-  var text = (input as HTMLTextAreaElement).value.trim();
-  if (!text) {
-    showToast("Yorum metni boş olamaz", "warn");
-    return;
-  }
-
-  var baseData: Record<string, any> = {
-    uid: user.uid,
-    username: user.displayName || "Kullanici",
-    text: text,
-    createdAt: firebase.database.ServerValue.TIMESTAMP,
-    likes: {},
-  };
-
-  if (_replyTargetCommentId) {
-    var targetCid = _replyTargetCommentId;
-    var post = allPosts[(window as any)._viewingPostId as string];
-    if (!post || !post.comments || !post.comments[targetCid]) {
-      showToast("Yanıtlamak istediğin yorum artık mevcut değil", "warn");
-      _clearPostViewReplyTarget();
-      return;
-    }
-    addReplyToFirebase((window as any)._viewingPostId, targetCid, baseData)
-      .then(function () {
-        _clearPostViewReplyTarget();
-        showToast("Yanıt eklendi", "success");
-        var repliesSec = document.getElementById(
-          "replies-" + (window as any)._viewingPostId + "-" + targetCid,
-        );
-        if (repliesSec && repliesSec.classList.contains("hidden")) {
-          repliesSec.classList.remove("hidden");
-          var toggleBtn = document.getElementById(
-            "toggleReplies-" + (window as any)._viewingPostId + "-" + targetCid,
-          ) as HTMLElement | null;
-          if (toggleBtn) toggleBtn.textContent = "yanıtları gizle";
-        }
-        var input = document.getElementById(
-          "postViewCommentInput",
-        ) as HTMLTextAreaElement | null;
-        if (input) input.value = "";
-        var sendBtn = document.getElementById("postViewSendBtn");
-        if (sendBtn) sendBtn.classList.remove("visible");
-      })
-      .catch(function () {
-        showToast("Yanıt eklenemedi", "error");
-      });
-  } else {
-    addCommentToFirebase((window as any)._viewingPostId, baseData)
-      .then(function () {
-        showToast("Yorum eklendi", "success");
-        var input = document.getElementById(
-          "postViewCommentInput",
-        ) as HTMLTextAreaElement | null;
-        if (input) input.value = "";
-        var sendBtn = document.getElementById("postViewSendBtn");
-        if (sendBtn) sendBtn.classList.remove("visible");
-      })
-      .catch(function () {
-        showToast("Yorum eklenemedi", "error");
-      });
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
 /*                       SİLİNEN POST YÖNETİMİ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -468,66 +331,9 @@ function _handleDeletedPostView(): void {
 var _pvBackBtn = document.getElementById("postViewBackBtn");
 if (_pvBackBtn) _pvBackBtn.addEventListener("click", closePostView);
 
-/* ─────────────────── Yanıt iptal ─────────────────── */
-
-var _pvReplyCancel = document.getElementById("postViewReplyCancel");
-if (_pvReplyCancel)
-  _pvReplyCancel.addEventListener("click", _clearPostViewReplyTarget);
-
-/* ─────────────────── Composer input ─────────────────── */
-
-var _pvInput = document.getElementById(
-  "postViewCommentInput",
-) as HTMLTextAreaElement | null;
-if (_pvInput) {
-  _pvInput.addEventListener("input", function (this: HTMLTextAreaElement) {
-    var sendBtn = document.getElementById("postViewSendBtn");
-    if (sendBtn)
-      sendBtn.classList.toggle("visible", this.value.trim().length > 0);
-  });
-
-  _pvInput.addEventListener("keydown", function (e: KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      _submitPostViewComment();
-    }
-  });
-}
-
-/* ─────────────────── Gönder butonu ─────────────────── */
-
-var _pvSendBtn = document.getElementById("postViewSendBtn");
-if (_pvSendBtn) _pvSendBtn.addEventListener("click", _submitPostViewComment);
-
-/* ─────────────────── Post View içi delegasyon ─────────────────── */
-
-var _pvContent = document.getElementById("postViewContent");
-if (_pvContent) {
-  _pvContent.addEventListener("click", function (e: MouseEvent) {
-    var btn = (e.target as HTMLElement).closest(
-      "[data-action]",
-    ) as HTMLElement | null;
-    if (!btn) return;
-    var action = btn.dataset.action;
-
-    if (action === "pv-focus-composer") {
-      var input = document.getElementById(
-        "postViewCommentInput",
-      ) as HTMLElement | null;
-      if (input) input.focus();
-      return;
-    }
-
-    if (action === "start-reply") {
-      _setPostViewReplyTarget(btn.dataset.commentId!, btn.dataset.username!);
-      return;
-    }
-  });
-}
-
-/* ================================================================= */
-/*                          F5 / RELOAD KORUMASI                           */
-/* ================================================================= */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          F5 / YENİDEN YÜKLEME KORUMASI                      */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 function _restorePostViewOnLoad(): void {
   var savedPid = sessionStorage.getItem("_viewingPostId");
