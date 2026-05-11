@@ -22,8 +22,16 @@ export function updateComponentStatusInFirebase(id: string, newStatus: string): 
   return db.database!.ref(db.activeBasePath + "/" + id).update({ status: newStatus });
 }
 
-export function deleteComponentFromFirebase(id: string): Promise<void> {
-  return db.database!.ref(db.activeBasePath + "/" + id).remove();
+export async function deleteComponentFromFirebase(id: string): Promise<void> {
+  const itemRef = db.database!.ref(db.activeBasePath + "/" + id);
+  const snap = await itemRef.once("value");
+  const item = snap.val() as any;
+  if (item && item.imageUrl) {
+    try {
+      await firebase.storage().refFromURL(item.imageUrl).delete();
+    } catch (_) {}
+  }
+  await itemRef.remove();
 }
 
 /* ─────────────────── Storage İşlemleri ─────────────────── */
@@ -52,10 +60,17 @@ export function uploadImageToFirebase(file: File, itemId: string): Promise<strin
 
 export async function deleteAllInFolder(ref: firebase.storage.StorageReference): Promise<void> {
   const list = await ref.listAll();
-  await Promise.all(
-    list.items.map(function (item) {
-      return item.delete();
-    }),
-  );
-  await Promise.all(list.prefixes.map(deleteAllInFolder));
+  const BATCH = 10;
+  for (let i = 0; i < list.items.length; i += BATCH) {
+    await Promise.all(
+      list.items.slice(i, i + BATCH).map(function (item) {
+        return item.delete();
+      }),
+    );
+  }
+  for (let i = 0; i < list.prefixes.length; i += BATCH) {
+    await Promise.all(
+      list.prefixes.slice(i, i + BATCH).map(deleteAllInFolder),
+    );
+  }
 }

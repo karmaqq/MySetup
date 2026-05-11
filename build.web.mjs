@@ -6,6 +6,7 @@
 
 import * as esbuild from "esbuild";
 import { readFileSync } from "fs";
+import { rendererBase, cssBase } from "./esbuild-config.mjs";
 
 const pkg = JSON.parse(readFileSync("./package.json", "utf-8"));
 
@@ -15,14 +16,7 @@ async function buildWeb() {
 
   await Promise.all([
     esbuild.build({
-      entryPoints: ["src/renderer/index.ts"],
-      outfile: "dist/renderer.js",
-      bundle: true,
-      format: "iife",
-      globalName: "__mySetup",
-      platform: "browser",
-      target: "es2020",
-      tsconfig: "tsconfig.json",
+      ...rendererBase,
       minify: true,
       sourcemap: false,
       define: {
@@ -31,12 +25,8 @@ async function buildWeb() {
       },
     }),
     esbuild.build({
-      entryPoints: ["css/index.css"],
-      outfile: "dist/styles.css",
-      bundle: true,
+      ...cssBase,
       minify: true,
-      loader: { ".woff2": "file" },
-      assetNames: "[name]",
     }),
   ]);
 

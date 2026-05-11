@@ -59,6 +59,9 @@ export function showPage(pageName: string): void {
   ) as HTMLElement | null;
   if (activeNavBtn) activeNavBtn.classList.add("active");
 
+  _currentPage = pageName;
+  sessionStorage.setItem("_lastPage", pageName);
+
   if (oldPage) {
     oldPage.style.opacity = "0";
     oldPage.style.visibility = "hidden";
@@ -79,8 +82,6 @@ export function showPage(pageName: string): void {
 
   setTimeout(() => {
     _isAnimating = false;
-    _currentPage = pageName;
-    sessionStorage.setItem("_lastPage", pageName);
     if (
       pageName === "profile" &&
       typeof (window as any).updateProfilePosts === "function"
@@ -118,7 +119,7 @@ export const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
 /* ─────────────────── Tarih Formatlayıcı ─────────────────── */
 
 const _dateCache = new Map<string, string>();
-const _DATECACHE_MAX = 1000;
+const _DATECACHE_MAX = 200;
 
 export const DATE_FORMAT = (dateString: string): string => {
   if (!dateString) return "-";
@@ -329,35 +330,20 @@ export function normalizeTr(s: string): string {
     .replace(/ç/g, "c");
 }
 
-/* ─────────────────── Ortak Karakter Kaçış Fonksiyonu ─────────────────── */
+/* ─────────────────── Karakter Kaçış Fonksiyonu ─────────────────── */
 
-function _escapeChars(str: string, mode: "html" | "attr" = "html"): string {
+function escapeString(str: string): string {
   if (str == null) return "";
-  return String(str).replace(/[&<>"]|'?/g, (c) => {
-    switch (c) {
-      case "&":
-        return "&amp;";
-      case "<":
-        return "&lt;";
-      case ">":
-        return "&gt;";
-      case '"':
-        return "&quot;";
-      case "'":
-        return "&#39;";
-      default:
-        return c;
-    }
-  });
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
-export function escHtml(str: string): string {
-  return _escapeChars(str, "html");
-}
-
-export function escAttr(str: string): string {
-  return _escapeChars(str, "attr");
-}
+export const escHtml = escapeString;
+export const escAttr = escapeString;
 
 /* ─────────────────── Güvenli Harici URL Doğrulama ─────────────────── */
 
@@ -473,7 +459,7 @@ export function formatTimeAgo(
   const idx =
     phraseIndex !== undefined && phraseIndex !== null
       ? phraseIndex
-      : Math.floor(Math.random() * POST_PHRASES.length);
+      : 0;
   return timeText + " " + POST_PHRASES[idx];
 }
 
@@ -560,13 +546,23 @@ export function getTotalCommentCount(post: any): number {
   return total;
 }
 
+export function _onlyFieldChanged<T>(
+  oldObj: T,
+  newObj: T,
+  fields: (keyof T)[],
+): boolean {
+  for (const field of fields) {
+    if (oldObj[field] !== newObj[field]) return false;
+  }
+  return true;
+}
+
 export function _onlyCommentLikesChanged(
   oldComment: any,
   newComment: any,
 ): boolean {
   if (!oldComment || !newComment) return false;
-  if (oldComment.text !== newComment.text) return false;
-  if (oldComment.uid !== newComment.uid) return false;
+  if (!_onlyFieldChanged(oldComment, newComment, ["text", "uid"])) return false;
   const oldRC = oldComment.replies ? Object.keys(oldComment.replies).length : 0;
   const newRC = newComment.replies ? Object.keys(newComment.replies).length : 0;
   if (oldRC !== newRC) return false;

@@ -2,6 +2,8 @@
 update.bat
 update.mjs
 OPTIMIZATIONS.md
+rules.json
+storage.rules
 dist/
 release/
 node_modules/

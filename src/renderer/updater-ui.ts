@@ -7,13 +7,12 @@ import { showToast } from "./io";
 /* ─────────────────── Versiyon Gösterimi ─────────────────── */
 
 const vEl = document.getElementById("versionDisplay");
-if (window.electronAPI) {
+if (typeof __IS_WEB__ !== "undefined" && __IS_WEB__) {
+  if (vEl) vEl.textContent = "" + (typeof __APP_VERSION__ !== "undefined" ? "Web v" + __APP_VERSION__ : "");
+} else if (window.electronAPI) {
   window.electronAPI.onAppVersion?.((version) => {
     if (vEl) vEl.textContent = "v" + version;
   });
-} else {
-  /* Web: bundle'a gömülü versiyon */
-  if (vEl) vEl.textContent = "" + (typeof __APP_VERSION__ !== "undefined" ? "Web v" + __APP_VERSION__ : "");
 }
 
 /* ─────────────────── Electron Ortam Kontrolü ─────────────────── */

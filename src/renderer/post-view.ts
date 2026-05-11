@@ -1,19 +1,3 @@
-/* ─────────────────── Yanıt Listener Başlatıcı (Post View) ─────────────────── */
-function _initReplyListenerPV(postId: string, commentId: string): void {
-  var post = allPosts[postId];
-  if (!post || !post.comments || !post.comments[commentId]) return;
-  var repliesRef = db
-    .postsRef!.child(postId)
-    .child("comments")
-    .child(commentId)
-    .child("replies");
-  repliesRef.on("child_added", function (s) {
-    if (!s.key) return;
-  });
-  repliesRef.on("child_removed", function (s) {
-    if (!s.key) return;
-  });
-}
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                              POST VIEW                                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -188,26 +172,6 @@ function _renderPostViewContent(postId: string, postData: any): void {
   var sendBtn = document.getElementById("postViewSendBtn");
   if (input && sendBtn) {
     sendBtn.classList.toggle("visible", input.value.trim().length > 0);
-    input.addEventListener("input", function (this: HTMLTextAreaElement) {
-      var sendBtn = document.getElementById("postViewSendBtn");
-      if (sendBtn)
-        sendBtn.classList.toggle("visible", this.value.trim().length > 0);
-    });
-    input.addEventListener("keydown", function (e: KeyboardEvent) {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        _submitPostViewComment();
-      }
-    });
-  }
-  if (sendBtn) sendBtn.addEventListener("click", _submitPostViewComment);
-
-  var input = document.getElementById(
-    "postViewCommentInput",
-  ) as HTMLTextAreaElement | null;
-  var sendBtn = document.getElementById("postViewSendBtn");
-  if (input && sendBtn) {
-    sendBtn.classList.toggle("visible", input.value.trim().length > 0);
   }
 }
 
@@ -241,8 +205,6 @@ function _initPostViewCommentListener(postId: string): void {
     if (post.comments[cid]) return;
 
     post.comments[cid] = data;
-
-    _initReplyListenerPV(postId, cid);
 
     var commentList = document.getElementById("commentList-" + postId);
     if (commentList) {
@@ -279,8 +241,6 @@ function _initPostViewCommentListener(postId: string): void {
 
     var thread = document.getElementById("commentThread-" + postId + "-" + cid);
     if (!thread) return;
-
-    _initReplyListenerPV(postId, cid);
 
     if (
       oldData &&
@@ -332,25 +292,6 @@ function _initPostViewCommentListener(postId: string): void {
     if (thread) thread.remove();
     _updatePostViewCommentCount(postId);
   });
-  function _initReplyListenerPV(postId: string, commentId: string): void {
-    var post = allPosts[postId];
-    if (!post || !post.comments || !post.comments[commentId]) return;
-    var repliesRef = db
-      .postsRef!.child(postId)
-      .child("comments")
-      .child(commentId)
-      .child("replies");
-    repliesRef.on("child_added", function (s) {
-      if (!s.key) return;
-      if (typeof post._commentCount !== "number") post._commentCount = 0;
-      post._commentCount++;
-    });
-    repliesRef.on("child_removed", function (s) {
-      if (!s.key) return;
-      if (typeof post._commentCount === "number" && post._commentCount > 0)
-        post._commentCount--;
-    });
-  }
 }
 
 /* ─────────────────── Yorum sayacını günceller ─────────────────── */
@@ -358,7 +299,7 @@ function _initPostViewCommentListener(postId: string): void {
 function _updatePostViewCommentCount(postId: string): void {
   var post = allPosts[postId];
   var count = getTotalCommentCount(post);
-  document.querySelectorAll(".comment-count-" + postId).forEach(function (el) {
+  document.querySelectorAll('[data-comment-count="' + postId + '"]').forEach(function (el) {
     el.textContent = String(count);
   });
 }
@@ -426,16 +367,28 @@ function _submitPostViewComment(): void {
   var sendBtn = document.getElementById("postViewSendBtn");
   if (sendBtn) sendBtn.classList.remove("visible");
 
+  var text = (input as HTMLTextAreaElement).value.trim();
+  if (!text) {
+    showToast("Yorum metni boş olamaz", "warn");
+    return;
+  }
+
   var baseData: Record<string, any> = {
     uid: user.uid,
     username: user.displayName || "Kullanici",
-    text: (input as HTMLTextAreaElement).value.trim(),
+    text: text,
     createdAt: firebase.database.ServerValue.TIMESTAMP,
     likes: {},
   };
 
   if (_replyTargetCommentId) {
     var targetCid = _replyTargetCommentId;
+    var post = allPosts[(window as any)._viewingPostId as string];
+    if (!post || !post.comments || !post.comments[targetCid]) {
+      showToast("Yanıtlamak istediğin yorum artık mevcut değil", "warn");
+      _clearPostViewReplyTarget();
+      return;
+    }
     addReplyToFirebase((window as any)._viewingPostId, targetCid, baseData)
       .then(function () {
         _clearPostViewReplyTarget();

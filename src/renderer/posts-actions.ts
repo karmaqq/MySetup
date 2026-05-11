@@ -1,27 +1,9 @@
-
-/* ─────────────────── Yanıt Listener Başlatıcı ─────────────────── */
-function _initReplyListener(postId: string, commentId: string): void {
-  const post = allPosts[postId];
-  if (!post || !post.comments || !post.comments[commentId]) return;
-  const repliesRef = firebase
-    .database()
-    .ref("posts")
-    .child(postId)
-    .child("comments")
-    .child(commentId)
-    .child("replies");
-  repliesRef.on("child_added", function (s) {
-    if (!s.key) return;
-  });
-  repliesRef.on("child_removed", function (s) {
-    if (!s.key) return;
-  });
-}
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          BEĞENİ İŞLEMLERİ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { allPosts } from "./posts-render";
+import { db } from "./firebase-init";
 import { showToast } from "./io";
 import {
   _confirmDeletePost,
@@ -66,12 +48,14 @@ function _togglePostLike(postId: string): void {
   }
   _patchPostLikes(postId, post.likes, user);
   togglePostLike(postId, user.uid).catch(function () {
-    if (had) {
-      post.likes[user.uid] = true;
-    } else {
-      delete post.likes[user.uid];
-    }
-    _patchPostLikes(postId, post.likes, user);
+    db.postsRef!.child(postId).child("likes").child(user.uid).once("value").then(function (snap) {
+      if (snap.val() === null) {
+        delete post.likes[user.uid];
+      } else {
+        post.likes[user.uid] = true;
+      }
+      _patchPostLikes(postId, post.likes, user);
+    });
     showToast("Beğeni kaydedilemedi.", "error");
   });
 }
@@ -197,11 +181,16 @@ function _initCommentListener(postId: string): void {
     if (lru && _commentListenerRefs[lru]) {
       (_commentListenerRefs[lru] as any).off();
       delete _commentListenerRefs[lru];
+      var sec = document.getElementById("commentSection-" + lru);
+      if (sec) sec.classList.remove("visible");
+      getPostCards(lru).forEach(function (card) {
+        var btn = card.querySelector(".comment-btn");
+        if (btn) btn.classList.remove("active");
+      });
     }
   }
   _touchListener(postId);
-  const postsRef = firebase.database().ref("posts");
-  const q = postsRef.child(postId).child("comments").orderByChild("createdAt");
+  const q = db.postsRef!.child(postId).child("comments").orderByChild("createdAt");
   _commentListenerRefs[postId] = q as any;
   const _currentUser = firebase.auth().currentUser;
 
@@ -215,8 +204,6 @@ function _initCommentListener(postId: string): void {
     if (post.comments[cid]) return;
 
     post.comments[cid] = data;
-
-    _initReplyListener(postId, cid);
 
     const isPostOwner = _currentUser && post && _currentUser.uid === post.uid;
     getPostCards(postId).forEach(function (card) {
@@ -251,7 +238,6 @@ function _initCommentListener(postId: string): void {
     if (oldData && _onlyCommentLikesChanged(oldData, data)) {
       getPostCards(postId).forEach(function (card) {
         _patchCommentLikeBtn(postId, cid, data.likes, _currentUser);
-        _initReplyListener(postId, cid);
       });
       return;
     }
@@ -267,6 +253,7 @@ function _initCommentListener(postId: string): void {
     threads.forEach(function (thread) {
       _refreshCommentThread(postId, cid, data, thread, _currentUser);
     });
+    _updateCommentCount(postId);
   });
 
   q.on("child_removed", function (s: firebase.database.DataSnapshot) {
@@ -339,7 +326,7 @@ function _updateCommentCount(postId: string): void {
   const post = allPosts[postId];
   const count = getTotalCommentCount(post);
   getPostCards(postId).forEach(function (card) {
-    const spans = card.querySelectorAll('[class*="comment-count-"]');
+    const spans = card.querySelectorAll('[data-comment-count="' + postId + '"]');
     spans.forEach(function (s) {
       s.textContent = String(count);
     });

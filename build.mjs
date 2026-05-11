@@ -6,20 +6,14 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import * as esbuild from "esbuild";
+import { rendererBase, cssBase } from "./esbuild-config.mjs";
 
 const isWatch = process.argv.includes("--watch");
 
 /* ─────────────────── Renderer Bundle ─────────────────── */
 
 const rendererConfig = {
-  entryPoints: ["src/renderer/index.ts"],
-  outfile: "dist/renderer.js",
-  bundle: true,
-  format: "iife",
-  globalName: "__mySetup",
-  platform: "browser",
-  target: "es2020",
-  tsconfig: "tsconfig.json",
+  ...rendererBase,
   minify: !isWatch,
   sourcemap: isWatch,
 };
@@ -27,14 +21,8 @@ const rendererConfig = {
 /* ─────────────────── CSS Bundle ─────────────────── */
 
 const cssConfig = {
-  entryPoints: ["css/index.css"],
-  outfile: "dist/styles.css",
-  bundle: true,
+  ...cssBase,
   minify: !isWatch,
-  loader: {
-    ".woff2": "file",
-  },
-  assetNames: "[name]",
 };
 
 /* ─────────────────── Main Process (CJS, transpile only) ─────────────────── */

@@ -30,7 +30,7 @@ export function closeChangePassModal(): void {
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Şifreyi Kaydet"; }
   ["oldPassword", "newPassword", "newPasswordConfirm"].forEach(function (id) {
     const el = document.getElementById(id) as HTMLInputElement | null;
-    if (el) { el.value = ""; el.classList.remove("input-error"); }
+    if (el) el.classList.remove("input-error");
   });
   if (changePasswordModal) changePasswordModal.classList.remove("active");
 }
@@ -44,10 +44,6 @@ export function closeDeleteModal(): void {
   if (checkEl) checkEl.checked = false;
   const submitBtn = document.getElementById("finalDeleteBtn") as HTMLButtonElement | null;
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Hesabı Kalıcı Olarak Sil"; }
-  const emailEl = document.getElementById("deleteEmail") as HTMLInputElement | null;
-  if (emailEl) emailEl.value = "";
-  const passEl = document.getElementById("deletePassword") as HTMLInputElement | null;
-  if (passEl) passEl.value = "";
   if (deleteAccountModal) deleteAccountModal.classList.remove("active");
 }
 

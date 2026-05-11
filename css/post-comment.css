@@ -141,33 +141,6 @@
   color: var(--text-dim);
 }
 
-.comment-send-btn {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
-  padding: 6px;
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-glow);
-  border-radius: 50%;
-  color: var(--accent);
-  font-family: var(--font-ui);
-  cursor: pointer;
-  transition: all 0.15s;
-  z-index: 2;
-  display: none;
-}
-
-.comment-send-btn.visible {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-.comment-send-btn:hover {
-  background: var(--accent);
-  color: var(--text-btn);
-}
-
 .comment-send-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;

@@ -19,6 +19,7 @@ import {
   buildPostMenuHTML,
   PAGE_SIZE,
   getTotalCommentCount,
+  _onlyFieldChanged,
 } from "./utils";
 import { renderLoadMoreBtn, removeLoadMoreBtn } from "./utils";
 import {
@@ -85,7 +86,7 @@ export function _renderPostHTML(
     html += `<button class="post-action-btn comment-btn" data-action="open-post-view" data-id="${pid}">`;
   }
   html += `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
-  html += ` <span class="comment-count-${pid}">${commentCount}</span></button>`;
+  html += ` <span data-comment-count="${pid}">${commentCount}</span></button>`;
   html += `<span class="post-date">${escHtml(formatDateTime(postData.createdAt))}</span>`;
   html += "</div>";
 
@@ -291,7 +292,6 @@ export function _teardownPosts(): void {
 /* ─────────────────── İlk 20 postu yükler, listener başlatır ─────────────────── */
 
 function _startPostsListener(): void {
-  if (db.postsRef) db.postsRef.off();
   const ref = db.postsRef!.orderByChild("createdAt");
 
   ref
@@ -491,17 +491,9 @@ function _removeLoadMoreBtn(): void {
 /* ─────────────────── Sadece beğeni değişimi mi kontrol et ─────────────────── */
 
 function _onlyLikesChanged(oldPost: any, newPost: any): boolean {
-  const primitiveFields = [
-    "content",
-    "imageUrl",
-    "username",
-    "uid",
-    "createdAt",
-  ];
-  for (let i = 0; i < primitiveFields.length; i++) {
-    if (oldPost[primitiveFields[i]] !== newPost[primitiveFields[i]])
-      return false;
-  }
+  if (!_onlyFieldChanged(oldPost, newPost, [
+    "content", "imageUrl", "username", "uid", "createdAt",
+  ])) return false;
   var oldComments = oldPost.comments || {};
   var newComments = newPost.comments || {};
   for (var cid of Object.keys(newComments)) {

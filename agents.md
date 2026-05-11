@@ -4,71 +4,203 @@
 
 ---
 
-## Yorum Kuralları (Kesin Kural)
+## Kodlama Kuralları
 
-Tüm yorumlar **Türkçe** ve **blok halinde** yazılır. 3 seviye hiyerarşi:
+### Yorum Stili (Kesin Kural)
 
-**1. Dosya Başlığı** — her `.ts` dosyasının ilk 3 satırı, dosyada yalnızca 1 adet:
+Tüm yorumlar **blok halinde** ve **Türkçe** yazılır. Projede 3 seviye yorum hiyerarşisi vardır.
 
-```ts
+#### 1. Bölüm Başlığı (Section Header) — 3 satır
+
+Her `.ts` dosyasının en tepesinde, dosyanın ne işe yaradığını belirten bölüm başlığı bulunur:
+
+```
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          BÖLÜM ADI                                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 ```
 
-Üst/alt çizgi: `/* ` + 84 `═` + ` */` = 90 karakter
+- Toplam: **3 satır**
+- Kullanılan karakterler: `=`, `*`
+- Üst ve alt çizgi: tam 90 karakter (`/* ` + 84 `=` + ` */` = 90)
+- Orta satır: `/* ` + boşluk + metin + boşluk + `*/` — metin sağa yaslı olacak şekilde boşluklarla doldurulur
+- Metin uzunluğu max ~60 karakter, fazlası alt satıra geçer
+- **Her dosyada yalnızca 1 tane** — dosyanın ilk 3 satırı
 
-**2. Ara Bölüm** — aynı dosyada mantıksal gruplar arası, aynı format, birden fazla olabilir.
+#### 2. Ara Bölüm Başlığı (Sub Section) — 1 satır
 
-**3. Alt Başlık** — fonksiyon grubu önü, 1 satır:
+Aynı dosya içinde farklı mantıksal bölümleri ayırmak için kullanılır:
 
-```ts
+```
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          ALT BÖLÜM ADI                                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+```
+
+- Toplam: **3 satır**
+- 1. seviye ile aynı format
+- Dosyada birden fazla olabilir (örneğin `auth.ts`: Oturum Yönetimi, Giriş Formu, Kayıt Formu)
+
+#### 3. Alt Başlık (Subheader) — 1 satır
+
+Bir bölüm içindeki spesifik bir grubu veya fonksiyon grubunu ayırmak için kullanılır:
+
+```
 /* ─────────────────── Başlık ─────────────────── */
 ```
 
-**Yasak yorum türleri:**
+- Toplam: **1 satır**
+- Kullanılan karakter: `─`
+- Başlangıç: `/* ` + 18 tane `─`
+- Bitiş: 18 tane `─` + ` */`
+- Metin ortalanır: 18 boşluk + metin + 18 boşluk şeklinde değil, `─` karakterleri metnin etrafında simetrik olacak şekilde
+
+#### 4. Fonksiyon İçi Adım (Step Comment) — isteğe bağlı
+
+Fonksiyon içinde kritik adımları belirtmek için kullanılır (sadece gerçekten gerekliyse):
 
 ```ts
-const x = a + b; // satır sonu yorum     ← YASAK
-// açıklama satırı                        ← YASAK
-/* TODO / FIXME */                        ← YASAK
-// @ts-ignore                             ← YASAK (yerine: as any)
-console.log(...)                          ← YASAK (production'da)
+function foo(): void {
+  // 1. Adım bir
+  // 2. Adım iki
+}
 ```
 
-**HTML yorumları** (`index.html`) aynı hiyerarşiyi izler, `═` sayısı 66'dır:
+- Toplam: adım başına **1 satır**
+- Format: `// N. Metin`
+- N sayısı 1'den başlar, artarak devam eder
+- Maksimum 5 adım — daha fazlası fonksiyonun bölünmesi gerektiğini gösterir
+
+### HTML Yorumları
+
+`index.html` içinde de aynı hiyerarşi HTML yorum formatıyla kullanılır:
 
 ```html
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <!--                          BÖLÜM ADI                               -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
+
+<!-- ─────────────────── Alt Başlık ─────────────────── -->
 ```
+
+- HTML yorumlarında `=` karakteri 66 adet kullanılır (CSS/TS'dekinden daha kısa)
+- Aynı 3 seviye hiyerarşisi geçerlidir
+
+### Yasak Yorum Tipleri
+
+Aşağıdaki yorum türleri **kesinlikle yasaktır**:
+
+```
+const x = a + b; // satır sonu yorum     ← YASAK
+// Satır içi açıklama                    ← YASAK
+/* TODO: ileride */                      ← YASAK
+// @ts-ignore                            ← YASAK (bunun yerine as any kullan)
+console.log("debug");                    ← YASAK (production'da)
+```
+
+Yasak olma sebepleri:
+
+1. **Satır sonu yorum** — kod okunurluğunu bozar, diff'leri kirletir
+2. **Satır içi açıklama** — ne yapıldığı değil, ne yapılmaya çalışıldığı yazılmalı
+3. **TODO/FIXME/HACK** — birikmeye yol açar, asla temizlenmez
+4. **@ts-ignore** — tip güvenliğini devre dışı bırakır, alternatifi `as any`
+5. **console.log** — production build'de temizlenmezse kalır
+
+### Zorunlu Yorum Kuralları
+
+Her `.ts` dosyası **mutlaka** şunları içermelidir:
+
+- İlk 3 satır: 1. seviye bölüm başlığı
+- Her `export function` öncesi: 3. seviye alt başlık (1 satır `/* ── */`)
+- Birden fazla mantıksal grup varsa: 2. seviye ara bölüm başlığı (3 satır `/* == */`)
 
 ---
 
 ### Veritabanı Yapısı
 
 ```
-/posts/{postId}
-  ├── uid, username, content, imageUrl
-  ├── createdAt (timestamp), phraseIndex
-  ├── likes/{userId}: true
-  └── comments/{commentId}
-        ├── uid, username, text, createdAt
-        ├── likes/{userId}: true
-        └── replies/{replyId}
-              ├── uid, username, text, createdAt
-              └── likes/{userId}: true
-
-/users/{userId}/components/{itemId}
-  ├── date, component, brand, specs, price, vendor, status
-  ├── url, imageUrl, star, opinion
-  └── _searchTag, _statusNorm (runtime'da enrichItem ile eklenir)
-
-/userPosts/{userId}/{postId}: timestamp
-/userLikes/{userId}/{postId}: timestamp
-/usernames/{usernameKey}: uid
+KÖK (firebase.database().ref())
+├── /posts/{postId}                              # MAP: tüm gönderiler
+│   ├── uid: string                              # Gönderi sahibi (Auth UID)
+│   ├── username: string                         # Görünen ad
+│   ├── content: string                          # Yazı içeriği
+│   ├── imageUrl: string                         # Storage download URL (opsiyonel)
+│   ├── createdAt: TIMESTAMP                     # Sunucu zamanı
+│   ├── phraseIndex: number                      # Rastgele ifade indeksi (0-11)
+│   ├── likes/{userId}: true                     # MAP: beğenen kullanıcı UID'leri
+│   └── comments/{commentId}                     # MAP: yorumlar
+│       ├── uid: string                          # Yorum sahibi UID
+│       ├── username: string                     # Yorum sahibi görünen adı
+│       ├── text: string                         # Yorum metni
+│       ├── createdAt: TIMESTAMP                 # Oluşturulma zamanı
+│       ├── likes/{userId}: true                 # MAP: yorum beğenileri
+│       └── replies/{replyId}                    # MAP: yanıtlar (yorum altı)
+│           ├── uid: string                      # Yanıt sahibi UID
+│           ├── username: string                 # Yanıt sahibi görünen adı
+│           ├── text: string                     # Yanıt metni
+│           ├── createdAt: TIMESTAMP             # Oluşturulma zamanı
+│           └── likes/{userId}: true             # MAP: yanıt beğenileri
+│
+├── /userPosts/{userId}/{postId}: TIMESTAMP      # INDEX: kullanıcının gönderi listesi
+│                                                 (değer = TIMESTAMP, sıralama için)
+│
+├── /userLikes/{userId}/{postId}: TIMESTAMP      # INDEX: kullanıcının beğendikleri
+│                                                 (sadece POST beğenileri, comment/reply DEĞİL)
+│
+├── /users/{userId}/
+│   └── components/{itemId}                      # MAP: envanter öğeleri
+│       ├── date: string                         # Tarih
+│       ├── component: string                    # Bileşen adı
+│       ├── brand: string                        # Marka
+│       ├── specs: string                        # Özellikler
+│       ├── price: number|string                 # Fiyat
+│       ├── vendor: string                       # Satıcı
+│       ├── status: string                       # Durum
+│       ├── url: string                          # Ürün URL'si
+│       ├── imageUrl: string                     # Storage download URL
+│       ├── star: number                         # Puan
+│       └── opinion: string                      # Görüş
+│       # Runtime'da enrichItem() ile eklenir (DB'de saklanmaz):
+│       # - _searchTag: normalizeTr(...) ile normalize edilmiş arama metni
+│       # - _statusNorm: normalizeTr(status)
+│
+└── /usernames/{usernameKey}: uid                # INDEX: kullanıcı adı → UID eşlemesi
+                                                  # usernameKey = username.toLowerCase()
 ```
+
+### Silme Cascade Kuralları (Firebase .remove())
+
+| Silinen | Cascade ile Otomatik Temizlenen | Manuel Temizlenen | Orphan Kalan |
+|---------|-------------------------------|-------------------|--------------|
+| `/posts/{id}` | `likes/*`, `comments/*`, `comments/*/likes/*`, `comments/*/replies/*`, `comments/*/replies/*/likes/*` | `userPosts/{uid}/{id}`, her liker için `userLikes/{uid}/{id}`, Storage image | `userLikes` race (açık beğeni eklenmişse) |
+| `/posts/{id}/comments/{cid}` | `likes/*`, `replies/*`, `replies/*/likes/*` | Yok | Yok |
+| `/posts/{id}/comments/{cid}/replies/{rid}` | `likes/*` | Yok | Yok |
+| Kullanıcı silindi | Yok | `userLikes/{uid}`, tüm postları (Storage+userLikes+post subtree), `userPosts/{uid}`, `users/{uid}`, `usernames/{key}`, Storage klasör | **Başkalarının postlarındaki yorumları** (uid/text kalır), **başkalarının postlarındaki beğenileri** (like marker'ları kalır) |
+
+### Önemli Notlar
+
+- **Comment like'ları kullanıcı index'inde tutulmaz**: Sadece `/posts/{id}/comments/{cid}/likes/{uid}` altında. `/userCommentLikes` diye bir path yoktur.
+- **Reply like'ları da index'sizdir**: Aynı şekilde sadece reply altındadır.
+- **`/userLikes/` sadece POST beğenilerini** index'ler. Comment/reply beğenilerinin kullanıcı-bazlı bir index'i yoktur.
+- **`deleteUserAccount`** post loop'unda `userLikes/{otherUser}/{postId}` (başka kullanıcıların beğenilerini) temizler. Kendi `userLikes/{uid}`'si daha önce silinir.
+- **Storage yolu**: `users/{uid}/components/{itemId}/image` (component görselleri), `users/{uid}/posts/{timestamp}` (post görselleri). Storage'daki URL `imageUrl` alanında saklanır.
+
+### Firebase Security Rules (`rules.json`)
+
+Firebase Realtime Database kuralları `rules.json` dosyasında tanımlıdır. Firebase Console → Realtime Database → Rules bölümüne kopyalanır.
+
+**Önemli kural mantığı:**
+
+| Path | Kural | Sebep |
+|------|-------|-------|
+| `/users/{uid}` | Sadece kullanıcının kendisi | Kullanıcı verisi gizli |
+| `/posts/{pid}` | Yalnızca post sahibi silebilir / düzenleyebilir | Yetkisiz silme engeli |
+| `/posts/{pid}/comments/{cid}` | Yalnızca yorum sahibi silebilir | Yetkisiz yorum silme engeli |
+| `/posts/{pid}/likes/{uid}` | Yalnızca `$userId` == `auth.uid`, VE post henüz silinmemiş olmalı | Race condition: post yoksa beğeni eklenemez |
+| `/userLikes/{uid}/{pid}` | Sahibi yazabilir VEYA `newData.val() == null` | Başkasının `userLikes`'ına null yazılabilir (post silme cleanup) |
+| `/usernames/{key}` | `newData.val() == auth.uid` (yeni kayıt) VEYA `data.val() == auth.uid` (silme) | Username hijacking engeli |
+
+**Not:** `userLikes`'daki `newData.val() == null` kuralı, `deletePostFromFirebase`'in atomic multi-path `update()`'inin çalışması için zorunludur (Kullanıcı A, Kullanıcı B'nin `userLikes/{B}/{postId}`'ini null'layabilir).
 
 ## Proje Yapısı
 
@@ -91,28 +223,28 @@ mysetup/
 └── src/
     ├── main/
     │   ├── main.ts           (2)  # Pencere, CSP, yaşam döngüsü (124 satır)
-    │   └── preload.ts        (7)  # IPC contextBridge (46 satır)
+    │   └── preload.ts        (1)  # IPC contextBridge (46 satır)
     ├── updater/
     │   └── updater.ts        (2)  # electron-updater kurulumu (82 satır)
     └── renderer/
         ├── index.ts          (0)  # Entry point, tüm modülleri import eder
-        ├── utils.ts          (26) # Global değişkenler, yardımcılar (495 satır)
+        ├── utils.ts          (27) # Global değişkenler, yardımcılar (495 satır)
         ├── firebase-init.ts  (1)  # Firebase başlatma, db referansları (43 satır)
         ├── firebase-core.ts  (2)  # enrichItem, initUserDataRef (134 satır)
         ├── firebase-inv.ts   (7)  # Envanter CRUD + Storage (61 satır)
         ├── firebase-post.ts  (17) # Post/yorum/yanıt CRUD (257 satır)
         ├── firebase-user.ts  (1)  # Hesap silme (79 satır)
-        ├── auth.ts           (1)  # Giriş/kayıt, oturum yönetimi (331 satır)
+        ├── auth.ts           (6)  # Giriş/kayıt, oturum yönetimi (331 satır)
         ├── io.ts             (7)  # Toast/confirm bildirimleri (156 satır)
         ├── editmodal.ts      (8)  # Düzenleme modalı, görsel yükleme (343 satır)
-        ├── table.ts          (19) # Tablo render, sıralama, CRUD (676 satır)
+        ├── table.ts          (21) # Tablo render, sıralama, CRUD (676 satır)
         ├── toolbar.ts        (6)  # İstatistik, arama, filtre, CSV (417 satır)
-        ├── profile.ts        (19) # Profil sekmeleri (438 satır)
+        ├── profile.ts        (20) # Profil sekmeleri (438 satır)
         ├── posts-create.ts   (6)  # Post oluşturma, görsel seçimi (187 satır)
         ├── posts-render.ts   (20) # Post akışı render, sayfalama (464 satır)
-        ├── posts-actions.ts  (12) # Beğeni, yorum gönderme, event delegation (618 satır)
+        ├── posts-actions.ts  (13) # Beğeni, yorum gönderme, event delegation (618 satır)
         ├── post-view.ts      (11) # Post view aç/kapa, yorumlar (541 satır)
-        ├── post-comment.ts   (6)  # Yorum/yanıt HTML render (192 satır)
+        ├── post-comment.ts   (5)  # Yorum/yanıt HTML render (192 satır)
         ├── updater-ui.ts     (2)  # Güncelleme butonu animasyonu (118 satır)
         ├── userset.ts        (8)  # Hesap ayarları, şifre değiştirme (384 satır)
         └── types/
@@ -120,7 +252,7 @@ mysetup/
             └── global.d.ts        # Window interface genişletmesi
 ```
 
-## **Toplam: 195 fonksiyon** - **her eklemede güncelle**
+## **Toplam: 193 fonksiyon** - **her eklemede güncelle**
 
 Import sırası `index.ts`'de sabittir — **asla değiştirilmez:**
 
@@ -163,6 +295,37 @@ npm run build:ts                          # esbuild derleme
 npx tsc --noEmit                          # renderer tip kontrolü
 npx tsc --noEmit -p tsconfig.main.json    # main tip kontrolü
 ```
+
+### Firebase Delete Race Condition
+
+**Kritik:** `deletePostFromFirebase`'de (`firebase-post.ts:44-61`) likes snapshot okuma ile post silme arasında yeni beğeni eklenirse `userLikes/{userId}/{postId}` orphan kalır. Aynı sorun `deleteUserAccount`'ta da var.
+
+**Çözüm:** Multi-path `update()` ile atomik cleanup:
+```typescript
+// Tüm cleanup'leri tek updates objesinde topla:
+updates["posts/" + postId] = null;
+updates["userPosts/" + uid + "/" + postId] = null;
+Object.keys(likes).forEach(function (userId) {
+  updates["userLikes/" + userId + "/" + postId] = null;
+});
+return db.database!.ref().update(updates); // atomik
+```
+
+### Storage Cleanup Zorunluluğu
+
+- Component silindiğinde (`deleteComponentFromFirebase`) Storage'daki görsel de silinmeli
+- CSV Import / "Tümünü Sil" öncesi eski görseller temizlenmeli
+
+### Firebase Storage Rules (`storage.rules`)
+
+Storage kuralları `storage.rules` dosyasında tanımlıdır. Firebase Console → Storage → Rules bölümüne kopyalanır.
+
+**Kural özeti:**
+```
+/users/{uid}/{allPaths=**} → allow read, write: if request.auth.uid == uid
+```
+
+Tüm dosyalar `/users/{uid}/` altında olduğu için tek bir kural yeterlidir. Download URL (token içeren) herkese açık olduğu için post görselleri herkes tarafından görüntülenebilir; SDK üzerinden silme/yazma işlemleri yalnızca kullanıcının kendisi tarafından yapılabilir.
 
 ## Yaygın Hatalar
 

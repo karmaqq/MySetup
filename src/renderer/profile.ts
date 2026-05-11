@@ -361,7 +361,7 @@ function _loadPostsChunk(cfg: PostsChunkConfig): void {
           }
         });
 
-        if (ids.length >= PAGE_SIZE) {
+        if (postIds.length >= PAGE_SIZE) {
           cfg.setOldestTs(map[ids[ids.length - 1]]);
           cfg.setHasMore(true);
           _renderProfileLoadMoreBtn(cfg.tabId, function () {
@@ -413,6 +413,10 @@ function _onUserLikesChanged(postId: string, value: any, type: string): void {
   } else if (type === "removed") {
     _userLikesTimestamps.delete(postId);
     if (_likedPostsVisible.has(postId)) _likedPostsVisible.delete(postId);
+    const likePost = allPosts[postId];
+    if (likePost && likePost.likes) {
+      delete likePost.likes[firebase.auth().currentUser!.uid];
+    }
     if (_profileTab === "liked-posts") {
       document
         .querySelectorAll('#likedPostsTab [data-post-id="' + postId + '"]')

@@ -65,7 +65,6 @@ export function updateStatsCacheOnChange(
     }
     if (_statsCache.mostExpId === item.id) {
       rebuildStatsCache();
-      updateStats(getFilteredSortedList());
       return;
     }
   } else {
@@ -96,7 +95,6 @@ export function updateStatsCacheOnChange(
         newPrice > _statsCache.mostExpPrice
       ) {
         rebuildStatsCache();
-        updateStats(getFilteredSortedList());
         return;
       }
     }
@@ -263,24 +261,6 @@ function parseCsvLine(line: string): string[] {
   return result;
 }
 
-/* ─────────────────── Firebase Key Üretici ─────────────────── */
-function generateFirebaseKey(): string {
-  /*
-    Firebase push key algoritmasına benzer şekilde, timestamp tabanlı ve random ekli local key üretir.
-    Çakışma riski yok denecek kadar azdır.
-  */
-  const now = Date.now();
-  const chars =
-    "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
-  let key = "";
-  let time = now;
-  for (let i = 7; i >= 0; i--) {
-    key = chars[time % 64] + key;
-    time = Math.floor(time / 64);
-  }
-  return key + Math.random().toString(36).substr(2, 12);
-}
-
 function processCsv(csvText: string): void {
   const lines = csvText.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) {
@@ -295,7 +275,7 @@ function processCsv(csvText: string): void {
     const row = parseCsvLine(line);
     if (row.length < 2 || !row[1]) return;
 
-    const entryId = generateFirebaseKey();
+    const entryId = db.userDataRef!.push().key!;
     importPayload[entryId] = {
       date: row[0] || new Date().toISOString().split("T")[0],
       component: row[1],
@@ -321,6 +301,12 @@ function processCsv(csvText: string): void {
     "Yeni liste aktarılırken mevcut tüm verileriniz silinecektir. Onaylıyor musunuz?",
     async () => {
       try {
+        var deleteOldImages = Object.values(allData)
+          .filter((item: any) => item.imageUrl)
+          .map((item: any) =>
+            firebase.storage().refFromURL(item.imageUrl).delete().catch(() => {}),
+          );
+        await Promise.all(deleteOldImages);
         await replaceUserDataInFirebase(importPayload);
         showToast(`${importCount} kayıt sıfırdan yüklendi.`, "success");
         scheduleRender();
@@ -377,7 +363,7 @@ if (exportCsvBtn) {
       "Satıcı",
       "Durum",
       "URL",
-      "imageUrl",
+      "GörselURL",
       "Puan",
       "Görüş",
     ];
@@ -439,14 +425,19 @@ if (deleteAllBtn) {
 
     showConfirm(
       "Tüm verileri gerçekten silmek istiyor musunuz?",
-      () => {
-        replaceUserDataInFirebase({})
-          .then(() => {
-            showToast("Tüm kayıtlar silindi", "success");
-          })
-          .catch(() => {
-            showToast("Silme işlemi tamamlanamadı", "error");
-          });
+      async () => {
+        try {
+          var deleteOldImages = Object.values(allData)
+            .filter((item: any) => item.imageUrl)
+            .map((item: any) =>
+              firebase.storage().refFromURL(item.imageUrl).delete().catch(() => {}),
+            );
+          await Promise.all(deleteOldImages);
+          await replaceUserDataInFirebase({});
+          showToast("Tüm kayıtlar silindi", "success");
+        } catch (_) {
+          showToast("Silme işlemi tamamlanamadı", "error");
+        }
       },
       { yesText: "Onay" },
     );

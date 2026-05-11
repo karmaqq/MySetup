@@ -2,7 +2,7 @@
 /*                  KİMLİK DOĞRULAMA VE OTURUM YÖNETİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { showPage, refreshAllAvatars } from "./utils";
+import { showPage, refreshAllAvatars, mainScroll } from "./utils";
 import { initUserDataRef } from "./firebase-core";
 import { db } from "./firebase-init";
 import { initPosts, _teardownPosts } from "./posts-render";
@@ -74,7 +74,6 @@ function onUserLoggedIn(user: firebase.auth.User): void {
 
 function onUserLoggedOut(): void {
   const sidebar = document.getElementById("sidebar");
-  const mainScroll = document.getElementById("mainScroll");
   const appFooter = document.getElementById("appFooter");
   const userInfo = document.getElementById("userInfo");
   const authOverlay = document.getElementById("authOverlay");

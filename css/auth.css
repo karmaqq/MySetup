@@ -26,6 +26,11 @@
   visibility: visible;
 }
 
+.label-hint {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
 .auth-container {
   width: 100%;
   max-width: 440px;

@@ -2,6 +2,7 @@
 /*                          HESAP SILME                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { allPosts } from "./posts-render";
 import { db } from "./firebase-init";
 import { getPostsByIds } from "./firebase-post";
 import { deleteAllInFolder } from "./firebase-inv";
@@ -17,8 +18,7 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
     const userPostsSnap = await db.database!.ref("userPosts/" + uid).once("value");
     const postIds = userPostsSnap.val() ? Object.keys(userPostsSnap.val() as Record<string, any>) : [];
 
-    const allPostsGlobal = (window as any).allPosts || {};
-    const postDataMap = await getPostsByIds(postIds, allPostsGlobal);
+    const postDataMap = await getPostsByIds(postIds, allPosts);
     const BATCH_SIZE = 10;
     const MAX_PARALLEL_BATCHES = 5;
     const batches: string[][] = [];
@@ -36,16 +36,18 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
                   await firebase.storage().refFromURL(imageUrl).delete();
                 } catch (_) {}
               }
-              const likesSnap = await db.postsRef!
-                .child(id)
-                .child("likes")
-                .once("value");
+              const likesSnap = await db.postsRef!.child(id).child("likes").once("value");
               const likes = likesSnap.val() || {};
-              const likeCleanups = Object.keys(likes).map(function (userId) {
-                return db.userLikesRef!.child(userId).child(id).remove();
+              const updates: Record<string, any> = {};
+              updates["posts/" + id] = null;
+              Object.keys(likes).forEach(function (userId) {
+                updates["userLikes/" + userId + "/" + id] = null;
               });
-              await Promise.all(likeCleanups);
-              await db.postsRef!.child(id).remove();
+              try {
+                await db.database!.ref().update(updates);
+              } catch (_) {
+                /* post silme başarısız olsa bile devam et */
+              }
             }),
           );
         }),

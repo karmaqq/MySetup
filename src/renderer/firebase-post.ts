@@ -27,42 +27,27 @@ export function addPostToFirebase(postData: any): Promise<firebase.database.Refe
 }
 
 export function deletePostFromFirebase(postId: string, postData: any): Promise<any> {
-  const imageUrl = postData ? postData.imageUrl : null;
   const uid = postData ? postData.uid : null;
+  const imageUrl = postData ? postData.imageUrl : null;
 
-  let deletePromise = Promise.resolve();
-  if (imageUrl) {
-    deletePromise = firebase
-      .storage()
-      .refFromURL(imageUrl)
-      .delete()
-      .catch(function (e: any) {
-        console.warn("Görsel silinemedi:", e);
-      });
-  }
+  const imagePromise = imageUrl
+    ? firebase.storage().refFromURL(imageUrl).delete().catch(function () {})
+    : Promise.resolve();
 
-  return db
-    .postsRef!
-    .child(postId)
-    .child("likes")
-    .once("value")
-    .then(function (likesSnap) {
-      const likes = likesSnap.val() || {};
-      const cleanupPromises: Promise<any>[] = [];
-      if (uid) {
-        cleanupPromises.push(db.userPostsRef!.child(uid).child(postId).remove());
-      }
-      Object.keys(likes).forEach(function (userId) {
-        cleanupPromises.push(db.userLikesRef!.child(userId).child(postId).remove());
-      });
+  return db.postsRef!.child(postId).child("likes").once("value").then(function (likesSnap) {
+    const likes = likesSnap.val() || {};
+    const updates: Record<string, any> = {};
 
-      return deletePromise.then(function () {
-        return Promise.all([
-          db.postsRef!.child(postId).remove(),
-          Promise.all(cleanupPromises),
-        ]);
-      });
+    updates["posts/" + postId] = null;
+    if (uid) updates["userPosts/" + uid + "/" + postId] = null;
+    Object.keys(likes).forEach(function (userId) {
+      updates["userLikes/" + userId + "/" + postId] = null;
     });
+
+    return imagePromise.then(function () {
+      return db.database!.ref().update(updates);
+    });
+  });
 }
 
 export function togglePostLike(postId: string, userId: string): Promise<any> {
@@ -125,6 +110,26 @@ export function getPostsByIds(postIds: string[], existing: Record<string, any>):
     }
   });
   if (!missing.length) return Promise.resolve(result);
+  if (missing.length > 3) {
+    var sorted = [...missing].sort();
+    return db
+      .postsRef!
+      .orderByKey()
+      .startAt(sorted[0])
+      .endAt(sorted[sorted.length - 1])
+      .once("value")
+      .then(function (snap) {
+        var all = (snap.val() || {}) as Record<string, any>;
+        missing.forEach(function (id) {
+          if (all[id]) {
+            var d = all[id];
+            d._id = id;
+            result[id] = d;
+          }
+        });
+        return result;
+      });
+  }
   return Promise.all(
     missing.map(function (id) {
       return db

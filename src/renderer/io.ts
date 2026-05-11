@@ -7,6 +7,7 @@ import {
   deletePostFromFirebase,
   deleteCommentFromFirebase,
   deleteReplyFromFirebase,
+  getPostsByIds,
 } from "./firebase-post";
 
 /* ─────────────────── Toast Bildirimi Göster ─────────────────── */
@@ -107,9 +108,14 @@ function _confirmDelete(type: string, ids: Record<string, string>): void {
     reply: "Yanıt silindi",
   };
   const fns: Record<string, () => Promise<any>> = {
-    post: function () {
+    post: async function () {
       const allPostsGlobal = (window as any).allPosts || {};
-      return deletePostFromFirebase(ids.postId, allPostsGlobal[ids.postId]);
+      let postData = allPostsGlobal[ids.postId];
+      if (!postData) {
+        const fetched = await getPostsByIds([ids.postId], {});
+        postData = fetched[ids.postId] || { uid: firebase.auth().currentUser?.uid };
+      }
+      return deletePostFromFirebase(ids.postId, postData);
     },
     comment: function () {
       return deleteCommentFromFirebase(ids.postId, ids.commentId);

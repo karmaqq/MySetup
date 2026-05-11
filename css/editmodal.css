@@ -54,6 +54,29 @@
   display: block;
 }
 
+.preview-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  z-index: 10;
+}
+
+.preview-delete-btn:hover {
+  background: var(--red);
+}
+
 /* ─────────────────── Durum ve Görsel Satırı ─────────────────── */
 
 .status-image-row {
