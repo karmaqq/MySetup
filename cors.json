@@ -6,7 +6,7 @@
     "responseHeader": ["Content-Type", "Content-Disposition"]
   },
   {
-    "origin": ["file://*"],
+    "origin": ["app://*"],
     "method": ["GET", "HEAD", "OPTIONS"],
     "maxAgeSeconds": 3600,
     "responseHeader": ["Content-Type", "Content-Disposition"]

@@ -2,7 +2,7 @@
 /*                          GÖRSEL YÜKLEME VE ÖNİZLEME                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { allData, editingId } from "./app-state";
+import { allData, editingId, currentUser } from "./app-state";
 import { escAttr } from "./global-ut";
 import { showToast, showConfirm } from "./global-fn";
 import { updateComponentInFirebase } from "./firebase-inv";
@@ -11,7 +11,7 @@ import { updateComponentInFirebase } from "./firebase-inv";
 
 export function uploadImageToFirebase(file: File, itemId: string): Promise<string> {
   return new Promise(function (resolve, reject) {
-    const user = firebase.auth().currentUser;
+    const user = currentUser;
     if (!user) return reject("Kullanıcı yok");
     const storageRef = firebase.storage().ref();
     const imageRef = storageRef.child(
@@ -86,7 +86,7 @@ export function refreshPreview(
       if (!idToDelete) return;
       showConfirm("Görsel kalıcı olarak silinsin mi?", async () => {
         try {
-          const user = firebase.auth().currentUser;
+          const user = currentUser;
           if (user) {
             const ref = firebase.storage().ref(`users/${user.uid}/components/${idToDelete}/image`);
             await ref.delete().catch(() => {});
@@ -127,10 +127,23 @@ export function handleImageFile(
 
   uploadImageToFirebase(file, id)
     .then((url) => {
-      updateComponentInFirebase(id, { imageUrl: url }).then(() => {
-        if (allData[id]) allData[id].imageUrl = url;
-        refreshPreview(url, imagePreview, imageUploadBtn);
-      });
+      updateComponentInFirebase(id, { imageUrl: url })
+        .then(() => {
+          if (allData[id]) allData[id].imageUrl = url;
+          refreshPreview(url, imagePreview, imageUploadBtn);
+        })
+        .catch(() => {
+          const user = currentUser;
+          if (user) {
+            firebase
+              .storage()
+              .ref("users/" + user.uid + "/components/" + id + "/image")
+              .delete()
+              .catch(function () {});
+          }
+          showToast("Güncelleme başarısız", "error");
+          refreshPreview("", imagePreview, imageUploadBtn);
+        });
     })
     .catch(() => {
       imagePreview.classList.add("hidden");

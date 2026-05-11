@@ -2,6 +2,7 @@
 /*                      POST VIEW YORUM/YANIT GÖNDERİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { currentUser } from "./app-state";
 import { addCommentToFirebase, addReplyToFirebase } from "./firebase-comment";
 import { showToast } from "./global-fn";
 
@@ -51,13 +52,13 @@ export function _submitPostViewComment(): void {
   var input = document.getElementById(
     "postViewCommentInput",
   ) as HTMLElement | null;
-  if (!input || !(window as any)._viewingPostId) return;
-  if (!(window as any).allPosts[(window as any)._viewingPostId]) {
+  if (!input || !window._viewingPostId) return;
+  if (!(window as any).allPosts[window._viewingPostId]) {
     showToast("Bu gönderi artık mevcut değil", "warn");
     return;
   }
 
-  var user = firebase.auth().currentUser;
+  var user = currentUser;
   if (!user) return;
 
   var text = (input as HTMLTextAreaElement).value.trim();
@@ -93,24 +94,24 @@ export function _submitPostViewComment(): void {
 
   if (_replyTargetCommentId) {
     var targetCid = _replyTargetCommentId;
-    var post = (window as any).allPosts[(window as any)._viewingPostId as string];
+    var post = (window as any).allPosts[window._viewingPostId as string];
     if (!post || !post.comments || !post.comments[targetCid]) {
       showToast("Yanıtlamak istediğin yorum artık mevcut değil", "warn");
       _clearPostViewReplyTarget();
       _fail();
       return;
     }
-    addReplyToFirebase((window as any)._viewingPostId, targetCid, baseData)
+    addReplyToFirebase(window._viewingPostId, targetCid, baseData)
       .then(function () {
         _clearPostViewReplyTarget();
         showToast("Yanıt eklendi", "success");
         var repliesSec = document.getElementById(
-          "replies-" + (window as any)._viewingPostId + "-" + targetCid,
+          "replies-" + window._viewingPostId + "-" + targetCid,
         );
         if (repliesSec && repliesSec.classList.contains("hidden")) {
           repliesSec.classList.remove("hidden");
           var toggleBtn = document.getElementById(
-            "toggleReplies-" + (window as any)._viewingPostId + "-" + targetCid,
+            "toggleReplies-" + window._viewingPostId + "-" + targetCid,
           ) as HTMLElement | null;
           if (toggleBtn) toggleBtn.textContent = "yanıtları gizle";
         }
@@ -121,7 +122,7 @@ export function _submitPostViewComment(): void {
         _fail();
       });
   } else {
-    addCommentToFirebase((window as any)._viewingPostId, baseData)
+    addCommentToFirebase(window._viewingPostId, baseData)
       .then(function () {
         showToast("Yorum eklendi", "success");
         _done();

@@ -2,8 +2,8 @@
 /*                         KULLANICI AYARLARI                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-.modal-input.input-error {
-  border-color: var(--red) !important;
+.premium-modal .modal-input.input-error {
+  border-color: var(--red);
   box-shadow: 0 0 0 1px rgba(245, 96, 96, 0.25);
 }
 
@@ -16,7 +16,7 @@
 .premium-modal {
   width: 100%;
   max-width: 400px;
-  padding: 20px !important;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -48,10 +48,10 @@
 
 .premium-modal .back-icon-btn,
 .premium-modal .modal-close {
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  display: flex !important;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  display: flex;
   align-items: center;
   justify-content: center;
   background: var(--surface2);
@@ -59,7 +59,7 @@
   border-radius: 10px;
   color: var(--text-dim);
   cursor: pointer;
-  padding: 0 !important;
+  padding: 0;
   font-size: 17px;
   transition: all 0.2s;
 }
@@ -90,8 +90,8 @@
 }
 
 .premium-modal .back-icon-btn svg {
-  width: 20px !important;
-  height: 20px !important;
+  width: 20px;
+  height: 20px;
 }
 
 .premium-modal .modal-body {
@@ -135,7 +135,7 @@
 }
 
 .premium-modal .modal-input {
-  width: 100% !important;
+  width: 100%;
   min-height: 52px;
   padding: 10px 16px;
   background: var(--surface2);
@@ -206,8 +206,8 @@
 }
 
 .action-icon-btn svg {
-  width: 22px !important;
-  height: 22px !important;
+  width: 22px;
+  height: 22px;
 }
 
 .action-icon-btn:hover {
@@ -332,9 +332,9 @@
 
 .danger-check-wrapper input[type="checkbox"] {
   appearance: none;
-  width: 20px !important;
-  height: 20px !important;
-  min-width: 20px !important;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
   border: 2px solid var(--border2);
   border-radius: 4px;
   background: var(--surface3);
@@ -513,14 +513,14 @@
 /*                           TEHLİKE BUTONU                                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-.btn-danger {
-  background: var(--red) !important;
-  color: #fff !important;
+#userSettingsModal .btn-danger {
+  background: var(--red);
+  color: #fff;
 }
 
-.btn-danger:disabled {
-  background: var(--border2) !important;
-  color: var(--text-dim) !important;
+#userSettingsModal .btn-danger:disabled {
+  background: var(--border2);
+  color: var(--text-dim);
   cursor: not-allowed;
 }
 
@@ -528,14 +528,14 @@
 /*                            DUYARLI TASARIM                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 760px) {
+  @media (max-width: 760px) {
   .premium-modal,
   .premium-modal.wide,
   #userSettingsModal .premium-modal,
   #changePasswordModal .premium-modal.wide,
   #deleteAccountModal .premium-modal.wide {
     max-width: min(100%, 94vw);
-    padding: 24px 20px !important;
+    padding: 24px 20px;
   }
   #userSettingsModal .modal-body,
   .premium-modal .form-grid {

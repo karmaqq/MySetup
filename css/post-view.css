@@ -297,7 +297,7 @@
 
 .post-header-link {
   cursor: pointer;
-  transition: background 1.15s;
+  transition: background 0.15s;
 }
 
 .post-header-link:hover {

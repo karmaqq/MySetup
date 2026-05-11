@@ -83,6 +83,15 @@
   padding: 40px 48px;
 }
 
+@media (max-width: 480px) {
+  .auth-panel {
+    padding: 28px 20px;
+  }
+  .auth-container {
+    max-width: 100%;
+  }
+}
+
 .auth-panel h2 {
   font-family: var(--font-display);
   font-size: 22px;
@@ -159,7 +168,7 @@
 }
 
 .password-wrapper input {
-  padding-right: 48px !important;
+  padding-right: 48px;
 }
 
 .toggle-password {
@@ -192,13 +201,13 @@
 /* ─────────────────── Eşleştirme ─────────────────── */
 
 .auth-field input.match-success {
-  border-color: var(--green) !important;
-  box-shadow: 0 0 0 3px var(--green-dim) !important;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-dim);
 }
 
 .auth-field input.match-error {
-  border-color: var(--red) !important;
-  box-shadow: 0 0 0 3px var(--red-dim) !important;
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-dim);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

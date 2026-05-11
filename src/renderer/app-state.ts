@@ -7,7 +7,7 @@
 export let _currentPage: string = sessionStorage.getItem("_lastPage") || "home";
 export let _isAnimating = false;
 export let _pendingPage: string | null = null;
-export let _commentListenerRefs: Record<string, () => void> = {};
+export let _commentListenerRefs: Record<string, any> = {};
 export const _commentListenerOrder: string[] = [];
 
 let _viewingPostIdVal: string | null = null;
@@ -22,6 +22,13 @@ Object.defineProperty(window, "_viewingPostId", {
   },
   configurable: true,
 });
+
+/* ─────────────────── Oturum Durumu ─────────────────── */
+
+export let currentUser: firebase.auth.User | null = null;
+export function setCurrentUser(u: firebase.auth.User | null): void {
+  currentUser = u;
+}
 
 export const mainScroll = document.getElementById(
   "mainScroll",
@@ -82,29 +89,44 @@ export function showPage(pageName: string): void {
 
   if (mainScroll) mainScroll.scrollTop = 0;
 
-  setTimeout(() => {
+  var fallbackId = setTimeout(function () {
     _isAnimating = false;
-    if (
-      pageName === "profile" &&
-      typeof (window as any).updateProfilePosts === "function"
-    ) {
-      (window as any).updateProfilePosts();
-    }
-    if (
-      pageName !== "home" &&
-      typeof (window as any).clearPostDraft === "function"
-    ) {
-      (window as any).clearPostDraft();
-    }
-    if (typeof (window as any)._onPageChange === "function") {
-      (window as any)._onPageChange(pageName);
-    }
-    if (_pendingPage) {
-      const next = _pendingPage;
-      _pendingPage = null;
-      showPage(next);
-    }
-  }, 320);
+    _runPageCallbacks(pageName);
+  }, 400);
+
+  newPage.addEventListener(
+    "transitionend",
+    function handler() {
+      clearTimeout(fallbackId);
+      newPage.removeEventListener("transitionend", handler);
+      _isAnimating = false;
+      _runPageCallbacks(pageName);
+    },
+    { once: true },
+  );
+}
+
+function _runPageCallbacks(pageName: string): void {
+  if (
+    pageName === "profile" &&
+    typeof (window as any).updateProfilePosts === "function"
+  ) {
+    (window as any).updateProfilePosts();
+  }
+  if (
+    pageName !== "home" &&
+    typeof (window as any).clearPostDraft === "function"
+  ) {
+    (window as any).clearPostDraft();
+  }
+  if (typeof (window as any)._onPageChange === "function") {
+    (window as any)._onPageChange(pageName);
+  }
+  if (_pendingPage) {
+    const next = _pendingPage;
+    _pendingPage = null;
+    showPage(next);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -163,13 +185,31 @@ export interface StatsCache {
   mostExpPrice: number;
 }
 
-export let _statsCache: StatsCache = {
+let _statsCacheVal: StatsCache = {
   total: 0,
   count: 0,
   healthy: 0,
   mostExpId: null,
   mostExpPrice: 0,
 };
+
+export function getStatsCache(): StatsCache {
+  return _statsCacheVal;
+}
+
+export function setStatsCache(val: Partial<StatsCache>): void {
+  Object.assign(_statsCacheVal, val);
+}
+
+export function resetStatsCache(): void {
+  _statsCacheVal = {
+    total: 0,
+    count: 0,
+    healthy: 0,
+    mostExpId: null,
+    mostExpPrice: 0,
+  };
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          DOM REFERANSLARI                                */

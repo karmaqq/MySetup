@@ -9,11 +9,20 @@ exports.default = async function (context) {
     if (!fs.existsSync(localeDir)) return;
     const allowed = ["en-US.pak", "tr.pak"];
     let deleted = 0;
-    for (const file of fs.readdirSync(localeDir)) {
-        if (!allowed.includes(file)) {
-            fs.unlinkSync(path.join(localeDir, file));
-            deleted++;
+    try {
+        const files = fs.readdirSync(localeDir);
+        for (const file of files) {
+            if (!allowed.includes(file)) {
+                try {
+                    fs.unlinkSync(path.join(localeDir, file));
+                    deleted++;
+                } catch (unlinkErr) {
+                    console.warn("  ⚠ locale silinemedi:", file, unlinkErr);
+                }
+            }
         }
+    } catch (readErr) {
+        console.warn("  ⚠ locale dizini okunamadı:", readErr);
     }
     console.log(`  🧹 ${deleted} locale dosyasi temizlendi (sadece tr/en kaldi)`);
 };

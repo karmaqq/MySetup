@@ -379,9 +379,6 @@
     overflow-x: auto;
     padding-bottom: 4px;
   }
-  .modal-body {
-    grid-template-columns: 1fr;
-  }
   .field-full {
     grid-column: 1;
   }

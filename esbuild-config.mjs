@@ -7,7 +7,6 @@ export const rendererBase = {
   outfile: "dist/renderer.js",
   bundle: true,
   format: "iife",
-  globalName: "__mySetup",
   platform: "browser",
   target: "es2020",
   tsconfig: "tsconfig.json",

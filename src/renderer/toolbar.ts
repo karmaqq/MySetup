@@ -6,7 +6,7 @@ import {
   allData,
   currentSearch,
   currentStatusFilter,
-  _statsCache,
+  getStatsCache,
   setCurrentSearch,
   setCurrentStatusFilter,
   searchInput,
@@ -26,20 +26,21 @@ import { CURRENCY_FORMAT } from "./global-ut";
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 export function rebuildStatsCache(): void {
-  _statsCache.total = 0;
-  _statsCache.count = 0;
-  _statsCache.healthy = 0;
-  _statsCache.mostExpId = null;
-  _statsCache.mostExpPrice = 0;
+  const c = getStatsCache();
+  c.total = 0;
+  c.count = 0;
+  c.healthy = 0;
+  c.mostExpId = null;
+  c.mostExpPrice = 0;
 
   for (const [id, i] of Object.entries(allData)) {
     const price = parseFloat(i.price) || 0;
-    _statsCache.total += price;
-    _statsCache.count++;
-    if ((i._statusNorm || "").includes("saglikli")) _statsCache.healthy++;
-    if (price > _statsCache.mostExpPrice) {
-      _statsCache.mostExpPrice = price;
-      _statsCache.mostExpId = id;
+    c.total += price;
+    c.count++;
+    if ((i._statusNorm || "").includes("saglikli")) c.healthy++;
+    if (price > c.mostExpPrice) {
+      c.mostExpPrice = price;
+      c.mostExpId = id;
     }
   }
 }
@@ -51,43 +52,44 @@ export function updateStatsCacheOnChange(
 ): void {
   const newPrice = parseFloat(item.price) || 0;
   const oldPrice = oldItem ? parseFloat(oldItem.price) || 0 : 0;
+  const c = getStatsCache();
 
   if (isRemove) {
-    _statsCache.total -= oldPrice;
-    _statsCache.count--;
+    c.total -= oldPrice;
+    c.count--;
     if (oldItem && (oldItem._statusNorm || "").includes("saglikli")) {
-      _statsCache.healthy--;
+      c.healthy--;
     }
-    if (_statsCache.mostExpId === item.id) {
+    if (c.mostExpId === item.id) {
       rebuildStatsCache();
       return;
     }
   } else {
     if (!oldItem) {
-      _statsCache.total += newPrice;
-      _statsCache.count++;
-      if ((item._statusNorm || "").includes("saglikli")) _statsCache.healthy++;
-      if (newPrice > _statsCache.mostExpPrice) {
-        _statsCache.mostExpPrice = newPrice;
-        _statsCache.mostExpId = item.id;
-        const mostExpItem = _statsCache.mostExpId
-          ? allData[_statsCache.mostExpId]
+      c.total += newPrice;
+      c.count++;
+      if ((item._statusNorm || "").includes("saglikli")) c.healthy++;
+      if (newPrice > c.mostExpPrice) {
+        c.mostExpPrice = newPrice;
+        c.mostExpId = item.id;
+        const mostExpItem = c.mostExpId
+          ? allData[c.mostExpId]
           : null;
         if (statExpensive)
           statExpensive.textContent = mostExpItem ? mostExpItem.component : "—";
       }
     } else {
       const priceDiff = newPrice - oldPrice;
-      if (priceDiff !== 0) _statsCache.total += priceDiff;
+      if (priceDiff !== 0) c.total += priceDiff;
 
       const oldHealthy = (oldItem._statusNorm || "").includes("saglikli");
       const newHealthy = (item._statusNorm || "").includes("saglikli");
-      if (!oldHealthy && newHealthy) _statsCache.healthy++;
-      else if (oldHealthy && !newHealthy) _statsCache.healthy--;
+      if (!oldHealthy && newHealthy) c.healthy++;
+      else if (oldHealthy && !newHealthy) c.healthy--;
 
       if (
-        _statsCache.mostExpId === item.id ||
-        newPrice > _statsCache.mostExpPrice
+        c.mostExpId === item.id ||
+        newPrice > c.mostExpPrice
       ) {
         rebuildStatsCache();
         return;
@@ -103,10 +105,11 @@ export function updateStats(filteredList: any[]): void {
     mostExpItem: any,
     filteredLength: number;
 
+  const c = getStatsCache();
   if (!isFiltered) {
-    filteredTotal = _statsCache.total;
-    filteredHealthy = _statsCache.healthy;
-    mostExpItem = _statsCache.mostExpId ? allData[_statsCache.mostExpId] : null;
+    filteredTotal = c.total;
+    filteredHealthy = c.healthy;
+    mostExpItem = c.mostExpId ? allData[c.mostExpId] : null;
     filteredLength = Object.keys(allData).length;
   } else if (filteredList) {
     let mostExpPrice = -Infinity;

@@ -4,7 +4,7 @@
 
 import { app, BrowserWindow, shell, session, ipcMain, globalShortcut } from "electron";
 import * as path from "path";
-const { setupUpdater, checkForUpdates } = require("./updater") as { setupUpdater: (w: BrowserWindow) => void; checkForUpdates: () => void; };
+const { setupUpdater, checkForUpdates, teardownUpdater } = require("./updater") as { setupUpdater: (w: BrowserWindow) => void; checkForUpdates: () => void; teardownUpdater: () => void; };
 
 let mainWindow: BrowserWindow | null;
 
@@ -120,5 +120,5 @@ app.on("activate", () => {
 
 app.on("will-quit", () => {
   globalShortcut.unregisterAll();
-  ipcMain.removeAllListeners();
+  teardownUpdater();
 });

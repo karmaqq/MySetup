@@ -12,6 +12,7 @@ import { autoUpdater } from "electron-updater";
 let _mainWindow: BrowserWindow | null = null;
 let _initialized = false;
 let _updateReady = false;
+let _launchHandler: (() => void) | null = null;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          GÜNCELLEME KURULUMU                             */
@@ -55,13 +56,24 @@ function setupUpdater(mainWindow: BrowserWindow): void {
 
   /* ─────────────────── IPC: İndirmeyi Başlat ─────────────────── */
 
-  ipcMain.on("launch_updater", () => {
+  _launchHandler = (): void => {
     if (_updateReady) {
       autoUpdater.quitAndInstall(true, true);
     } else {
       autoUpdater.downloadUpdate();
     }
-  });
+  };
+
+  ipcMain.on("launch_updater", _launchHandler);
+}
+
+/* ─────────────────── Temizleme ─────────────────── */
+
+function teardownUpdater(): void {
+  if (_launchHandler) {
+    ipcMain.removeListener("launch_updater", _launchHandler);
+    _launchHandler = null;
+  }
 }
 
 /* ─────────────────── Güncelleme Kontrolü ─────────────────── */
@@ -79,4 +91,4 @@ function checkForUpdates(): void {
 
 /* ─────────────────── Dışa Aktarım ─────────────────── */
 
-export { setupUpdater, checkForUpdates };
+export { setupUpdater, checkForUpdates, teardownUpdater };

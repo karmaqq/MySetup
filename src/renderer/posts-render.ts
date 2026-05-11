@@ -2,9 +2,21 @@
 /*                            POST RENDER + FEED YÖNETİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { postsFeed } from "./app-state";
-import { formatTimeAgo, formatDateTime, escHtml, escAttr, escUrl, _onlyFieldChanged } from "./global-ut";
-import { getPostCards, buildAvatarHTML, buildPostMenuHTML, getTotalCommentCount } from "./global-fn";
+import { postsFeed, currentUser } from "./app-state";
+import {
+  formatTimeAgo,
+  formatDateTime,
+  escHtml,
+  escAttr,
+  escUrl,
+  _onlyFieldChanged,
+} from "./global-ut";
+import {
+  getPostCards,
+  buildAvatarHTML,
+  buildPostMenuHTML,
+  getTotalCommentCount,
+} from "./global-fn";
 
 /* ─────────────────── Feed Durum Değişkenleri ─────────────────── */
 
@@ -18,7 +30,7 @@ export function _renderPostHTML(
   postData: any,
   opts?: { inPostView?: boolean },
 ): string {
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   const isOwn = !!(user && user.uid === postData.uid);
   const liked = postData.likes && user && postData.likes[user.uid];
   const likeCount = postData.likes ? Object.keys(postData.likes).length : 0;
@@ -194,11 +206,20 @@ export function _renderEmptyFeed(): void {
 /* ─────────────────── Sadece beğeni değişimi mi kontrol et ─────────────────── */
 
 export function _onlyLikesChanged(oldPost: any, newPost: any): boolean {
-  if (!_onlyFieldChanged(oldPost, newPost, [
-    "content", "imageUrl", "username", "uid", "createdAt",
-  ])) return false;
+  if (
+    !_onlyFieldChanged(oldPost, newPost, [
+      "content",
+      "imageUrl",
+      "username",
+      "uid",
+      "createdAt",
+    ])
+  )
+    return false;
   var oldComments = oldPost.comments || {};
   var newComments = newPost.comments || {};
+  if (Object.keys(oldComments).length !== Object.keys(newComments).length)
+    return false;
   for (var cid of Object.keys(newComments)) {
     if (!oldComments[cid]) return false;
     if (oldComments[cid].text !== newComments[cid].text) return false;

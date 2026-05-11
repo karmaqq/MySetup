@@ -5,12 +5,24 @@
 import { allPosts } from "./posts-render";
 import { db } from "./firebase-init";
 import { showToast } from "./global-fn";
-import { _confirmDeletePost, _confirmDeleteComment, _confirmDeleteReply } from "./io";
+import {
+  _confirmDeletePost,
+  _confirmDeleteComment,
+  _confirmDeleteReply,
+} from "./io";
 import { togglePostLike } from "./firebase-post";
 import { toggleCommentLike, toggleReplyLike } from "./firebase-comment";
 import { _patchPostLikes } from "./posts-render";
-import { _patchCommentLikeBtn, _patchReplyLikeBtn, _renderCommentThreadHTML } from "./post-comment";
-import { _commentListenerRefs, _commentListenerOrder } from "./app-state";
+import {
+  _patchCommentLikeBtn,
+  _patchReplyLikeBtn,
+  _renderCommentThreadHTML,
+} from "./post-comment";
+import {
+  _commentListenerRefs,
+  _commentListenerOrder,
+  currentUser,
+} from "./app-state";
 import { _onlyCommentLikesChanged } from "./global-ut";
 import { getPostCards, getTotalCommentCount } from "./global-fn";
 import { _removePostImage } from "./posts-create";
@@ -18,7 +30,7 @@ import { _removePostImage } from "./posts-create";
 /* ─────────────────── Post beğeni toggle ─────────────────── */
 
 function _togglePostLike(postId: string): void {
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   if (!user) return;
   const post = allPosts[postId];
   if (!post) return;
@@ -31,14 +43,18 @@ function _togglePostLike(postId: string): void {
   }
   _patchPostLikes(postId, post.likes, user);
   togglePostLike(postId, user.uid).catch(function () {
-    db.postsRef!.child(postId).child("likes").child(user.uid).once("value").then(function (snap) {
-      if (snap.val() === null) {
-        delete post.likes[user.uid];
-      } else {
-        post.likes[user.uid] = true;
-      }
-      _patchPostLikes(postId, post.likes, user);
-    });
+    db.postsRef!.child(postId)
+      .child("likes")
+      .child(user.uid)
+      .once("value")
+      .then(function (snap) {
+        if (snap.val() === null) {
+          delete post.likes[user.uid];
+        } else {
+          post.likes[user.uid] = true;
+        }
+        _patchPostLikes(postId, post.likes, user);
+      });
     showToast("Beğeni kaydedilemedi.", "error");
   });
 }
@@ -46,7 +62,7 @@ function _togglePostLike(postId: string): void {
 /* ─────────────────── Yorum beğeni toggle (optimistic) ─────────────────── */
 
 function _toggleCommentLike(postId: string, commentId: string): void {
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   if (!user) return;
   const post = allPosts[postId];
   if (!post || !post.comments || !post.comments[commentId]) return;
@@ -80,7 +96,7 @@ function _toggleReplyLike(
   commentId: string,
   replyId: string,
 ): void {
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   if (!user) return;
   const post = allPosts[postId];
   if (!post || !post.comments || !post.comments[commentId]) return;
@@ -116,29 +132,17 @@ function _toggleReplyLike(
 /* ─────────────────── Yanıtlar bölümünü aç/kapat ─────────────────── */
 
 function _openRepliesSection(postId: string, commentId: string): void {
-  var activePage = document.querySelector(
-    ".page-content.active",
+  const sec = document.getElementById(
+    "replies-" + postId + "-" + commentId,
   ) as HTMLElement | null;
-  var card = activePage
-    ? activePage.querySelector('[data-post-id="' + postId + '"]')
-    : document.querySelector('[data-post-id="' + postId + '"]');
-  if (!card) return;
-  const sec = card.querySelector(
-    "#replies-" + postId + "-" + commentId,
-  ) as HTMLElement | null;
-  const btn = card.querySelector(
-    "#toggleReplies-" + postId + "-" + commentId,
+  const btn = document.getElementById(
+    "toggleReplies-" + postId + "-" + commentId,
   ) as HTMLElement | null;
   if (!sec || !btn) return;
 
   const isOpen = !sec.classList.contains("hidden");
   sec.classList.toggle("hidden");
-
-  if (isOpen) {
-    btn.textContent = "yanıtları gör";
-  } else {
-    btn.textContent = "yanıtları gizle";
-  }
+  btn.textContent = isOpen ? "yanıtları gör" : "yanıtları gizle";
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -159,23 +163,28 @@ function _initCommentListener(postId: string): void {
     _touchListener(postId);
     return;
   }
-  if (_commentListenerOrder.length >= 10) {
+  if (_commentListenerOrder.length >= 5) {
     var lru = _commentListenerOrder.shift();
     if (lru && _commentListenerRefs[lru]) {
-      (_commentListenerRefs[lru] as any).off();
+      _commentListenerRefs[lru].off();
       delete _commentListenerRefs[lru];
-      var sec = document.getElementById("commentSection-" + lru);
-      if (sec) sec.classList.remove("visible");
       getPostCards(lru).forEach(function (card) {
+        var sec = card.querySelector(".comment-section");
+        if (sec) sec.classList.remove("visible");
+        var list = card.querySelector("#commentList-" + lru);
+        if (list) list.innerHTML = "";
         var btn = card.querySelector(".comment-btn");
         if (btn) btn.classList.remove("active");
       });
     }
   }
   _touchListener(postId);
-  const q = db.postsRef!.child(postId).child("comments").orderByChild("createdAt");
-  _commentListenerRefs[postId] = q as any;
-  const _currentUser = firebase.auth().currentUser;
+  const q = db
+    .postsRef!.child(postId)
+    .child("comments")
+    .orderByChild("createdAt");
+  _commentListenerRefs[postId] = q;
+  const _currentUser = currentUser;
 
   q.on("child_added", function (s) {
     const cid = s.key;
@@ -309,7 +318,9 @@ function _updateCommentCount(postId: string): void {
   const post = allPosts[postId];
   const count = getTotalCommentCount(post);
   getPostCards(postId).forEach(function (card) {
-    const spans = card.querySelectorAll('[data-comment-count="' + postId + '"]');
+    const spans = card.querySelectorAll(
+      '[data-comment-count="' + postId + '"]',
+    );
     spans.forEach(function (s) {
       s.textContent = String(count);
     });

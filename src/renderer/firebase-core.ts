@@ -3,7 +3,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { normalizeTr } from "./global-ut";
-import { allData, _statsCache } from "./app-state";
+import { allData, resetStatsCache } from "./app-state";
 import { db } from "./firebase-init";
 
 /* ─────────────────── Enrich Item ─────────────────── */
@@ -46,11 +46,7 @@ export function initUserDataRef(userId: string | null): void {
     db.userDataRef = null;
   }
 
-  _statsCache.total = 0;
-  _statsCache.count = 0;
-  _statsCache.healthy = 0;
-  _statsCache.mostExpId = null;
-  _statsCache.mostExpPrice = 0;
+  resetStatsCache();
 
   if (!userId) {
     db.activeBasePath = null;

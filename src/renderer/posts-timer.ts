@@ -18,7 +18,12 @@ function _runTimeUpdateBatch() {
   )
     return;
   if (document.hidden) return;
-  const postCards = document.querySelectorAll("[data-post-id]");
+  const activePage = document.querySelector(
+    ".page-content.active",
+  ) as HTMLElement | null;
+  const postCards = (activePage || document).querySelectorAll(
+    "[data-post-id]",
+  );
   if (!postCards.length) return;
   postCards.forEach(function (card) {
     const post = allPosts[(card as HTMLElement).dataset.postId!];

@@ -5,7 +5,7 @@
 import { allPosts, _renderPostHTML, _initPostImage } from "./posts-render";
 import { db } from "./firebase-init";
 import { _renderCommentThreadHTML } from "./post-comment";
-import { _currentPage, mainScroll, _commentListenerRefs, showPage } from "./app-state";
+import { _currentPage, mainScroll, _commentListenerRefs, showPage, currentUser } from "./app-state";
 import { escHtml, escAttr, _onlyCommentLikesChanged } from "./global-ut";
 import { getTotalCommentCount } from "./global-fn";
 import { _patchCommentLikeBtn } from "./post-comment";
@@ -75,7 +75,7 @@ function closePostView(): void {
   /* ─────────────────── Güvenli Listener Temizliği ─────────────────── */
   const pidToClean = (window as any)._viewingPostId as string | null;
   if (pidToClean && _commentListenerRefs[pidToClean]) {
-    (_commentListenerRefs[pidToClean] as any).off();
+    _commentListenerRefs[pidToClean].off();
     delete _commentListenerRefs[pidToClean];
   }
 
@@ -123,7 +123,7 @@ function closePostView(): void {
 function _renderPostViewContent(postId: string, postData: any): void {
   var container = document.getElementById("postViewContent");
   if (!container) return;
-  var user = firebase.auth().currentUser;
+  var user = currentUser;
   var pid = escAttr(postId);
   let html = _renderPostHTML(postId, postData, { inPostView: true });
   html += `<div class="comment-section visible" id="commentSection-${pid}">`;
@@ -172,7 +172,7 @@ function _renderPostViewContent(postId: string, postData: any): void {
 
 function _initPostViewCommentListener(postId: string): void {
   if (_commentListenerRefs[postId]) {
-    (_commentListenerRefs[postId] as any).off();
+    _commentListenerRefs[postId].off();
     delete _commentListenerRefs[postId];
   }
 
@@ -181,7 +181,7 @@ function _initPostViewCommentListener(postId: string): void {
     .child("comments")
     .orderByChild("createdAt");
   _commentListenerRefs[postId] = ref as any;
-  var _currentUser = firebase.auth().currentUser;
+  var _currentUser = currentUser;
 
   ref.on("child_added", function (s: firebase.database.DataSnapshot) {
     if ((window as any)._viewingPostId !== postId) return;

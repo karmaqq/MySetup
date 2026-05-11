@@ -39,23 +39,6 @@
   position: relative;
 }
 
-.post-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
 .post-user-info {
   flex: 1;
   min-width: 0;
@@ -102,47 +85,9 @@
 }
 
 .post-dropdown {
-  position: absolute;
   right: 48px;
   top: 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  min-width: 100px;
   z-index: 100;
-  display: none;
-}
-
-.post-dropdown.active {
-  display: block;
-}
-
-.post-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.15s;
-  text-align: left;
-}
-
-.post-dropdown-item:hover {
-  background: var(--surface3);
-}
-
-.post-dropdown-item.delete {
-  color: var(--red);
-}
-
-.post-dropdown-item.delete:hover {
-  background: var(--red-dim);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

@@ -2,7 +2,7 @@
 /*                          ŞİFRE DEĞİŞTİRME                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { db } from "./firebase-init";
+import { currentUser } from "./app-state";
 import { showToast } from "./global-fn";
 import { closeSettingsModal } from "./userset";
 
@@ -80,7 +80,7 @@ document.getElementById("changePasswordForm")?.addEventListener("submit", async 
   }
 
   try {
-    const user = firebase.auth().currentUser!;
+    const user = currentUser!;
     const credential = firebase.auth.EmailAuthProvider.credential(user.email!, oldPass);
     await user.reauthenticateWithCredential(credential);
     await user.updatePassword(newPass);
@@ -91,12 +91,7 @@ document.getElementById("changePasswordForm")?.addEventListener("submit", async 
 
     setTimeout(() => {
       closeChangePassModal();
-  var cpForm = document.getElementById("changePasswordForm") as HTMLFormElement | null;
-  if (cpForm) cpForm.reset();
-  errEl.textContent = "";
-  submitBtn.disabled = false;
-  submitBtn.textContent = "Şifreyi Kaydet";
-  showToast("Şifre güncellendi", "success");
+      showToast("Şifre güncellendi", "success");
     }, 900);
   } catch (err: any) {
     errEl.style.color = "var(--red)";

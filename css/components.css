@@ -1,0 +1,148 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          ORTAK BİLEŞEN SINIFLARI                        */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Avatar ─────────────────── */
+
+.avatar,
+.post-avatar,
+.comment-avatar,
+.reply-avatar,
+.comment-composer-avatar,
+.profile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent);
+  overflow: hidden;
+  line-height: 1;
+}
+
+.avatar-26 {
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+}
+
+.reply-avatar {
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+}
+
+.avatar-32,
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+.avatar-40,
+.post-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+}
+
+.avatar-46,
+.comment-composer-avatar {
+  width: 46px;
+  height: 46px;
+  font-size: 13px;
+}
+
+.profile-avatar {
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+}
+
+/* ─────────────────── Dropdown Menü ─────────────────── */
+
+.dropdown-menu,
+.post-dropdown,
+.comment-dropdown {
+  position: absolute;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  min-width: 100px;
+  display: none;
+}
+
+.dropdown-menu.active,
+.post-dropdown.active,
+.comment-dropdown.active {
+  display: block;
+}
+
+.dropdown-item,
+.post-dropdown-item,
+.comment-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+}
+
+.dropdown-item:hover,
+.post-dropdown-item:hover,
+.comment-dropdown-item:hover {
+  background: var(--surface3);
+}
+
+.post-dropdown-item.delete,
+.comment-dropdown-item.delete,
+.dropdown-item.danger {
+  color: var(--red);
+}
+
+.post-dropdown-item.delete:hover,
+.comment-dropdown-item.delete:hover,
+.dropdown-item.danger:hover {
+  background: var(--red-dim);
+}
+
+/* ─────────────────── Boş Durum ─────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--text-dim);
+  padding: 56px 20px 48px 20px;
+  min-height: 220px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  opacity: 0.5;
+  margin-bottom: 2px;
+  line-height: 1;
+}
+
+.empty-text {
+  font-size: 17px;
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-weight: 500;
+  margin-top: 2px;
+}

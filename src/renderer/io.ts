@@ -2,6 +2,7 @@
 /*                          BİLDİRİM SİSTEMİ                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { currentUser } from "./app-state";
 import { showToast, showConfirm } from "./global-fn";
 import {
   deletePostFromFirebase,
@@ -35,7 +36,7 @@ function _confirmDelete(type: string, ids: Record<string, string>): void {
       let postData = allPostsGlobal[ids.postId];
       if (!postData) {
         const fetched = await getPostsByIds([ids.postId], {});
-        postData = fetched[ids.postId] || { uid: firebase.auth().currentUser?.uid };
+        postData = fetched[ids.postId] || { uid: currentUser?.uid };
       }
       return deletePostFromFirebase(ids.postId, postData);
     },

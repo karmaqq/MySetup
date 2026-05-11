@@ -110,7 +110,7 @@ export function getUserLikesOnce(userId: string, limit?: number, endAt?: number 
 
 /* ─────────────────── ID ile Gönderi Getirme ─────────────────── */
 
-export function getPostsByIds(postIds: string[], existing: Record<string, any>): Promise<Record<string, any>> {
+export async function getPostsByIds(postIds: string[], existing: Record<string, any>): Promise<Record<string, any>> {
   if (!postIds || !postIds.length) return Promise.resolve({});
   const result: Record<string, any> = {};
   const missing: string[] = [];
@@ -122,37 +122,20 @@ export function getPostsByIds(postIds: string[], existing: Record<string, any>):
     }
   });
   if (!missing.length) return Promise.resolve(result);
-  if (missing.length > 3) {
-    var sorted = [...missing].sort();
-    return db
-      .postsRef!
-      .orderByKey()
-      .startAt(sorted[0])
-      .endAt(sorted[sorted.length - 1])
-      .once("value")
-      .then(function (snap) {
-        var all = (snap.val() || {}) as Record<string, any>;
-        missing.forEach(function (id) {
-          if (all[id]) {
-            var d = all[id];
-            d._id = id;
-            result[id] = d;
-          }
-        });
-        return result;
-      });
-  }
-  return Promise.all(
-    missing.map(function (id) {
-      return db
-        .postsRef!
-        .child(id)
-        .once("value")
-        .then(function (s) {
-          return s.exists() ? { id: id, data: s.val() } : null;
-        });
-    }),
-  ).then(function (results) {
+  const BATCH = 10;
+  for (let i = 0; i < missing.length; i += BATCH) {
+    const batch = missing.slice(i, i + BATCH);
+    const results = await Promise.all(
+      batch.map(function (id) {
+        return db
+          .postsRef!
+          .child(id)
+          .once("value")
+          .then(function (s) {
+            return s.exists() ? { id: id, data: s.val() } : null;
+          });
+      }),
+    );
     results.forEach(function (r) {
       if (r) {
         const d = r.data as any;
@@ -160,8 +143,8 @@ export function getPostsByIds(postIds: string[], existing: Record<string, any>):
         result[r.id] = d;
       }
     });
-    return result;
-  });
+  }
+  return result;
 }
 
 /* ─────────────────── Posts Referansı ─────────────────── */

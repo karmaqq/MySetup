@@ -8,7 +8,7 @@ import {
   getUserLikesOnce,
   getPostsByIds,
 } from "./firebase-post";
-import { PAGE_SIZE, _currentPage } from "./app-state";
+import { PAGE_SIZE, _currentPage, currentUser } from "./app-state";
 import { renderLoadMoreBtn, removeLoadMoreBtn, showToast } from "./global-fn";
 import { escHtml } from "./global-ut";
 
@@ -88,23 +88,6 @@ let _userLikesTimestamps = new Map<string, number>();
 
 /* ─────────────────── Yetim Tarih Ayracı Temizleyici ─────────────────── */
 
-function _cleanOrphanSep(tab: HTMLElement): void {
-  const seps = Array.from(tab.querySelectorAll(".profile-date-sep"));
-  seps.forEach(function (sep) {
-    let cursor = sep.nextElementSibling;
-    let hasPost = false;
-    while (cursor) {
-      if (cursor.classList.contains("profile-date-sep")) break;
-      if (cursor.classList.contains("post-card")) {
-        hasPost = true;
-        break;
-      }
-      cursor = cursor.nextElementSibling;
-    }
-    if (!hasPost) sep.remove();
-  });
-}
-
 function _showProfileLoading(tab: HTMLElement): void {
   tab.innerHTML = '<div class="posts-loading">Yükleniyor...</div>';
 }
@@ -154,7 +137,7 @@ export function _initUserPostsTab(): void {
   }
   _userPostsInitialized = false;
 
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   if (!user) return;
 
   _showProfileLoading(tab);
@@ -201,7 +184,7 @@ export function _initLikedPostsTab(): void {
   }
   _likedPostsInitialized = false;
 
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   if (!user) return;
 
   _showProfileLoading(tab);
@@ -262,7 +245,7 @@ interface PostsChunkConfig {
 
 function _loadPostsChunk(cfg: PostsChunkConfig): void {
   if (cfg.getLoading()) return;
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   if (!user) return;
 
   cfg.setLoading(true);
@@ -375,7 +358,11 @@ function _loadPostsChunk(cfg: PostsChunkConfig): void {
 
 /* ─────────────────── UserLikes Değişikliği Callback ─────────────────── */
 
-export function _onUserLikesChanged(postId: string, value: any, type: string): void {
+export function _onUserLikesChanged(
+  postId: string,
+  value: any,
+  type: string,
+): void {
   if (type === "added") {
     _userLikesTimestamps.set(postId, value as number);
     if (!_likedPostsVisible.has(postId)) {
@@ -389,7 +376,7 @@ export function _onUserLikesChanged(postId: string, value: any, type: string): v
     if (_likedPostsVisible.has(postId)) _likedPostsVisible.delete(postId);
     const likePost = allPosts[postId];
     if (likePost && likePost.likes) {
-      delete likePost.likes[firebase.auth().currentUser!.uid];
+      delete likePost.likes[currentUser!.uid];
     }
     if (_profileTab === "liked-posts") {
       document
@@ -425,7 +412,11 @@ export function _onUserLikesChanged(postId: string, value: any, type: string): v
 }
 (window as any)._onUserLikesChanged = _onUserLikesChanged;
 
-export function _onUserPostsChanged(postId: string, value: any, type: string): void {
+export function _onUserPostsChanged(
+  postId: string,
+  value: any,
+  type: string,
+): void {
   if (type === "added") {
     _userPostsTimestamps.set(postId, value as number);
     if (!_userPostsVisible.has(postId)) {

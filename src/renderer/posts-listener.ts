@@ -3,7 +3,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { db } from "./firebase-init";
-import { postsFeed, _commentListenerRefs, _commentListenerOrder, PAGE_SIZE } from "./app-state";
+import { postsFeed, _commentListenerRefs, _commentListenerOrder, PAGE_SIZE, currentUser } from "./app-state";
 import { renderLoadMoreBtn, removeLoadMoreBtn } from "./global-fn";
 import {
   initUserLikesListener,
@@ -27,6 +27,7 @@ let _postsListenerActive = false;
 (window as any)._postsListenerActive = _postsListenerActive;
 let _postsQuery: firebase.database.Query | null = null;
 let _oldestLoadedKey: string | null = null;
+let _newestLoadedTs = 0;
 let _hasMorePosts = false;
 let _loadingMore = false;
 
@@ -54,7 +55,7 @@ export function initPosts(): void {
     (window as any)._startTimeUpdateInterval();
   }
 
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   if (user) {
     initUserLikesListener(user.uid, (window as any)._onUserLikesChanged);
     initUserPostsListener(user.uid, (window as any)._onUserPostsChanged);
@@ -113,6 +114,9 @@ function _startPostsListener(): void {
 
       keys.forEach(function (id) {
         allPosts[id] = raw[id];
+        if ((raw[id].createdAt || 0) > _newestLoadedTs) {
+          _newestLoadedTs = raw[id].createdAt;
+        }
       });
 
       if (keys.length > 0) {
@@ -171,7 +175,7 @@ function _onPostChanged(s: firebase.database.DataSnapshot): void {
   if (!id || !allPosts[id]) return;
   const oldData = allPosts[id];
   allPosts[id] = s.val();
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   const newVal = s.val() as any;
   if (_onlyLikesChanged(oldData, newVal)) {
     _patchPostLikes(id, newVal.likes, user);
@@ -184,7 +188,7 @@ function _onPostRemoved(s: firebase.database.DataSnapshot): void {
   const id = s.key;
   if (!id) return;
   if (_commentListenerRefs[id]) {
-    (_commentListenerRefs[id] as any).off();
+    _commentListenerRefs[id].off();
     delete _commentListenerRefs[id];
   }
   delete allPosts[id];
@@ -201,15 +205,17 @@ function _listenForNewPosts(ref: firebase.database.Query): void {
   _postsListenerActive = true;
   (window as any)._postsListenerActive = true;
 
-  const newestTs = _getNewestTimestamp();
-  const liveQuery = ref.startAt(newestTs + 1);
+  const liveQuery = ref.startAt(_newestLoadedTs + 1);
   _postsQuery = liveQuery;
 
   liveQuery.on("child_added", function (s) {
     const id = s.key;
-    const data = s.val();
+    const data = s.val() as any;
     if (!id) return;
     allPosts[id] = data;
+    if ((data.createdAt || 0) > _newestLoadedTs) {
+      _newestLoadedTs = data.createdAt;
+    }
     const empty = postsFeed && postsFeed.querySelector(".posts-empty");
     if (empty) empty.remove();
     _insertPostToFeed(id, data, true);
@@ -217,16 +223,6 @@ function _listenForNewPosts(ref: firebase.database.Query): void {
 
   liveQuery.on("child_changed", _onPostChanged);
   liveQuery.on("child_removed", _onPostRemoved);
-}
-
-/* ─────────────────── En yeni yüklü postun timestamp'i ─────────────────── */
-
-function _getNewestTimestamp(): number {
-  let max = 0;
-  Object.values(allPosts).forEach(function (p: any) {
-    if ((p.createdAt || 0) > max) max = p.createdAt;
-  });
-  return max;
 }
 
 /* ─────────────────── Daha fazla post yükle (sayfalama) ─────────────────── */

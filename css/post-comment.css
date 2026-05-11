@@ -30,23 +30,6 @@
   margin-top: 4px;
 }
 
-.comment-composer-avatar {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
 .comment-composer-right {
   flex: 1;
   display: flex;
@@ -172,23 +155,8 @@
 }
 
 .comment-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--accent);
   position: relative;
   z-index: 1;
-  line-height: 1;
 }
 
 .comment-body {
@@ -295,34 +263,8 @@
 }
 
 .comment-dropdown {
-  position: absolute;
   right: 36px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  min-width: 100px;
   z-index: 200;
-  display: none;
-}
-
-.comment-dropdown.active {
-  display: block;
-}
-
-.comment-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.15s;
-  text-align: left;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -369,25 +311,6 @@
 
 .reply-item:hover {
   background: var(--surface2);
-}
-
-.reply-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--accent);
-  overflow: hidden;
-  line-height: 1;
 }
 
 .reply-body {

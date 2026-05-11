@@ -45,8 +45,12 @@ export function escUrl(url: string): string {
 
 export function safeExternalUrl(value: string): string {
   if (!value) return "";
+  var normalized = value.trim();
+  if (!/^https?:\/\//i.test(normalized)) {
+    normalized = "https://" + normalized;
+  }
   try {
-    const parsed = new URL(value);
+    const parsed = new URL(normalized);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "";
     return parsed.toString();
   } catch (_) {
@@ -64,7 +68,7 @@ export const CURRENCY_FORMAT = new Intl.NumberFormat("tr-TR", {
 /* ─────────────────── Tarih Formatlayıcı ─────────────────── */
 
 const _dateCache = new Map<string, string>();
-const _DATECACHE_MAX = 200;
+const _DATECACHE_MAX = 50;
 
 export const DATE_FORMAT = (dateString: string): string => {
   if (!dateString) return "-";
@@ -229,16 +233,14 @@ export function _onlyCommentLikesChanged(
 export async function deleteAllInFolder(ref: firebase.storage.StorageReference): Promise<void> {
   const list = await ref.listAll();
   const BATCH = 10;
-  for (let i = 0; i < list.items.length; i += BATCH) {
-    await Promise.all(
-      list.items.slice(i, i + BATCH).map(function (item) {
-        return item.delete();
-      }),
-    );
-  }
-  for (let i = 0; i < list.prefixes.length; i += BATCH) {
-    await Promise.all(
-      list.prefixes.slice(i, i + BATCH).map(deleteAllInFolder),
-    );
-  }
+  await Promise.all([
+    ...Array.from({ length: Math.ceil(list.items.length / BATCH) }, function (_, i) {
+      return Promise.all(
+        list.items.slice(i * BATCH, (i + 1) * BATCH).map(function (item) {
+          return item.delete();
+        }),
+      );
+    }),
+    ...list.prefixes.map(deleteAllInFolder),
+  ]);
 }

@@ -2,6 +2,7 @@
 /*                       KULLANICI AYARLARI YÖNETİMİ                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { currentUser } from "./app-state";
 import { db } from "./firebase-init";
 import { initUserDataRef } from "./firebase-core";
 import { refreshAllAvatars } from "./global-fn";
@@ -29,7 +30,7 @@ export function closeAllModals(): void {
 /* ─────────────────── Ayarlar Modalını Aç ─────────────────── */
 
 function openSettingsModal(): void {
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   if (!user) return;
 
   const _ni = document.getElementById("settingsDisplayName") as HTMLInputElement | null;
@@ -86,7 +87,7 @@ const nameInput = document.getElementById("settingsDisplayName") as HTMLInputEle
 const usernameErrEl = document.getElementById("usernameError") as HTMLElement | null;
 
 export function resetUsernameEditState(): void {
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   if (nameInput) { nameInput.value = user?.displayName || ""; nameInput.readOnly = true; }
   if (usernameErrEl) usernameErrEl.textContent = "";
   editBtn?.classList.remove("hidden");
@@ -141,7 +142,7 @@ saveBtn?.addEventListener("click", async () => {
   saveBtn!.disabled = true;
 
   try {
-    const user = firebase.auth().currentUser;
+    const user = currentUser;
     if (!user) {
       if (usernameErrEl) { usernameErrEl.textContent = "Oturum bulunamadı, tekrar giriş yapın"; usernameErrEl.style.color = "var(--red)"; }
       saveBtn!.disabled = false;

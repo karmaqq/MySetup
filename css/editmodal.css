@@ -234,6 +234,15 @@
   padding: 20px 24px;
 }
 
+@media (max-width: 600px) {
+  .modal-body {
+    grid-template-columns: 1fr;
+  }
+  .field-full {
+    grid-column: 1;
+  }
+}
+
 .field-group {
   display: flex;
   flex-direction: column;
@@ -268,8 +277,8 @@
 .image-upload-cell button {
   width: 44px;
   height: 44px;
-  border: 1.5px dashed var(--border2, #ccc);
-  background: var(--surface2, #f8f8f8);
+  border: 1.5px dashed var(--border2);
+  background: var(--surface2);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -282,9 +291,9 @@
 }
 
 .image-upload-cell button.has-image {
-  border-color: var(--green, #3dd68c);
-  color: var(--green, #3dd68c);
-  background: var(--green-dim, rgba(61, 214, 140, 0.08));
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-dim);
 }
 
 .image-preview-cell {
@@ -292,8 +301,8 @@
   height: 88px;
   border-radius: 10px;
   overflow: hidden;
-  background: var(--surface2, #f8f8f8);
-  border: 1.5px solid var(--border2, #ccc);
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
   display: flex;
   align-items: center;
   justify-content: center;

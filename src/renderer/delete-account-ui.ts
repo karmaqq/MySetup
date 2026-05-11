@@ -2,7 +2,7 @@
 /*                            HESAP SILME                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { db } from "./firebase-init";
+import { currentUser } from "./app-state";
 import { deleteUserAccount } from "./firebase-user";
 import { showToast } from "./global-fn";
 import { closeSettingsModal } from "./userset";
@@ -43,7 +43,7 @@ document.getElementById("deleteAccountForm")?.addEventListener("submit", async (
   submitBtn.textContent = "Siliniyor...";
 
   try {
-    const user = firebase.auth().currentUser;
+    const user = currentUser;
     if (!user) throw new Error("Oturum bulunamadı, lütfen yeniden giriş yapın.");
 
     const credential = firebase.auth.EmailAuthProvider.credential(email, pass);

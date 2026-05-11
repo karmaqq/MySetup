@@ -4,10 +4,12 @@
 
 import { onUserLoggedIn, onUserLoggedOut, getAuthErrorMessage, hideLoading } from "./auth-nav";
 import { db } from "./firebase-init";
+import { setCurrentUser } from "./app-state";
 
 const auth = firebase.auth();
 
 auth.onAuthStateChanged((user) => {
+  setCurrentUser(user);
   hideLoading();
   if (user) {
     onUserLoggedIn(user);
@@ -170,24 +172,31 @@ regPasswordConfirm?.addEventListener("input", validatePasswords);
 
 /* ─────────────────── Şifre Gizle / Göster ─────────────────── */
 
+var _svgEyeCache: string | null = null;
+var _svgEyeOffCache: string | null = null;
+
+function _getSvgHtml(id: string): string {
+  const tmpl = document.getElementById(id) as HTMLTemplateElement | null;
+  if (!tmpl) return "";
+  return tmpl.innerHTML;
+}
+
 document.querySelectorAll(".toggle-password").forEach((btn) => {
-  const eyeTmpl = document.getElementById("svg-eye") as HTMLTemplateElement | null;
-  if (eyeTmpl && btn.childNodes.length === 0) {
-    btn.appendChild(eyeTmpl.content.cloneNode(true));
+  if (btn.childNodes.length === 0) {
+    if (!_svgEyeCache) _svgEyeCache = _getSvgHtml("svg-eye");
+    btn.innerHTML = _svgEyeCache;
   }
   btn.addEventListener("click", function (this: HTMLElement) {
     const input = this.previousElementSibling as HTMLInputElement | null;
     if (!input) return;
     if (input.type === "password") {
       input.type = "text";
-      this.innerHTML = "";
-      const eyeOffTmpl = document.getElementById("svg-eye-off") as HTMLTemplateElement | null;
-      if (eyeOffTmpl) this.appendChild(eyeOffTmpl.content.cloneNode(true));
+      if (!_svgEyeOffCache) _svgEyeOffCache = _getSvgHtml("svg-eye-off");
+      this.innerHTML = _svgEyeOffCache;
     } else {
       input.type = "password";
-      this.innerHTML = "";
-      const eyeTmpl2 = document.getElementById("svg-eye") as HTMLTemplateElement | null;
-      if (eyeTmpl2) this.appendChild(eyeTmpl2.content.cloneNode(true));
+      if (!_svgEyeCache) _svgEyeCache = _getSvgHtml("svg-eye");
+      this.innerHTML = _svgEyeCache;
     }
   });
 });

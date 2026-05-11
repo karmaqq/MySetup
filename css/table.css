@@ -6,7 +6,7 @@
 
 .table-wrapper {
   width: 100%;
-  overflow: visible;
+  overflow-x: auto;
   background: transparent;
   border: none;
 }
@@ -118,8 +118,8 @@ td.col-date,
   border-left: 1px solid var(--border);
 }
 
-.new-item-row td:first-child {
-  border-left: 3px solid var(--accent) !important;
+tr.new-item-row td:first-child {
+  border-left: 3px solid var(--accent);
 }
 
 /* ─────────────────── Satır Durumları ─────────────────── */
@@ -188,8 +188,8 @@ td[rowspan] {
 .group-separator td {
   padding: 0;
   height: 14px;
-  background: transparent !important;
-  border: none !important;
+  background: transparent;
+  border: none;
   max-width: none;
   overflow: visible;
 }
@@ -250,14 +250,14 @@ td[rowspan] {
 
 /* ─────────────────── Boş Hücre ─────────────────── */
 
-.empty-cell {
-  padding: 60px 20px !important;
-  border-right: 1px solid var(--border) !important;
-  border-left: 1px solid var(--border) !important;
-  overflow: visible !important;
-  max-width: none !important;
-  white-space: normal !important;
-  text-overflow: unset !important;
+td.empty-cell {
+  padding: 60px 20px;
+  border-right: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  overflow: visible;
+  max-width: none;
+  white-space: normal;
+  text-overflow: unset;
 }
 
 .empty-state {
@@ -275,11 +275,11 @@ td[rowspan] {
 
 /* ─────────────────── Durum Hücresi ─────────────────── */
 
-.status-cell {
+td.status-cell {
   position: relative;
   padding: 8px 12px;
-  overflow: visible !important;
-  max-width: none !important;
+  overflow: visible;
+  max-width: none;
 }
 
 .status-cell-inner {
@@ -452,14 +452,15 @@ tfoot {
   border: none;
 }
 
+tfoot.control-panel-footer td,
 .control-panel-footer td {
   padding: 24px 8px 0 8px;
-  border: none !important;
-  background: transparent !important;
-  overflow: visible !important;
-  max-width: none !important;
-  white-space: normal !important;
-  text-overflow: unset !important;
+  border: none;
+  background: transparent;
+  overflow: visible;
+  max-width: none;
+  white-space: normal;
+  text-overflow: unset;
 }
 
 .footer-left {
@@ -515,12 +516,12 @@ tfoot {
 
 /* ─────────────────── Girdi Alanları ─────────────────── */
 
-.new-item-row td {
+tr.new-item-row td {
   background: var(--surface2);
   padding: 8px 8px;
-  overflow: visible !important;
-  max-width: none !important;
-  white-space: normal !important;
+  overflow: visible;
+  max-width: none;
+  white-space: normal;
 }
 
 .entry-input {
@@ -556,8 +557,8 @@ tfoot {
   align-items: center;
 }
 
-.date-input {
-  padding-right: 30px !important;
+.date-input-wrapper .date-input {
+  padding-right: 30px;
 }
 
 .hidden-picker {
@@ -606,15 +607,17 @@ tfoot {
   justify-content: center;
   transition: 0.18s;
   white-space: nowrap;
-  &.new-row-save {
-    display: none;
-  }
-  &.new-row-save.visible {
-    display: inline-flex;
-  }
+}
+
+.save-btn.new-row-save {
+  display: none;
+}
+
+.save-btn.new-row-save.visible {
+  display: inline-flex;
 }
 
 .save-btn:hover {
-  background: #f5b030;
+  background: var(--accent-hover);
   transform: translateY(-1px);
 }

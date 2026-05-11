@@ -2,6 +2,7 @@
 update.bat
 update.mjs
 OPTIMIZATIONS.md
+authfix.md
 rules.json
 storage.rules
 dist/
@@ -10,3 +11,4 @@ node_modules/
 .VSCodeCounter/
 .vscode/
 src/renderer/firebase-config.ts
+js/firebase-config.js

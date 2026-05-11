@@ -469,7 +469,7 @@ body {
 
 .app-footer b {
   margin-left: 4px;
-  color: #daa924;
+  color: var(--accent);
 }
 
 .hidden {
@@ -478,6 +478,16 @@ body {
 
 body .hidden {
   display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 input,

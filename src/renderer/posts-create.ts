@@ -2,6 +2,7 @@
 /*                        POST OLUŞTURMA SİSTEMİ                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { currentUser } from "./app-state";
 import { POST_PHRASES } from "./global-ut";
 import { addPostToFirebase } from "./firebase-post";
 import { showToast } from "./global-fn";
@@ -40,7 +41,7 @@ export function createPost(): void {
   }
 
 
-  const user = firebase.auth().currentUser;
+  const user = currentUser;
   if (!user) return;
 
   if (publishPostBtn) {
@@ -68,7 +69,7 @@ export function createPost(): void {
 /* ─────────────────── Görsel varsa önce yükle, sonra kaydet ─────────────────── */
 
 function _uploadAndSavePost(postData: Record<string, any>, file: File): void {
-  const user = firebase.auth().currentUser!;
+  const user = currentUser!;
   const ref = firebase
     .storage()
     .ref()
