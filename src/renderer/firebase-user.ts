@@ -21,6 +21,7 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
     const postIds = userPostsSnap.val() ? Object.keys(userPostsSnap.val() as Record<string, any>) : [];
 
     const postDataMap = await getPostsByIds(postIds, allPosts);
+    const postErrors: any[] = [];
     const BATCH_SIZE = 10;
     const MAX_PARALLEL_BATCHES = 5;
     const batches: string[][] = [];
@@ -47,8 +48,8 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
               });
               try {
                 await db.database!.ref().update(updates);
-      } catch (_) {
-        // 1. Post silme hatasını yoksay, kalanı temizlemeye devam et
+      } catch (e) {
+        postErrors.push({ postId: id, error: e });
       }
             }),
           );
@@ -56,14 +57,40 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
       );
     }
 
+    if (postErrors.length > 0) {
+      return { success: false, error: new Error(postErrors.length + " post silinemedi.") };
+    }
+
+    const orphanDeletes: Record<string, any> = {};
+    const userLikesSnap = await db.database!.ref("userLikes").once("value");
+    if (userLikesSnap.exists()) {
+      userLikesSnap.forEach(function (userLikesEntry) {
+        const userId = userLikesEntry.key;
+        if (!userId) return;
+        userLikesEntry.forEach(function (postEntry) {
+          if (postIds.indexOf(postEntry.key!) !== -1) {
+            orphanDeletes["userLikes/" + userId + "/" + postEntry.key] = null;
+          }
+        });
+      });
+    }
+    const orphanKeys = Object.keys(orphanDeletes);
+    if (orphanKeys.length > 0) {
+      orphanDeletes["userPosts/" + uid] = null;
+      await db.database!.ref().update(orphanDeletes);
+    }
+
     await db.database!.ref("userPosts/" + uid).remove();
     await db.database!.ref("users/" + uid).remove();
 
-    const usernameKey = (user.displayName || "").trim().toLowerCase();
-    if (usernameKey) {
-      const ref = db.database!.ref("usernames/" + usernameKey);
-      const snap = await ref.once("value");
-      if (snap.val() === uid) await ref.remove();
+    const usernameSnap = await db.database!.ref("usernames").once("value");
+    if (usernameSnap.exists()) {
+      const allUsernames = usernameSnap.val() as Record<string, string>;
+      Object.keys(allUsernames).forEach(async (key) => {
+        if (allUsernames[key] === uid) {
+          try { await db.database!.ref("usernames/" + key).remove(); } catch (_) {}
+        }
+      });
     }
 
     await deleteAllInFolder(
@@ -77,7 +104,6 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
 
     return { success: true };
   } catch (e) {
-    console.error("Hesap silme hatası:", e);
     return { success: false, error: e };
   }
 }

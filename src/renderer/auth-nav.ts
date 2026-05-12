@@ -33,10 +33,10 @@ export function onUserLoggedIn(user: firebase.auth.User): void {
   if (authOverlay) authOverlay.classList.remove("active");
 
   const sidebar = document.getElementById("sidebar");
-  const mainScroll = document.getElementById("mainScroll");
+  const mainScrollEl = document.getElementById("mainScroll");
   const appFooter = document.getElementById("appFooter");
   if (sidebar) sidebar.classList.remove("hidden");
-  if (mainScroll) mainScroll.classList.remove("hidden");
+  if (mainScrollEl) mainScrollEl.classList.remove("hidden");
   if (appFooter) appFooter.classList.remove("hidden");
 
   const userInfo = document.getElementById("userInfo");
@@ -90,6 +90,13 @@ export function onUserLoggedOut(): void {
     if (btn) { btn.textContent = "Kayıt Ol"; (btn as HTMLButtonElement).disabled = false; }
     document.getElementById("regPassword")?.classList.remove("match-success", "match-error");
     document.getElementById("regPasswordConfirm")?.classList.remove("match-success", "match-error");
+    document.getElementById("regUsername")?.classList.remove("match-success", "match-error");
+    const _usernameHint = document.getElementById("usernameHint");
+    if (_usernameHint) { _usernameHint.textContent = ""; _usernameHint.className = "username-hint"; }
+    const _passwordHint = document.getElementById("passwordHint");
+    if (_passwordHint) { _passwordHint.textContent = ""; _passwordHint.className = "username-hint"; }
+    const _passwordConfirmHint = document.getElementById("passwordConfirmHint");
+    if (_passwordConfirmHint) { _passwordConfirmHint.textContent = ""; _passwordConfirmHint.className = "username-hint"; }
   }
 
   const loginError = document.getElementById("loginError");

@@ -376,7 +376,7 @@ export function _onUserLikesChanged(
     if (_likedPostsVisible.has(postId)) _likedPostsVisible.delete(postId);
     const likePost = allPosts[postId];
     if (likePost && likePost.likes) {
-      delete likePost.likes[currentUser!.uid];
+      if (currentUser) delete likePost.likes[currentUser.uid];
     }
     if (_profileTab === "liked-posts") {
       document

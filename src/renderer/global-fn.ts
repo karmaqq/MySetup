@@ -2,7 +2,7 @@
 /*                          PAYLAŞILAN UYGULAMA FONKSİYONLARI                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { isAnyModalOpen, getAvatarLetter } from "./global-ut";
+import { isAnyModalOpen, getAvatarLetter, escAttr } from "./global-ut";
 
 /* ─────────────────── Toast Bildirimi ─────────────────── */
 
@@ -121,20 +121,21 @@ export function buildAvatarHTML(name: string, cssClass: string): string {
 /* ─────────────────── Post Kartı Yardımcıları ─────────────────── */
 
 export function getPostCards(postId: string): NodeListOf<Element> {
-  return document.querySelectorAll('[data-post-id="' + postId + '"]');
+  return document.querySelectorAll('[data-post-id="' + escAttr(postId) + '"]');
 }
 
 export function buildPostMenuHTML(pid: string, isOwn: boolean): string {
   if (!isOwn) return "";
+  const ePid = escAttr(pid);
   return (
     '<button class="post-menu-btn" data-action="post-menu" data-id="' +
-    pid +
+    ePid +
     '">⋮</button>' +
     '<div class="post-dropdown" id="postDropdown-' +
-    pid +
+    ePid +
     '">' +
     '<button class="post-dropdown-item delete" data-action="delete-post" data-id="' +
-    pid +
+    ePid +
     '">' +
     '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">' +
     '<polyline points="3 6 5 6 21 6"/>' +

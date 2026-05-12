@@ -2,7 +2,12 @@
 /*                  KİMLİK DOĞRULAMA VE OTURUM YÖNETİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { onUserLoggedIn, onUserLoggedOut, getAuthErrorMessage, hideLoading } from "./auth-nav";
+import {
+  onUserLoggedIn,
+  onUserLoggedOut,
+  getAuthErrorMessage,
+  hideLoading,
+} from "./auth-nav";
 import { db } from "./firebase-init";
 import { setCurrentUser } from "./app-state";
 
@@ -22,17 +27,32 @@ auth.onAuthStateChanged((user) => {
 /*                             GİRİŞ FORMU                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const loginForm = document.getElementById("loginForm") as HTMLFormElement | null;
+const loginForm = document.getElementById(
+  "loginForm",
+) as HTMLFormElement | null;
 
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = (document.getElementById("loginEmail") as HTMLInputElement).value.trim();
-    const password = (document.getElementById("loginPassword") as HTMLInputElement).value;
-    const errEl = document.getElementById("loginError") as HTMLElement;
-    const btn = loginForm.querySelector(".auth-submit-btn") as HTMLButtonElement;
-    const rememberMeCheck = document.getElementById("rememberMe") as HTMLInputElement | null;
+    const emailEl = document.getElementById(
+      "loginEmail",
+    ) as HTMLInputElement | null;
+    const passEl = document.getElementById(
+      "loginPassword",
+    ) as HTMLInputElement | null;
+    const errEl = document.getElementById("loginError") as HTMLElement | null;
+    const btn = loginForm.querySelector(
+      ".auth-submit-btn",
+    ) as HTMLButtonElement | null;
+    const rememberMeCheck = document.getElementById(
+      "rememberMe",
+    ) as HTMLInputElement | null;
+
+    if (!emailEl || !passEl || !errEl || !btn) return;
+
+    const email = emailEl.value.trim();
+    const password = passEl.value;
 
     errEl.textContent = "";
     btn.textContent = "Giriş yapılıyor...";
@@ -57,18 +77,38 @@ if (loginForm) {
 /*                             KAYIT FORMU                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-const registerForm = document.getElementById("registerForm") as HTMLFormElement | null;
+const registerForm = document.getElementById(
+  "registerForm",
+) as HTMLFormElement | null;
 
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const username = (document.getElementById("regUsername") as HTMLInputElement).value.trim();
-    const email = (document.getElementById("regEmail") as HTMLInputElement).value.trim();
-    const password = (document.getElementById("regPassword") as HTMLInputElement).value;
-    const passwordConfirm = (document.getElementById("regPasswordConfirm") as HTMLInputElement).value;
-    const errEl = document.getElementById("regError") as HTMLElement;
-    const btn = registerForm.querySelector(".auth-submit-btn") as HTMLButtonElement;
+    const usernameEl = document.getElementById(
+      "regUsername",
+    ) as HTMLInputElement | null;
+    const emailEl = document.getElementById(
+      "regEmail",
+    ) as HTMLInputElement | null;
+    const passEl = document.getElementById(
+      "regPassword",
+    ) as HTMLInputElement | null;
+    const passConfirmEl = document.getElementById(
+      "regPasswordConfirm",
+    ) as HTMLInputElement | null;
+    const errEl = document.getElementById("regError") as HTMLElement | null;
+    const btn = registerForm.querySelector(
+      ".auth-submit-btn",
+    ) as HTMLButtonElement | null;
+
+    if (!usernameEl || !emailEl || !passEl || !passConfirmEl || !errEl || !btn)
+      return;
+
+    const username = usernameEl.value.trim();
+    const email = emailEl.value.trim();
+    const password = passEl.value;
+    const passwordConfirm = passConfirmEl.value;
 
     errEl.textContent = "";
 
@@ -76,8 +116,9 @@ if (registerForm) {
       errEl.textContent = "Kullanıcı adı en az 3 karakter olmalıdır.";
       return;
     }
-    if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
-      errEl.textContent = "Kullanıcı adı sadece küçük harf (a-z), rakam, nokta, tire, alt çizgi içerebilir.";
+    if (!/^[a-z][a-z0-9._-]{2,12}$/.test(username)) {
+      errEl.textContent =
+        "Kullanıcı adı harf ile başlamalı, 3-12 karakter arası olmalıdır.";
       return;
     }
     if (password !== passwordConfirm) {
@@ -106,6 +147,14 @@ if (registerForm) {
 
       let cred: firebase.auth.UserCredential | null = null;
       try {
+        const regRememberMe =
+          (document.getElementById("regRememberMe") as HTMLInputElement | null)
+            ?.checked ?? true;
+        await auth.setPersistence(
+          regRememberMe
+            ? firebase.auth.Auth.Persistence.LOCAL
+            : firebase.auth.Auth.Persistence.SESSION,
+        );
         cred = await auth.createUserWithEmailAndPassword(email, password);
         await usernameRef.set(cred.user.uid);
         await cred.user.updateProfile({ displayName: username });
@@ -117,9 +166,13 @@ if (registerForm) {
           });
         } catch (_) {}
         if (cred && cred.user) {
-          try { await cred.user.delete(); } catch (_) {}
+          try {
+            await cred.user.delete();
+          } catch (_) {}
         }
-        errEl.textContent = getAuthErrorMessage(userErr.code) || "Bir hata oluştu.";
+        errEl.textContent =
+          getAuthErrorMessage(userErr.code) || "Bir hata oluştu.";
+      } finally {
         btn.textContent = "Kayıt Ol";
         btn.disabled = false;
       }
@@ -130,6 +183,142 @@ if (registerForm) {
     }
   });
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                  KULLANICI ADI ANLIK DOĞRULAMA                          */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+let _usernameCheckToken = 0;
+let _usernameCheckTimer: number | null = null;
+
+const regUsernameInput = document.getElementById(
+  "regUsername",
+) as HTMLInputElement | null;
+const regUsernameHint = document.getElementById(
+  "usernameHint",
+) as HTMLElement | null;
+
+function _validateUsernameFormat(value: string): {
+  valid: boolean;
+  reason: string;
+} {
+  const v = value.trim();
+  if (!v || v.length < 3) return { valid: false, reason: "too-short" };
+  if (!/^[a-z0-9._-]+$/.test(v))
+    return { valid: false, reason: "invalid-chars" };
+  if (/^[0-9]/.test(v)) return { valid: false, reason: "starts-with-number" };
+  if (/^[._-]/.test(v)) return { valid: false, reason: "starts-with-symbol" };
+  if (v.length > 12) return { valid: false, reason: "too-long" };
+  return { valid: true, reason: "" };
+}
+
+function _updateUsernameUI(opts: {
+  reason?: string;
+  taken?: boolean;
+  checking?: boolean;
+}): void {
+  if (!regUsernameInput || !regUsernameHint) return;
+
+  regUsernameInput.classList.remove("match-success", "match-error");
+  regUsernameHint.className = "username-hint";
+  regUsernameHint.textContent = "";
+
+  if (opts.checking) {
+    regUsernameHint.classList.add("hint-checking");
+    regUsernameHint.textContent = "Kullanıcı adı kontrol ediliyor...";
+    return;
+  }
+
+  if (
+    opts.reason === "too-short" ||
+    opts.reason === "invalid-chars" ||
+    opts.reason === "too-long" ||
+    opts.reason === "starts-with-number" ||
+    opts.reason === "starts-with-symbol"
+  ) {
+    regUsernameInput.classList.add("match-error");
+    regUsernameHint.classList.add("hint-error");
+    if (opts.reason === "too-short") {
+      regUsernameHint.textContent = "En az 3 karakter girmelisiniz.";
+    } else if (opts.reason === "invalid-chars") {
+      regUsernameHint.textContent =
+        "Yalnızca küçük harf ve semboller (a-z, 0-9, ., _, -).";
+    } else if (opts.reason === "starts-with-number") {
+      regUsernameHint.textContent = "Kullanıcı adı sayı ile başlayamaz.";
+    } else if (opts.reason === "starts-with-symbol") {
+      regUsernameHint.textContent = "Kullanıcı adı sembol ile başlayamaz.";
+    } else {
+      regUsernameHint.textContent =
+        "Kullanıcı adı en fazla 12 karakter olabilir.";
+    }
+    return;
+  }
+
+  if (opts.taken === true) {
+    regUsernameInput.classList.add("match-error");
+    regUsernameHint.classList.add("hint-error");
+    regUsernameHint.textContent = "Bu kullanıcı adı zaten alınmış.";
+    return;
+  }
+
+  if (opts.taken === false) {
+    regUsernameInput.classList.add("match-success");
+    regUsernameHint.classList.add("hint-ok");
+    regUsernameHint.textContent = "Bu kullanıcı adı kullanılabilir.";
+  }
+}
+
+async function _checkUsernameAvailability(
+  key: string,
+  token: number,
+): Promise<void> {
+  try {
+    const snap = await db.database!.ref("usernames/" + key).once("value");
+    if (token !== _usernameCheckToken) return;
+    _updateUsernameUI({ taken: snap.exists() });
+  } catch (_) {
+    if (token !== _usernameCheckToken) return;
+    if (regUsernameHint) {
+      regUsernameHint.textContent = "";
+      regUsernameHint.className = "username-hint";
+    }
+  }
+}
+
+function _onUsernameInput(): void {
+  if (!regUsernameInput || !regUsernameHint) return;
+
+  const value = regUsernameInput.value;
+  _usernameCheckToken++;
+
+  if (_usernameCheckTimer !== null) {
+    clearTimeout(_usernameCheckTimer);
+    _usernameCheckTimer = null;
+  }
+
+  if (!value) {
+    regUsernameInput.classList.remove("match-success", "match-error");
+    regUsernameHint.className = "username-hint";
+    regUsernameHint.textContent = "";
+    return;
+  }
+
+  const result = _validateUsernameFormat(value);
+
+  if (!result.valid) {
+    _updateUsernameUI({ reason: result.reason });
+    return;
+  }
+
+  _updateUsernameUI({ checking: true });
+
+  const token = _usernameCheckToken;
+  _usernameCheckTimer = window.setTimeout(function () {
+    _checkUsernameAvailability(value.toLowerCase(), token);
+  }, 400);
+}
+
+regUsernameInput?.addEventListener("input", _onUsernameInput);
 
 /* ─────────────────── Panel Geçişi ─────────────────── */
 
@@ -143,14 +332,33 @@ document.getElementById("goToLogin")?.addEventListener("click", () => {
   document.getElementById("loginPanel")?.classList.remove("hidden");
 });
 
-/* ─────────────────── Şifre Eşleştirme Kontrolü ─────────────────── */
+/* ─────────────────── Şifre Anlık Doğrulama ─────────────────── */
 
-const regPasswordInput = document.getElementById("regPassword") as HTMLInputElement | null;
-const regPasswordConfirm = document.getElementById("regPasswordConfirm") as HTMLInputElement | null;
+const regPasswordInput = document.getElementById(
+  "regPassword",
+) as HTMLInputElement | null;
+const regPasswordConfirm = document.getElementById(
+  "regPasswordConfirm",
+) as HTMLInputElement | null;
+const regPasswordHint = document.getElementById(
+  "passwordHint",
+) as HTMLElement | null;
+const regPasswordConfirmHint = document.getElementById(
+  "passwordConfirmHint",
+) as HTMLElement | null;
 
-function validatePasswords(): void {
+function _validatePassword(): void {
   const p1 = regPasswordInput?.value || "";
   const p2 = regPasswordConfirm?.value || "";
+
+  if (regPasswordHint) {
+    regPasswordHint.className = "username-hint";
+    regPasswordHint.textContent = "";
+  }
+  if (regPasswordConfirmHint) {
+    regPasswordConfirmHint.className = "username-hint";
+    regPasswordConfirmHint.textContent = "";
+  }
 
   if (!p1 && !p2) {
     regPasswordInput?.classList.remove("match-success", "match-error");
@@ -158,22 +366,53 @@ function validatePasswords(): void {
     return;
   }
 
-  const isMatch = p1 === p2 && p1.length >= 6;
-  const hasInput = p2.length > 0;
+  if (p1.length < 6) {
+    regPasswordInput?.classList.remove("match-success");
+    regPasswordInput?.classList.add("match-error");
+    if (regPasswordHint) {
+      regPasswordHint.classList.add("hint-error");
+      regPasswordHint.textContent = "Şifre en az 6 karakter olmalıdır.";
+    }
+  } else if (/\s/.test(p1)) {
+    regPasswordInput?.classList.remove("match-success");
+    regPasswordInput?.classList.add("match-error");
+    if (regPasswordHint) {
+      regPasswordHint.classList.add("hint-error");
+      regPasswordHint.textContent = "Şifre boşluk içeremez.";
+    }
+  } else {
+    regPasswordInput?.classList.remove("match-error");
+    regPasswordInput?.classList.add("match-success");
+    if (regPasswordHint) {
+      regPasswordHint.classList.add("hint-ok");
+      regPasswordHint.textContent = "Şifre uzunluğu yeterli.";
+    }
+  }
 
-  regPasswordInput?.classList.toggle("match-success", isMatch);
-  regPasswordInput?.classList.toggle("match-error", !isMatch && hasInput);
+  const hasConfirmInput = p2.length > 0;
+  if (!hasConfirmInput) {
+    regPasswordConfirm?.classList.remove("match-success", "match-error");
+    return;
+  }
+
+  const isMatch = p1 === p2;
   regPasswordConfirm?.classList.toggle("match-success", isMatch);
-  regPasswordConfirm?.classList.toggle("match-error", !isMatch && hasInput);
+  regPasswordConfirm?.classList.toggle("match-error", !isMatch);
+  if (regPasswordConfirmHint) {
+    regPasswordConfirmHint.classList.add(isMatch ? "hint-ok" : "hint-error");
+    regPasswordConfirmHint.textContent = isMatch
+      ? "Şifreler eşleşiyor."
+      : "Şifreler eşleşmiyor.";
+  }
 }
 
-regPasswordInput?.addEventListener("input", validatePasswords);
-regPasswordConfirm?.addEventListener("input", validatePasswords);
+regPasswordInput?.addEventListener("input", _validatePassword);
+regPasswordConfirm?.addEventListener("input", _validatePassword);
 
 /* ─────────────────── Şifre Gizle / Göster ─────────────────── */
 
-var _svgEyeCache: string | null = null;
-var _svgEyeOffCache: string | null = null;
+let _svgEyeCache: string | null = null;
+let _svgEyeOffCache: string | null = null;
 
 function _getSvgHtml(id: string): string {
   const tmpl = document.getElementById(id) as HTMLTemplateElement | null;
@@ -182,7 +421,7 @@ function _getSvgHtml(id: string): string {
 }
 
 document.querySelectorAll(".toggle-password").forEach((btn) => {
-  if (btn.childNodes.length === 0) {
+  if (!btn.querySelector("svg")) {
     if (!_svgEyeCache) _svgEyeCache = _getSvgHtml("svg-eye");
     btn.innerHTML = _svgEyeCache;
   }

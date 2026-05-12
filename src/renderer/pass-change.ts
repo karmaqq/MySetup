@@ -4,7 +4,6 @@
 
 import { currentUser } from "./app-state";
 import { showToast } from "./global-fn";
-import { closeSettingsModal } from "./userset";
 
 const changePasswordModal = document.getElementById("changePasswordModal") as HTMLElement | null;
 
@@ -12,7 +11,7 @@ export function closeChangePassModal(): void {
   const form = document.getElementById("changePasswordForm") as HTMLFormElement | null;
   if (form) form.reset();
   const errEl = document.getElementById("changePassError");
-  if (errEl) errEl.textContent = "";
+  if (errEl) { errEl.textContent = ""; errEl.className = "auth-error"; }
   const submitBtn = document.getElementById("changePassSubmitBtn") as HTMLButtonElement | null;
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Şifreyi Kaydet"; }
   ["oldPassword", "newPassword", "newPasswordConfirm"].forEach(function (id) {
@@ -23,8 +22,18 @@ export function closeChangePassModal(): void {
 }
 
 document.getElementById("openChangePassBtn")?.addEventListener("click", () => {
-  closeSettingsModal();
-  closeChangePassModal();
+  const settingsModal = document.getElementById("userSettingsModal") as HTMLElement | null;
+  if (settingsModal) settingsModal.classList.remove("active");
+  const form = document.getElementById("changePasswordForm") as HTMLFormElement | null;
+  if (form) form.reset();
+  const errEl = document.getElementById("changePassError");
+  if (errEl) { errEl.textContent = ""; errEl.className = "auth-error"; }
+  ["oldPassword", "newPassword", "newPasswordConfirm"].forEach(function (id) {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    if (el) el.classList.remove("input-error");
+  });
+  const submitBtn = document.getElementById("changePassSubmitBtn") as HTMLButtonElement | null;
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Şifreyi Kaydet"; }
   if (changePasswordModal) changePasswordModal.classList.add("active");
 });
 
@@ -72,7 +81,6 @@ document.getElementById("changePasswordForm")?.addEventListener("submit", async 
   submitBtn.textContent = "Kaydediliyor...";
 
   if (newPass !== newPassConfirm) {
-    errEl.style.color = "var(--red)";
     errEl.textContent = "Yeni şifreler uyuşmuyor.";
     submitBtn.disabled = false;
     submitBtn.textContent = "Şifreyi Kaydet";
@@ -80,24 +88,44 @@ document.getElementById("changePasswordForm")?.addEventListener("submit", async 
   }
 
   try {
-    const user = currentUser!;
-    const credential = firebase.auth.EmailAuthProvider.credential(user.email!, oldPass);
+    const user = currentUser;
+    if (!user) {
+      errEl.textContent = "Oturum bulunamadı. Lütfen yeniden giriş yapın.";
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Şifreyi Kaydet";
+      return;
+    }
+    const userEmail = user.email || "";
+    if (!userEmail) {
+      errEl.textContent = "E-posta adresinize erişilemiyor. Lütfen destek ekibiyle iletişime geçin.";
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Şifreyi Kaydet";
+      return;
+    }
+    const credential = firebase.auth.EmailAuthProvider.credential(userEmail, oldPass);
     await user.reauthenticateWithCredential(credential);
     await user.updatePassword(newPass);
     await user.reload();
 
-    errEl.style.color = "var(--green)";
     errEl.textContent = "Şifre başarıyla değiştirildi.";
+    errEl.className = "auth-error success";
 
     setTimeout(() => {
       closeChangePassModal();
       showToast("Şifre güncellendi", "success");
     }, 900);
   } catch (err: any) {
-    errEl.style.color = "var(--red)";
-    errEl.textContent = err.code === "auth/wrong-password" || err.code === "auth/invalid-credential"
-      ? "Mevcut şifre hatalı."
-      : "Bir hata oluştu.";
+    errEl.className = "auth-error";
+    const passChangeErrors: Record<string, string> = {
+      "auth/wrong-password": "Mevcut şifre hatalı.",
+      "auth/invalid-credential": "Mevcut şifre hatalı.",
+      "auth/too-many-requests": "Çok fazla başarısız deneme. Lütfen bekleyin.",
+      "auth/network-request-failed": "Ağ bağlantısı hatası. İnterneti kontrol edin.",
+      "auth/requires-recent-login": "Güvenlik nedeniyle lütfen tekrar giriş yapın.",
+      "auth/user-disabled": "Bu hesap devre dışı bırakılmış.",
+      "auth/user-not-found": "Kullanıcı bulunamadı.",
+    };
+    errEl.textContent = passChangeErrors[err.code] || "Bir hata oluştu. Lütfen tekrar deneyin.";
     const oldPassInput = document.getElementById("oldPassword") as HTMLInputElement | null;
     if (oldPassInput) { oldPassInput.value = ""; oldPassInput.focus(); }
     submitBtn.disabled = false;

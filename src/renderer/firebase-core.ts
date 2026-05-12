@@ -86,7 +86,7 @@ export function initUserDataRef(userId: string | null): void {
         if (_initToken !== sessionToken) return;
         if (!db.userDataRef) return;
         if (err && err.toString().includes("permission_denied")) return;
-        console.error("child_added error:", err);
+        // child_added hatası sessizce geçildi
       },
     );
 
@@ -106,7 +106,7 @@ export function initUserDataRef(userId: string | null): void {
         if (_initToken !== sessionToken) return;
         if (!db.userDataRef) return;
         if (err && err.toString().includes("permission_denied")) return;
-        console.error("child_changed error:", err);
+        // child_changed hatası sessizce geçildi
       },
     );
 
@@ -124,7 +124,7 @@ export function initUserDataRef(userId: string | null): void {
         if (_initToken !== sessionToken) return;
         if (!db.userDataRef) return;
         if (err && err.toString().includes("permission_denied")) return;
-        console.error("child_removed error:", err);
+        // child_removed hatası sessizce geçildi
       },
     );
   });

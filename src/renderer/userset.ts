@@ -5,8 +5,7 @@
 import { currentUser } from "./app-state";
 import { db } from "./firebase-init";
 import { initUserDataRef } from "./firebase-core";
-import { refreshAllAvatars } from "./global-fn";
-import { showToast } from "./global-fn";
+import { refreshAllAvatars, showToast } from "./global-fn";
 import { closeChangePassModal } from "./pass-change";
 import { closeDeleteModal } from "./delete-account-ui";
 
@@ -56,7 +55,6 @@ settingsModal?.addEventListener("click", (e) => {
 /* ─────────────────── Çıkış Yap ─────────────────── */
 
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
-  closeAllModals();
   initUserDataRef(null);
   firebase.auth().signOut();
 });
@@ -66,7 +64,7 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
 function goBackToSettings(from: string): void {
   if (from === "changePass") closeChangePassModal();
   if (from === "deleteAcc") closeDeleteModal();
-  if (settingsModal) settingsModal.classList.add("active");
+  openSettingsModal();
 }
 
 document.getElementById("backToSettingsFromPass")?.addEventListener("click", () => goBackToSettings("changePass"));
@@ -97,19 +95,20 @@ export function resetUsernameEditState(): void {
 }
 
 editBtn?.addEventListener("click", () => {
-  nameInput!.dataset.original = nameInput!.value;
-  nameInput!.readOnly = false;
-  nameInput!.focus();
-  const len = nameInput!.value.length;
-  nameInput!.setSelectionRange(len, len);
+  if (!nameInput || !saveBtn || !cancelBtn) return;
+  nameInput.dataset.original = nameInput.value;
+  nameInput.readOnly = false;
+  nameInput.focus();
+  const len = nameInput.value.length;
+  nameInput.setSelectionRange(len, len);
   editBtn.classList.add("hidden");
-  saveBtn!.classList.remove("hidden");
-  cancelBtn!.classList.remove("hidden");
-  saveBtn!.disabled = true;
+  saveBtn.classList.remove("hidden");
+  cancelBtn.classList.remove("hidden");
+  saveBtn.disabled = true;
 });
 
 nameInput?.addEventListener("input", () => {
-  if (nameInput.readOnly || !usernameErrEl) return;
+  if (nameInput.readOnly || !usernameErrEl || !saveBtn) return;
   const val = nameInput.value;
   const originalName = nameInput.dataset.original || "";
   let msg = "";
@@ -125,13 +124,14 @@ nameInput?.addEventListener("input", () => {
 
   const isDirty = val.trim() !== originalName.trim();
   const isValid = !msg && val.trim().length >= 3;
-  saveBtn!.disabled = !(isDirty && isValid);
+  saveBtn.disabled = !(isDirty && isValid);
 });
 
 cancelBtn?.addEventListener("click", resetUsernameEditState);
 
 saveBtn?.addEventListener("click", async () => {
-  const newName = nameInput!.value.trim();
+  if (!nameInput || !saveBtn || !cancelBtn || !editBtn) return;
+  const newName = nameInput.value.trim();
   if (usernameErrEl) usernameErrEl.textContent = "";
 
   if (!newName || newName.length < 3) {
@@ -139,13 +139,13 @@ saveBtn?.addEventListener("click", async () => {
     return;
   }
 
-  saveBtn!.disabled = true;
+  saveBtn.disabled = true;
 
   try {
     const user = currentUser;
     if (!user) {
       if (usernameErrEl) { usernameErrEl.textContent = "Oturum bulunamadı, tekrar giriş yapın"; usernameErrEl.style.color = "var(--red)"; }
-      saveBtn!.disabled = false;
+      saveBtn.disabled = false;
       return;
     }
 
@@ -156,7 +156,7 @@ saveBtn?.addEventListener("click", async () => {
     if (oldName !== newKey) {
       if (!/^[a-z0-9._-]{3,32}$/.test(newKey)) {
         if (usernameErrEl) { usernameErrEl.textContent = "Geçersiz kullanıcı adı"; usernameErrEl.style.color = "var(--red)"; }
-        saveBtn!.disabled = false;
+        saveBtn.disabled = false;
         return;
       }
 
@@ -165,13 +165,15 @@ saveBtn?.addEventListener("click", async () => {
         if (current === null || current === user.uid) return user.uid;
         return;
       });
-      if (!txnResult.committed || (txnResult.snapshot!.exists() && txnResult.snapshot!.val() !== user.uid)) {
+      if (!txnResult.committed || (txnResult.snapshot?.exists() && txnResult.snapshot!.val() !== user.uid)) {
         if (usernameErrEl) { usernameErrEl.textContent = "Bu kullanıcı adı zaten alınmış"; usernameErrEl.style.color = "var(--red)"; }
-        saveBtn!.disabled = false;
+        saveBtn.disabled = false;
         return;
       }
       if (oldName && oldName !== newKey) {
-        try { await db.database!.ref("usernames/" + oldName).remove(); } catch (_) {}
+        try { await db.database!.ref("usernames/" + oldName).remove(); } catch (e) {
+          // Eski kullanıcı adı silinemedi — veritabanında kalabilir
+        }
       }
     }
 
@@ -186,15 +188,15 @@ saveBtn?.addEventListener("click", async () => {
     if (usernameErrEl) usernameErrEl.textContent = "";
     showToast("Kullanıcı adı güncellendi", "success");
 
-    nameInput!.readOnly = true;
-    saveBtn!.classList.add("hidden");
-    cancelBtn!.classList.add("hidden");
-    editBtn!.classList.remove("hidden");
+    nameInput.readOnly = true;
+    saveBtn.classList.add("hidden");
+    cancelBtn.classList.add("hidden");
+    editBtn.classList.remove("hidden");
   } catch (err: any) {
     const msg = err.code === "PERMISSION_DENIED" || err.message?.includes("Permission")
       ? "Yetki hatası — tekrar giriş yapıp deneyin"
       : err.message || "Hata oluştu";
     if (usernameErrEl) { usernameErrEl.textContent = msg; usernameErrEl.style.color = "var(--red)"; }
-    saveBtn!.disabled = false;
+    saveBtn.disabled = false;
   }
 });

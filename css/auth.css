@@ -29,14 +29,15 @@
 .label-hint {
   color: var(--text-dim);
   font-weight: 400;
+  font-size: 11px;
 }
 
 .auth-container {
   width: 100%;
-  max-width: 440px;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   transform: translateY(20px) scale(0.98);
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
 }
@@ -68,9 +69,8 @@
 .auth-brand p {
   color: var(--text-dim);
   font-family: var(--font-ui);
-  font-size: 14.5px;
-  margin-top: 12px;
-  margin-bottom: 0;
+  font-size: 13px;
+  margin: 8px 0 0 0;
 }
 
 /* ─────────────────── Paneller ─────────────────── */
@@ -78,14 +78,14 @@
 .auth-panel {
   background: var(--surface);
   border: 1px solid var(--border2);
-  border-radius: 24px;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
-  padding: 40px 48px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  padding: 28px;
 }
 
 @media (max-width: 480px) {
   .auth-panel {
-    padding: 28px 20px;
+    padding: 20px;
   }
   .auth-container {
     max-width: 100%;
@@ -94,11 +94,11 @@
 
 .auth-panel h2 {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--text-bright);
-  margin: 0 0 24px 0;
-  padding-bottom: 16px;
+  margin: 0 0 12px 0;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
   text-align: center;
 }
@@ -106,7 +106,7 @@
 .auth-panel form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -116,7 +116,7 @@
 .auth-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .auth-field label {
@@ -130,10 +130,10 @@
 
 .auth-field input {
   width: 100%;
-  padding: 14px 16px;
+  padding: 11px 14px;
   background: var(--surface2);
   border: 1px solid var(--border2);
-  border-radius: 12px;
+  border-radius: 10px;
   color: var(--text-bright);
   font-family: var(--font-ui);
   font-size: 14.5px;
@@ -217,9 +217,8 @@
 .remember-me-wrapper {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: -6px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin: 0 0 2px 0;
 }
 
 .remember-me-wrapper input[type="checkbox"] {
@@ -272,21 +271,26 @@
 
 .auth-error {
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--red);
-  min-height: 18px;
+  min-height: 0;
   text-align: center;
   line-height: 1.5;
   font-weight: 500;
   margin: 0;
 }
 
+.auth-error.success {
+  color: var(--green);
+}
+
 .username-hint {
   font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 500;
-  min-height: 16px;
-  margin: 4px 0 0 2px;
+  min-height: 0;
+  margin: 0;
+  line-height: 1.4;
   transition: color 0.18s ease;
 }
 
@@ -308,20 +312,26 @@
 
 .auth-submit-btn {
   width: 100%;
-  padding: 15px;
+  padding: 12px;
   background: var(--accent);
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   color: var(--text-btn);
   font-family: var(--font-ui);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   cursor: pointer;
   transition:
     background 0.2s,
     box-shadow 0.2s,
     transform 0.15s;
-  margin-top: 8px;
+  margin: 0;
+}
+
+.auth-submit-btn:focus-visible,
+.toggle-password:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .auth-submit-btn:hover:not(:disabled) {
@@ -348,10 +358,10 @@
 .auth-switch {
   text-align: center;
   font-family: var(--font-ui);
-  font-size: 13.5px;
+  font-size: 13px;
   color: var(--text-dim);
-  margin-top: 24px;
-  padding-top: 20px;
+  margin-top: 14px;
+  padding-top: 10px;
   border-top: 1px solid var(--border);
 }
 
@@ -370,9 +380,78 @@
     text-shadow 0.2s;
 }
 
+.auth-switch button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .auth-switch button:hover {
   color: var(--accent-hover);
   text-decoration: underline;
   text-underline-offset: 4px;
   text-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          PANEL ANİMASYONLARI                                 */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes slideOutLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.auth-panel.anim-out-left {
+  animation: slideOutLeft 0.3s ease forwards;
+}
+
+.auth-panel.anim-in-right {
+  animation: slideInRight 0.3s ease forwards;
+}
+
+.auth-panel.anim-out-right {
+  animation: slideOutRight 0.3s ease forwards;
+}
+
+.auth-panel.anim-in-left {
+  animation: slideInLeft 0.3s ease forwards;
 }

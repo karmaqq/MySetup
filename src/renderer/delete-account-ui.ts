@@ -5,7 +5,6 @@
 import { currentUser } from "./app-state";
 import { deleteUserAccount } from "./firebase-user";
 import { showToast } from "./global-fn";
-import { closeSettingsModal } from "./userset";
 
 const deleteAccountModal = document.getElementById("deleteAccountModal") as HTMLElement | null;
 
@@ -22,13 +21,15 @@ export function closeDeleteModal(): void {
 }
 
 document.getElementById("openDeleteAccountBtn")?.addEventListener("click", () => {
-  closeSettingsModal();
+  const settingsModal = document.getElementById("userSettingsModal") as HTMLElement | null;
+  if (settingsModal) settingsModal.classList.remove("active");
   closeDeleteModal();
   if (deleteAccountModal) deleteAccountModal.classList.add("active");
 });
 
 document.getElementById("deleteConfirmCheck")?.addEventListener("change", (e) => {
-  (document.getElementById("finalDeleteBtn") as HTMLButtonElement).disabled = !(e.target as HTMLInputElement).checked;
+  const btn = document.getElementById("finalDeleteBtn") as HTMLButtonElement | null;
+  if (btn) btn.disabled = !(e.target as HTMLInputElement).checked;
 });
 
 document.getElementById("deleteAccountForm")?.addEventListener("submit", async (e) => {
@@ -50,12 +51,11 @@ document.getElementById("deleteAccountForm")?.addEventListener("submit", async (
     await user.reauthenticateWithCredential(credential);
 
     const result = await deleteUserAccount(user);
-    if (!result.success) throw result.error;
+    if (!result.success) throw result.error || new Error("Silme işlemi başarısız oldu.");
 
     showToast("Hesabınız kalıcı olarak silindi.", "info");
     closeDeleteModal();
   } catch (err: any) {
-    errEl.style.color = "var(--red)";
     const code = err?.code || "";
     if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
       errEl.textContent = "E-posta veya şifre hatalı.";
@@ -64,7 +64,7 @@ document.getElementById("deleteAccountForm")?.addEventListener("submit", async (
     } else if (code === "auth/requires-recent-login") {
       errEl.textContent = "Yeniden giriş yapmanız gerekiyor.";
     } else {
-      errEl.textContent = err?.message || "Bir hata oluştu. Lütfen tekrar deneyin.";
+      errEl.textContent = "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.";
     }
     submitBtn.disabled = false;
     submitBtn.textContent = "Hesabı Kalıcı Olarak Sil";

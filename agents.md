@@ -229,12 +229,12 @@ mysetup/
     └── renderer/
         ├── index.ts          (0)  # Entry point, tüm modülleri import eder
         ├── global-ut.ts      (0)  # Saf araç fonksiyonları ~195 satır
-        ├── global-fn.ts      (0)  # Paylaşılan uygulama fonksiyonları ~180 satır
+        ├── global-fn.ts      (0)  # Paylaşılan uygulama fonksiyonları ~175 satır
         ├── app-state.ts      (0)  # Uygulama durumu + DOM referansları ~195 satır
         ├── firebase-init.ts  (1)  # Firebase başlatma ~43 satır
-        ├── firebase-core.ts  (2)  # enrichItem, initUserDataRef ~134 satır
+        ├── firebase-core.ts  (2)  # enrichItem, initUserDataRef ~131 satır
         ├── firebase-inv.ts   (5)  # Envanter CRUD ~39 satır
-        ├── firebase-user.ts  (1)  # Hesap silme ~81 satır
+        ├── firebase-user.ts  (1)  # Hesap silme ~87 satır
         ├── firebase-post.ts  (11) # Post CRUD + sorgular ~155 satır
         ├── firebase-comment.ts (6)# Yorum/yanıt CRUD ~120 satır
         ├── io.ts             (5)  # Silme onay diyalogları ~50 satır
@@ -244,14 +244,14 @@ mysetup/
         ├── table-crud.ts     (0)  # Tablo CRUD + event delegation ~230 satır
         ├── editmodal.ts      (6)  # Düzenleme modalı ~230 satır
         ├── image-utils.ts    (0)  # Görsel yükleme + önizleme ~180 satır
-        ├── auth-nav.ts       (1)  # Navigasyon + session yönetimi ~100 satır
-        ├── auth.ts           (6)  # Giriş/kayıt formları ~175 satır
-        ├── pass-change.ts    (1)  # Şifre değiştirme ~120 satır
-        ├── delete-account-ui.ts (1)# Hesap silme UI ~100 satır
-        ├── userset.ts        (5)  # Hesap ayarları ~140 satır
+        ├── auth-nav.ts       (1)  # Navigasyon + session yönetimi ~143 satır
+        ├── auth.ts           (11)  # Giriş/kayıt formları ~441 satır
+        ├── pass-change.ts    (1)  # Şifre değiştirme ~112 satır
+        ├── delete-account-ui.ts (1)# Hesap silme UI ~79 satır
+        ├── userset.ts        (5)  # Hesap ayarları ~200 satır
         ├── updater-ui.ts     (2)  # Güncelleme butonu ~122 satır
         ├── post-comment.ts   (5)  # Yorum/yanıt HTML render ~197 satır
-        ├── posts-create.ts   (6)  # Post oluşturma ~201 satır
+        ├── posts-create.ts   (6)  # Post oluşturma ~203 satır
         ├── posts-render.ts   (10) # Post kart HTML render ~260 satır
         ├── posts-listener.ts (5)  # Post listener + sayfalama ~200 satır
         ├── posts-timer.ts    (1)  # Zaman güncellemesi ~120 satır
@@ -265,7 +265,7 @@ mysetup/
             └── global.d.ts        # Window interface genişletmesi
 ```
 
-## **Toplam: ~200 fonksiyon** - **her eklemede güncelle**
+## **Toplam: ~205 fonksiyon** - **her eklemede güncelle**
 
 ## Import Sırası (index.ts)
 
@@ -324,21 +324,32 @@ npx tsc --noEmit                          # renderer tip kontrolü
 npx tsc --noEmit -p tsconfig.main.json    # main tip kontrolü
 ```
 
-### Firebase Delete Race Condition
+### Firebase Delete Race Condition (v3.3.2 — K1 Fix)
 
 **Kritik:** `deletePostFromFirebase`'de (`firebase-post.ts:44-61`) likes snapshot okuma ile post silme arasında yeni beğeni eklenirse `userLikes/{userId}/{postId}` orphan kalır. Aynı sorun `deleteUserAccount`'ta da var.
 
-**Çözüm:** Multi-path `update()` ile atomik cleanup:
+**1. Anlık Silme (deletePostFromFirebase):** Multi-path `update()` ile atomik cleanup:
 
 ```typescript
-// Tüm cleanup'leri tek updates objesinde topla:
 updates["posts/" + postId] = null;
 updates["userPosts/" + uid + "/" + postId] = null;
 Object.keys(likes).forEach(function (userId) {
   updates["userLikes/" + userId + "/" + postId] = null;
 });
-return db.database!.ref().update(updates); // atomik
+return db.database!.ref().update(updates);
 ```
+
+**2. Hesap Silme (deleteUserAccount):** Post loop'undaki atomic per-post cleanup + sonrasında `userLikes` altında orphan kalan kayıtları temizleyen ikincil tarama:
+
+```typescript
+// 1. Tüm postları batch'ler halinde atomik sil
+// 2. userLikes altında kalan orphan post referanslarını temizle
+// 3. userPosts, users, usernames node'larını temizle
+// 4. Storage klasörünü sil
+// 5. user.delete() ile Auth kaydını sil
+```
+
+Orphan temizleme için `deleteUserAccount` sonunda tüm `userLikes` node'ları taranır ve silinen post ID'lerine referans veren entry'ler null'lanır.
 
 ### Storage Cleanup Zorunluluğu
 
@@ -367,3 +378,8 @@ Tüm dosyalar `/users/{uid}/` altında olduğu için tek bir kural yeterlidir. D
 | `@ts-ignore` kullanımı              | `as any` ile geç                                             |
 | Yeni `window` property'si           | `global.d.ts`'yi güncelle                                    |
 | `escAttr` + `escHtml` ardışık       | **Çift escape** oluşur; birini kullan                        |
+| `currentUser!` non-null hatası      | `if (!currentUser) return;` guard'ı ekle, `!` kullanma       |
+| `style.color` inline CSS            | CSS class kullan (`.auth-error.success`)                     |
+| `var` kullanımı                     | `let` / `const` ile değiştir                                 |
+| `throw undefined`                   | `throw error || new Error("mesaj")` ile güvenceye al         |
+| Circular import                    | Tek yönlü bağımlılık kur; alt modüller üst modülü import etmesin|

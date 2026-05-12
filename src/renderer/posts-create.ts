@@ -69,7 +69,8 @@ export function createPost(): void {
 /* ─────────────────── Görsel varsa önce yükle, sonra kaydet ─────────────────── */
 
 function _uploadAndSavePost(postData: Record<string, any>, file: File): void {
-  const user = currentUser!;
+  const user = currentUser;
+  if (!user) { showToast("Oturum bulunamadı.", "error"); return; }
   const ref = firebase
     .storage()
     .ref()

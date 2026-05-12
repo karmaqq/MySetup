@@ -148,6 +148,12 @@
   box-sizing: border-box;
 }
 
+.premium-modal .modal-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+  background: var(--surface3);
+}
+
 /* ─────────────────── Kullanıcı Adı Düzenleme ─────────────────── */
 
 .username-edit-box {
@@ -187,6 +193,11 @@
   outline: none;
 }
 
+#settingsDisplayName:focus:not([readonly]) {
+  border-color: var(--accent-dim);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
 .action-icon-btn {
   width: 38px;
   height: 38px;
@@ -203,6 +214,14 @@
     color 0.2s,
     border-color 0.2s,
     background 0.2s;
+}
+
+.action-icon-btn:focus-visible,
+.setting-row-btn:focus-visible,
+.back-icon-btn:focus-visible,
+.modal-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .action-icon-btn svg {
@@ -342,6 +361,11 @@
   position: relative;
   margin: 0;
   flex-shrink: 0;
+}
+
+.danger-check-wrapper input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
 }
 
 .danger-check-wrapper input[type="checkbox"]:checked {
