@@ -148,137 +148,259 @@
     <!--                      KİMLİK DOĞRULAMA KATMANI                              -->
     <!-- ═══════════════════════════════════════════════════════════════════════════ -->
     <div class="auth-overlay" id="authOverlay">
-      <div class="auth-container">
-        <!-- ─────────────────── Marka Alanı ─────────────────── -->
-        <div class="auth-brand">
-          <h1>My<span class="accent-text">SETUP</span></h1>
-          <p>Kişisel kurulum envanterinize hoş geldiniz</p>
+      <div class="auth-split">
+
+        <!-- ─────────────────── Sol Hero Paneli ─────────────────── -->
+        <div class="auth-hero">
+          <div class="auth-hero-features-label">Özellikler</div>
+          <div class="auth-feature-pills">
+            <span class="auth-feature-pill pill-inv">Envanter Takibi</span>
+            <span class="auth-feature-pill pill-post">Topluluk Akışı</span>
+            <span class="auth-feature-pill pill-stat">Detaylı İstatistik</span>
+          </div>
+
+          <!-- ─────────────────── Yüzen Özellik Kartları ─────────────────── -->
+          <div class="auth-cards-stack">
+
+            <div class="auth-feat-card card-inv">
+              <div class="feat-card-header">
+                <div class="feat-card-dot dot-blue"></div>
+                <span class="feat-card-title">ENVANTERİM</span>
+              </div>
+              <div class="feat-card-body">
+                <table class="inv-mini-table">
+                  <thead>
+                    <tr>
+                      <th>Tarih</th>
+                      <th>Bileşen</th>
+                      <th>Fiyat</th>
+                      <th>Durum</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="inv-td-date">15.03.2024</span></td>
+                      <td>
+                        <span class="inv-td-comp">CPU</span>
+                        <span class="inv-td-spec">Intel i9-14900K</span>
+                      </td>
+                      <td><span class="inv-td-price">24.490 ₺</span></td>
+                      <td><span class="inv-status-mini ok">Sağlıklı</span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="inv-td-date">02.01.2024</span></td>
+                      <td>
+                        <span class="inv-td-comp">GPU</span>
+                        <span class="inv-td-spec">RTX 4090 FE</span>
+                      </td>
+                      <td><span class="inv-td-price">59.900 ₺</span></td>
+                      <td><span class="inv-status-mini ok">Sağlıklı</span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="inv-td-date">10.11.2023</span></td>
+                      <td>
+                        <span class="inv-td-comp">RAM</span>
+                        <span class="inv-td-spec">G.Skill 32GB DDR5</span>
+                      </td>
+                      <td><span class="inv-td-price">8.750 ₺</span></td>
+                      <td><span class="inv-status-mini reserve">Yedek</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="auth-feat-card card-post">
+              <div class="feat-card-header">
+                <div class="feat-card-dot dot-green"></div>
+                <span class="feat-card-title">TOPLULUK AKIŞI</span>
+              </div>
+              <div class="feat-card-body">
+                <div class="post-mini-header">
+                  <div class="post-mini-avatar">K</div>
+                  <div class="post-mini-meta">
+                    <span class="post-mini-user">karma</span>
+                    <span class="post-mini-time">12 dakika önce dedi ki;</span>
+                  </div>
+                </div>
+                <div class="post-mini-text">
+                  <span class="accent-text">RTX 4090 FE</span> aldım, sonunda!
+                  Fiyatı yüksek ama performansı gerçekten müthiş.
+                </div>
+                <div class="post-mini-actions">
+                  <span class="post-mini-btn liked">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" stroke="currentColor" stroke-width="2">
+                      <path d="M20.84 4.61a5.5 5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5 0 0 0 0-7.78z"/>
+                    </svg>
+                    34
+                  </span>
+                  <span class="post-mini-btn">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    8 yorum
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="auth-feat-card card-stat">
+              <div class="feat-card-header">
+                <div class="feat-card-dot dot-amber"></div>
+                <span class="feat-card-title">İSTATİSTİKLER</span>
+              </div>
+              <div class="feat-card-body">
+                <div class="stat-mini-grid">
+                  <div class="stat-mini-item">
+                    <div class="stat-mini-val amber">93.140 ₺</div>
+                    <div class="stat-mini-lbl">Toplam</div>
+                  </div>
+                  <div class="stat-mini-item">
+                    <div class="stat-mini-val blue">24</div>
+                    <div class="stat-mini-lbl">Ürün</div>
+                  </div>
+                  <div class="stat-mini-item">
+                    <div class="stat-mini-val green">21</div>
+                    <div class="stat-mini-lbl">Aktif</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
 
-        <!-- ─────────────────── Giriş Paneli ─────────────────── -->
-        <div class="auth-panel" id="loginPanel">
-          <h2>Giriş Yap</h2>
-          <form id="loginForm" autocomplete="on">
-            <div class="auth-field">
-              <label for="loginEmail">E-posta</label>
-              <input
-                type="email"
-                id="loginEmail"
-                placeholder="ornek@gmail.com"
-                autocomplete="email"
-                required
-              />
-            </div>
-            <div class="auth-field">
-              <label for="loginPassword">Şifre</label>
-              <div class="password-wrapper">
+        <!-- ─────────────────── Sağ Giriş Paneli ─────────────────── -->
+        <div class="auth-container">
+          <div class="auth-brand">
+            <h1>My<span class="accent-text">SETUP</span></h1>
+            <p>Kişisel kurulum envanterinize hoş geldiniz</p>
+          </div>
+
+          <div class="auth-panel" id="loginPanel">
+            <h2>Giriş Yap</h2>
+            <form id="loginForm" autocomplete="on">
+              <div class="auth-field">
+                <label for="loginEmail">E-posta</label>
                 <input
-                  type="password"
-                  id="loginPassword"
-                  placeholder="••••••••"
-                  autocomplete="current-password"
+                  type="email"
+                  id="loginEmail"
+                  placeholder="ornek@gmail.com"
+                  autocomplete="email"
                   required
                 />
-                <button
-                  type="button"
-                  class="toggle-password"
-                  tabindex="-1"
-                ></button>
               </div>
-            </div>
-            <div class="remember-me-wrapper">
-              <input type="checkbox" id="rememberMe" />
-              <label for="rememberMe">Beni Hatırla</label>
-            </div>
-            <p class="auth-error" id="loginError" aria-live="polite"></p>
-            <button type="submit" class="auth-submit-btn">Giriş Yap</button>
-          </form>
-          <p class="auth-switch">
-            Hesabın yok mu?
-            <button type="button" id="goToRegister">Kayıt Ol</button>
-          </p>
+              <div class="auth-field">
+                <label for="loginPassword">Şifre</label>
+                <div class="password-wrapper">
+                  <input
+                    type="password"
+                    id="loginPassword"
+                    placeholder="••••••••"
+                    autocomplete="current-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    tabindex="-1"
+                  ></button>
+                </div>
+              </div>
+              <div class="remember-me-wrapper">
+                <input type="checkbox" id="rememberMe" />
+                <label for="rememberMe">Beni Hatırla</label>
+              </div>
+              <p class="auth-error" id="loginError" aria-live="polite"></p>
+              <button type="submit" class="auth-submit-btn">Giriş Yap</button>
+            </form>
+            <p class="auth-switch">
+              Hesabın yok mu?
+              <button type="button" id="goToRegister">Kayıt Ol</button>
+            </p>
+          </div>
+
+          <div class="auth-panel hidden" id="registerPanel">
+            <h2>Kayıt Ol</h2>
+            <form id="registerForm" autocomplete="on">
+              <div class="auth-field">
+                <label for="regUsername"
+                  >Kullanıcı Adı <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="regUsername"
+                  placeholder="Görünecek İsim"
+                  autocomplete="nickname"
+                  maxlength="12"
+                  required
+                />
+                <p id="usernameHint" class="username-hint"></p>
+              </div>
+              <div class="auth-field">
+                <label for="regEmail">E-posta</label>
+                <input
+                  type="email"
+                  id="regEmail"
+                  placeholder="ornek@gmail.com"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+              <div class="auth-field">
+                <label for="regPassword"
+                  >Şifre <span class="label-hint">(en az 6 karakter)</span></label
+                >
+                <div class="password-wrapper">
+                  <input
+                    type="password"
+                    id="regPassword"
+                    placeholder="••••••••"
+                    autocomplete="new-password"
+                    minlength="6"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    tabindex="-1"
+                  ></button>
+                </div>
+                <p id="passwordHint" class="username-hint"></p>
+              </div>
+              <div class="auth-field">
+                <label for="regPasswordConfirm">Şifre (Tekrar)</label>
+                <div class="password-wrapper">
+                  <input
+                    type="password"
+                    id="regPasswordConfirm"
+                    placeholder="Şifrenizi tekrar girin"
+                    autocomplete="new-password"
+                    minlength="6"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    tabindex="-1"
+                  ></button>
+                </div>
+                <p id="passwordConfirmHint" class="username-hint"></p>
+              </div>
+              <p class="auth-error" id="regError" aria-live="polite"></p>
+              <div class="remember-me-wrapper">
+                <input type="checkbox" id="regRememberMe" checked />
+                <label for="regRememberMe">Beni hatırla</label>
+              </div>
+              <button type="submit" class="auth-submit-btn">Kayıt Ol</button>
+            </form>
+            <p class="auth-switch">
+              Zaten hesabın var mı?
+              <button type="button" id="goToLogin">Giriş Yap</button>
+            </p>
+          </div>
         </div>
 
-        <!-- ─────────────────── Kayıt Paneli ─────────────────── -->
-        <div class="auth-panel hidden" id="registerPanel">
-          <h2>Kayıt Ol</h2>
-          <form id="registerForm" autocomplete="on">
-            <div class="auth-field">
-              <label for="regUsername"
-                >Kullanıcı Adı <span class="required">*</span></label
-              >
-              <input
-                type="text"
-                id="regUsername"
-                placeholder="Görünecek İsim"
-                autocomplete="nickname"
-                maxlength="12"
-                required
-              />
-              <p id="usernameHint" class="username-hint"></p>
-            </div>
-            <div class="auth-field">
-              <label for="regEmail">E-posta</label>
-              <input
-                type="email"
-                id="regEmail"
-                placeholder="ornek@gmail.com"
-                autocomplete="email"
-                required
-              />
-            </div>
-            <div class="auth-field">
-              <label for="regPassword"
-                >Şifre <span class="label-hint">(en az 6 karakter)</span></label
-              >
-              <div class="password-wrapper">
-                <input
-                  type="password"
-                  id="regPassword"
-                  placeholder="••••••••"
-                  autocomplete="new-password"
-                  minlength="6"
-                  required
-                />
-                <button
-                  type="button"
-                  class="toggle-password"
-                  tabindex="-1"
-                ></button>
-              </div>
-              <p id="passwordHint" class="username-hint"></p>
-            </div>
-            <div class="auth-field">
-              <label for="regPasswordConfirm">Şifre (Tekrar)</label>
-              <div class="password-wrapper">
-                <input
-                  type="password"
-                  id="regPasswordConfirm"
-                  placeholder="Şifrenizi tekrar girin"
-                  autocomplete="new-password"
-                  minlength="6"
-                  required
-                />
-                <button
-                  type="button"
-                  class="toggle-password"
-                  tabindex="-1"
-                ></button>
-              </div>
-              <p id="passwordConfirmHint" class="username-hint"></p>
-            </div>
-            <p class="auth-error" id="regError" aria-live="polite"></p>
-            <div class="remember-me-wrapper">
-              <input type="checkbox" id="regRememberMe" checked />
-              <label for="regRememberMe">Beni hatırla</label>
-            </div>
-            <button type="submit" class="auth-submit-btn">Kayıt Ol</button>
-          </form>
-          <p class="auth-switch">
-            Zaten hesabın var mı?
-            <button type="button" id="goToLogin">Giriş Yap</button>
-          </p>
-        </div>
       </div>
     </div>
 

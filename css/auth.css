@@ -17,7 +17,8 @@
   transition:
     opacity 0.35s ease,
     visibility 0.35s ease;
-  padding: 24px;
+  top: var(--title-bar-height);
+  padding: 48px 40px;
   overflow-y: auto;
 }
 
