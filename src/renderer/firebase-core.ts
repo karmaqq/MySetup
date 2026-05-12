@@ -75,11 +75,12 @@ export function initUserDataRef(userId: string | null): void {
       function (snapshot) {
         if (_initToken !== sessionToken) return;
         const id = snapshot.key!;
+        // F-12: once("value") ile zaten yüklendiyse tekrar işleme
+        if (allData[id]) return;
         const item = enrichItem(snapshot.val());
         item.id = id;
-        const oldItem = allData[id];
         allData[id] = item;
-        updateStatsCacheOnChange(item, oldItem, false);
+        updateStatsCacheOnChange(item, undefined, false);
         addOrUpdateTableRow(id, item);
       },
       function (err: any) {
@@ -115,6 +116,12 @@ export function initUserDataRef(userId: string | null): void {
         const id = snapshot.key!;
         const oldItem = allData[id];
         delete allData[id];
+        // F-06: Tüm kayıtlar silindiyse tam render et (grup ayraçlarını temizlemek için)
+        if (Object.keys(allData).length === 0) {
+          if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
+          renderAll();
+          return;
+        }
         if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
         removeTableRow(id);
       },

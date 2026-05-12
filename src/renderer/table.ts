@@ -16,7 +16,6 @@ import {
   tableBody,
 } from "./app-state";
 import {
-  isAnyModalOpen,
   normalizeTr,
   DATE_FORMAT,
   CURRENCY_FORMAT,
@@ -362,12 +361,8 @@ function isItemVisible(item: any): boolean {
 
 export function addOrUpdateTableRow(id: string, item: any, oldItem?: any): void {
   if (currentSort.col === "date") {
-    if (oldItem && item.date === oldItem.date) {
-      // tarih değişmedi: satır bazlı güncelleme yapılabilir
-    } else {
-      scheduleRender();
-      return;
-    }
+    scheduleRender();
+    return;
   }
 
   const visible = isItemVisible(item);
@@ -400,8 +395,14 @@ export function addOrUpdateTableRow(id: string, item: any, oldItem?: any): void 
 
 export function removeTableRow(id: string): void {
   const row = tableBody!.querySelector(`tr[data-id="${id}"]`);
-  if (row) row.remove();
-
+  if (row) {
+    // F-06: Satır öncesindeki grup ayracını da temizle
+    const prev = row.previousElementSibling;
+    if (prev && prev.classList.contains("group-separator")) {
+      prev.remove();
+    }
+    row.remove();
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

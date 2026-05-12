@@ -65,6 +65,12 @@ if (loginForm) {
           : firebase.auth.Auth.Persistence.SESSION,
       );
       await auth.signInWithEmailAndPassword(email, password);
+      // F-03: Başarılı giriş sonrası e-posta hatırla
+      if (rememberMeCheck?.checked) {
+        localStorage.setItem("_rememberedEmail", email);
+      } else {
+        localStorage.removeItem("_rememberedEmail");
+      }
     } catch (err: any) {
       errEl.textContent = getAuthErrorMessage(err.code);
       btn.textContent = "Giriş Yap";
@@ -131,53 +137,56 @@ if (registerForm) {
 
     try {
       const usernameKey = username.toLowerCase();
-      const tempToken = "reserving_" + Date.now() + "_" + Math.random();
       const usernameRef = db.database!.ref("usernames/" + usernameKey);
 
-      const txnResult = await usernameRef.transaction((current) => {
-        if (current === null) return tempToken;
-      });
+      const regRememberMe =
+        (document.getElementById("regRememberMe") as HTMLInputElement | null)
+          ?.checked ?? true;
+      await auth.setPersistence(
+        regRememberMe
+          ? firebase.auth.Auth.Persistence.LOCAL
+          : firebase.auth.Auth.Persistence.SESSION,
+      );
 
-      if (!txnResult.committed) {
-        errEl.textContent = "Bu kullanıcı adı zaten alınmış.";
-        btn.textContent = "Kayıt Ol";
-        btn.disabled = false;
-        return;
-      }
+      // 1. Önce Firebase Auth kullanıcısı oluştur
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      const uid = cred.user.uid;
 
-      let cred: firebase.auth.UserCredential | null = null;
       try {
-        const regRememberMe =
-          (document.getElementById("regRememberMe") as HTMLInputElement | null)
-            ?.checked ?? true;
-        await auth.setPersistence(
-          regRememberMe
-            ? firebase.auth.Auth.Persistence.LOCAL
-            : firebase.auth.Auth.Persistence.SESSION,
-        );
-        cred = await auth.createUserWithEmailAndPassword(email, password);
-        await usernameRef.set(cred.user.uid);
-        await cred.user.updateProfile({ displayName: username });
-      } catch (userErr: any) {
-        try {
-          await usernameRef.transaction(function (current) {
-            if (current === tempToken) return null;
-            return current;
-          });
-        } catch (_) {}
-        if (cred && cred.user) {
+        // 2. Sonra username rezervasyonu yap (transaction ile race condition koruması)
+        const txnResult = await usernameRef.transaction((current) => {
+          if (current === null) return uid;
+        });
+
+        var snapVal = txnResult.snapshot ? txnResult.snapshot.val() : null;
+        if (!txnResult.committed || snapVal !== uid) {
+          // Username alınmış: auth kullanıcısını sil, hata göster
           try {
             await cred.user.delete();
           } catch (_) {}
+          errEl.textContent = "Bu kullanıcı adı zaten alınmış.";
+          btn.textContent = "Kayıt Ol";
+          btn.disabled = false;
+          return;
         }
-        errEl.textContent =
-          getAuthErrorMessage(userErr.code) || "Bir hata oluştu.";
-      } finally {
-        btn.textContent = "Kayıt Ol";
-        btn.disabled = false;
+
+        // 3. İsim güncellemesi
+        await cred.user.updateProfile({ displayName: username });
+      } catch (innerErr: any) {
+        // Username yazılamadı: auth kullanıcısını temizle
+        try {
+          await cred.user.delete();
+        } catch (_) {}
+        throw innerErr;
       }
     } catch (err: any) {
-      errEl.textContent = getAuthErrorMessage(err.code);
+      if (err.code === "auth/email-already-in-use") {
+        errEl.textContent = "Bu e-posta adresi zaten kullanımda.";
+      } else {
+        errEl.textContent =
+          getAuthErrorMessage(err.code) || "Bir hata oluştu.";
+      }
+    } finally {
       btn.textContent = "Kayıt Ol";
       btn.disabled = false;
     }

@@ -114,8 +114,21 @@ export function onUserLoggedOut(): void {
     if (eyeTmpl) btn.appendChild(eyeTmpl.content.cloneNode(true));
   });
 
+  // F-03: Çıkış sonrası e-posta alanını localStorage'daki hatırlanan değerle doldur
+  var _remembered = localStorage.getItem("_rememberedEmail");
+  var _loginEmailEl = document.getElementById("loginEmail") as HTMLInputElement | null;
+  if (_loginEmailEl && _remembered) {
+    _loginEmailEl.value = _remembered;
+  }
+
   _teardownPosts();
   closeAllModals();
+
+  // F-04: Çıkış sonrası post view kalıntılarını temizle
+  sessionStorage.removeItem("_viewingPostId");
+  sessionStorage.removeItem("_pvPreviousPage");
+  sessionStorage.removeItem("_pvScrollTop");
+  (window as any)._viewingPostId = null;
 
   if (authOverlay) authOverlay.classList.add("active");
 }

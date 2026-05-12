@@ -171,7 +171,7 @@ function _initCommentListener(postId: string): void {
       getPostCards(lru).forEach(function (card) {
         var sec = card.querySelector(".comment-section");
         if (sec) sec.classList.remove("visible");
-        var list = card.querySelector("#commentList-" + lru);
+        var list = card.querySelector('[id="commentList-' + lru + '"]');
         if (list) list.innerHTML = "";
         var btn = card.querySelector(".comment-btn");
         if (btn) btn.classList.remove("active");

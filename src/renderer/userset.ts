@@ -64,7 +64,10 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
 function goBackToSettings(from: string): void {
   if (from === "changePass") closeChangePassModal();
   if (from === "deleteAcc") closeDeleteModal();
-  openSettingsModal();
+  // F-09: Modal kapanma animasyonu (220ms CSS transition) bitmeden açma
+  setTimeout(function () {
+    openSettingsModal();
+  }, 240);
 }
 
 document.getElementById("backToSettingsFromPass")?.addEventListener("click", () => goBackToSettings("changePass"));
@@ -177,6 +180,58 @@ saveBtn?.addEventListener("click", async () => {
     }
 
     await user.updateProfile({ displayName: newName });
+
+    // F-08: Geçmiş post/yorum/yanıtlardaki kullanıcı adını güncelle
+    try {
+      const postIdsSnap = await db.database!.ref("userPosts/" + user.uid).once("value");
+      const postIds = postIdsSnap.val() as Record<string, number> | null;
+      if (postIds) {
+        const postKeys = Object.keys(postIds);
+        var batchSize = 10;
+        for (var i = 0; i < postKeys.length; i += batchSize) {
+          var batch: Record<string, any> = {};
+          var chunk = postKeys.slice(i, i + batchSize);
+          for (var j = 0; j < chunk.length; j++) {
+            var pid = chunk[j];
+            var postSnap = await db.database!.ref("posts/" + pid).once("value");
+            var postData = postSnap.val() as Record<string, any> | null;
+            if (!postData) continue;
+            // Post sahibi ise username alanını güncelle
+            if (postData.uid === user.uid) {
+              batch["posts/" + pid + "/username"] = newName;
+            }
+            // Yorumlarda kullanıcı adını güncelle
+            if (postData.comments) {
+              var cids = Object.keys(postData.comments);
+              for (var k = 0; k < cids.length; k++) {
+                var cid = cids[k];
+                var comment = postData.comments[cid];
+                if (comment.uid === user.uid) {
+                  batch["posts/" + pid + "/comments/" + cid + "/username"] = newName;
+                }
+                // Yanıtlarda kullanıcı adını güncelle
+                if (comment.replies) {
+                  var rids = Object.keys(comment.replies);
+                  for (var l = 0; l < rids.length; l++) {
+                    var rid = rids[l];
+                    var reply = comment.replies[rid];
+                    if (reply.uid === user.uid) {
+                      batch["posts/" + pid + "/comments/" + cid + "/replies/" + rid + "/username"] = newName;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          if (Object.keys(batch).length > 0) {
+            await db.database!.ref().update(batch);
+          }
+        }
+      }
+    } catch (_) {
+      // Geçmiş güncelleme başarısız — kritik değil
+    }
+
     const userEmailEl = document.getElementById("userEmail");
     if (userEmailEl) userEmailEl.textContent = newName;
     const profileUsernameEl = document.getElementById("profileUsername");

@@ -39,8 +39,10 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
                   await firebase.storage().refFromURL(imageUrl).delete();
                 } catch (_) {}
               }
-              const likesSnap = await db.postsRef!.child(id).child("likes").once("value");
-              const likes = likesSnap.val() || {};
+              // F-13: allPosts cache'inde likes varsa tekrar fetch etme
+              const likes =
+                (postDataMap[id] && postDataMap[id].likes) ||
+                ((await db.postsRef!.child(id).child("likes").once("value")).val() || {});
               const updates: Record<string, any> = {};
               updates["posts/" + id] = null;
               Object.keys(likes).forEach(function (userId) {

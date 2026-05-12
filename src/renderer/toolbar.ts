@@ -49,6 +49,18 @@ export function rebuildStatsCache(): void {
 
 /* ─────────────────── Önbellek Güncelleme ─────────────────── */
 
+// F-17: Ardışık rebuildStatsCache çağrılarını RAF ile debounce et
+let _rebuildScheduled = false;
+function scheduleRebuild(): void {
+  if (_rebuildScheduled) return;
+  _rebuildScheduled = true;
+  requestAnimationFrame(function () {
+    _rebuildScheduled = false;
+    rebuildStatsCache();
+  });
+}
+
+
 export function updateStatsCacheOnChange(
   item: any,
   oldItem: any | undefined,
@@ -65,7 +77,7 @@ export function updateStatsCacheOnChange(
       c.healthy--;
     }
     if (c.mostExpId === item.id) {
-      rebuildStatsCache();
+      scheduleRebuild();
       return;
     }
   } else {
@@ -95,7 +107,7 @@ export function updateStatsCacheOnChange(
         c.mostExpId === item.id ||
         newPrice > c.mostExpPrice
       ) {
-        rebuildStatsCache();
+        scheduleRebuild();
         return;
       }
     }

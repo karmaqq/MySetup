@@ -61,17 +61,25 @@ export function initPosts(): void {
     initUserPostsListener(user.uid, (window as any)._onUserPostsChanged);
   }
 
-  if (typeof (window as any)._restorePostViewOnLoad === "function") {
-    (window as any)._restorePostViewOnLoad();
-  }
 }
 
 /* ─────────────────── Çıkış yapıldığında çağrılır ─────────────────── */
+
+let _fullChangedRef: firebase.database.Reference | null = null;
+let _fullRemovedRef: firebase.database.Reference | null = null;
 
 export function _teardownPosts(): void {
   if (_postsQuery) {
     _postsQuery.off();
     _postsQuery = null;
+  }
+  if (_fullChangedRef) {
+    _fullChangedRef.off("child_changed", _onPostChanged);
+    _fullChangedRef = null;
+  }
+  if (_fullRemovedRef) {
+    _fullRemovedRef.off("child_removed", _onPostRemoved);
+    _fullRemovedRef = null;
   }
   _postsListenerActive = false;
   (window as any)._postsListenerActive = false;
@@ -185,6 +193,7 @@ function _listenForNewPosts(ref: firebase.database.Query): void {
   _postsListenerActive = true;
   (window as any)._postsListenerActive = true;
 
+  // Sadece yeni postlar için startAt filtresi
   const liveQuery = ref.startAt(_newestLoadedTs + 1);
   _postsQuery = liveQuery;
 
@@ -201,8 +210,12 @@ function _listenForNewPosts(ref: firebase.database.Query): void {
     _insertPostToFeed(id, data, true);
   });
 
-  liveQuery.on("child_changed", _onPostChanged);
-  liveQuery.on("child_removed", _onPostRemoved);
+  // child_changed ve child_removed TÜM yüklü postlar için tam ref üzerinde dinlenir
+  const fullRef = db.postsRef!;
+  _fullChangedRef = fullRef;
+  _fullRemovedRef = fullRef;
+  fullRef.on("child_changed", _onPostChanged);
+  fullRef.on("child_removed", _onPostRemoved);
 }
 
 /* ─────────────────── Daha fazla post yükle (sayfalama) ─────────────────── */

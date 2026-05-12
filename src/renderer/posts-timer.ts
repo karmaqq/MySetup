@@ -6,6 +6,20 @@ import { _currentPage } from "./app-state";
 import { formatTimeAgo } from "./global-ut";
 import { allPosts } from "./posts-render";
 
+// F-15: requestIdleCallback polyfill (Safari web build uyumluluğu)
+var _requestIdle: (cb: IdleRequestCallback, opts?: IdleRequestOptions) => number =
+  typeof requestIdleCallback !== "undefined"
+    ? requestIdleCallback
+    : function (cb) {
+        return window.setTimeout(function () {
+          cb({ didTimeout: false, timeRemaining: function () { return 50; } } as IdleDeadline);
+        }, 200);
+      };
+var _cancelIdle: (id: number) => void =
+  typeof cancelIdleCallback !== "undefined"
+    ? cancelIdleCallback
+    : window.clearTimeout.bind(window);
+
 let _timeUpdateIdleHandle: number | null = null;
 let _timeUpdateTimeout: number | null = null;
 let _visibilityListenerRegistered = false;
@@ -63,10 +77,10 @@ function _runTimeUpdateBatch() {
 
 function _scheduleTimeUpdateIdle() {
   if (_timeUpdateIdleHandle) {
-    cancelIdleCallback(_timeUpdateIdleHandle);
+    _cancelIdle(_timeUpdateIdleHandle);
     _timeUpdateIdleHandle = null;
   }
-  _timeUpdateIdleHandle = requestIdleCallback(_runTimeUpdateBatch, {
+  _timeUpdateIdleHandle = _requestIdle(_runTimeUpdateBatch, {
     timeout: 2000,
   });
 }
@@ -90,7 +104,7 @@ function _stopTimeUpdateInterval(): void {
     _timeUpdateTimeout = null;
   }
   if (_timeUpdateIdleHandle) {
-    cancelIdleCallback(_timeUpdateIdleHandle);
+    _cancelIdle(_timeUpdateIdleHandle);
     _timeUpdateIdleHandle = null;
   }
 }
