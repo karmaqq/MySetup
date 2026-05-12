@@ -87,13 +87,8 @@ export function showConfirm(message: string, onConfirm: () => void, opts?: { yes
 /* ─────────────────── Render Yönetimi ─────────────────── */
 
 let _renderRafId: number | null = null;
-let _pendingRender = false;
 
 export function scheduleRender(): void {
-  if (isAnyModalOpen()) {
-    _pendingRender = true;
-    return;
-  }
   if (_renderRafId) cancelAnimationFrame(_renderRafId);
   _renderRafId = requestAnimationFrame(function () {
     _renderRafId = null;

@@ -7,6 +7,8 @@ import { showToast } from "./global-fn";
 
 const changePasswordModal = document.getElementById("changePasswordModal") as HTMLElement | null;
 
+/* ─────────────────── Modal Kapatma ─────────────────── */
+
 export function closeChangePassModal(): void {
   const form = document.getElementById("changePasswordForm") as HTMLFormElement | null;
   if (form) form.reset();

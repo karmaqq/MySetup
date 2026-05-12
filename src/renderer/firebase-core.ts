@@ -86,7 +86,6 @@ export function initUserDataRef(userId: string | null): void {
         if (_initToken !== sessionToken) return;
         if (!db.userDataRef) return;
         if (err && err.toString().includes("permission_denied")) return;
-        // child_added hatası sessizce geçildi
       },
     );
 
@@ -100,13 +99,12 @@ export function initUserDataRef(userId: string | null): void {
         const oldItem = allData[id];
         allData[id] = item;
         updateStatsCacheOnChange(item, oldItem, false);
-        addOrUpdateTableRow(id, item);
+        addOrUpdateTableRow(id, item, oldItem);
       },
       function (err: any) {
         if (_initToken !== sessionToken) return;
         if (!db.userDataRef) return;
         if (err && err.toString().includes("permission_denied")) return;
-        // child_changed hatası sessizce geçildi
       },
     );
 
@@ -124,7 +122,6 @@ export function initUserDataRef(userId: string | null): void {
         if (_initToken !== sessionToken) return;
         if (!db.userDataRef) return;
         if (err && err.toString().includes("permission_denied")) return;
-        // child_removed hatası sessizce geçildi
       },
     );
   });

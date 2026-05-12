@@ -133,9 +133,8 @@ function _startPostsListener(): void {
       }
 
       if (keys.length >= PAGE_SIZE) {
-        _checkHasMorePosts(
-          raw[_oldestLoadedKey!] ? raw[_oldestLoadedKey!].createdAt : null,
-        );
+        _hasMorePosts = true;
+        _renderLoadMoreBtn();
       } else {
         _hasMorePosts = false;
         _removeLoadMoreBtn();
@@ -147,26 +146,7 @@ function _startPostsListener(): void {
     });
 }
 
-/* ─────────────────── Veritabanında daha fazla post var mı kontrol eder ─────────────────── */
 
-function _checkHasMorePosts(oldestTs: number | null): void {
-  if (!oldestTs) {
-    _hasMorePosts = false;
-    _removeLoadMoreBtn();
-    return;
-  }
-  db.postsRef!.orderByChild("createdAt")
-    .endAt(oldestTs - 1)
-    .limitToLast(1)
-    .once("value", function (snap: firebase.database.DataSnapshot) {
-      _hasMorePosts = snap.exists();
-      if (_hasMorePosts) {
-        _renderLoadMoreBtn();
-      } else {
-        _removeLoadMoreBtn();
-      }
-    });
-}
 
 /* ─────────────────── Yeni gelen postları gerçek zamanlı dinler ─────────────────── */
 
@@ -266,8 +246,8 @@ function _loadMorePosts(): void {
           _hasMorePosts = false;
           _removeLoadMoreBtn();
         } else {
-          const newOldestTs = raw[_oldestLoadedKey].createdAt;
-          _checkHasMorePosts(newOldestTs);
+          _hasMorePosts = true;
+          _renderLoadMoreBtn();
         }
       } else {
         _hasMorePosts = false;

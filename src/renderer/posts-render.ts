@@ -218,8 +218,6 @@ export function _onlyLikesChanged(oldPost: any, newPost: any): boolean {
     return false;
   var oldComments = oldPost.comments || {};
   var newComments = newPost.comments || {};
-  if (Object.keys(oldComments).length !== Object.keys(newComments).length)
-    return false;
   for (var cid of Object.keys(newComments)) {
     if (!oldComments[cid]) return false;
     if (oldComments[cid].text !== newComments[cid].text) return false;

@@ -25,6 +25,8 @@ import { CURRENCY_FORMAT } from "./global-ut";
 /*                          İSTATİSTİK HESAPLAMA                             */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── İstatistik Önbelleği ─────────────────── */
+
 export function rebuildStatsCache(): void {
   const c = getStatsCache();
   c.total = 0;
@@ -44,6 +46,8 @@ export function rebuildStatsCache(): void {
     }
   }
 }
+
+/* ─────────────────── Önbellek Güncelleme ─────────────────── */
 
 export function updateStatsCacheOnChange(
   item: any,
@@ -97,6 +101,8 @@ export function updateStatsCacheOnChange(
     }
   }
 }
+
+/* ─────────────────── İstatistik Görüntüleme ─────────────────── */
 
 export function updateStats(filteredList: any[]): void {
   const isFiltered = currentSearch || currentStatusFilter !== "all";
@@ -168,6 +174,8 @@ export function updateStats(filteredList: any[]): void {
     totalCostDisplay.textContent = CURRENCY_FORMAT.format(filteredTotal) + " ₺";
 }
 
+/* ─────────────────── Sonuç Sayısı ─────────────────── */
+
 export function updateResultCount(filteredCount: number): void {
   const total = Object.keys(allData).length;
   const isFiltered = currentSearch || currentStatusFilter !== "all";
@@ -194,7 +202,7 @@ if (searchInput && clearSearch) {
     if (_searchDebounce) clearTimeout(_searchDebounce);
     _searchDebounce = window.setTimeout(() => {
       scheduleRender();
-    }, 180);
+    }, 250);
   });
 
   clearSearch.addEventListener("click", () => {

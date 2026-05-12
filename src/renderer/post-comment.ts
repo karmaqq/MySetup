@@ -27,6 +27,8 @@ function _buildDeleteDropdownHTML(
 /*                       YORUM HTML                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Yorum İş Parçacığı ─────────────────── */
+
 export function _renderCommentThreadHTML(
   postId: string,
   commentId: string,
@@ -111,6 +113,8 @@ export function _renderCommentThreadHTML(
 /*                          YANIT HTML                                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Yanıt İş Parçacığı ─────────────────── */
+
 export function _renderReplyHTML(
   postId: string,
   commentId: string,
@@ -158,6 +162,8 @@ export function _renderReplyHTML(
 /*                      YORUM/YANIT BEĞENİ DOM GÜNCELLEME                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Yorum Beğeni Güncelleme ─────────────────── */
+
 export function _patchCommentLikeBtn(
   postId: string,
   commentId: string,
@@ -176,6 +182,8 @@ export function _patchCommentLikeBtn(
   const span = document.querySelector(`.like-count-c-${commentId}`);
   if (span) span.textContent = String(count);
 }
+
+/* ─────────────────── Yanıt Beğeni Güncelleme ─────────────────── */
 
 export function _patchReplyLikeBtn(
   postId: string,

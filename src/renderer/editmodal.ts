@@ -43,6 +43,8 @@ let currentRating = 0;
 /*                          MODAL YÖNETİMİ                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Modal Açma ─────────────────── */
+
 export function openEditModal(
   id: string,
   focusTarget: string = "component",
@@ -126,13 +128,14 @@ export function openEditModal(
   });
 }
 
+/* ─────────────────── Modal Kapatma ─────────────────── */
+
 export function closeEditModal(): void {
   if (editModal) editModal.classList.remove("active");
   setEditingId(null);
-  if ((window as any)._flushPendingRender) {
-    (window as any)._flushPendingRender();
-  }
 }
+
+/* ─────────────────── Modal Kaydetme ─────────────────── */
 
 export function saveEditModal(): void {
   if (!editingId) return;

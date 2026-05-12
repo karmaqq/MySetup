@@ -29,15 +29,7 @@ import {
   updateResultCount,
 } from "./toolbar";
 
-let _pendingRender = false;
 let _vsRafId: number | null = null;
-
-(window as any)._flushPendingRender = function () {
-  if (_pendingRender) {
-    _pendingRender = false;
-    renderAll();
-  }
-};
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          FİLTRELEME VE SIRALAMA                          */
@@ -107,11 +99,13 @@ function getStatusClassName(statusValue: string): string {
   return "status-healthy";
 }
 
-export function buildStatusCellInnerHTML(item: any): string {
+/* ─────────────────── Durum Hücresi ─────────────────── */
+
+export function buildStatusCellContent(item: any): string {
   const statusClass = getStatusClassName(item.status);
   const safeId = escAttr(item.id);
   const safeStatus = escHtml(item.status);
-  return `<td class="status-cell"><div class="status-cell-inner">
+  return `<div class="status-cell-inner">
     <div class="status-menu">
       <span class="status-label ${statusClass}">${safeStatus}</span>
       <div class="status-options">
@@ -125,7 +119,11 @@ export function buildStatusCellInnerHTML(item: any): string {
       <button class="action-btn edit-btn"   data-action="edit-item"   data-id="${safeId}" title="Düzenle">✎</button>
       <button class="action-btn delete-btn" data-action="delete-item" data-id="${safeId}" title="Sil">✕</button>
     </div>
-  </div></td>`;
+  </div>`;
+}
+
+export function buildStatusCellInnerHTML(item: any): string {
+  return `<td class="status-cell">${buildStatusCellContent(item)}</td>`;
 }
 
 function buildCombinedSpecsCellHTML(item: any): string {
@@ -362,10 +360,14 @@ function isItemVisible(item: any): boolean {
 
 /* ─────────────────── Satır Ekle veya Güncelle ─────────────────── */
 
-export function addOrUpdateTableRow(id: string, item: any): void {
+export function addOrUpdateTableRow(id: string, item: any, oldItem?: any): void {
   if (currentSort.col === "date") {
-    scheduleRender();
-    return;
+    if (oldItem && item.date === oldItem.date) {
+      // tarih değişmedi: satır bazlı güncelleme yapılabilir
+    } else {
+      scheduleRender();
+      return;
+    }
   }
 
   const visible = isItemVisible(item);

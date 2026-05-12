@@ -324,9 +324,9 @@ npx tsc --noEmit                          # renderer tip kontrolü
 npx tsc --noEmit -p tsconfig.main.json    # main tip kontrolü
 ```
 
-### Firebase Delete Race Condition (v3.3.2 — K1 Fix)
+### Firebase Delete Race Condition (v3.3.2 — K1 Fix, v3.3.3 — F-01 Fix)
 
-**Kritik:** `deletePostFromFirebase`'de (`firebase-post.ts:44-61`) likes snapshot okuma ile post silme arasında yeni beğeni eklenirse `userLikes/{userId}/{postId}` orphan kalır. Aynı sorun `deleteUserAccount`'ta da var.
+**Kritik:** `deletePostFromFirebase`'de (`firebase-post.ts`) likes snapshot okuma ile post silme arasında yeni beğeni eklenirse `userLikes/{userId}/{postId}` orphan kalır.
 
 **1. Anlık Silme (deletePostFromFirebase):** Multi-path `update()` ile atomik cleanup:
 
@@ -339,17 +339,15 @@ Object.keys(likes).forEach(function (userId) {
 return db.database!.ref().update(updates);
 ```
 
-**2. Hesap Silme (deleteUserAccount):** Post loop'undaki atomic per-post cleanup + sonrasında `userLikes` altında orphan kalan kayıtları temizleyen ikincil tarama:
+**2. Hesap Silme (deleteUserAccount - OPTİMİZE):** Artık `userLikes` tam ağaç taraması **KALDIRILMIŞTIR**. Per-post atomic cleanup zaten tüm liker'ları temizler. Race condition orphan'ları uygulama katmanında görünmez (`getPostsByIds` null post'ları filtreler). Akış:
 
 ```typescript
-// 1. Tüm postları batch'ler halinde atomik sil
-// 2. userLikes altında kalan orphan post referanslarını temizle
+// 1. Kendi userLikes/{uid} düğümünü temizle
+// 2. Tüm postları batch'ler halinde atomik sil (liker'ları da temizler)
 // 3. userPosts, users, usernames node'larını temizle
 // 4. Storage klasörünü sil
 // 5. user.delete() ile Auth kaydını sil
 ```
-
-Orphan temizleme için `deleteUserAccount` sonunda tüm `userLikes` node'ları taranır ve silinen post ID'lerine referans veren entry'ler null'lanır.
 
 ### Storage Cleanup Zorunluluğu
 
@@ -379,7 +377,10 @@ Tüm dosyalar `/users/{uid}/` altında olduğu için tek bir kural yeterlidir. D
 | Yeni `window` property'si           | `global.d.ts`'yi güncelle                                    |
 | `escAttr` + `escHtml` ardışık       | **Çift escape** oluşur; birini kullan                        |
 | `currentUser!` non-null hatası      | `if (!currentUser) return;` guard'ı ekle, `!` kullanma       |
-| `style.color` inline CSS            | CSS class kullan (`.auth-error.success`)                     |
+| `style.color` inline CSS            | CSS class kullan (`.auth-error.success`) — userset.ts'de tüm `style.color` kaldırıldı (element zaten `.auth-error` class'ına sahip) |
 | `var` kullanımı                     | `let` / `const` ile değiştir                                 |
 | `throw undefined`                   | `throw error || new Error("mesaj")` ile güvenceye al         |
 | Circular import                    | Tek yönlü bağımlılık kur; alt modüller üst modülü import etmesin|
+| `window._flushPendingRender`       | KALDIRILDI (F-09) — `scheduleRender()` artık modal kontrolü yapmaz; dead code temizlendi |
+| `_checkHasMorePosts`               | KALDIRILDI (F-02) — `keys.length >= PAGE_SIZE` yeterli, ayrı Firebase sorgusu gerekmez |
+| Profil sekme state değişkenleri    | `TabState` arayüzüne taşındı (F-07) — `_tabStates["userPostsTab"]`, `_tabStates["likedPostsTab"]` |

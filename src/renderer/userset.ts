@@ -84,6 +84,8 @@ const cancelBtn = document.getElementById("cancelUsernameBtn") as HTMLElement | 
 const nameInput = document.getElementById("settingsDisplayName") as HTMLInputElement | null;
 const usernameErrEl = document.getElementById("usernameError") as HTMLElement | null;
 
+/* ─────────────────── Düzenleme Durumu Sıfırlama ─────────────────── */
+
 export function resetUsernameEditState(): void {
   const user = currentUser;
   if (nameInput) { nameInput.value = user?.displayName || ""; nameInput.readOnly = true; }
@@ -120,7 +122,6 @@ nameInput?.addEventListener("input", () => {
   else if (val.length > 0 && val.length < 3) msg = "En az 3 karakter gerekli";
 
   usernameErrEl.textContent = msg;
-  usernameErrEl.style.color = msg ? "var(--red)" : "";
 
   const isDirty = val.trim() !== originalName.trim();
   const isValid = !msg && val.trim().length >= 3;
@@ -135,7 +136,7 @@ saveBtn?.addEventListener("click", async () => {
   if (usernameErrEl) usernameErrEl.textContent = "";
 
   if (!newName || newName.length < 3) {
-    if (usernameErrEl) { usernameErrEl.textContent = "Kullanıcı adı en az 3 karakter olmalı"; usernameErrEl.style.color = "var(--red)"; }
+    if (usernameErrEl) usernameErrEl.textContent = "Kullanıcı adı en az 3 karakter olmalı";
     return;
   }
 
@@ -144,7 +145,7 @@ saveBtn?.addEventListener("click", async () => {
   try {
     const user = currentUser;
     if (!user) {
-      if (usernameErrEl) { usernameErrEl.textContent = "Oturum bulunamadı, tekrar giriş yapın"; usernameErrEl.style.color = "var(--red)"; }
+      if (usernameErrEl) usernameErrEl.textContent = "Oturum bulunamadı, tekrar giriş yapın";
       saveBtn.disabled = false;
       return;
     }
@@ -155,7 +156,7 @@ saveBtn?.addEventListener("click", async () => {
 
     if (oldName !== newKey) {
       if (!/^[a-z0-9._-]{3,32}$/.test(newKey)) {
-        if (usernameErrEl) { usernameErrEl.textContent = "Geçersiz kullanıcı adı"; usernameErrEl.style.color = "var(--red)"; }
+        if (usernameErrEl) usernameErrEl.textContent = "Geçersiz kullanıcı adı";
         saveBtn.disabled = false;
         return;
       }
@@ -166,14 +167,12 @@ saveBtn?.addEventListener("click", async () => {
         return;
       });
       if (!txnResult.committed || (txnResult.snapshot?.exists() && txnResult.snapshot!.val() !== user.uid)) {
-        if (usernameErrEl) { usernameErrEl.textContent = "Bu kullanıcı adı zaten alınmış"; usernameErrEl.style.color = "var(--red)"; }
+        if (usernameErrEl) usernameErrEl.textContent = "Bu kullanıcı adı zaten alınmış";
         saveBtn.disabled = false;
         return;
       }
       if (oldName && oldName !== newKey) {
-        try { await db.database!.ref("usernames/" + oldName).remove(); } catch (e) {
-          // Eski kullanıcı adı silinemedi — veritabanında kalabilir
-        }
+        try { await db.database!.ref("usernames/" + oldName).remove(); } catch (e) { /* eski kullanıcı adı silinemedi */ }
       }
     }
 
@@ -196,7 +195,7 @@ saveBtn?.addEventListener("click", async () => {
     const msg = err.code === "PERMISSION_DENIED" || err.message?.includes("Permission")
       ? "Yetki hatası — tekrar giriş yapıp deneyin"
       : err.message || "Hata oluştu";
-    if (usernameErrEl) { usernameErrEl.textContent = msg; usernameErrEl.style.color = "var(--red)"; }
+    if (usernameErrEl) usernameErrEl.textContent = msg;
     saveBtn.disabled = false;
   }
 });

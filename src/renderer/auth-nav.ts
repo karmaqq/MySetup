@@ -124,6 +124,8 @@ export function onUserLoggedOut(): void {
 /*                         YARDIMCI FONKSİYONLAR                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Yükleniyor Gizleme ─────────────────── */
+
 export function hideLoading(): void {
   const el = document.getElementById("authLoading");
   if (!el) return;
@@ -131,6 +133,8 @@ export function hideLoading(): void {
   el.style.transition = "opacity 0.25s ease";
   setTimeout(() => { el.style.display = "none"; }, 260);
 }
+
+/* ─────────────────── Hata Mesajı ─────────────────── */
 
 export function getAuthErrorMessage(code: string): string {
   const messages: Record<string, string> = {

@@ -78,10 +78,10 @@ if (window.electronAPI) {
 
   window.electronAPI.onUpdateDownloaded?.(() => {
     if (!updateBtn || !updateBtnSpan) return;
-    updateBtnSpan.textContent = "Yeniden Başlatılıyor";
-    updateBtn.style.pointerEvents = "none";
-    startDotAnimation();
-    window.electronAPI.launchUpdater();
+    updateBtn.classList.remove("downloading");
+    updateBtn.classList.add("visible", "ready");
+    updateBtnSpan.textContent = "Yeniden Başlatmak için Tıkla";
+    updateBtn.style.pointerEvents = "";
   });
 
   /* ─────────────────── Güncelleme Hatası ─────────────────── */

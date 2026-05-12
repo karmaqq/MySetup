@@ -36,8 +36,4 @@ if (firebaseConfig) {
   db.postsRef = db.database.ref("posts");
   db.userPostsRef = db.database.ref("userPosts");
   db.userLikesRef = db.database.ref("userLikes");
-} else {
-  console.error(
-    "Firebase config bulunamadı. js/firebase-config.js dosyasını oluşturun.",
-  );
 }

@@ -12,7 +12,7 @@ import {
 } from "./firebase-inv";
 import { openEditModal } from "./editmodal";
 import { updateStats, rebuildStatsCache, updateStatsCacheOnChange } from "./toolbar";
-import { buildStatusCellInnerHTML, getFilteredSortedList } from "./table";
+import { buildStatusCellContent, getFilteredSortedList } from "./table";
 
 /* ─────────────────── Durum Güncelleme ─────────────────── */
 
@@ -35,7 +35,7 @@ function updateItemStatus(itemId: string, newStatus: string): void {
     if (cell && cell.parentNode) {
       const newCell = document.createElement("td");
       newCell.className = "status-cell";
-      newCell.innerHTML = buildStatusCellInnerHTML(
+      newCell.innerHTML = buildStatusCellContent(
         Object.assign({ id: itemId }, currentItem),
       );
       cell.parentNode.replaceChild(newCell, cell);

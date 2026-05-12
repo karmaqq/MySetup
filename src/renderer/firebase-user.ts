@@ -61,25 +61,6 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
       return { success: false, error: new Error(postErrors.length + " post silinemedi.") };
     }
 
-    const orphanDeletes: Record<string, any> = {};
-    const userLikesSnap = await db.database!.ref("userLikes").once("value");
-    if (userLikesSnap.exists()) {
-      userLikesSnap.forEach(function (userLikesEntry) {
-        const userId = userLikesEntry.key;
-        if (!userId) return;
-        userLikesEntry.forEach(function (postEntry) {
-          if (postIds.indexOf(postEntry.key!) !== -1) {
-            orphanDeletes["userLikes/" + userId + "/" + postEntry.key] = null;
-          }
-        });
-      });
-    }
-    const orphanKeys = Object.keys(orphanDeletes);
-    if (orphanKeys.length > 0) {
-      orphanDeletes["userPosts/" + uid] = null;
-      await db.database!.ref().update(orphanDeletes);
-    }
-
     await db.database!.ref("userPosts/" + uid).remove();
     await db.database!.ref("users/" + uid).remove();
 

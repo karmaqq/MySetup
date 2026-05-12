@@ -7,27 +7,60 @@ import { escAttr } from "./global-ut";
 import { showToast, showConfirm } from "./global-fn";
 import { updateComponentInFirebase } from "./firebase-inv";
 
+/* ─────────────────── Görsel Sıkıştırma ─────────────────── */
+
+function compressImage(file: File, maxWidth: number = 800, quality: number = 0.82): Promise<Blob> {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function () {
+      var scale = Math.min(1, maxWidth / img.naturalWidth);
+      var canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth * scale;
+      canvas.height = img.naturalHeight * scale;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        function (blob) {
+          URL.revokeObjectURL(url);
+          if (blob) resolve(blob);
+          else reject(new Error("Sıkıştırma başarısız"));
+        },
+        "image/webp",
+        quality,
+      );
+    };
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      reject(new Error("Görsel yüklenemedi"));
+    };
+    img.src = url;
+  });
+}
+
 /* ─────────────────── Storage'a Görsel Yükle ─────────────────── */
 
-export function uploadImageToFirebase(file: File, itemId: string): Promise<string> {
+function _doUpload(blob: Blob, path: string): Promise<string> {
   return new Promise(function (resolve, reject) {
-    const user = currentUser;
-    if (!user) return reject("Kullanıcı yok");
-    const storageRef = firebase.storage().ref();
-    const imageRef = storageRef.child(
-      "users/" + user.uid + "/components/" + itemId + "/image",
-    );
-    const uploadTask = imageRef.put(file);
+    var storageRef = firebase.storage().ref();
+    var imageRef = storageRef.child(path);
+    var uploadTask = imageRef.put(blob);
     uploadTask.on(
       "state_changed",
       undefined,
-      function (error: any) {
-        reject(error);
-      },
+      function (error: any) { reject(error); },
       function () {
         uploadTask.snapshot.ref.getDownloadURL().then(resolve).catch(reject);
       },
     );
+  });
+}
+
+export function uploadImageToFirebase(file: File, itemId: string): Promise<string> {
+  var user = currentUser;
+  if (!user) return Promise.reject("Kullanıcı yok");
+  var path = "users/" + user.uid + "/components/" + itemId + "/image";
+  return compressImage(file, 800, 0.82).then(function (blob) {
+    return _doUpload(blob, path);
   });
 }
 

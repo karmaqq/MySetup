@@ -83,10 +83,7 @@ function checkForUpdates(): void {
     console.log("[Updater] Development modunda, güncelleme kontrolü atlanıyor");
     return;
   }
-  console.log("[Updater] GitHub'dan güncelleme kontrol ediliyor...");
-  autoUpdater.checkForUpdates().catch((err: Error) => {
-    console.error("[Updater] Hata:", err.message);
-  });
+  autoUpdater.checkForUpdates().catch(function () { return; });
 }
 
 /* ─────────────────── Dışa Aktarım ─────────────────── */

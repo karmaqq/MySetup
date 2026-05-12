@@ -33,6 +33,8 @@ let selectedPostImage: File | null = null;
 /*                           POST OLUŞTURMA                                  */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Post Oluşturma ─────────────────── */
+
 export function createPost(): void {
   const text = (postText ? postText.value : "").trim();
   if (!text && !selectedPostImage) {
@@ -68,31 +70,57 @@ export function createPost(): void {
 
 /* ─────────────────── Görsel varsa önce yükle, sonra kaydet ─────────────────── */
 
+function _compressPostImage(file: File): Promise<Blob> {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function () {
+      var scale = Math.min(1, 1200 / img.naturalWidth);
+      var canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth * scale;
+      canvas.height = img.naturalHeight * scale;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        function (blob) {
+          URL.revokeObjectURL(url);
+          if (blob) resolve(blob);
+          else reject(new Error("Sıkıştırma başarısız"));
+        },
+        "image/webp",
+        0.82,
+      );
+    };
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      reject(new Error("Görsel yüklenemedi"));
+    };
+    img.src = url;
+  });
+}
+
 function _uploadAndSavePost(postData: Record<string, any>, file: File): void {
   const user = currentUser;
   if (!user) { showToast("Oturum bulunamadı.", "error"); return; }
-  const ref = firebase
-    .storage()
-    .ref()
-    .child("users/" + user.uid + "/posts/" + Date.now());
+  const path = "users/" + user.uid + "/posts/" + Date.now();
 
-  ref
-    .put(file)
-    .then(function (snap: firebase.storage.UploadTaskSnapshot) {
-      return snap.ref.getDownloadURL();
-    })
-    .then(function (url) {
-      postData.imageUrl = url;
-      _savePost(postData);
-      return;
-    })
-    .catch(function () {
-      if (publishPostBtn) {
-        (publishPostBtn as HTMLButtonElement).disabled = false;
-        publishPostBtn.textContent = "Yayınla";
-      }
-      showToast("Görsel yüklenemedi.", "error");
-    });
+  _compressPostImage(file).then(function (blob) {
+    var ref = firebase.storage().ref().child(path);
+    return ref
+      .put(blob)
+      .then(function (snap: firebase.storage.UploadTaskSnapshot) {
+        return snap.ref.getDownloadURL();
+      })
+      .then(function (url) {
+        postData.imageUrl = url;
+        _savePost(postData);
+      });
+  }).catch(function () {
+    if (publishPostBtn) {
+      (publishPostBtn as HTMLButtonElement).disabled = false;
+      publishPostBtn.textContent = "Yayınla";
+    }
+    showToast("Görsel yüklenemedi.", "error");
+  });
 }
 
 /* ─────────────────── Firebase'e post yazar, formu sıfırlar ─────────────────── */

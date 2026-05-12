@@ -8,6 +8,8 @@ import { showToast } from "./global-fn";
 
 const deleteAccountModal = document.getElementById("deleteAccountModal") as HTMLElement | null;
 
+/* ─────────────────── Modal Kapatma ─────────────────── */
+
 export function closeDeleteModal(): void {
   const form = document.getElementById("deleteAccountForm") as HTMLFormElement | null;
   if (form) form.reset();
