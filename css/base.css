@@ -39,17 +39,26 @@
   --scrollbar-width: 20px;
   --scrollbar-thumb: var(--border2);
   --scrollbar-thumb-hover: var(--text-dim);
-  --col-date: 110px;
-  --col-component: 140px;
-  --col-price: 120px;
-  --col-vendor: 120px;
-  --col-status: 170px;
+  --col-date: 120px;
+  --col-component: 150px;
+  --col-price: 130px;
+  --col-vendor: 130px;
+  --col-status: 180px;
   --title-bar-height: 35px;
   --sidebar-width: 250px;
   --text-btn: #000;
   --sidebar-gap: 10px;
   --content-margin: 10px;
   --footer-height: 35px;
+  --titlebar-bg: rgba(0, 0, 0, 0.05);
+  --titlebar-border: rgba(126, 126, 126, 0.096);
+  --footer-bg: rgba(0, 0, 0, 0.05);
+  --footer-border: rgba(255, 255, 255, 0.05);
+  --footer-text: rgba(255, 255, 255, 0.5);
+  --toast-shadow: rgba(0, 0, 0, 0.4);
+  --modal-overlay: rgba(0, 0, 0, 0.7);
+  --preview-overlay: rgba(0, 0, 0, 0.6);
+  --surface-hover: rgba(255, 255, 255, 0.07);
 }
 
 /* ─────────────────── Yerel Fontlar ─────────────────── */
@@ -120,7 +129,7 @@ body {
     );
   color: var(--text);
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -177,9 +186,9 @@ body {
   right: 0;
   height: var(--title-bar-height);
   -webkit-app-region: drag;
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--titlebar-bg);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(126, 126, 126, 0.096);
+  border-bottom: 1px solid var(--titlebar-border);
   z-index: 10000;
 }
 
@@ -205,11 +214,11 @@ body {
   justify-content: center;
   height: var(--footer-height);
   padding: 0 20px;
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--footer-bg);
   backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
+  border-top: 1px solid var(--footer-border);
+  color: var(--footer-text);
+  font-size: 13px;
   letter-spacing: 0.5px;
   pointer-events: none;
 }
@@ -265,7 +274,7 @@ body {
 }
 
 .page-650 {
-  max-width: 650px;
+  max-width: 700px;
 }
 
 .page-1250 {
@@ -363,9 +372,9 @@ body {
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: var(--radius);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px var(--toast-shadow);
   color: var(--text-bright);
-  font-size: 13.5px;
+  font-size: 14px;
   pointer-events: all;
   opacity: 0;
   transform: translateX(24px);
@@ -387,7 +396,7 @@ body {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -431,11 +440,11 @@ body {
 .toast-yes,
 .toast-no {
   flex: 1;
-  padding: 6px 12px;
+  padding: 8px 14px;
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: 0.15s;
@@ -449,7 +458,7 @@ body {
 
 .toast-yes:hover {
   background: var(--red);
-  color: #fff;
+  color: var(--text-btn);
 }
 
 .toast-no {

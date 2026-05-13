@@ -58,8 +58,8 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
+  background: var(--preview-overlay);
+  color: var(--text-btn);
   border: none;
   border-radius: 50%;
   width: 24px;
@@ -156,7 +156,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--modal-overlay);
   backdrop-filter: blur(4px);
   opacity:0;
   visibility: hidden;
@@ -173,7 +173,7 @@
 /* ─────────────────── Modal Kutusu ─────────────────── */
 
 .modal-box {
-  width: min(520px, 95vw);
+  width: min(560px, 95vw);
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 16px;
@@ -192,13 +192,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px 16px;
+  padding: 22px 26px 18px;
   border-bottom: 1px solid var(--border);
 }
 
 .modal-title {
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-bright);
 }
@@ -207,13 +207,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   background: rgba(245, 96, 96, 0.1);
   border: 1px solid rgba(245, 96, 96, 0.25);
   border-radius: var(--radius-sm);
   color: var(--red);
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   transition: 0.15s;
 }
@@ -221,7 +221,7 @@
 .modal-close:hover {
   background: rgba(245, 96, 96, 0.22);
   border-color: rgba(245, 96, 96, 0.5);
-  color: #ff8080;
+  color: var(--red);
   box-shadow: 0 0 8px rgba(245, 96, 96, 0.2);
 }
 
@@ -230,8 +230,8 @@
 .modal-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px 16px;
-  padding: 20px 24px;
+  gap: 16px 18px;
+  padding: 22px 26px;
 }
 
 @media (max-width: 600px) {
@@ -317,7 +317,7 @@
 }
 
 .field-group label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-dim);
   text-transform: uppercase;
@@ -344,13 +344,13 @@
 
 .modal-input {
   width: 100%;
-  padding: 9px 12px;
+  padding: 11px 14px;
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   color: var(--text-bright);
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: 15px;
   outline: none;
   resize: vertical;
   transition:
@@ -375,7 +375,7 @@
 #editUrl {
   color: var(--blue);
   font-family: var(--font-data);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -406,7 +406,7 @@
 }
 
 .opinion-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-dim);
   text-transform: uppercase;
@@ -419,7 +419,7 @@
 }
 
 .star {
-  font-size: 26px;
+  font-size: 27px;
   color: var(--border2);
   cursor: pointer;
   transition:
@@ -443,8 +443,8 @@
   border-radius: var(--radius-sm);
   color: var(--text-bright);
   font-family: var(--font-ui);
-  font-size: 14px;
-  padding: 9px 12px;
+  font-size: 15px;
+  padding: 11px 14px;
   line-height: 1.5;
   resize: none;
   min-height: 102px;
@@ -473,18 +473,18 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  padding: 16px 24px 20px;
+  padding: 18px 26px 22px;
   border-top: 1px solid var(--border);
 }
 
 .btn-modal-cancel {
-  padding: 9px 20px;
+  padding: 10px 22px;
   background: none;
   border: 1px solid var(--border2);
   border-radius: var(--radius);
   color: var(--text);
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   cursor: pointer;
   transition: 0.15s;
@@ -496,13 +496,13 @@
 }
 
 .btn-modal-save {
-  padding: 9px 24px;
+  padding: 10px 26px;
   background: var(--accent);
   border: none;
   border-radius: var(--radius);
   color: var(--text-btn);
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   transition: 0.15s;

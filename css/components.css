@@ -28,40 +28,40 @@
 .avatar-26 {
   width: 26px;
   height: 26px;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .reply-avatar {
   width: 26px;
   height: 26px;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .avatar-32,
 .comment-avatar {
   width: 32px;
   height: 32px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .avatar-40,
 .post-avatar {
   width: 40px;
   height: 40px;
-  font-size: 16px;
+  font-size: 17px;
 }
 
 .avatar-46,
 .comment-composer-avatar {
   width: 46px;
   height: 46px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .profile-avatar {
   width: 56px;
   height: 56px;
-  font-size: 24px;
+  font-size: 25px;
 }
 
 /* ─────────────────── Dropdown Menü ─────────────────── */
@@ -90,12 +90,12 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 8px 12px;
+  padding: 9px 13px;
   background: transparent;
   border: none;
   color: var(--text);
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   transition: background 0.15s;
   text-align: left;
@@ -140,7 +140,7 @@
 }
 
 .empty-text {
-  font-size: 17px;
+  font-size: 18px;
   color: var(--text-dim);
   font-family: var(--font-ui);
   font-weight: 500;

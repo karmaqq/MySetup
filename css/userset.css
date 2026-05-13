@@ -15,7 +15,7 @@
 
 .premium-modal {
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -23,7 +23,7 @@
 }
 
 .premium-modal.wide {
-  max-width: 400px;
+  max-width: 440px;
 }
 
 .premium-modal .modal-header {
@@ -42,7 +42,7 @@
 }
 
 .premium-modal .modal-title {
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 700;
 }
 
@@ -81,7 +81,7 @@
 .premium-modal .modal-close:hover {
   background: rgba(245, 96, 96, 0.22);
   border-color: rgba(245, 96, 96, 0.5);
-  color: #ff8080;
+  color: var(--red);
   box-shadow: 0 0 8px rgba(245, 96, 96, 0.2);
 }
 
@@ -127,7 +127,7 @@
 }
 
 .premium-modal .auth-field label {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: none;
@@ -136,14 +136,14 @@
 
 .premium-modal .modal-input {
   width: 100%;
-  min-height: 52px;
-  padding: 10px 16px;
+  min-height: 54px;
+  padding: 11px 17px;
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: 10px;
   color: var(--text-bright);
   font-family: var(--font-ui);
-  font-size: 17px;
+  font-size: 18px;
   outline: none;
   box-sizing: border-box;
 }
@@ -163,8 +163,8 @@
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: 12px;
-  padding: 12px 16px;
-  min-height: 52px;
+  padding: 13px 17px;
+  min-height: 54px;
   width: 100%;
   box-sizing: border-box;
   cursor: default;
@@ -177,7 +177,7 @@
   border: none;
   color: var(--text-bright);
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   outline: none;
 }
@@ -275,13 +275,13 @@
 
 #userSettingsModal .setting-row {
   min-height: 0;
-  height: 52px;
-  padding: 0 16px;
+  height: 54px;
+  padding: 0 18px;
   gap: 10px;
 }
 
 #userSettingsModal .setting-row-label {
-  font-size: 17px;
+  font-size: 18px;
   letter-spacing: 0.6px;
   text-transform: none;
   color: var(--text-dim);
@@ -290,17 +290,17 @@
 #userSettingsModal .username-edit-box .clean-input {
   height: auto;
   line-height: 1;
-  font-size: 17px;
+  font-size: 18px;
   color: var(--text-bright);
 }
 
 #userSettingsModal .toggle-label {
-  font-size: 17px;
+  font-size: 18px;
   color: var(--text);
 }
 
 #userSettingsModal .setting-row-btn {
-  font-size: 17px;
+  font-size: 18px;
   color: var(--text);
 }
 
@@ -329,8 +329,8 @@
   background: var(--red-dim);
   border-left: none;
   color: var(--text-bright);
-  padding: 12px 16px;
-  font-size: 16px;
+  padding: 13px 17px;
+  font-size: 17px;
   line-height: 1.4;
   border-radius: 6px;
   margin-bottom: 0;
@@ -343,7 +343,7 @@
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: 13px 17px;
   margin-top: 4px;
   width: 100%;
   box-sizing: border-box;
@@ -380,13 +380,13 @@
   top: 1px;
   width: 4px;
   height: 9px;
-  border: solid #fff;
+  border: solid var(--text-btn);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 
 .check-text {
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.4;
   color: var(--text-bright);
   padding-top: 1px;
@@ -398,12 +398,12 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 18px;
+  padding: 15px 19px;
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: 12px;
   transition: border-color 0.2s;
-  min-height: 56px;
+  min-height: 58px;
 }
 
 .setting-row:hover {
@@ -412,7 +412,7 @@
 
 .setting-row-label {
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-dim);
   text-transform: uppercase;
@@ -437,7 +437,7 @@
   border: none;
   color: var(--text-bright);
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   outline: none;
 }
@@ -445,7 +445,7 @@
 .setting-row-btn {
   cursor: pointer;
   font-family: var(--font-ui);
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 500;
   color: var(--text);
   justify-content: center;
@@ -464,11 +464,11 @@
 .btn-settings-yellow,
 .btn-settings-danger {
   width: 100%;
-  min-height: 52px;
-  padding: 10px 16px;
+  min-height: 54px;
+  padding: 11px 17px;
   border-radius: 10px;
   font-family: var(--font-ui);
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   cursor: pointer;
   border: none;
@@ -481,7 +481,7 @@
 }
 
 .btn-settings-yellow:hover {
-  background: #f5b030;
+  background: var(--accent-hover);
   box-shadow: 0 8px 22px rgba(232, 160, 32, 0.18);
 }
 
@@ -501,7 +501,7 @@
 
 #changePasswordModal .premium-modal.wide,
 #deleteAccountModal .premium-modal.wide {
-  max-width: 600px;
+  max-width: 640px;
 }
 
 #changePasswordModal .modal-body,
@@ -539,7 +539,7 @@
 
 #userSettingsModal .btn-danger {
   background: var(--red);
-  color: #fff;
+  color: var(--text-btn);
 }
 
 #userSettingsModal .btn-danger:disabled {
@@ -552,7 +552,7 @@
 /*                            DUYARLI TASARIM                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-  @media (max-width: 760px) {
+@media (max-width: 760px) {
   .premium-modal,
   .premium-modal.wide,
   #userSettingsModal .premium-modal,

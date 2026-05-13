@@ -148,6 +148,7 @@ KÖK (firebase.database().ref())
 │                                                 (sadece POST beğenileri, comment/reply DEĞİL)
 │
 ├── /users/{userId}/
+│   ├── theme: "dark" | "light"                  # Kullanıcının seçtiği tema (varsayılan dark)
 │   └── components/{itemId}                      # MAP: envanter öğeleri
 │       ├── date: string                         # Tarih
 │       ├── component: string                    # Bileşen adı
