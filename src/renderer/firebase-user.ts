@@ -39,7 +39,6 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
                   await firebase.storage().refFromURL(imageUrl).delete();
                 } catch (_) {}
               }
-              // 1. allPosts cache'inde likes varsa tekrar fetch etme
               const likes =
                 (postDataMap[id] && postDataMap[id].likes) ||
                 ((await db.postsRef!.child(id).child("likes").once("value")).val() || {});

@@ -197,11 +197,9 @@ saveBtn?.addEventListener("click", async () => {
             var postSnap = await db.database!.ref("posts/" + pid).once("value");
             var postData = postSnap.val() as Record<string, any> | null;
             if (!postData) continue;
-            // 1. Post sahibiyse username alanını güncelle
             if (postData.uid === user.uid) {
               batch["posts/" + pid + "/username"] = newName;
             }
-            // 2. Yorumlarda kullanıcı adını güncelle
             if (postData.comments) {
               var cids = Object.keys(postData.comments);
               for (var k = 0; k < cids.length; k++) {
@@ -210,7 +208,6 @@ saveBtn?.addEventListener("click", async () => {
                 if (comment.uid === user.uid) {
                   batch["posts/" + pid + "/comments/" + cid + "/username"] = newName;
                 }
-                // 3. Yanıtlarda kullanıcı adını güncelle
                 if (comment.replies) {
                   var rids = Object.keys(comment.replies);
                   for (var l = 0; l < rids.length; l++) {

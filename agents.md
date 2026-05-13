@@ -55,22 +55,6 @@ Bir bölüm içindeki spesifik bir grubu veya fonksiyon grubunu ayırmak için k
 - Bitiş: 19 tane `─` + ` */`
 - Metin ortalanır: 19 boşluk + metin + 19 boşluk şeklinde değil, `─` karakterleri metnin etrafında simetrik olacak şekilde
 
-#### 4. Fonksiyon İçi Adım (Step Comment) — isteğe bağlı
-
-Fonksiyon içinde kritik adımları belirtmek için kullanılır (sadece gerçekten gerekliyse):
-
-```ts
-function foo(): void {
-  // 1. Adım bir
-  // 2. Adım iki
-}
-```
-
-- Toplam: adım başına **1 satır**
-- Format: `// N. Metin`
-- N sayısı 1'den başlar, artarak devam eder
-- Maksimum 5 adım — daha fazlası fonksiyonun bölünmesi gerektiğini gösterir
-
 ### HTML Yorumları
 
 `index.html` içinde de aynı hiyerarşi HTML yorum formatıyla kullanılır:
@@ -95,7 +79,6 @@ const x = a + b; // satır sonu yorum     ← YASAK
 // Satır içi açıklama                    ← YASAK
 /* TODO: ileride */                      ← YASAK
 // @ts-ignore                            ← YASAK (bunun yerine as any kullan)
-console.log("debug");                    ← YASAK (production'da)
 ```
 
 Yasak olma sebepleri:
@@ -104,7 +87,6 @@ Yasak olma sebepleri:
 2. **Satır içi açıklama** — ne yapıldığı değil, ne yapılmaya çalışıldığı yazılmalı
 3. **TODO/FIXME/HACK** — birikmeye yol açar, asla temizlenmez
 4. **@ts-ignore** — tip güvenliğini devre dışı bırakır, alternatifi `as any`
-5. **console.log** — production build'de temizlenmezse kalır
 
 ### Zorunlu Yorum Kuralları
 
@@ -169,15 +151,6 @@ KÖK (firebase.database().ref())
                                                   # usernameKey = username.toLowerCase()
 ```
 
-### Silme Cascade Kuralları (Firebase .remove())
-
-| Silinen                                    | Cascade ile Otomatik Temizlenen                                                                       | Manuel Temizlenen                                                                                                                     | Orphan Kalan                                                                                                                  |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `/posts/{id}`                              | `likes/*`, `comments/*`, `comments/*/likes/*`, `comments/*/replies/*`, `comments/*/replies/*/likes/*` | `userPosts/{uid}/{id}`, her liker için `userLikes/{uid}/{id}`, Storage image                                                          | `userLikes` race (açık beğeni eklenmişse)                                                                                     |
-| `/posts/{id}/comments/{cid}`               | `likes/*`, `replies/*`, `replies/*/likes/*`                                                           | Yok                                                                                                                                   | Yok                                                                                                                           |
-| `/posts/{id}/comments/{cid}/replies/{rid}` | `likes/*`                                                                                             | Yok                                                                                                                                   | Yok                                                                                                                           |
-| Kullanıcı silindi                          | Yok                                                                                                   | `userLikes/{uid}`, tüm postları (Storage+userLikes+post subtree), `userPosts/{uid}`, `users/{uid}`, `usernames/{key}`, Storage klasör | **Başkalarının postlarındaki yorumları** (uid/text kalır), **başkalarının postlarındaki beğenileri** (like marker'ları kalır) |
-
 ### Önemli Notlar
 
 - **Comment like'ları kullanıcı index'inde tutulmaz**: Sadece `/posts/{id}/comments/{cid}/likes/{uid}` altında. `/userCommentLikes` diye bir path yoktur.
@@ -207,63 +180,63 @@ Firebase Realtime Database kuralları `rules.json` dosyasında tanımlıdır. Fi
 
 ```
 mysetup/
-├── build.mjs                      # esbuild yapı sistemi
-├── build.web.mjs                  # esbuild (Netlify)
-├── update.mjs                     # otomasyonlu commit - build
-├── package.json                   # v3.0.9, electron 33, electron-updater
-├── tsconfig.json                  # Renderer tip kontrolü (DOM lib)
-├── tsconfig.main.json             # Main process tip kontrolü (Node lib)
-├── index.html                     # Ana sayfa
+├── build.mjs                          # esbuild yapı sistemi
+├── build.web.mjs                      # esbuild (Netlify)
+├── update.mjs                         # otomasyonlu commit - build
+├── package.json                       # v3.0.9, electron 33, electron-updater
+├── tsconfig.json                      # Renderer tip kontrolü (DOM lib)
+├── tsconfig.main.json                 # Main process tip kontrolü (Node lib)
+├── index.html                         # Ana sayfa
 ├── js/
-│   └── firebase-config.js         # Firebase API anahtarları
-├── css/                           # 12 CSS kaynak dosyası + index.css (bundle girişi)
-├── assets/                        # icon.ico
-│   └── fonts/                     # yerel font dosyaları 4 woff2
+│   └── firebase-config.js             # Firebase API anahtarları
+├── css/                               # 12 CSS kaynak dosyası + index.css (bundle girişi)
+├── assets/                            # icon.ico
+│   └── fonts/                         # yerel font dosyaları 4 woff2
 ├── scripts/
-│   └── clean-locales.js           # electron-builder afterPack (tr/en pak hariç temizleme)
+│   └── clean-locales.js               # electron-builder afterPack (tr/en pak hariç temizleme)
 └── src/
     ├── main/
-    │   ├── main.ts           (2)  # Pencere, CSP, yaşam döngüsü (124 satır)
-    │   └── preload.ts        (1)  # IPC contextBridge (46 satır)
+    │   ├── main.ts               (2)  # Pencere, CSP, yaşam döngüsü (124 satır)
+    │   └── preload.ts            (1)  # IPC contextBridge (46 satır)
     ├── updater/
-    │   └── updater.ts        (2)  # electron-updater kurulumu (82 satır)
+    │   └── updater.ts            (2)  # electron-updater kurulumu (82 satır)
     └── renderer/
-        ├── index.ts          (0)  # Entry point, tüm modülleri import eder
-        ├── global-ut.ts      (0)  # Saf araç fonksiyonları ~195 satır
-        ├── global-fn.ts      (0)  # Paylaşılan uygulama fonksiyonları ~175 satır
-        ├── app-state.ts      (0)  # Uygulama durumu + DOM referansları ~195 satır
-        ├── firebase-init.ts  (1)  # Firebase başlatma ~43 satır
-        ├── firebase-core.ts  (2)  # enrichItem, initUserDataRef ~131 satır
-        ├── firebase-inv.ts   (5)  # Envanter CRUD ~39 satır
-        ├── firebase-user.ts  (1)  # Hesap silme ~87 satır
-        ├── firebase-post.ts  (11) # Post CRUD + sorgular ~155 satır
-        ├── firebase-comment.ts (6)# Yorum/yanıt CRUD ~120 satır
-        ├── io.ts             (5)  # Silme onay diyalogları ~50 satır
-        ├── toolbar.ts        (5)  # İstatistik + arama + filtre ~234 satır
-        ├── csv.ts            (0)  # CSV içeri/dışarı aktarma ~200 satır
-        ├── table.ts          (13) # Tablo render + sıralama ~410 satır
-        ├── table-crud.ts     (0)  # Tablo CRUD + event delegation ~230 satır
-        ├── editmodal.ts      (6)  # Düzenleme modalı ~230 satır
-        ├── image-utils.ts    (0)  # Görsel yükleme + önizleme ~180 satır
-        ├── auth-nav.ts       (1)  # Navigasyon + session yönetimi ~143 satır
-        ├── auth.ts           (11)  # Giriş/kayıt formları ~441 satır
-        ├── pass-change.ts    (1)  # Şifre değiştirme ~112 satır
-        ├── delete-account-ui.ts (1)# Hesap silme UI ~79 satır
-        ├── userset.ts        (5)  # Hesap ayarları ~200 satır
-        ├── updater-ui.ts     (2)  # Güncelleme butonu ~122 satır
-        ├── post-comment.ts   (5)  # Yorum/yanıt HTML render ~197 satır
-        ├── posts-create.ts   (6)  # Post oluşturma ~203 satır
-        ├── posts-render.ts   (10) # Post kart HTML render ~260 satır
-        ├── posts-listener.ts (5)  # Post listener + sayfalama ~200 satır
-        ├── posts-timer.ts    (1)  # Zaman güncellemesi ~120 satır
-        ├── posts-actions.ts  (10) # Beğeni + event delegation ~380 satır
-        ├── profile-tabs.ts   (8)  # Profil sekme yükleme ~280 satır
-        ├── profile.ts        (5)  # Profil sekme yönetimi ~120 satır
-        ├── post-view.ts      (8)  # Post view aç/kapa ~300 satır
-        ├── post-view-comment.ts (4)# Post view yorum gönderimi ~240 satır
+        ├── index.ts              (0)  # Entry point, tüm modülleri import eder
+        ├── global-ut.ts          (0)  # Saf araç fonksiyonları ~195 satır
+        ├── global-fn.ts          (0)  # Paylaşılan uygulama fonksiyonları ~175 satır
+        ├── app-state.ts          (0)  # Uygulama durumu + DOM referansları ~195 satır
+        ├── firebase-init.ts      (1)  # Firebase başlatma ~43 satır
+        ├── firebase-core.ts      (2)  # enrichItem, initUserDataRef ~131 satır
+        ├── firebase-inv.ts       (5)  # Envanter CRUD ~39 satır
+        ├── firebase-user.ts      (1)  # Hesap silme ~87 satır
+        ├── firebase-post.ts      (11) # Post CRUD + sorgular ~155 satır
+        ├── firebase-comment.ts   (6)  # Yorum/yanıt CRUD ~120 satır
+        ├── io.ts                 (5)  # Silme onay diyalogları ~50 satır
+        ├── toolbar.ts            (5)  # İstatistik + arama + filtre ~234 satır
+        ├── csv.ts                (0)  # CSV içeri/dışarı aktarma ~200 satır
+        ├── table.ts              (13) # Tablo render + sıralama ~410 satır
+        ├── table-crud.ts         (0)  # Tablo CRUD + event delegation ~230 satır
+        ├── editmodal.ts          (6)  # Düzenleme modalı ~230 satır
+        ├── image-utils.ts        (0)  # Görsel yükleme + önizleme ~180 satır
+        ├── auth-nav.ts           (1)  # Navigasyon + session yönetimi ~143 satır
+        ├── auth.ts               (11) # Giriş/kayıt formları ~441 satır
+        ├── pass-change.ts        (1)  # Şifre değiştirme ~112 satır
+        ├── delete-account-ui.ts  (1)  # Hesap silme UI ~79 satır
+        ├── userset.ts            (5)  # Hesap ayarları ~200 satır
+        ├── updater-ui.ts         (2)  # Güncelleme butonu ~122 satır
+        ├── post-comment.ts       (5)  # Yorum/yanıt HTML render ~197 satır
+        ├── posts-create.ts       (6)  # Post oluşturma ~203 satır
+        ├── posts-render.ts       (10) # Post kart HTML render ~260 satır
+        ├── posts-listener.ts     (5)  # Post listener + sayfalama ~200 satır
+        ├── posts-timer.ts        (1)  # Zaman güncellemesi ~120 satır
+        ├── posts-actions.ts      (10) # Beğeni + event delegation ~380 satır
+        ├── profile-tabs.ts       (8)  # Profil sekme yükleme ~280 satır
+        ├── profile.ts            (5)  # Profil sekme yönetimi ~120 satır
+        ├── post-view.ts          (8)  # Post view aç/kapa ~300 satır
+        ├── post-view-comment.ts  (4)  # Post view yorum gönderimi ~240 satır
         └── types/
-            ├── firebase.d.ts      # Firebase compat SDK tipleri
-            └── global.d.ts        # Window interface genişletmesi
+            ├── firebase.d.ts          # Firebase compat SDK tipleri
+            └── global.d.ts            # Window interface genişletmesi
 ```
 
 ## **Toplam: ~205 fonksiyon** - **her eklemede güncelle**
@@ -285,12 +258,12 @@ profile-tabs → profile → post-view-comment → post-view
 
 ### Kategori Bazında Gruplama
 
-| Sıra | Grup | Dosyalar | Toplam |
-|------|------|----------|:------:|
-| 1-10 | **Çekirdek** | firebase-init → global-ut → global-fn → app-state → firebase-core → firebase-inv → firebase-user → firebase-post → firebase-comment | 10 |
-| 11-19 | **Envanter** | io → toolbar → csv → table → table-crud → editmodal → image-utils | 9 |
-| 20-26 | **Kullanıcı** | auth-nav → auth → pass-change → delete-account-ui → userset → updater-ui | 7 |
-| 27-36 | **Post Sistemi** | post-comment → posts-create → posts-render → posts-listener → posts-timer → posts-actions → profile-tabs → profile → post-view-comment → post-view | 10 |
+| Sıra  | Grup             | Dosyalar                                                                                                                                           | Toplam |
+| ----- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | :----: |
+| 1-10  | **Çekirdek**     | firebase-init → global-ut → global-fn → app-state → firebase-core → firebase-inv → firebase-user → firebase-post → firebase-comment                |   10   |
+| 11-19 | **Envanter**     | io → toolbar → csv → table → table-crud → editmodal → image-utils                                                                                  |   9    |
+| 20-26 | **Kullanıcı**    | auth-nav → auth → pass-change → delete-account-ui → userset → updater-ui                                                                           |   7    |
+| 27-36 | **Post Sistemi** | post-comment → posts-create → posts-render → posts-listener → posts-timer → posts-actions → profile-tabs → profile → post-view-comment → post-view |   10   |
 
 ## Zorunlu Kısıtlar
 
@@ -366,22 +339,3 @@ Storage kuralları `storage.rules` dosyasında tanımlıdır. Firebase Console �
 ```
 
 Tüm dosyalar `/users/{uid}/` altında olduğu için tek bir kural yeterlidir. Download URL (token içeren) herkese açık olduğu için post görselleri herkes tarafından görüntülenebilir; SDK üzerinden silme/yazma işlemleri yalnızca kullanıcının kendisi tarafından yapılabilir.
-
-## Yaygın Hatalar
-
-| Hata                                | Çözüm                                                        |
-| ----------------------------------- | ------------------------------------------------------------ |
-| `window.showPage is not a function` | `showPage`'i direkt import et, `(window as any)` ile çağırma |
-| `Imported binding is read-only`     | `export let` değerini başka modülde atama; setter kullan     |
-| `details.requestHeaders` TS hatası  | `(details as any).requestHeaders`                            |
-| `@ts-ignore` kullanımı              | `as any` ile geç                                             |
-| Yeni `window` property'si           | `global.d.ts`'yi güncelle                                    |
-| `escAttr` + `escHtml` ardışık       | **Çift escape** oluşur; birini kullan                        |
-| `currentUser!` non-null hatası      | `if (!currentUser) return;` guard'ı ekle, `!` kullanma       |
-| `style.color` inline CSS            | CSS class kullan (`.auth-error.success`) — userset.ts'de tüm `style.color` kaldırıldı (element zaten `.auth-error` class'ına sahip) |
-| `var` kullanımı                     | `let` / `const` ile değiştir                                 |
-| `throw undefined`                   | `throw error || new Error("mesaj")` ile güvenceye al         |
-| Circular import                    | Tek yönlü bağımlılık kur; alt modüller üst modülü import etmesin|
-| `window._flushPendingRender`       | KALDIRILDI (F-09) — `scheduleRender()` artık modal kontrolü yapmaz; dead code temizlendi |
-| `_checkHasMorePosts`               | KALDIRILDI (F-02) — `keys.length >= PAGE_SIZE` yeterli, ayrı Firebase sorgusu gerekmez |
-| Profil sekme state değişkenleri    | `TabState` arayüzüne taşındı (F-07) — `_tabStates["userPostsTab"]`, `_tabStates["likedPostsTab"]` |

@@ -155,7 +155,6 @@ export function onUserLoggedOut(): void {
     if (eyeTmpl) btn.appendChild(eyeTmpl.content.cloneNode(true));
   });
 
-  // 1. Çıkış sonrası e-posta alanını localStorage'daki hatırlanan değerle doldur
   var _remembered = localStorage.getItem("_rememberedEmail");
   var _loginEmailEl = document.getElementById("loginEmail") as HTMLInputElement | null;
   if (_loginEmailEl && _remembered) {
@@ -165,7 +164,6 @@ export function onUserLoggedOut(): void {
   _teardownPosts();
   closeAllModals();
 
-  // 1. Çıkış sonrası post view kalıntılarını temizle
   sessionStorage.removeItem("_viewingPostId");
   sessionStorage.removeItem("_pvPreviousPage");
   sessionStorage.removeItem("_pvScrollTop");

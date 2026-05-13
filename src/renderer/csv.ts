@@ -79,7 +79,6 @@ function processCsv(csvText: string): void {
     "Yeni liste aktarılırken mevcut tüm verileriniz silinecektir. Onaylıyor musunuz?",
     async () => {
       try {
-        // 1. Race condition önlemi — allData anlık kopyası
         var dataSnapshot = Object.assign({}, allData);
         var deleteOldImages = Object.values(dataSnapshot)
           .filter((item: any) => item.imageUrl)
@@ -186,7 +185,6 @@ if (deleteAllBtn) {
       "Tüm verileri gerçekten silmek istiyor musunuz?",
       async () => {
         try {
-          // 1. Race condition önlemi — allData anlık kopyası
           var dataSnapshot = Object.assign({}, allData);
           var deleteOldImages = Object.values(dataSnapshot)
             .filter((item: any) => item.imageUrl)

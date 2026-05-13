@@ -49,7 +49,6 @@ export function rebuildStatsCache(): void {
 
 /* ─────────────────── Önbellek Güncelleme ─────────────────── */
 
-// 1. Ardışık rebuildStatsCache çağrılarını RAF ile debounce et
 let _rebuildScheduled = false;
 function scheduleRebuild(): void {
   if (_rebuildScheduled) return;

@@ -396,7 +396,6 @@ export function addOrUpdateTableRow(id: string, item: any, oldItem?: any): void 
 export function removeTableRow(id: string): void {
   const row = tableBody!.querySelector(`tr[data-id="${id}"]`);
   if (row) {
-    // 1. Satır öncesindeki grup ayracını da temizle
     const prev = row.previousElementSibling;
     if (prev && prev.classList.contains("group-separator")) {
       prev.remove();

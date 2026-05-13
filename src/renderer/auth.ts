@@ -65,7 +65,6 @@ if (loginForm) {
           : firebase.auth.Auth.Persistence.SESSION,
       );
       await auth.signInWithEmailAndPassword(email, password);
-      // 1. Başarılı giriş sonrası e-posta hatırla
       if (rememberMeCheck?.checked) {
         localStorage.setItem("_rememberedEmail", email);
       } else {
@@ -148,19 +147,16 @@ if (registerForm) {
           : firebase.auth.Auth.Persistence.SESSION,
       );
 
-      // 1. Önce Firebase Auth kullanıcısı oluştur
       const cred = await auth.createUserWithEmailAndPassword(email, password);
       const uid = cred.user.uid;
 
       try {
-        // 2. Sonra username rezervasyonu yap (transaction ile race condition koruması)
         const txnResult = await usernameRef.transaction((current) => {
           if (current === null) return uid;
         });
 
         var snapVal = txnResult.snapshot ? txnResult.snapshot.val() : null;
         if (!txnResult.committed || snapVal !== uid) {
-          // 1. Username alınmışsa auth kullanıcısını sil, hata göster
           try {
             await cred.user.delete();
           } catch (_) {}
@@ -170,10 +166,8 @@ if (registerForm) {
           return;
         }
 
-        // 3. İsim güncellemesi
         await cred.user.updateProfile({ displayName: username });
       } catch (innerErr: any) {
-        // 1. Username yazılamadıysa auth kullanıcısını temizle
         try {
           await cred.user.delete();
         } catch (_) {}
