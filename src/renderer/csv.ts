@@ -63,7 +63,7 @@ function processCsv(csvText: string): void {
       vendor: row[5] || "-",
       status: row[6] || "sağlıklı",
       url: safeExternalUrl(row[7]),
-      imageUrl: "", // F-05: Güvenlik — dış kaynaktan gelen imageUrl kabul edilmez
+      imageUrl: "",
       star: parseInt(row[9]) || 0,
       opinion: row[10] || "",
     };
@@ -79,7 +79,7 @@ function processCsv(csvText: string): void {
     "Yeni liste aktarılırken mevcut tüm verileriniz silinecektir. Onaylıyor musunuz?",
     async () => {
       try {
-        // F-18: Race condition önlemi — allData anlık kopyası
+        // 1. Race condition önlemi — allData anlık kopyası
         var dataSnapshot = Object.assign({}, allData);
         var deleteOldImages = Object.values(dataSnapshot)
           .filter((item: any) => item.imageUrl)
@@ -186,7 +186,7 @@ if (deleteAllBtn) {
       "Tüm verileri gerçekten silmek istiyor musunuz?",
       async () => {
         try {
-          // F-18: Race condition önlemi — allData anlık kopyası
+          // 1. Race condition önlemi — allData anlık kopyası
           var dataSnapshot = Object.assign({}, allData);
           var deleteOldImages = Object.values(dataSnapshot)
             .filter((item: any) => item.imageUrl)

@@ -26,6 +26,9 @@ export function closeAllModals(): void {
   closeDeleteModal();
 }
 
+/* ─────────────────── Global Modal Kapatma Hook'u ─────────────────── */
+(window as any)._closeAllModals = closeAllModals;
+
 /* ─────────────────── Ayarlar Modalını Aç ─────────────────── */
 
 function openSettingsModal(): void {
@@ -64,7 +67,6 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
 function goBackToSettings(from: string): void {
   if (from === "changePass") closeChangePassModal();
   if (from === "deleteAcc") closeDeleteModal();
-  // F-09: Modal kapanma animasyonu (220ms CSS transition) bitmeden açma
   setTimeout(function () {
     openSettingsModal();
   }, 240);
@@ -175,13 +177,12 @@ saveBtn?.addEventListener("click", async () => {
         return;
       }
       if (oldName && oldName !== newKey) {
-        try { await db.database!.ref("usernames/" + oldName).remove(); } catch (e) { /* eski kullanıcı adı silinemedi */ }
+        try { await db.database!.ref("usernames/" + oldName).remove(); } catch (e) {}
       }
     }
 
     await user.updateProfile({ displayName: newName });
 
-    // F-08: Geçmiş post/yorum/yanıtlardaki kullanıcı adını güncelle
     try {
       const postIdsSnap = await db.database!.ref("userPosts/" + user.uid).once("value");
       const postIds = postIdsSnap.val() as Record<string, number> | null;
@@ -196,11 +197,11 @@ saveBtn?.addEventListener("click", async () => {
             var postSnap = await db.database!.ref("posts/" + pid).once("value");
             var postData = postSnap.val() as Record<string, any> | null;
             if (!postData) continue;
-            // Post sahibi ise username alanını güncelle
+            // 1. Post sahibiyse username alanını güncelle
             if (postData.uid === user.uid) {
               batch["posts/" + pid + "/username"] = newName;
             }
-            // Yorumlarda kullanıcı adını güncelle
+            // 2. Yorumlarda kullanıcı adını güncelle
             if (postData.comments) {
               var cids = Object.keys(postData.comments);
               for (var k = 0; k < cids.length; k++) {
@@ -209,7 +210,7 @@ saveBtn?.addEventListener("click", async () => {
                 if (comment.uid === user.uid) {
                   batch["posts/" + pid + "/comments/" + cid + "/username"] = newName;
                 }
-                // Yanıtlarda kullanıcı adını güncelle
+                // 3. Yanıtlarda kullanıcı adını güncelle
                 if (comment.replies) {
                   var rids = Object.keys(comment.replies);
                   for (var l = 0; l < rids.length; l++) {
@@ -229,7 +230,6 @@ saveBtn?.addEventListener("click", async () => {
         }
       }
     } catch (_) {
-      // Geçmiş güncelleme başarısız — kritik değil
     }
 
     const userEmailEl = document.getElementById("userEmail");

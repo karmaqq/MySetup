@@ -22,6 +22,16 @@ let _previousScrollTop = 0;
 let _previousProfileTab: string | null = null;
 let _pvActiveNavBtn: Element | null = null;
 
+/* ─────────────────── F5 Restore: Modül Değişkenlerini Doldur ─────────────────── */
+function _restorePostViewState(prevPage: string, prevScrollTop: number): void {
+  _previousPage = prevPage;
+  _previousScrollTop = prevScrollTop;
+  _previousProfileTab = null;
+  const navPage = prevPage === "profile" ? "profile" : prevPage === "inventory" ? "inventory" : "home";
+  _pvActiveNavBtn = document.querySelector(`.sidebar-nav-btn[data-page="${navPage}"]`);
+}
+(window as any)._restorePostViewState = _restorePostViewState;
+
 /* ─────────────────── Post View'i açar ─────────────────── */
 
 function openPostView(postId: string, fromCommentBtn?: boolean): void {
@@ -32,15 +42,19 @@ function openPostView(postId: string, fromCommentBtn?: boolean): void {
   if (composerBar) composerBar.style.display = "";
 
   (window as any)._viewingPostId = postId;
-  _previousPage = _currentPage;
+  if (!_previousPage) {
+    _previousPage = _currentPage;
+  }
+  if (!_previousScrollTop) {
+    _previousScrollTop = mainScroll ? mainScroll.scrollTop : 0;
+  }
   _previousProfileTab =
-    _currentPage === "profile" ? (window as any)._profileTab : null;
+    _previousPage === "profile" ? (window as any)._profileTab : null;
   sessionStorage.setItem("_pvPreviousPage", _previousPage || "home");
   sessionStorage.setItem(
     "_pvScrollTop",
-    String(mainScroll ? mainScroll.scrollTop : 0),
+    String(_previousScrollTop),
   );
-  _previousScrollTop = mainScroll ? mainScroll.scrollTop : 0;
 
   var authorLabel = document.getElementById("postViewAuthorLabel");
   if (authorLabel) {
@@ -48,7 +62,9 @@ function openPostView(postId: string, fromCommentBtn?: boolean): void {
       escHtml(postData.username || "Kullanıcı") + " gönderisi";
   }
 
-  _pvActiveNavBtn = document.querySelector(".sidebar-nav-btn.active");
+  if (!_pvActiveNavBtn) {
+    _pvActiveNavBtn = document.querySelector(".sidebar-nav-btn.active");
+  }
 
   _renderPostViewContent(postId, postData);
 
@@ -108,9 +124,29 @@ function closePostView(): void {
     savedNavBtn.classList.add("active");
   }
 
-  setTimeout(function () {
-    if (mainScroll) mainScroll.scrollTop = savedScroll;
-  }, 320);
+  if (savedScroll > 0 && mainScroll) {
+    const _restoreScroll = function (): void {
+      if (mainScroll) mainScroll.scrollTop = savedScroll;
+    };
+    const newPage = document.getElementById(targetPage + "Page");
+    if (newPage) {
+      let _scrollRestored = false;
+      const _onTransitionEnd = function (): void {
+        if (_scrollRestored) return;
+        _scrollRestored = true;
+        _restoreScroll();
+      };
+      newPage.addEventListener("transitionend", _onTransitionEnd, { once: true });
+      setTimeout(function () {
+        if (_scrollRestored) return;
+        _scrollRestored = true;
+        newPage.removeEventListener("transitionend", _onTransitionEnd);
+        _restoreScroll();
+      }, 420);
+    } else {
+      setTimeout(_restoreScroll, 320);
+    }
+  }
 }
 (window as any).closePostView = closePostView;
 
@@ -185,6 +221,8 @@ function _initPostViewCommentListener(postId: string): void {
 
   ref.on("child_added", function (s: firebase.database.DataSnapshot) {
     if ((window as any)._viewingPostId !== postId) return;
+    var postViewContent = document.getElementById("postViewContent");
+    if (!postViewContent || postViewContent.children.length === 0) return;
     var cid = s.key;
     var data = s.val();
     if (!cid) return;
@@ -219,6 +257,8 @@ function _initPostViewCommentListener(postId: string): void {
 
   ref.on("child_changed", function (s: firebase.database.DataSnapshot) {
     if ((window as any)._viewingPostId !== postId) return;
+    var postViewContent = document.getElementById("postViewContent");
+    if (!postViewContent || postViewContent.children.length === 0) return;
     var cid = s.key;
     var newData = s.val() as any;
     if (!cid) return;
@@ -270,6 +310,8 @@ function _initPostViewCommentListener(postId: string): void {
 
   ref.on("child_removed", function (s: firebase.database.DataSnapshot) {
     if ((window as any)._viewingPostId !== postId) return;
+    var postViewContent = document.getElementById("postViewContent");
+    if (!postViewContent || postViewContent.children.length === 0) return;
     var cid = s.key;
     if (!cid) return;
     var post = allPosts[postId];
@@ -298,6 +340,13 @@ function _updatePostViewCommentCount(postId: string): void {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 function _handleDeletedPostView(): void {
+  sessionStorage.removeItem("_viewingPostId");
+  sessionStorage.removeItem("_pvPreviousPage");
+  sessionStorage.removeItem("_pvScrollTop");
+  (window as any)._viewingPostId = null;
+  _previousPage = null;
+  _previousScrollTop = 0;
+
   var composerBar = document.getElementById("postViewComposerBar");
   if (composerBar) composerBar.style.display = "none";
 

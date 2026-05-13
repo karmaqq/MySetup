@@ -49,7 +49,7 @@ export function rebuildStatsCache(): void {
 
 /* ─────────────────── Önbellek Güncelleme ─────────────────── */
 
-// F-17: Ardışık rebuildStatsCache çağrılarını RAF ile debounce et
+// 1. Ardışık rebuildStatsCache çağrılarını RAF ile debounce et
 let _rebuildScheduled = false;
 function scheduleRebuild(): void {
   if (_rebuildScheduled) return;

@@ -1,10 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                        FIREBASE BAŞLATMA / ORTAK REFERANSLAR                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*  Bu dosya: Firebase'i başlatır ve tüm modüllerin paylaştığı referansları  */
-/*  (database, userDataRef, postsRef vb.) tek bir yerde tutar.              */
-/*  Hiçbir renderer modülüne bağımlı değildir.                              */
-/* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Firebase Config Çözümleme ─────────────────── */
 

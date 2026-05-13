@@ -43,6 +43,10 @@ export function showPage(pageName: string): void {
   }
   _isAnimating = true;
 
+  if (typeof (window as any)._closeAllModals === "function") {
+    (window as any)._closeAllModals();
+  }
+
   const pages = document.querySelectorAll(".page-content");
   const navBtns = document.querySelectorAll(".sidebar-nav-btn");
 
@@ -63,10 +67,12 @@ export function showPage(pageName: string): void {
   }
 
   navBtns.forEach((b) => b.classList.remove("active"));
-  const activeNavBtn = document.querySelector(
-    `.sidebar-nav-btn[data-page="${pageName}"]`,
-  ) as HTMLElement | null;
-  if (activeNavBtn) activeNavBtn.classList.add("active");
+  if (pageName !== "postView") {
+    const activeNavBtn = document.querySelector(
+      `.sidebar-nav-btn[data-page="${pageName}"]`,
+    ) as HTMLElement | null;
+    if (activeNavBtn) activeNavBtn.classList.add("active");
+  }
 
   _currentPage = pageName;
   sessionStorage.setItem("_lastPage", pageName);
@@ -114,7 +120,7 @@ function _runPageCallbacks(pageName: string): void {
     (window as any).updateProfilePosts();
   }
   if (
-    pageName !== "home" &&
+    (pageName === "profile" || pageName === "inventory") &&
     typeof (window as any).clearPostDraft === "function"
   ) {
     (window as any).clearPostDraft();

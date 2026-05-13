@@ -6,7 +6,7 @@ import { _currentPage } from "./app-state";
 import { formatTimeAgo } from "./global-ut";
 import { allPosts } from "./posts-render";
 
-// F-15: requestIdleCallback polyfill (Safari web build uyumluluğu)
+// 1. requestIdleCallback polyfill (Safari web build uyumluluğu)
 var _requestIdle: (cb: IdleRequestCallback, opts?: IdleRequestOptions) => number =
   typeof requestIdleCallback !== "undefined"
     ? requestIdleCallback

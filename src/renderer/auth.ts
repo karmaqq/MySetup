@@ -65,7 +65,7 @@ if (loginForm) {
           : firebase.auth.Auth.Persistence.SESSION,
       );
       await auth.signInWithEmailAndPassword(email, password);
-      // F-03: Başarılı giriş sonrası e-posta hatırla
+      // 1. Başarılı giriş sonrası e-posta hatırla
       if (rememberMeCheck?.checked) {
         localStorage.setItem("_rememberedEmail", email);
       } else {
@@ -160,7 +160,7 @@ if (registerForm) {
 
         var snapVal = txnResult.snapshot ? txnResult.snapshot.val() : null;
         if (!txnResult.committed || snapVal !== uid) {
-          // Username alınmış: auth kullanıcısını sil, hata göster
+          // 1. Username alınmışsa auth kullanıcısını sil, hata göster
           try {
             await cred.user.delete();
           } catch (_) {}
@@ -173,7 +173,7 @@ if (registerForm) {
         // 3. İsim güncellemesi
         await cred.user.updateProfile({ displayName: username });
       } catch (innerErr: any) {
-        // Username yazılamadı: auth kullanıcısını temizle
+        // 1. Username yazılamadıysa auth kullanıcısını temizle
         try {
           await cred.user.delete();
         } catch (_) {}

@@ -10,17 +10,25 @@ export function addComponentToFirebase(itemData: any): firebase.database.Thenabl
   return db.userDataRef!.push(itemData);
 }
 
+/* ── Toplu Veri İşlemleri ── */
+
 export function replaceUserDataInFirebase(itemsMap: Record<string, any>): Promise<void> {
   return db.userDataRef!.set(itemsMap || {});
 }
+
+/* ── Bileşen Güncelleme ── */
 
 export function updateComponentInFirebase(id: string, itemData: any): Promise<void> {
   return db.database!.ref(db.activeBasePath + "/" + id).update(itemData);
 }
 
+/* ── Durum Güncelleme ── */
+
 export function updateComponentStatusInFirebase(id: string, newStatus: string): Promise<void> {
   return db.database!.ref(db.activeBasePath + "/" + id).update({ status: newStatus });
 }
+
+/* ── Bileşen Silme ── */
 
 export async function deleteComponentFromFirebase(id: string): Promise<void> {
   const itemRef = db.database!.ref(db.activeBasePath + "/" + id);

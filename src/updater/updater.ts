@@ -80,7 +80,6 @@ function teardownUpdater(): void {
 
 function checkForUpdates(): void {
   if (!app.isPackaged) {
-    console.log("[Updater] Development modunda, güncelleme kontrolü atlanıyor");
     return;
   }
   autoUpdater.checkForUpdates().catch(function () { return; });

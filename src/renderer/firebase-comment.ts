@@ -10,9 +10,13 @@ export function addCommentToFirebase(postId: string, commentData: any): firebase
   return db.postsRef!.child(postId).child("comments").push(commentData);
 }
 
+/* ── Yorum Silme ── */
+
 export function deleteCommentFromFirebase(postId: string, commentId: string): Promise<void> {
   return db.postsRef!.child(postId).child("comments").child(commentId).remove();
 }
+
+/* ── Yorum Beğeni ── */
 
 export function toggleCommentLike(postId: string, commentId: string, userId: string): Promise<any> {
   const likeRef = db.postsRef!
@@ -37,6 +41,8 @@ export function addReplyToFirebase(postId: string, commentId: string, replyData:
     .push(replyData);
 }
 
+/* ── Yanıt Silme ── */
+
 export function deleteReplyFromFirebase(postId: string, commentId: string, replyId: string): Promise<void> {
   return db.postsRef!
     .child(postId)
@@ -46,6 +52,8 @@ export function deleteReplyFromFirebase(postId: string, commentId: string, reply
     .child(replyId)
     .remove();
 }
+
+/* ── Yanıt Beğeni ── */
 
 export function toggleReplyLike(postId: string, commentId: string, replyId: string, userId: string): Promise<any> {
   const likeRef = db.postsRef!

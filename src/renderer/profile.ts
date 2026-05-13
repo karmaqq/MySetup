@@ -11,13 +11,31 @@ function updateProfilePosts(): void {
     switchProfileTab((window as any)._pendingProfileTab);
     (window as any)._pendingProfileTab = null;
   } else {
-    switchProfileTab("user-posts");
+    const savedTab = sessionStorage.getItem("_profileTab");
+    switchProfileTab(savedTab === "liked-posts" ? "liked-posts" : "user-posts");
   }
 }
 (window as any).updateProfilePosts = updateProfilePosts;
 
 function switchProfileTab(tabName: string): void {
   (window as any)._profileTab = tabName;
+
+  sessionStorage.setItem("_profileTab", tabName);
+
+  /* ─────────────────── Tab görünürlüğünü güncelle ─────────────────── */
+  document.querySelectorAll(".profile-tabs .tab-btn").forEach(function (b) {
+    b.classList.remove("active");
+  });
+  const activeBtn = document.querySelector(
+    '.profile-tabs .tab-btn[data-tab="' + tabName + '"]',
+  ) as HTMLElement | null;
+  if (activeBtn) activeBtn.classList.add("active");
+  document.querySelectorAll("#profilePage .tab-content").forEach(function (c) {
+    c.classList.remove("active");
+  });
+  const targetId = tabName === "user-posts" ? TAB.USER_POSTS : TAB.LIKED_POSTS;
+  const target = document.getElementById(targetId);
+  if (target) target.classList.add("active");
 
   if (tabName === "user-posts") {
     _initUserPostsTab();
@@ -35,6 +53,7 @@ function switchProfileTab(tabName: string): void {
 function _onPageChange(pageName: string): void {
   if (pageName !== "profile") {
     (window as any)._profileTab = null;
+    sessionStorage.removeItem("_profileTab");
   }
 }
 (window as any)._onPageChange = _onPageChange;

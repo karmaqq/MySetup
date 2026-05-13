@@ -193,7 +193,7 @@ function _listenForNewPosts(ref: firebase.database.Query): void {
   _postsListenerActive = true;
   (window as any)._postsListenerActive = true;
 
-  // Sadece yeni postlar için startAt filtresi
+  // 1. Sadece yeni postlar için startAt filtresi
   const liveQuery = ref.startAt(_newestLoadedTs + 1);
   _postsQuery = liveQuery;
 
@@ -210,7 +210,7 @@ function _listenForNewPosts(ref: firebase.database.Query): void {
     _insertPostToFeed(id, data, true);
   });
 
-  // child_changed ve child_removed TÜM yüklü postlar için tam ref üzerinde dinlenir
+  // 1. child_changed ve child_removed tüm yüklü postlar için tam ref üzerinde dinlenir
   const fullRef = db.postsRef!;
   _fullChangedRef = fullRef;
   _fullRemovedRef = fullRef;

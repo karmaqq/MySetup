@@ -75,7 +75,7 @@ export function initUserDataRef(userId: string | null): void {
       function (snapshot) {
         if (_initToken !== sessionToken) return;
         const id = snapshot.key!;
-        // F-12: once("value") ile zaten yüklendiyse tekrar işleme
+        // 1. once("value") ile zaten yüklendiyse tekrar işleme
         if (allData[id]) return;
         const item = enrichItem(snapshot.val());
         item.id = id;
@@ -116,7 +116,7 @@ export function initUserDataRef(userId: string | null): void {
         const id = snapshot.key!;
         const oldItem = allData[id];
         delete allData[id];
-        // F-06: Tüm kayıtlar silindiyse tam render et (grup ayraçlarını temizlemek için)
+        // 1. Tüm kayıtlar silindiyse tam render et (grup ayraçlarını temizlemek için)
         if (Object.keys(allData).length === 0) {
           if (oldItem) updateStatsCacheOnChange(oldItem, oldItem, true);
           renderAll();

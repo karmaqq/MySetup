@@ -87,7 +87,7 @@ function _emptyTabState(): TabState {
   };
 }
 
-let _profileTab: string | null = null;
+let _profileTab: string | null = sessionStorage.getItem("_profileTab");
 (window as any)._profileTab = _profileTab;
 const _tabStates: Record<string, TabState> = {
   userPostsTab: _emptyTabState(),

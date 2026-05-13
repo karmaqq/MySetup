@@ -54,8 +54,49 @@ export function onUserLoggedIn(user: firebase.auth.User): void {
   initPosts();
 
   const lastPage = sessionStorage.getItem("_lastPage");
-  if (lastPage && lastPage !== "home") {
+  if (lastPage && lastPage !== "home" && lastPage !== "postView") {
     showPage(lastPage);
+  }
+
+  if (lastPage === "postView") {
+    const viewingPostId = sessionStorage.getItem("_viewingPostId");
+    if (viewingPostId) {
+      const _attemptRestorePostView = function (): void {
+        const postData =
+          (window as any).allPosts && (window as any).allPosts[viewingPostId];
+
+        if (postData) {
+          const pvPrevPage = sessionStorage.getItem("_pvPreviousPage") || "home";
+          const pvScrollTop = parseInt(
+            sessionStorage.getItem("_pvScrollTop") || "0",
+            10,
+          );
+
+          if (typeof (window as any)._restorePostViewState === "function") {
+            (window as any)._restorePostViewState(pvPrevPage, pvScrollTop);
+          }
+
+          if (typeof (window as any).openPostView === "function") {
+            (window as any).openPostView(viewingPostId);
+          }
+        } else {
+          sessionStorage.removeItem("_viewingPostId");
+          sessionStorage.removeItem("_pvPreviousPage");
+          sessionStorage.removeItem("_pvScrollTop");
+          sessionStorage.setItem("_lastPage", "home");
+          showPage("home");
+        }
+      };
+
+      if ((window as any)._postsReadyFired) {
+        _attemptRestorePostView();
+      } else {
+        document.addEventListener("postsReady", function _onPostsReady() {
+          document.removeEventListener("postsReady", _onPostsReady);
+          _attemptRestorePostView();
+        });
+      }
+    }
   }
 }
 
@@ -114,7 +155,7 @@ export function onUserLoggedOut(): void {
     if (eyeTmpl) btn.appendChild(eyeTmpl.content.cloneNode(true));
   });
 
-  // F-03: Çıkış sonrası e-posta alanını localStorage'daki hatırlanan değerle doldur
+  // 1. Çıkış sonrası e-posta alanını localStorage'daki hatırlanan değerle doldur
   var _remembered = localStorage.getItem("_rememberedEmail");
   var _loginEmailEl = document.getElementById("loginEmail") as HTMLInputElement | null;
   if (_loginEmailEl && _remembered) {
@@ -124,7 +165,7 @@ export function onUserLoggedOut(): void {
   _teardownPosts();
   closeAllModals();
 
-  // F-04: Çıkış sonrası post view kalıntılarını temizle
+  // 1. Çıkış sonrası post view kalıntılarını temizle
   sessionStorage.removeItem("_viewingPostId");
   sessionStorage.removeItem("_pvPreviousPage");
   sessionStorage.removeItem("_pvScrollTop");
