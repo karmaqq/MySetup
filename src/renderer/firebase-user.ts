@@ -1,23 +1,27 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          HESAP SILME                                  */
+/*                          HESAP SILME                                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { get, ref, child, update, remove } from "firebase/database";
+import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
+import { getIdToken, deleteUser } from "firebase/auth";
+import { User } from "firebase/auth";
 import { allPosts } from "./posts-render";
 import { db } from "./firebase-init";
 import { getPostsByIds } from "./firebase-post";
-import { deleteAllInFolder } from "./global-ut";
+import { deleteAllInFolder, extractPathFromUrl } from "./global-ut";
 
 /* ─────────────────── Hesap Silme ─────────────────── */
 
-export async function deleteUserAccount(user: firebase.auth.User): Promise<{ success: boolean; error?: any }> {
+export async function deleteUserAccount(user: User): Promise<{ success: boolean; error?: any }> {
   const uid = user.uid;
 
   try {
-    await user.getIdToken(true);
+    await getIdToken(user, true);
 
-    await db.database!.ref("userLikes/" + uid).remove();
+    await remove(ref(db.database, "userLikes/" + uid));
 
-    const userPostsSnap = await db.database!.ref("userPosts/" + uid).once("value");
+    const userPostsSnap = await get(ref(db.database, "userPosts/" + uid));
     const postIds = userPostsSnap.val() ? Object.keys(userPostsSnap.val() as Record<string, any>) : [];
 
     const postDataMap = await getPostsByIds(postIds, allPosts);
@@ -33,22 +37,24 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
         batches.slice(j, j + MAX_PARALLEL_BATCHES).map(function (batch) {
           return Promise.all(
             batch.map(async function (id) {
-              const imageUrl = postDataMap[id] ? postDataMap[id].imageUrl : null;
+              const postData = postDataMap[id];
+              const imageUrl = postData ? postData.imageUrl : null;
+              const imagePath = postData ? postData.imagePath : null;
               if (imageUrl) {
                 try {
-                  await firebase.storage().refFromURL(imageUrl).delete();
+                  await deleteObject(storageRef(getStorage(), imagePath || extractPathFromUrl(imageUrl) || imageUrl));
                 } catch (_) {}
               }
               const likes =
-                (postDataMap[id] && postDataMap[id].likes) ||
-                ((await db.postsRef!.child(id).child("likes").once("value")).val() || {});
+                (postData && postData.likes) ||
+                ((await get(child(child(db.postsRef!, id), "likes"))).val() || {});
               const updates: Record<string, any> = {};
               updates["posts/" + id] = null;
               Object.keys(likes).forEach(function (userId) {
                 updates["userLikes/" + userId + "/" + id] = null;
               });
               try {
-                await db.database!.ref().update(updates);
+                await update(ref(db.database), updates);
       } catch (e) {
         postErrors.push({ postId: id, error: e });
       }
@@ -62,22 +68,19 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
       return { success: false, error: new Error(postErrors.length + " post silinemedi.") };
     }
 
-    await db.database!.ref("userPosts/" + uid).remove();
-    await db.database!.ref("users/" + uid).remove();
+    await remove(ref(db.database, "userPosts/" + uid));
+    await remove(ref(db.database, "users/" + uid));
 
     const usernameKey = (user.displayName || "").trim().toLowerCase();
     if (usernameKey) {
-      await db.database!.ref("usernames/" + usernameKey).remove().catch(function () {});
+      await remove(ref(db.database, "usernames/" + usernameKey)).catch(function () {});
     }
 
     await deleteAllInFolder(
-      firebase
-        .storage()
-        .ref()
-        .child("users/" + uid),
+      storageRef(getStorage(), "users/" + uid),
     );
 
-    await user.delete();
+    await deleteUser(user);
 
     return { success: true };
   } catch (e) {

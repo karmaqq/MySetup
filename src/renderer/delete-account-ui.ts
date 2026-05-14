@@ -2,6 +2,7 @@
 /*                            HESAP SILME                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { currentUser } from "./app-state";
 import { deleteUserAccount } from "./firebase-user";
 import { showToast } from "./global-fn";
@@ -49,8 +50,8 @@ document.getElementById("deleteAccountForm")?.addEventListener("submit", async (
     const user = currentUser;
     if (!user) throw new Error("Oturum bulunamadı, lütfen yeniden giriş yapın.");
 
-    const credential = firebase.auth.EmailAuthProvider.credential(email, pass);
-    await user.reauthenticateWithCredential(credential);
+    const credential = EmailAuthProvider.credential(email, pass);
+    await reauthenticateWithCredential(user, credential);
 
     const result = await deleteUserAccount(user);
     if (!result.success) throw result.error || new Error("Silme işlemi başarısız oldu.");

@@ -2,6 +2,8 @@
 /*                        POST OLUŞTURMA SİSTEMİ                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { serverTimestamp } from "firebase/database";
+import { getStorage, ref, uploadBytes, getDownloadURL, UploadResult } from "firebase/storage";
 import { currentUser } from "./app-state";
 import { POST_PHRASES } from "./global-ut";
 import { addPostToFirebase } from "./firebase-post";
@@ -56,7 +58,7 @@ export function createPost(): void {
     username: user.displayName || "Kullanici",
     content: text,
     imageUrl: null,
-    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    createdAt: serverTimestamp(),
     likes: {},
     phraseIndex: Math.floor(Math.random() * POST_PHRASES.length),
   };
@@ -104,14 +106,14 @@ function _uploadAndSavePost(postData: Record<string, any>, file: File): void {
   const path = "users/" + user.uid + "/posts/" + Date.now();
 
   _compressPostImage(file).then(function (blob) {
-    var ref = firebase.storage().ref().child(path);
-    return ref
-      .put(blob)
-      .then(function (snap: firebase.storage.UploadTaskSnapshot) {
-        return snap.ref.getDownloadURL();
+    var imageRef = ref(getStorage(), path);
+    return uploadBytes(imageRef, blob)
+      .then(function (snap: UploadResult) {
+        return getDownloadURL(snap.ref);
       })
       .then(function (url) {
         postData.imageUrl = url;
+        postData.imagePath = path;
         _savePost(postData);
       });
   }).catch(function () {

@@ -2,6 +2,7 @@
 /*                          ŞİFRE DEĞİŞTİRME                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, reload } from "firebase/auth";
 import { currentUser } from "./app-state";
 import { showToast } from "./global-fn";
 
@@ -104,10 +105,10 @@ document.getElementById("changePasswordForm")?.addEventListener("submit", async 
       submitBtn.textContent = "Şifreyi Kaydet";
       return;
     }
-    const credential = firebase.auth.EmailAuthProvider.credential(userEmail, oldPass);
-    await user.reauthenticateWithCredential(credential);
-    await user.updatePassword(newPass);
-    await user.reload();
+    const credential = EmailAuthProvider.credential(userEmail, oldPass);
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPass);
+    await reload(user);
 
     errEl.textContent = "Şifre başarıyla değiştirildi.";
     errEl.className = "auth-error success";

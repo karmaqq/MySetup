@@ -2,30 +2,28 @@
 /*                          POST SİSTEMİ FIREBASE                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { ref, child, get, update, set, push, remove, runTransaction, onChildAdded, onChildRemoved, off, query, orderByValue, limitToLast, endAt, serverTimestamp, DatabaseReference, Query, ThenableReference } from "firebase/database";
+import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
 import { db } from "./firebase-init";
+import { extractPathFromUrl } from "./global-ut";
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                          POST CRUD                                   */
+/*                          POST CRUD                                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Post Oluşturma ─────────────────── */
 
-export function addPostToFirebase(postData: any): Promise<firebase.database.Reference> {
-  const newRef = db.postsRef!.push();
+export function addPostToFirebase(postData: any): Promise<DatabaseReference> {
+  const newRef = push(db.postsRef!);
   const updates: Record<string, any> = {};
   const newKey = newRef.key;
   updates["posts/" + newKey] = postData;
   if (postData.uid) {
-    updates["userPosts/" + postData.uid + "/" + newKey] =
-      firebase.database.ServerValue.TIMESTAMP;
+    updates["userPosts/" + postData.uid + "/" + newKey] = serverTimestamp();
   }
-  return db
-    .database!
-    .ref()
-    .update(updates)
-    .then(function () {
-      return newRef;
-    }) as Promise<firebase.database.Reference>;
+  return update(ref(db.database), updates).then(function () {
+    return newRef;
+  }) as Promise<DatabaseReference>;
 }
 
 /* ─────────────────── Post Silme ─────────────────── */
@@ -33,12 +31,13 @@ export function addPostToFirebase(postData: any): Promise<firebase.database.Refe
 export function deletePostFromFirebase(postId: string, postData: any): Promise<any> {
   const uid = postData ? postData.uid : null;
   const imageUrl = postData ? postData.imageUrl : null;
+  const imagePath = postData ? postData.imagePath : null;
 
   const imagePromise = imageUrl
-    ? firebase.storage().refFromURL(imageUrl).delete().catch(function () {})
+    ? deleteObject(storageRef(getStorage(), imagePath || extractPathFromUrl(imageUrl) || imageUrl)).catch(function () {})
     : Promise.resolve();
 
-  return db.postsRef!.child(postId).child("likes").once("value").then(function (likesSnap) {
+  return get(child(child(db.postsRef!, postId), "likes")).then(function (likesSnap) {
     const likes = likesSnap.val() || {};
     const updates: Record<string, any> = {};
 
@@ -49,61 +48,55 @@ export function deletePostFromFirebase(postId: string, postData: any): Promise<a
     });
 
     return imagePromise.then(function () {
-      return db.database!.ref().update(updates);
+      return update(ref(db.database), updates);
     });
-      });
+  });
 }
 
 /* ─────────────────── Post Beğeni ─────────────────── */
 
 export function togglePostLike(postId: string, userId: string): Promise<any> {
-  const likeRef = db.postsRef!.child(postId).child("likes").child(userId);
-  const userLikeRef = db.userLikesRef!.child(userId).child(postId);
-  return likeRef
-    .transaction(function (currentValue) {
-      return currentValue ? null : true;
-    })
-    .then(function (result) {
-      if (result.committed) {
-        if (result.snapshot!.val() === null) {
-          return userLikeRef.remove();
-        } else {
-          return userLikeRef.set(firebase.database.ServerValue.TIMESTAMP);
-        }
+  const likeRef = child(child(child(db.postsRef!, postId), "likes"), userId);
+  const userLikeRef = child(child(db.userLikesRef!, userId), postId);
+  return runTransaction(likeRef, function (currentValue) {
+    return currentValue ? null : true;
+  }).then(function (result) {
+    if (result.committed) {
+      if (result.snapshot.val() === null) {
+        return remove(userLikeRef);
+      } else {
+        return set(userLikeRef, serverTimestamp());
       }
-    });
+    }
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                       POST SORGULARI                                  */
+/*                       POST SORGULARI                                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────── Kullanıcı Gönderileri ─────────────────── */
 
-export function getUserPostsOnce(userId: string, limit?: number, endAt?: number | null): Promise<Record<string, any>> {
-  let ref = db.userPostsRef!
-    .child(userId)
-    .orderByValue()
-    .limitToLast(limit || 20);
-  if (endAt !== undefined && endAt !== null) {
-    ref = ref.endAt(endAt);
+export function getUserPostsOnce(userId: string, limit?: number, endAtVal?: number | null): Promise<Record<string, any>> {
+  const baseRef = child(db.userPostsRef!, userId);
+  const constraints: import("firebase/database").QueryConstraint[] = [orderByValue(), limitToLast(limit || 20)];
+  if (endAtVal !== undefined && endAtVal !== null) {
+    constraints.push(endAt(endAtVal));
   }
-  return ref.once("value").then(function (snap) {
+  return get(query(baseRef, ...constraints)).then(function (snap) {
     return snap.val() || {};
   });
 }
 
 /* ─────────────────── Kullanıcı Beğenileri ─────────────────── */
 
-export function getUserLikesOnce(userId: string, limit?: number, endAt?: number | null): Promise<Record<string, any>> {
-  let ref = db.userLikesRef!
-    .child(userId)
-    .orderByValue()
-    .limitToLast(limit || 20);
-  if (endAt !== undefined && endAt !== null) {
-    ref = ref.endAt(endAt);
+export function getUserLikesOnce(userId: string, limit?: number, endAtVal?: number | null): Promise<Record<string, any>> {
+  const baseRef = child(db.userLikesRef!, userId);
+  const constraints: import("firebase/database").QueryConstraint[] = [orderByValue(), limitToLast(limit || 20)];
+  if (endAtVal !== undefined && endAtVal !== null) {
+    constraints.push(endAt(endAtVal));
   }
-  return ref.once("value").then(function (snap) {
+  return get(query(baseRef, ...constraints)).then(function (snap) {
     return snap.val() || {};
   });
 }
@@ -127,13 +120,9 @@ export async function getPostsByIds(postIds: string[], existing: Record<string, 
     const batch = missing.slice(i, i + BATCH);
     const results = await Promise.all(
       batch.map(function (id) {
-        return db
-          .postsRef!
-          .child(id)
-          .once("value")
-          .then(function (s) {
-            return s.exists() ? { id: id, data: s.val() } : null;
-          });
+        return get(child(db.postsRef!, id)).then(function (s) {
+          return s.exists() ? { id: id, data: s.val() } : null;
+        });
       }),
     );
     results.forEach(function (r) {
@@ -149,29 +138,27 @@ export async function getPostsByIds(postIds: string[], existing: Record<string, 
 
 /* ─────────────────── Posts Referansı ─────────────────── */
 
-export function getPostsRef(): firebase.database.Reference {
+export function getPostsRef(): DatabaseReference {
   return db.postsRef!;
 }
 
-
-
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                     USER LIKES / POSTS LİSTENER                         */
+/*                     USER LIKES / POSTS LİSTENER                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-let _userLikesListener: firebase.database.Reference | null = null;
+let _userLikesListenerRef: DatabaseReference | null = null;
 
 /* ─────────────────── Beğeni Dinleyici Başlat ─────────────────── */
 
 export function initUserLikesListener(userId: string, onLikesChanged: (key: string, val: any, type: string) => void): void {
-  if (_userLikesListener) {
-    _userLikesListener.off();
+  if (_userLikesListenerRef) {
+    off(_userLikesListenerRef);
   }
-  _userLikesListener = db.userLikesRef!.child(userId);
-  _userLikesListener.on("child_added", function (s) {
+  _userLikesListenerRef = child(db.userLikesRef!, userId);
+  onChildAdded(_userLikesListenerRef, function (s) {
     onLikesChanged(s.key!, s.val(), "added");
   });
-  _userLikesListener.on("child_removed", function (s) {
+  onChildRemoved(_userLikesListenerRef, function (s) {
     onLikesChanged(s.key!, null, "removed");
   });
 }
@@ -179,25 +166,25 @@ export function initUserLikesListener(userId: string, onLikesChanged: (key: stri
 /* ─────────────────── Beğeni Dinleyici Durdur ─────────────────── */
 
 export function removeUserLikesListener(): void {
-  if (_userLikesListener) {
-    _userLikesListener.off();
-    _userLikesListener = null;
+  if (_userLikesListenerRef) {
+    off(_userLikesListenerRef);
+    _userLikesListenerRef = null;
   }
 }
 
-let _userPostsListener: firebase.database.Reference | null = null;
+let _userPostsListenerRef: DatabaseReference | null = null;
 
 /* ─────────────────── Gönderi Dinleyici Başlat ─────────────────── */
 
 export function initUserPostsListener(userId: string, onPostsChanged: (key: string, val: any, type: string) => void): void {
-  if (_userPostsListener) {
-    _userPostsListener.off();
+  if (_userPostsListenerRef) {
+    off(_userPostsListenerRef);
   }
-  _userPostsListener = db.userPostsRef!.child(userId);
-  _userPostsListener.on("child_added", function (s) {
+  _userPostsListenerRef = child(db.userPostsRef!, userId);
+  onChildAdded(_userPostsListenerRef, function (s) {
     onPostsChanged(s.key!, s.val(), "added");
   });
-  _userPostsListener.on("child_removed", function (s) {
+  onChildRemoved(_userPostsListenerRef, function (s) {
     onPostsChanged(s.key!, null, "removed");
   });
 }
@@ -205,8 +192,8 @@ export function initUserPostsListener(userId: string, onPostsChanged: (key: stri
 /* ─────────────────── Gönderi Dinleyici Durdur ─────────────────── */
 
 export function removeUserPostsListener(): void {
-  if (_userPostsListener) {
-    _userPostsListener.off();
-    _userPostsListener = null;
+  if (_userPostsListenerRef) {
+    off(_userPostsListenerRef);
+    _userPostsListenerRef = null;
   }
 }

@@ -2,6 +2,7 @@
 /*                       YORUM VE YANIT RENDER                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { User } from "firebase/auth";
 import { escHtml, escAttr, formatTimeAgo } from "./global-ut";
 import { buildAvatarHTML } from "./global-fn";
 
@@ -33,7 +34,7 @@ export function _renderCommentThreadHTML(
   postId: string,
   commentId: string,
   commentData: any,
-  user: firebase.auth.User | null,
+  user: User | null,
   isPostOwner?: boolean,
 ): string {
   const pid = escAttr(postId);
@@ -120,7 +121,7 @@ export function _renderReplyHTML(
   commentId: string,
   replyId: string,
   replyData: any,
-  user: firebase.auth.User | null,
+  user: User | null,
   isPostOwner?: boolean,
 ): string {
   const pid = escAttr(postId);
@@ -168,7 +169,7 @@ export function _patchCommentLikeBtn(
   postId: string,
   commentId: string,
   likes: Record<string, any> | null,
-  user: firebase.auth.User | null,
+  user: User | null,
 ): void {
   const count = likes ? Object.keys(likes).length : 0;
   const liked = user && likes && likes[user.uid];
@@ -190,7 +191,7 @@ export function _patchReplyLikeBtn(
   commentId: string,
   replyId: string,
   likes: Record<string, any> | null,
-  user: firebase.auth.User | null,
+  user: User | null,
 ): void {
   const count = likes ? Object.keys(likes).length : 0;
   const liked = user && likes && likes[user.uid];

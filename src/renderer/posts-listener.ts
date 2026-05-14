@@ -2,6 +2,7 @@
 /*                        POST LİSTENER VE SAYFALAMA                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { query, Query, DataSnapshot, DatabaseReference, off, onValue, onChildAdded, onChildRemoved, get, orderByChild, limitToLast, startAt, endAt, child } from "firebase/database";
 import { db } from "./firebase-init";
 import { postsFeed, _commentListenerRefs, _commentListenerOrder, PAGE_SIZE, currentUser } from "./app-state";
 import { renderLoadMoreBtn, removeLoadMoreBtn } from "./global-fn";
@@ -26,7 +27,7 @@ import {
 
 let _postsListenerActive = false;
 (window as any)._postsListenerActive = _postsListenerActive;
-let _postsQuery: firebase.database.Query | null = null;
+let _postsQuery: Query | null = null;
 let _oldestLoadedKey: string | null = null;
 let _newestLoadedTs = 0;
 let _hasMorePosts = false;
@@ -66,15 +67,15 @@ export function initPosts(): void {
 
 /* ─────────────────── Çıkış yapıldığında çağrılır ─────────────────── */
 
-let _fullRemovedRef: firebase.database.Reference | null = null;
+let _fullRemovedRef: DatabaseReference | null = null;
 
 export function _teardownPosts(): void {
   if (_postsQuery) {
-    _postsQuery.off();
+    off(_postsQuery);
     _postsQuery = null;
   }
   if (_fullRemovedRef) {
-    _fullRemovedRef.off("child_removed", _onPostRemoved);
+    off(_fullRemovedRef, "child_removed", _onPostRemoved);
     _fullRemovedRef = null;
   }
   Object.keys(_postRefListeners).forEach(function (pid) {
@@ -90,7 +91,7 @@ export function _teardownPosts(): void {
   _removeLoadMoreBtn();
 
   Object.values(_commentListenerRefs).forEach(function (ref: any) {
-    ref.off();
+    off(ref);
   });
   for (var k in _commentListenerRefs) delete _commentListenerRefs[k];
   _commentListenerOrder.length = 0;
@@ -113,62 +114,61 @@ export function _teardownPosts(): void {
 /* ─────────────────── İlk 20 postu yükler, listener başlatır ─────────────────── */
 
 function _startPostsListener(): void {
-  const ref = db.postsRef!.orderByChild("createdAt");
+  const orderedRef = query(db.postsRef!, orderByChild("createdAt"));
+  const limitedQuery = query(orderedRef, limitToLast(PAGE_SIZE));
 
-  ref
-    .limitToLast(PAGE_SIZE)
-    .once("value", function (snap: firebase.database.DataSnapshot) {
-      const raw = (snap.val() || {}) as Record<string, any>;
-      const keys = Object.keys(raw).sort(function (a, b) {
-        return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);
-      });
-
-      keys.forEach(function (id) {
-        allPosts[id] = raw[id];
-        if ((raw[id].createdAt || 0) > _newestLoadedTs) {
-          _newestLoadedTs = raw[id].createdAt;
-        }
-      });
-
-      if (keys.length > 0) {
-        _oldestLoadedKey = keys[keys.length - 1];
-      }
-
-      if (postsFeed) postsFeed.innerHTML = "";
-      keys.forEach(function (id) {
-        _insertPostToFeed(id, raw[id], false);
-      });
-
-      if (keys.length === 0) {
-        _renderEmptyFeed();
-      }
-
-      keys.forEach(function (id) {
-        _attachPostRefListener(id);
-      });
-
-      if (keys.length >= PAGE_SIZE) {
-        _hasMorePosts = true;
-        _renderLoadMoreBtn();
-      } else {
-        _hasMorePosts = false;
-        _removeLoadMoreBtn();
-      }
-
-      _listenForNewPosts(ref);
-      _evictOldPostsIfNeeded();
-      (window as any)._postsReadyFired = true;
-      document.dispatchEvent(new CustomEvent("postsReady"));
+  get(limitedQuery).then(function (snap: DataSnapshot) {
+    const raw = (snap.val() || {}) as Record<string, any>;
+    const keys = Object.keys(raw).sort(function (a, b) {
+      return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);
     });
+
+    keys.forEach(function (id) {
+      allPosts[id] = raw[id];
+      if ((raw[id].createdAt || 0) > _newestLoadedTs) {
+        _newestLoadedTs = raw[id].createdAt;
+      }
+    });
+
+    if (keys.length > 0) {
+      _oldestLoadedKey = keys[keys.length - 1];
+    }
+
+    if (postsFeed) postsFeed.innerHTML = "";
+    keys.forEach(function (id) {
+      _insertPostToFeed(id, raw[id], false);
+    });
+
+    if (keys.length === 0) {
+      _renderEmptyFeed();
+    }
+
+    keys.forEach(function (id) {
+      _attachPostRefListener(id);
+    });
+
+    if (keys.length >= PAGE_SIZE) {
+      _hasMorePosts = true;
+      _renderLoadMoreBtn();
+    } else {
+      _hasMorePosts = false;
+      _removeLoadMoreBtn();
+    }
+
+    _listenForNewPosts(orderedRef);
+    _evictOldPostsIfNeeded();
+    (window as any)._postsReadyFired = true;
+    document.dispatchEvent(new CustomEvent("postsReady"));
+  });
 }
 
 
 
 /* ─────────────────── Post-bazlı değişim dinleyicileri ─────────────────── */
 
-var _postRefListeners: Record<string, firebase.database.Reference> = {};
+var _postRefListeners: Record<string, DatabaseReference> = {};
 
-function _onSinglePostValue(s: firebase.database.DataSnapshot): void {
+function _onSinglePostValue(s: DataSnapshot): void {
   var id = s.key;
   if (!id || !allPosts[id]) return;
   if (!_postRefListeners[id]) return;
@@ -185,26 +185,26 @@ function _onSinglePostValue(s: firebase.database.DataSnapshot): void {
 
 function _attachPostRefListener(postId: string): void {
   if (_postRefListeners[postId]) return;
-  var ref = db.postsRef!.child(postId);
+  var ref = child(db.postsRef!, postId);
   _postRefListeners[postId] = ref;
-  ref.on("value", _onSinglePostValue);
+  onValue(ref, _onSinglePostValue);
 }
 
 function _detachPostRefListener(postId: string): void {
   if (_postRefListeners[postId]) {
-    _postRefListeners[postId].off("value", _onSinglePostValue);
+    off(_postRefListeners[postId], "value", _onSinglePostValue);
     delete _postRefListeners[postId];
   }
 }
 
 /* ─────────────────── Post silindiğinde ─────────────────── */
 
-function _onPostRemoved(s: firebase.database.DataSnapshot): void {
+function _onPostRemoved(s: DataSnapshot): void {
   const id = s.key;
   if (!id) return;
   _detachPostRefListener(id);
   if (_commentListenerRefs[id]) {
-    _commentListenerRefs[id].off();
+    off(_commentListenerRefs[id]);
     delete _commentListenerRefs[id];
   }
   delete allPosts[id];
@@ -218,15 +218,15 @@ function _onPostRemoved(s: firebase.database.DataSnapshot): void {
 
 /* ─────────────────── Yeni gelen postları gerçek zamanlı dinler ─────────────────── */
 
-function _listenForNewPosts(ref: firebase.database.Query): void {
+function _listenForNewPosts(orderedRef: Query): void {
   if (_postsListenerActive) return;
   _postsListenerActive = true;
   (window as any)._postsListenerActive = true;
 
-  const liveQuery = ref.startAt(_newestLoadedTs + 1);
+  const liveQuery = query(orderedRef, startAt(_newestLoadedTs + 1));
   _postsQuery = liveQuery;
 
-  liveQuery.on("child_added", function (s) {
+  onChildAdded(liveQuery, function (s) {
     const id = s.key;
     const data = s.val() as any;
     if (!id) return;
@@ -241,7 +241,7 @@ function _listenForNewPosts(ref: firebase.database.Query): void {
   });
 
   _fullRemovedRef = db.postsRef!;
-  _fullRemovedRef.on("child_removed", _onPostRemoved);
+  onChildRemoved(_fullRemovedRef, _onPostRemoved);
 }
 
 /* ─────────────────── Daha fazla post yükle (sayfalama) ─────────────────── */
@@ -265,42 +265,40 @@ function _loadMorePosts(): void {
     return;
   }
 
-  db.postsRef!.orderByChild("createdAt")
-    .endAt(oldestTs - 1)
-    .limitToLast(PAGE_SIZE)
-    .once("value", function (snap: firebase.database.DataSnapshot) {
-      const raw = (snap.val() || {}) as Record<string, any>;
-      const keys = Object.keys(raw).sort(function (a, b) {
-        return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);
-      });
+  const q = query(db.postsRef!, orderByChild("createdAt"), endAt(oldestTs - 1), limitToLast(PAGE_SIZE));
+  get(q).then(function (snap: DataSnapshot) {
+    const raw = (snap.val() || {}) as Record<string, any>;
+    const keys = Object.keys(raw).sort(function (a, b) {
+      return (raw[b].createdAt || 0) - (raw[a].createdAt || 0);
+    });
 
-      keys.forEach(function (id) {
-        allPosts[id] = raw[id];
-        _attachPostRefListener(id);
-        _insertPostToFeed(id, raw[id], false);
-      });
+    keys.forEach(function (id) {
+      allPosts[id] = raw[id];
+      _attachPostRefListener(id);
+      _insertPostToFeed(id, raw[id], false);
+    });
 
-      if (keys.length > 0) {
-        _oldestLoadedKey = keys[keys.length - 1];
-        if (keys.length < PAGE_SIZE) {
-          _hasMorePosts = false;
-          _removeLoadMoreBtn();
-        } else {
-          _hasMorePosts = true;
-          _renderLoadMoreBtn();
-        }
-      } else {
+    if (keys.length > 0) {
+      _oldestLoadedKey = keys[keys.length - 1];
+      if (keys.length < PAGE_SIZE) {
         _hasMorePosts = false;
         _removeLoadMoreBtn();
+      } else {
+        _hasMorePosts = true;
+        _renderLoadMoreBtn();
       }
+    } else {
+      _hasMorePosts = false;
+      _removeLoadMoreBtn();
+    }
 
-      _evictOldPostsIfNeeded();
-      _loadingMore = false;
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = "Daha Fazla Göster";
-      }
-    });
+    _evictOldPostsIfNeeded();
+    _loadingMore = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Daha Fazla Göster";
+    }
+  });
 }
 
 /* ─────────────────── Daha fazla yükle butonunu render eder ─────────────────── */

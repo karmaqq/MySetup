@@ -2,6 +2,7 @@
 /*                          FIREBASE ANA YAPISI                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { get, ref, onChildAdded, onChildChanged, onChildRemoved, off, DataSnapshot } from "firebase/database";
 import { normalizeTr } from "./global-ut";
 import { allData, resetStatsCache } from "./app-state";
 import { db } from "./firebase-init";
@@ -25,8 +26,6 @@ export function enrichItem(item: any): any {
 }
 
 /* ─────────────────── User Data Ref Yönetimi ─────────────────── */
-/*  Bu fonksiyon table.ts'deki fonksiyonlara ihtiyaç duyar. içe aktarılan  */
-/*  referanslar çalışma anında çözümlenir (esbuild döngüsel bağımlılık).     */
 
 import { rebuildStatsCache, updateStatsCacheOnChange } from "./toolbar";
 import {
@@ -42,7 +41,7 @@ export function initUserDataRef(userId: string | null): void {
   _initToken = sessionToken;
 
   if (db.userDataRef) {
-    db.userDataRef.off();
+    off(db.userDataRef);
     db.userDataRef = null;
   }
 
@@ -56,9 +55,9 @@ export function initUserDataRef(userId: string | null): void {
   }
 
   db.activeBasePath = "users/" + userId + "/components";
-  db.userDataRef = db.database!.ref(db.activeBasePath);
+  db.userDataRef = ref(db.database, db.activeBasePath);
 
-  db.userDataRef.once("value").then(function (snapshot) {
+  get(db.userDataRef!).then(function (snapshot) {
     if (_initToken !== sessionToken) return;
     const rawData = (snapshot.val() || {}) as Record<string, any>;
     Object.keys(allData).forEach(function (k) { delete allData[k]; });
@@ -70,8 +69,7 @@ export function initUserDataRef(userId: string | null): void {
     rebuildStatsCache();
     renderAll();
 
-    db.userDataRef!.on(
-      "child_added",
+    onChildAdded(db.userDataRef!,
       function (snapshot) {
         if (_initToken !== sessionToken) return;
         const id = snapshot.key!;
@@ -89,8 +87,7 @@ export function initUserDataRef(userId: string | null): void {
       },
     );
 
-    db.userDataRef!.on(
-      "child_changed",
+    onChildChanged(db.userDataRef!,
       function (snapshot) {
         if (_initToken !== sessionToken) return;
         const id = snapshot.key!;
@@ -108,8 +105,7 @@ export function initUserDataRef(userId: string | null): void {
       },
     );
 
-    db.userDataRef!.on(
-      "child_removed",
+    onChildRemoved(db.userDataRef!,
       function (snapshot) {
         if (_initToken !== sessionToken) return;
         const id = snapshot.key!;

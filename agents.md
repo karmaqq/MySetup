@@ -1,6 +1,6 @@
 # AGENTS.md — MySetup v3.3.3
 
-**Yazar:** Karma (`shbkarma@gmail.com`) · Electron 33 + TypeScript + Firebase Compat SDK v9.22.1
+**Yazar:** Karma (`shbkarma@gmail.com`) · Electron 33 + TypeScript + Firebase Modular SDK v12.13.0
 
 ---
 
@@ -235,7 +235,6 @@ mysetup/
         ├── post-view.ts          (8)  # Post view aç/kapa ~300 satır
         ├── post-view-comment.ts  (4)  # Post view yorum gönderimi ~240 satır
         └── types/
-            ├── firebase.d.ts          # Firebase compat SDK tipleri
             └── global.d.ts            # Window interface genişletmesi
 ```
 
@@ -270,7 +269,12 @@ profile-tabs → profile → post-view-comment → post-view
 **Firebase:**
 
 - `initializeApp` yalnızca `firebase-init.ts`'de çağrılır.
-- Modular SDK (`import { initializeApp } from "firebase/app"`) **yasak**; compat API kullanılır: `firebase.auth()`, `firebase.database()`, `firebase.storage()`
+- Modular SDK (v12.13.0) kullanılır: `import { getAuth } from "firebase/auth"`, `import { ref, child } from "firebase/database"`, `import { ref as storageRef } from "firebase/storage"`
+- `firebase.auth()`, `firebase.database()`, `firebase.storage()` gibi compat API'ler **yasaktır**.
+- `query()` ile `QueryConstraint`'ler birleştirilir: `query(ref, orderByChild("createdAt"), limitToLast(20))`
+- `child()` zincirleri modular `child(child(ref, "a"), "b")` formatındadır.
+- `remove`, `set`, `update` fonksiyonları doğrudan import edilir (ref üzerinden çağrılmaz).
+- `serverTimestamp()` modülerdir: `ServerValue.TIMESTAMP` yerine kullanılır.
 - `enrichItem()` ham veri `allData`'ya yazılmadan önce **mutlaka** çağrılır.
 - `initUserDataRef()` başındaki `userDataRef.off()` **kaldırılamaz**.
   **Build:**
@@ -310,7 +314,7 @@ updates["userPosts/" + uid + "/" + postId] = null;
 Object.keys(likes).forEach(function (userId) {
   updates["userLikes/" + userId + "/" + postId] = null;
 });
-return db.database!.ref().update(updates);
+return update(ref(db.database), updates);
 ```
 
 **2. Hesap Silme (deleteUserAccount - OPTİMİZE):** Artık `userLikes` tam ağaç taraması **KALDIRILMIŞTIR**. Per-post atomic cleanup zaten tüm liker'ları temizler. Race condition orphan'ları uygulama katmanında görünmez (`getPostsByIds` null post'ları filtreler). Akış:

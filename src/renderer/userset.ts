@@ -2,6 +2,8 @@
 /*                       KULLANICI AYARLARI YÖNETİMİ                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { getAuth, getIdToken, signOut, updateProfile } from "firebase/auth";
+import { get, ref, runTransaction, update, remove } from "firebase/database";
 import { currentUser } from "./app-state";
 import { db } from "./firebase-init";
 import { initUserDataRef } from "./firebase-core";
@@ -60,7 +62,7 @@ settingsModal?.addEventListener("click", (e) => {
 
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
   initUserDataRef(null);
-  firebase.auth().signOut();
+  signOut(getAuth());
 });
 
 /* ─────────────────── Alt Modallerden Geri Dön ─────────────────── */
@@ -156,7 +158,7 @@ saveBtn?.addEventListener("click", async () => {
       return;
     }
 
-    await user.getIdToken(true);
+    await getIdToken(user, true);
     const oldName = (user.displayName || "").trim().toLowerCase();
     const newKey = newName.toLowerCase();
 
@@ -167,25 +169,25 @@ saveBtn?.addEventListener("click", async () => {
         return;
       }
 
-      const usernameRef = db.database!.ref("usernames/" + newKey);
-      const txnResult = await usernameRef.transaction((current) => {
+      const usernameRef = ref(db.database, "usernames/" + newKey);
+      const txnResult = await runTransaction(usernameRef, (current) => {
         if (current === null || current === user.uid) return user.uid;
         return;
       });
-      if (!txnResult.committed || (txnResult.snapshot?.exists() && txnResult.snapshot!.val() !== user.uid)) {
+      if (!txnResult.committed || (txnResult.snapshot.exists() && txnResult.snapshot.val() !== user.uid)) {
         if (usernameErrEl) usernameErrEl.textContent = "Bu kullanıcı adı zaten alınmış";
         saveBtn.disabled = false;
         return;
       }
       if (oldName && oldName !== newKey) {
-        try { await db.database!.ref("usernames/" + oldName).remove(); } catch (e) {}
+        try { await remove(ref(db.database, "usernames/" + oldName)); } catch (e) {}
       }
     }
 
-    await user.updateProfile({ displayName: newName });
+    await updateProfile(user, { displayName: newName });
 
     try {
-      const postIdsSnap = await db.database!.ref("userPosts/" + user.uid).once("value");
+      const postIdsSnap = await get(ref(db.database, "userPosts/" + user.uid));
       const postIds = postIdsSnap.val() as Record<string, number> | null;
       if (postIds) {
         var megaBatch: Record<string, string> = {};
@@ -225,7 +227,7 @@ saveBtn?.addEventListener("click", async () => {
           for (var cki = 0; cki < chunkKeys.length; cki++) {
             batchChunk[chunkKeys[cki]] = megaBatch[chunkKeys[cki]];
           }
-          await db.database!.ref().update(batchChunk);
+          await update(ref(db.database), batchChunk);
         }
       }
     } catch (_) {

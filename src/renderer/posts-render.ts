@@ -2,6 +2,7 @@
 /*                            POST RENDER + FEED YÖNETİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { User } from "firebase/auth";
 import { postsFeed, currentUser } from "./app-state";
 import {
   formatTimeAgo,
@@ -188,7 +189,7 @@ export function _patchPostCard(postId: string, postData: any): void {
 export function _patchPostLikes(
   postId: string,
   likes: Record<string, any> | null,
-  user: firebase.User | null,
+  user: User | null,
 ): void {
   const likeCount = likes ? Object.keys(likes).length : 0;
   const liked = user && likes && likes[user.uid];

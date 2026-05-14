@@ -2,6 +2,7 @@
 /*                              POST VIEW                                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { onChildAdded, onChildChanged, onChildRemoved, off, query, orderByChild, child, DataSnapshot, Query } from "firebase/database";
 import { allPosts, _renderPostHTML, _initPostImage } from "./posts-render";
 import { db } from "./firebase-init";
 import { _renderCommentThreadHTML } from "./post-comment";
@@ -96,7 +97,7 @@ function closePostView(): void {
   /* ─────────────────── Güvenli Listener Temizliği ─────────────────── */
   const pidToClean = (window as any)._viewingPostId as string | null;
   if (pidToClean && _commentListenerRefs[pidToClean]) {
-    _commentListenerRefs[pidToClean].off();
+    off(_commentListenerRefs[pidToClean]);
     delete _commentListenerRefs[pidToClean];
   }
 
@@ -213,18 +214,15 @@ function _renderPostViewContent(postId: string, postData: any): void {
 
 function _initPostViewCommentListener(postId: string): void {
   if (_commentListenerRefs[postId]) {
-    _commentListenerRefs[postId].off();
+    off(_commentListenerRefs[postId]);
     delete _commentListenerRefs[postId];
   }
 
-  var ref = db
-    .postsRef!.child(postId)
-    .child("comments")
-    .orderByChild("createdAt");
-  _commentListenerRefs[postId] = ref as any;
+  var q: Query = query(child(child(db.postsRef!, postId), "comments"), orderByChild("createdAt"));
+  _commentListenerRefs[postId] = q as any;
   var _currentUser = currentUser;
 
-  ref.on("child_added", function (s: firebase.database.DataSnapshot) {
+  onChildAdded(q, function (s: DataSnapshot) {
     if ((window as any)._viewingPostId !== postId) return;
     var postViewContent = document.getElementById("postViewContent");
     if (!postViewContent || postViewContent.children.length === 0) return;
@@ -260,7 +258,7 @@ function _initPostViewCommentListener(postId: string): void {
     _updatePostViewCommentCount(postId);
   });
 
-  ref.on("child_changed", function (s: firebase.database.DataSnapshot) {
+  onChildChanged(q, function (s: DataSnapshot) {
     if ((window as any)._viewingPostId !== postId) return;
     var postViewContent = document.getElementById("postViewContent");
     if (!postViewContent || postViewContent.children.length === 0) return;
@@ -313,7 +311,7 @@ function _initPostViewCommentListener(postId: string): void {
     }
   });
 
-  ref.on("child_removed", function (s: firebase.database.DataSnapshot) {
+  onChildRemoved(q, function (s: DataSnapshot) {
     if ((window as any)._viewingPostId !== postId) return;
     var postViewContent = document.getElementById("postViewContent");
     if (!postViewContent || postViewContent.children.length === 0) return;

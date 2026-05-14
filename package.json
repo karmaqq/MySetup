@@ -1,6 +1,6 @@
 {
   "name": "mysetup",
-  "version": "3.3.4",
+  "version": "3.3.5",
   "description": "Envanter Sistemi",
   "author": "Karma shbkarma@gmail.com",
   "main": "dist/main.js",
@@ -16,7 +16,8 @@
     "build:web": "node build.web.mjs"
   },
   "dependencies": {
-    "electron-updater": "^6.8.3"
+    "electron-updater": "^6.8.3",
+    "firebase": "^12.13.0"
   },
   "devDependencies": {
     "@types/node": "^25.6.2",

@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                        FIREBASE BAŞLATMA / ORTAK REFERANSLAR                */
+/*                        FIREBASE BAŞLATMA / ORTAK REFERANSLAR               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
+
+import { initializeApp, getApps } from "firebase/app";
+import { getDatabase, ref, Database, DatabaseReference } from "firebase/database";
 
 /* ─────────────────── Firebase Config Çözümleme ─────────────────── */
 
@@ -10,16 +13,14 @@ function _resolveFirebaseConfig(): Record<string, string> | null {
 }
 
 /* ─────────────────── Paylaşılan Referanslar ─────────────────── */
-/*  Tüm modüller bu objeyi import eder. Mutasyonlar (örn. initUserDataRef)  */
-/*  bu objenin property'leri üzerinden yapılır.                              */
 
 export const db = {
-  database: null as firebase.database.Database | null,
-  userDataRef: null as firebase.database.Reference | null,
+  database: null as unknown as Database,
+  userDataRef: null as DatabaseReference | null,
   activeBasePath: null as string | null,
-  postsRef: null as firebase.database.Reference | null,
-  userPostsRef: null as firebase.database.Reference | null,
-  userLikesRef: null as firebase.database.Reference | null,
+  postsRef: null as unknown as DatabaseReference,
+  userPostsRef: null as unknown as DatabaseReference,
+  userLikesRef: null as unknown as DatabaseReference,
 };
 
 /* ─────────────────── Firebase Başlatma ─────────────────── */
@@ -27,9 +28,9 @@ export const db = {
 const firebaseConfig = _resolveFirebaseConfig();
 
 if (firebaseConfig) {
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  db.database = firebase.database();
-  db.postsRef = db.database.ref("posts");
-  db.userPostsRef = db.database.ref("userPosts");
-  db.userLikesRef = db.database.ref("userLikes");
+  if (!getApps().length) initializeApp(firebaseConfig);
+  db.database = getDatabase();
+  db.postsRef = ref(db.database, "posts");
+  db.userPostsRef = ref(db.database, "userPosts");
+  db.userLikesRef = ref(db.database, "userLikes");
 }

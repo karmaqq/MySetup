@@ -2,6 +2,7 @@
 /*                          GÖRSEL YÜKLEME VE ÖNİZLEME                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { allData, editingId, currentUser } from "./app-state";
 import { escAttr } from "./global-ut";
 import { showToast, showConfirm } from "./global-fn";
@@ -41,26 +42,27 @@ function compressImage(file: File, maxWidth: number = 800, quality: number = 0.8
 
 function _doUpload(blob: Blob, path: string): Promise<string> {
   return new Promise(function (resolve, reject) {
-    var storageRef = firebase.storage().ref();
-    var imageRef = storageRef.child(path);
-    var uploadTask = imageRef.put(blob);
+    var imageRef = ref(getStorage(), path);
+    var uploadTask = uploadBytesResumable(imageRef, blob);
     uploadTask.on(
       "state_changed",
       undefined,
       function (error: any) { reject(error); },
       function () {
-        uploadTask.snapshot.ref.getDownloadURL().then(resolve).catch(reject);
+        getDownloadURL(uploadTask.snapshot.ref).then(resolve).catch(reject);
       },
     );
   });
 }
 
-export function uploadImageToFirebase(file: File, itemId: string): Promise<string> {
+export function uploadImageToFirebase(file: File, itemId: string): Promise<{ downloadUrl: string; storagePath: string }> {
   var user = currentUser;
   if (!user) return Promise.reject("Kullanıcı yok");
   var path = "users/" + user.uid + "/components/" + itemId + "/image";
   return compressImage(file, 800, 0.82).then(function (blob) {
-    return _doUpload(blob, path);
+    return _doUpload(blob, path).then(function (url) {
+      return { downloadUrl: url, storagePath: path };
+    });
   });
 }
 
@@ -121,8 +123,8 @@ export function refreshPreview(
         try {
           const user = currentUser;
           if (user) {
-            const ref = firebase.storage().ref(`users/${user.uid}/components/${idToDelete}/image`);
-            await ref.delete().catch(() => {});
+            const imageRef = ref(getStorage(), "users/" + user.uid + "/components/" + idToDelete + "/image");
+            await deleteObject(imageRef).catch(() => {});
           }
           await updateComponentInFirebase(idToDelete, { imageUrl: "" });
           if (allData[idToDelete]) allData[idToDelete].imageUrl = "";
@@ -159,19 +161,19 @@ export function handleImageFile(
     </div>`;
 
   uploadImageToFirebase(file, id)
-    .then((url) => {
-      updateComponentInFirebase(id, { imageUrl: url })
+    .then(function (result) {
+      updateComponentInFirebase(id, { imageUrl: result.downloadUrl, imagePath: result.storagePath })
         .then(() => {
-          if (allData[id]) allData[id].imageUrl = url;
-          refreshPreview(url, imagePreview, imageUploadBtn);
+          if (allData[id]) {
+            allData[id].imageUrl = result.downloadUrl;
+            allData[id].imagePath = result.storagePath;
+          }
+          refreshPreview(result.downloadUrl, imagePreview, imageUploadBtn);
         })
         .catch(() => {
           const user = currentUser;
           if (user) {
-            firebase
-              .storage()
-              .ref("users/" + user.uid + "/components/" + id + "/image")
-              .delete()
+            deleteObject(ref(getStorage(), "users/" + user.uid + "/components/" + id + "/image"))
               .catch(function () {});
           }
           showToast("Güncelleme başarısız", "error");

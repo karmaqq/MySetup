@@ -2,7 +2,9 @@
 /*                          CSV İÇERİ / DIŞARI AKTARMA                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { safeExternalUrl } from "./global-ut";
+import { push } from "firebase/database";
+import { getStorage, ref, deleteObject } from "firebase/storage";
+import { safeExternalUrl, extractPathFromUrl } from "./global-ut";
 import { showToast, showConfirm, scheduleRender } from "./global-fn";
 import { allData } from "./app-state";
 import { db } from "./firebase-init";
@@ -53,7 +55,7 @@ function processCsv(csvText: string): void {
     const row = parseCsvLine(line);
     if (row.length < 2 || !row[1]) return;
 
-    const entryId = db.userDataRef!.push().key!;
+    const entryId = push(db.userDataRef!).key!;
     importPayload[entryId] = {
       date: row[0] || new Date().toISOString().split("T")[0],
       component: row[1],
@@ -83,7 +85,7 @@ function processCsv(csvText: string): void {
         var deleteOldImages = Object.values(dataSnapshot)
           .filter((item: any) => item.imageUrl)
           .map((item: any) =>
-            firebase.storage().refFromURL(item.imageUrl).delete().catch(() => {}),
+            deleteObject(ref(getStorage(), item.imagePath || extractPathFromUrl(item.imageUrl) || item.imageUrl)).catch(() => {}),
           );
         await Promise.all(deleteOldImages);
         await replaceUserDataInFirebase(importPayload);
@@ -189,7 +191,7 @@ if (deleteAllBtn) {
           var deleteOldImages = Object.values(dataSnapshot)
             .filter((item: any) => item.imageUrl)
             .map((item: any) =>
-              firebase.storage().refFromURL(item.imageUrl).delete().catch(() => {}),
+              deleteObject(ref(getStorage(), item.imagePath || extractPathFromUrl(item.imageUrl) || item.imageUrl)).catch(() => {}),
             );
           await Promise.all(deleteOldImages);
           await replaceUserDataInFirebase({});

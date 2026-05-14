@@ -25,8 +25,10 @@ Object.defineProperty(window, "_viewingPostId", {
 
 /* ─────────────────── Oturum Durumu ─────────────────── */
 
-export let currentUser: firebase.auth.User | null = null;
-export function setCurrentUser(u: firebase.auth.User | null): void {
+import { User } from "firebase/auth";
+
+export let currentUser: User | null = null;
+export function setCurrentUser(u: User | null): void {
   currentUser = u;
 }
 

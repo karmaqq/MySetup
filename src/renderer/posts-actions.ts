@@ -2,6 +2,8 @@
 /*                          BEĞENİ İŞLEMLERİ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { query, Query, DataSnapshot, off, onChildAdded, onChildChanged, onChildRemoved, get, orderByChild, child } from "firebase/database";
+import { User } from "firebase/auth";
 import { allPosts } from "./posts-render";
 import { db } from "./firebase-init";
 import { showToast } from "./global-fn";
@@ -43,10 +45,7 @@ function _togglePostLike(postId: string): void {
   }
   _patchPostLikes(postId, post.likes, user);
   togglePostLike(postId, user.uid).catch(function () {
-    db.postsRef!.child(postId)
-      .child("likes")
-      .child(user.uid)
-      .once("value")
+    get(child(child(child(db.postsRef!, postId), "likes"), user.uid))
       .then(function (snap) {
         if (snap.val() === null) {
           delete post.likes[user.uid];
@@ -166,7 +165,7 @@ function _initCommentListener(postId: string): void {
   if (_commentListenerOrder.length >= 5) {
     var lru = _commentListenerOrder.shift();
     if (lru && _commentListenerRefs[lru]) {
-      _commentListenerRefs[lru].off();
+      off(_commentListenerRefs[lru]);
       delete _commentListenerRefs[lru];
       getPostCards(lru).forEach(function (card) {
         var sec = card.querySelector(".comment-section");
@@ -179,14 +178,11 @@ function _initCommentListener(postId: string): void {
     }
   }
   _touchListener(postId);
-  const q = db
-    .postsRef!.child(postId)
-    .child("comments")
-    .orderByChild("createdAt");
+  const q: Query = query(child(child(db.postsRef!, postId), "comments"), orderByChild("createdAt"));
   _commentListenerRefs[postId] = q;
   const _currentUser = currentUser;
 
-  q.on("child_added", function (s) {
+  onChildAdded(q, function (s) {
     const cid = s.key;
     const data = s.val() as any;
     if (!cid) return;
@@ -218,7 +214,7 @@ function _initCommentListener(postId: string): void {
     _updateCommentCount(postId);
   });
 
-  q.on("child_changed", function (s) {
+  onChildChanged(q, function (s) {
     const cid = s.key;
     const data = s.val() as any;
     if (!cid) return;
@@ -248,7 +244,7 @@ function _initCommentListener(postId: string): void {
     _updateCommentCount(postId);
   });
 
-  q.on("child_removed", function (s: firebase.database.DataSnapshot) {
+  onChildRemoved(q, function (s: DataSnapshot) {
     const cid = s.key;
     if (!cid) return;
     const post = allPosts[postId];
@@ -278,7 +274,7 @@ function _refreshCommentThread(
   commentId: string,
   commentData: any,
   existingEl: Element,
-  user: firebase.User | null,
+  user: User | null,
 ): void {
   if (!existingEl || !existingEl.isConnected) return;
   const wrapper = document.createElement("div");

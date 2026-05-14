@@ -2,6 +2,8 @@
 /*                  KİMLİK DOĞRULAMA VE OTURUM YÖNETİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence, updateProfile, deleteUser } from "firebase/auth";
+import { get, ref, runTransaction } from "firebase/database";
 import {
   onUserLoggedIn,
   onUserLoggedOut,
@@ -11,9 +13,9 @@ import {
 import { db } from "./firebase-init";
 import { setCurrentUser } from "./app-state";
 
-const auth = firebase.auth();
+const auth = getAuth();
 
-auth.onAuthStateChanged((user) => {
+onAuthStateChanged(auth, (user) => {
   setCurrentUser(user);
   hideLoading();
   if (user) {
@@ -59,12 +61,13 @@ if (loginForm) {
     btn.disabled = true;
 
     try {
-      await auth.setPersistence(
+      await setPersistence(
+        auth,
         rememberMeCheck?.checked
-          ? firebase.auth.Auth.Persistence.LOCAL
-          : firebase.auth.Auth.Persistence.SESSION,
+          ? browserLocalPersistence
+          : browserSessionPersistence,
       );
-      await auth.signInWithEmailAndPassword(email, password);
+      await signInWithEmailAndPassword(auth, email, password);
       if (rememberMeCheck?.checked) {
         localStorage.setItem("_rememberedEmail", email);
       } else {
@@ -136,29 +139,30 @@ if (registerForm) {
 
     try {
       const usernameKey = username.toLowerCase();
-      const usernameRef = db.database!.ref("usernames/" + usernameKey);
+      const usernameRef = ref(db.database, "usernames/" + usernameKey);
 
       const regRememberMe =
         (document.getElementById("regRememberMe") as HTMLInputElement | null)
           ?.checked ?? true;
-      await auth.setPersistence(
+      await setPersistence(
+        auth,
         regRememberMe
-          ? firebase.auth.Auth.Persistence.LOCAL
-          : firebase.auth.Auth.Persistence.SESSION,
+          ? browserLocalPersistence
+          : browserSessionPersistence,
       );
 
-      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
       const uid = cred.user.uid;
 
       try {
-        const txnResult = await usernameRef.transaction((current) => {
+        const txnResult = await runTransaction(usernameRef, (current) => {
           if (current === null) return uid;
         });
 
-        var snapVal = txnResult.snapshot ? txnResult.snapshot.val() : null;
+        const snapVal = txnResult.snapshot ? txnResult.snapshot.val() : null;
         if (!txnResult.committed || snapVal !== uid) {
           try {
-            await cred.user.delete();
+            await deleteUser(cred.user);
           } catch (_) {}
           errEl.textContent = "Bu kullanıcı adı zaten alınmış.";
           btn.textContent = "Kayıt Ol";
@@ -166,10 +170,10 @@ if (registerForm) {
           return;
         }
 
-        await cred.user.updateProfile({ displayName: username });
+        await updateProfile(cred.user, { displayName: username });
       } catch (innerErr: any) {
         try {
-          await cred.user.delete();
+          await deleteUser(cred.user);
         } catch (_) {}
         throw innerErr;
       }
@@ -276,7 +280,7 @@ async function _checkUsernameAvailability(
   token: number,
 ): Promise<void> {
   try {
-    const snap = await db.database!.ref("usernames/" + key).once("value");
+    const snap = await get(ref(db.database, "usernames/" + key));
     if (token !== _usernameCheckToken) return;
     _updateUsernameUI({ taken: snap.exists() });
   } catch (_) {

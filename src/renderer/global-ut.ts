@@ -238,10 +238,23 @@ export function _onlyCommentLikesChanged(
   return true;
 }
 
+/* ─────────────────── Storage Path Extract ─────────────────── */
+
+export function extractPathFromUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+    const match = u.pathname.match(/\/o\/(.+)/);
+    if (match) return decodeURIComponent(match[1]);
+  } catch (_) {}
+  return null;
+}
+
 /* ─────────────────── Storage Klasör Temizleme ─────────────────── */
 
-export async function deleteAllInFolder(ref: firebase.storage.StorageReference): Promise<void> {
-  const list = await ref.listAll();
+import { StorageReference, listAll, deleteObject } from "firebase/storage";
+
+export async function deleteAllInFolder(folderRef: StorageReference): Promise<void> {
+  const list = await listAll(folderRef);
   const BATCH = 10;
   var batchPromises: Promise<any>[] = [];
   var totalItems = list.items.length;
@@ -249,7 +262,7 @@ export async function deleteAllInFolder(ref: firebase.storage.StorageReference):
     var slice = list.items.slice(bi, bi + BATCH);
     batchPromises.push(
       Promise.all(
-        slice.map(function (item) { return item.delete(); }),
+        slice.map(function (item) { return deleteObject(item); }),
       ),
     );
   }

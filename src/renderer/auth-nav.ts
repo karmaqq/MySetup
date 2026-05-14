@@ -2,6 +2,7 @@
 /*                          NAVİGASYON VE OTURUM YÖNETİMİ                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { User } from "firebase/auth";
 import { showPage, mainScroll } from "./app-state";
 import { refreshAllAvatars } from "./global-fn";
 import { initUserDataRef } from "./firebase-core";
@@ -28,7 +29,7 @@ initNavigation();
 
 /* ─────────────────── Giriş Yapıldığında ─────────────────── */
 
-export function onUserLoggedIn(user: firebase.auth.User): void {
+export function onUserLoggedIn(user: User): void {
   const authOverlay = document.getElementById("authOverlay");
   if (authOverlay) authOverlay.classList.remove("active");
 

@@ -2,46 +2,45 @@
 /*                          ENVANTER FIREBASE İŞLEMLERİ                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { get, ref, push, set, update, remove, ThenableReference } from "firebase/database";
+import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
 import { db } from "./firebase-init";
+import { extractPathFromUrl } from "./global-ut";
 
 /* ─────────────────── Bileşen CRUD ─────────────────── */
 
-export function addComponentToFirebase(itemData: any): firebase.database.ThenableReference {
-  return db.userDataRef!.push(itemData);
+export function addComponentToFirebase(itemData: any): ThenableReference {
+  return push(db.userDataRef!, itemData) as ThenableReference;
 }
 
 /* ── Toplu Veri İşlemleri ── */
 
 export function replaceUserDataInFirebase(itemsMap: Record<string, any>): Promise<void> {
-  return db.userDataRef!.set(itemsMap || {});
+  return set(db.userDataRef!, itemsMap || {});
 }
 
 /* ── Bileşen Güncelleme ── */
 
 export function updateComponentInFirebase(id: string, itemData: any): Promise<void> {
-  return db.database!.ref(db.activeBasePath + "/" + id).update(itemData);
+  return update(ref(db.database, db.activeBasePath + "/" + id), itemData);
 }
 
 /* ── Durum Güncelleme ── */
 
 export function updateComponentStatusInFirebase(id: string, newStatus: string): Promise<void> {
-  return db.database!.ref(db.activeBasePath + "/" + id).update({ status: newStatus });
+  return update(ref(db.database, db.activeBasePath + "/" + id), { status: newStatus });
 }
 
 /* ── Bileşen Silme ── */
 
 export async function deleteComponentFromFirebase(id: string): Promise<void> {
-  const itemRef = db.database!.ref(db.activeBasePath + "/" + id);
-  const snap = await itemRef.once("value");
+  const itemRef = ref(db.database, db.activeBasePath + "/" + id);
+  const snap = await get(itemRef);
   const item = snap.val() as any;
   if (item && item.imageUrl) {
     try {
-      await firebase.storage().refFromURL(item.imageUrl).delete();
+      await deleteObject(storageRef(getStorage(), item.imagePath || extractPathFromUrl(item.imageUrl) || item.imageUrl));
     } catch (_) {}
   }
-  await itemRef.remove();
+  await remove(itemRef);
 }
-
-
-
-

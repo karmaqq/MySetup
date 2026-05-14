@@ -2,6 +2,7 @@
 /*                      POST VIEW YORUM/YANIT GÖNDERİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+import { serverTimestamp } from "firebase/database";
 import { currentUser } from "./app-state";
 import { addCommentToFirebase, addReplyToFirebase } from "./firebase-comment";
 import { showToast } from "./global-fn";
@@ -76,7 +77,7 @@ export function _submitPostViewComment(): void {
     uid: user.uid,
     username: user.displayName || "Kullanici",
     text: text,
-    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    createdAt: serverTimestamp(),
     likes: {},
   };
 
