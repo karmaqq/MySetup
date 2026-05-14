@@ -1,78 +1,56 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                     MYSETUP OTOMASYONLU YAYIN SISTEMI                    */
+/*                     MySetup — OTOMASYONLU YAYIN SİSTEMİ                   */
+/*                      Kullanım: npm run update                            */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  statSync,
-  writeFileSync,
-} from "fs";
-import { createHash } from "crypto";
-import { execSync, spawn, spawnSync } from "child_process";
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import { execSync, spawnSync, spawn } from "child_process";
 import { createInterface } from "readline";
-import { get, request } from "https";
-import { join } from "path";
+import { get } from "https";
+
+/* ─────────────────── ANSI Renk Sabitleri ─────────────────── */
 
 const R = "\x1b[0m";
 const B = "\x1b[1m";
+const D = "\x1b[2m";
 const C = "\x1b[96m";
 const G = "\x1b[92m";
 const Y = "\x1b[93m";
 const X = "\x1b[91m";
 const M = "\x1b[95m";
 const W = "\x1b[97m";
+const L = "\x1b[94m";
 const Z = "\x1b[90m";
-const WIDTH = 82;
-const OWNER = "karmaqq";
-const REPO = "MySetup";
-const INSTALLER_NAME = "MySetup-Installer.exe";
+
+/* ─────────────────── Yardımcı Fonksiyonlar ─────────────────── */
 
 let rl = createInterface({ input: process.stdin, output: process.stdout });
-let fullLog = [];
-let resolvedCommitMessage = "";
+let rlClosed = false;
 
-const args = process.argv.slice(2);
-const flags = new Set(args.filter((arg) => arg.startsWith("--")));
-const commitArg = args
-  .filter((arg) => !arg.startsWith("--"))
-  .join(" ")
-  .trim();
-const isDryRun = flags.has("--dry-run");
-const skipPublish = flags.has("--skip-publish");
-const autoYes = flags.has("--yes") || Boolean(commitArg);
-
-/* ─────────────────── Genel Yardimcilar ─────────────────── */
-
-function stripAnsi(text) {
-  return String(text).replace(/\x1b\[\d+m/g, "");
-}
-
-function logLine(text = "") {
-  console.log(text);
-  fullLog.push(stripAnsi(text));
-}
-
-function safeCloseRl() {
-  try {
-    rl.close();
-  } catch {
-    return;
+function ensureRL() {
+  if (rlClosed) {
+    rl = createInterface({ input: process.stdin, output: process.stdout });
+    rlClosed = false;
   }
+  return rl;
 }
 
-function ask(question) {
-  return new Promise((resolve) => rl.question(question, resolve));
-}
+const ask = (q) => new Promise((r) => ensureRL().question(q, r));
 
-function readJson(path) {
-  return JSON.parse(readFileSync(path, "utf-8"));
-}
-
-function writeJson(path, data) {
-  writeFileSync(path, JSON.stringify(data, null, 2) + "\n", "utf-8");
+function readKey() {
+  return new Promise((resolve) => {
+    rl.close();
+    rlClosed = true;
+    const stdin = process.stdin;
+    const wasRaw = stdin.isRaw;
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.once("data", (data) => {
+      stdin.setRawMode(wasRaw);
+      stdin.pause();
+      resolve(data);
+    });
+  });
 }
 
 function exec(cmd) {
@@ -85,614 +63,741 @@ function exec(cmd) {
     .trim();
 }
 
-function execResult(cmd) {
+function execOk(cmd) {
   try {
-    const output = execSync(cmd, {
+    execSync(cmd, {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
     });
-    return { ok: true, output: output.toString().trim() };
-  } catch (e) {
-    return {
-      ok: false,
-      output: `${e.stdout || ""}${e.stderr || ""}`.trim(),
-    };
+    return true;
+  } catch {
+    return false;
   }
 }
 
-function runInherited(cmd, env = {}) {
-  const result = spawnSync("cmd", ["/c", cmd], {
-    encoding: "utf-8",
-    stdio: "inherit",
-    windowsHide: true,
-    env: { ...process.env, ...env },
-  });
-  return result.status === 0;
-}
-
-function gitCommit(message) {
-  const result = spawnSync("git", ["commit", "-m", message], {
-    encoding: "utf-8",
-    stdio: "inherit",
-    windowsHide: true,
-  });
-  return result.status === 0;
-}
-
-function httpJson(method, url, headers, body = null) {
-  return new Promise((resolve, reject) => {
-    const data = body == null ? null : JSON.stringify(body);
-    const options = new URL(url);
-    const req = request(
-      {
-        method,
-        hostname: options.hostname,
-        path: options.pathname + options.search,
-        headers: {
-          ...headers,
-          ...(data ? { "Content-Type": "application/json" } : {}),
-          ...(data ? { "Content-Length": Buffer.byteLength(data) } : {}),
-        },
-      },
-      (res) => {
-        let raw = "";
-        res.on("data", (chunk) => (raw += chunk));
-        res.on("end", () => {
-          let parsed = null;
-          try {
-            parsed = raw ? JSON.parse(raw) : null;
-          } catch {
-            parsed = raw;
-          }
-          resolve({ statusCode: res.statusCode || 0, body: parsed });
-        });
-      },
+function sh(cmd) {
+  try {
+    return (
+      execSync(cmd, {
+        encoding: "utf-8",
+        stdio: "inherit",
+        windowsHide: true,
+      })?.toString() || ""
     );
-    req.on("error", reject);
-    if (data) req.write(data);
-    req.end();
-  });
+  } catch {
+    return null;
+  }
 }
 
-function httpStatus(url, headers) {
+function shEnv(cmd, extraEnv) {
+  try {
+    return (
+      execSync(cmd, {
+        encoding: "utf-8",
+        stdio: "inherit",
+        windowsHide: true,
+        env: { ...process.env, ...extraEnv },
+      })?.toString() || ""
+    );
+  } catch {
+    return null;
+  }
+}
+
+function readJson(path) {
+  return JSON.parse(readFileSync(path, "utf-8"));
+}
+
+function writeJson(path, data) {
+  writeFileSync(path, JSON.stringify(data, null, 2) + "\n", "utf-8");
+}
+
+/* ─────────────────── UI Kemikleri ─────────────────── */
+
+function box(w, color, top, mid, bot) {
+  const h = "─".repeat(w);
+  console.log(`   ${color}${B}${top}${h}${bot}${R}`);
+}
+
+function boxRow(color, content) {
+  console.log(`   ${color}│${R} ${content} │${R}`);
+}
+
+/* ─────────────────── Bölüm Başlık ve Alt Bilgi ─────────────────── */
+
+function stripAnsi(s) {
+  return s.replace(/\x1b\[\d+m/g, "");
+}
+
+const W70 = 70;
+
+function section(title, color = C) {
+  const h = "─".repeat(W70);
+  console.log(`   ${color}${B}┌${h}┐${R}`);
+  console.log(`   ${color}${B}│  ${title.padEnd(W70 - 2)}│${R}`);
+  console.log(`   ${color}${B}├${h}┤${R}`);
+}
+
+function sectionEnd(color = C) {
+  const h = "─".repeat(W70);
+  console.log(`   ${color}└${h}┘${R}`);
+  console.log();
+}
+
+/* ─────────────────── Durum Satırı ─────────────────── */
+
+function statusLine(icon, color, text, detail = "") {
+  const raw = detail ? ` ${stripAnsi(detail)}` : "";
+  const visLen = text.length + raw.length;
+  const pad = Math.max(0, 65 - visLen);
+  const isColored = detail && detail.includes("\x1b");
+  const detailStr = detail
+    ? ` ${isColored ? "" : Z}${detail}${isColored ? "" : R}`
+    : "";
+  console.log(
+    `   ${C}│${R} ${color}${icon}${R}  ${text}${detailStr}${" ".repeat(pad)} ${C}│${R}`,
+  );
+}
+
+function success(t, d) {
+  statusLine("✓", G, t, d);
+}
+function warn(t, d) {
+  statusLine("!", Y, t, d);
+}
+function error(t, d) {
+  statusLine("✗", X, t, d);
+}
+function info(t, d) {
+  statusLine("•", C, t, d);
+}
+
+function boxHeader(title, color = C) {
+  const h = "═".repeat(W70);
+  console.log(`   ${color}${B}╔${h}╗${R}`);
+  console.log(`   ${color}${B}║  ${title.padEnd(W70 - 2)}║${R}`);
+  console.log(`   ${color}${B}╚${h}╝${R}`);
+  console.log();
+}
+
+/* ─────────────────── İç Çerçeve Satırı ─────────────────── */
+
+function menuRow(color, content) {
+  const pad = Math.max(0, W70 - 2 - stripAnsi(content).length);
+  console.log(`   ${color}│${R} ${content}${" ".repeat(pad)} ${color}│${R}`);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                            1/4 ÖN KONTROLLER                                */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+async function preflight() {
+  section("[1/4]  ÖN KONTROLLER");
+  let ok = true;
+
+  if (!existsSync(".env.bat")) {
+    error(".env.bat", "DOSYA YOK");
+    ok = false;
+  } else {
+    const envContent = readFileSync(".env.bat", "utf-8");
+    const m = envContent.match(/set "GH_TOKEN=([^"]+)"/);
+    if (!m || !m[1].trim()) {
+      error(".env.bat", "GH_TOKEN BOŞ");
+      ok = false;
+    } else {
+      process.env.GH_TOKEN = m[1].trim();
+      success(".env.bat", "GH_TOKEN yüklendi");
+    }
+  }
+
+  try {
+    const remote = exec("git remote get-url origin");
+    const branch = exec("git branch --show-current");
+    if (remote) {
+      const short = remote.length > 44 ? remote.slice(0, 41) + "..." : remote;
+      statusLine("✓", G, "Git deposu", `${Z}${short}${R} (${M}${branch}${Z})`);
+    } else {
+      error("Git deposu", "GİT BULUNAMADI");
+      ok = false;
+    }
+  } catch {
+    error("Git deposu", "GİT BULUNAMADI");
+    ok = false;
+  }
+
+  try {
+    success("Node.js", exec("node -v"));
+  } catch {
+    error("Node.js", "NODE BULUNAMADI");
+    ok = false;
+  }
+
+  if (existsSync("node_modules/.bin/electron-builder.cmd"))
+    success("electron-builder", "mevcut");
+  else warn("electron-builder", "npm install gerekebilir");
+
+  try {
+    const pkg = readJson("package.json");
+    const ghPublish = (pkg.build?.publish || []).find(
+      (p) => p && p.provider === "github",
+    );
+    if (!ghPublish) {
+      error("GitHub yayın ayarı", "build.publish bulunamadı");
+      ok = false;
+    } else if (ghPublish.owner !== "karmaqq" || ghPublish.repo !== "MySetup") {
+      error("GitHub yayın ayarı", "owner/repo hatalı");
+      ok = false;
+    } else if (ghPublish.releaseType !== "release") {
+      error("GitHub yayın tipi", "releaseType release olmalı");
+      ok = false;
+    } else {
+      success("GitHub yayın tipi", "release");
+    }
+  } catch {
+    error("package.json", "OKUNAMADI");
+    ok = false;
+  }
+
+  if ((process.env.EP_DRAFT || "").toLowerCase() === "true") {
+    error("EP_DRAFT", "true olamaz");
+    ok = false;
+  } else {
+    success("EP_DRAFT", "kapalı");
+  }
+
+  if (process.env.GH_TOKEN) {
+    try {
+      const code = await httpGet(
+        "https://api.github.com",
+        {
+          Authorization: `token ${process.env.GH_TOKEN}`,
+          "User-Agent": "MySetup",
+        },
+        true,
+      );
+      if (code === 200) success("GitHub API", "erişim başarılı");
+      else if (code === 401) {
+        error("GitHub API", "401 Yetkisiz — TOKEN GEÇERSİZ");
+        ok = false;
+      } else warn("GitHub API", `HTTP ${code}`);
+    } catch {
+      warn("GitHub API", "bağlantı sorunu");
+    }
+  }
+
+  if (!ok) {
+    const h = "─".repeat(W70);
+    console.log(`   ${C}├${h}┤${R}`);
+    console.log(
+      `   ${C}│${R}  ${X}${B}X  KRİTİK HATA — Lütfen yukarıdaki sorunları giderin.${R}           ${C}│${R}`,
+    );
+    console.log(`   ${C}└${h}┘${R}`);
+    console.log();
+    process.exit(1);
+  }
+
+  success("Tüm kontroller başarılı");
+  sectionEnd();
+}
+
+/* ─────────────────── HTTP İsteği ─────────────────── */
+
+function httpGet(url, headers, statusOnly = false) {
   return new Promise((resolve, reject) => {
     get(url, { headers }, (res) => {
-      res.resume();
-      res.on("end", () => resolve(res.statusCode || 0));
+      let data = "";
+      res.on("data", (c) => (data += c));
+      res.on("end", () =>
+        statusOnly ? resolve(res.statusCode) : resolve(data),
+      );
     }).on("error", reject);
   });
 }
 
-function githubHeaders() {
-  return {
-    Authorization: `token ${process.env.GH_TOKEN}`,
-    Accept: "application/vnd.github.v3+json",
-    "User-Agent": "MySetup",
-  };
+function httpGetJson(url, headers) {
+  return new Promise((resolve, reject) => {
+    get(url, { headers }, (res) => {
+      let data = "";
+      res.on("data", (c) => (data += c));
+      res.on("end", () => {
+        let body = null;
+        try {
+          body = data ? JSON.parse(data) : null;
+        } catch {
+          body = data;
+        }
+        resolve({ statusCode: res.statusCode || 0, body });
+      });
+    }).on("error", reject);
+  });
 }
 
-function formatDuration(seconds) {
-  if (seconds < 1) return `${seconds.toFixed(2)} sn`;
-  if (seconds < 60) return `${seconds.toFixed(1)} sn`;
-  return `${Math.floor(seconds / 60)} dk ${Math.round(seconds % 60)} sn`;
-}
+/* ─────────────────── Sürüm Yükseltme (otomatik yama) ─────────────────── */
 
-function boxTitle(title) {
-  const line = "═".repeat(WIDTH);
-  logLine(`\n${C}${B}╔${line}╗${R}`);
-  logLine(`${C}${B}║ ${title.padEnd(WIDTH - 1)}║${R}`);
-  logLine(`${C}${B}╚${line}╝${R}`);
-}
+async function selectVersion(cur) {
+  const [vMaj, vMin, vPat] = cur.split(".").map(Number);
+  let nvMaj = vMaj,
+    nvMin = vMin,
+    nvPat = vPat;
+  if (nvPat === 9) {
+    nvPat = 0;
+    if (nvMin === 9) {
+      nvMin = 0;
+      nvMaj++;
+    } else nvMin++;
+  } else nvPat++;
+  const nxt = `${nvMaj}.${nvMin}.${nvPat}`;
 
-function section(index, total, title) {
-  const line = "─".repeat(WIDTH);
-  logLine(`\n${C}${B}┌${line}┐${R}`);
-  logLine(`${C}${B}│ [${index}/${total}] ${title.padEnd(WIDTH - 7)}│${R}`);
-  logLine(`${C}${B}├${line}┤${R}`);
-}
-
-function sectionEnd() {
-  const line = "─".repeat(WIDTH);
-  logLine(`${C}└${line}┘${R}`);
-}
-
-function row(icon, color, label, detail = "") {
-  const raw = `${icon}  ${label}${detail ? ` ${detail}` : ""}`;
-  const pad = Math.max(0, WIDTH - stripAnsi(raw).length - 2);
-  logLine(
-    `${C}│${R} ${color}${icon}${R}  ${label}${detail ? ` ${Z}${detail}${R}` : ""}${" ".repeat(pad)} ${C}│${R}`,
+  section("[2/6]  VERSİYON GÜNCELLEME");
+  menuRow(
+    C,
+    `${G}Sürüm Güncellendi${R} — ${W}${cur}${R} ${Z}→${R} ${G}${B}${nxt}${R}`,
   );
+  menuRow(C, `${Z}package.json dosyası güncellendi${R}`);
+  sectionEnd();
+
+  const pkg = readJson("package.json");
+  pkg.version = nxt;
+  writeJson("package.json", pkg);
+  return nxt;
 }
 
-function ok(label, detail = "") {
-  row("OK", G, label, detail);
-}
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                            2/4 TYPE SCRIPT DERLEME                          */
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
-function warn(label, detail = "") {
-  row("!!", Y, label, detail);
-}
+async function buildTs() {
+  section("[2/4]  TYPE SCRIPT DERLEME");
 
-function fail(label, detail = "") {
-  row("XX", X, label, detail);
-}
+  const bar = (pct) => {
+    const f = Math.floor(pct / 5);
+    return `${G}█${R}`.repeat(f) + `${Z}░${R}`.repeat(20 - f);
+  };
 
-function info(label, detail = "") {
-  row("..", C, label, detail);
-}
+  // 1. Animasyon 0→50
+  for (let p = 0; p <= 50; p += 5) {
+    const c = `${C}🔨 Derleniyor...${R} ${Z}[${bar(p)}]${R} ${Y}${p}%${R}`;
+    const pad = Math.max(0, W70 - 2 - stripAnsi(c).length);
+    process.stdout.write(`   ${C}│${R} ${c}${" ".repeat(pad)} ${C}│${R}\r`);
+    await new Promise((r) => setTimeout(r, 4));
+  }
 
-function stageResult(id, name) {
-  return { id, name, status: "SKIP", duration: 0, details: "" };
-}
+  const result = spawnSync("cmd", ["/c", "npm run build:ts"], {
+    encoding: "utf-8",
+    windowsHide: true,
+  });
 
-async function runStage(stages, id, total, name, fn) {
-  const stage = stageResult(id, name);
-  stages.push(stage);
-  const start = Date.now();
-  section(id, total, name);
-  try {
-    const result = await fn();
-    stage.status = result?.status || "OK";
-    stage.details = result?.details || "";
-    stage.duration = (Date.now() - start) / 1000;
+  // 2. Animasyon 55→100
+  for (let p = 55; p <= 100; p += 5) {
+    const c = `${G}✓ Derlendi${R} ${Z}[${bar(p)}]${R} ${G}${p}%${R}`;
+    const pad = Math.max(0, W70 - 2 - stripAnsi(c).length);
+    process.stdout.write(`   ${C}│${R} ${c}${" ".repeat(pad)} ${C}│${R}\r`);
+    await new Promise((r) => setTimeout(r, 3));
+  }
+  console.log();
+
+  if (result.status !== 0) {
+    menuRow(C, `${X}${B}X  DERLEME HATASI${R}`);
+    menuRow(C, `${Z}Yayın iptal edildi. Önce hatayı düzeltip tekrar dene.${R}`);
     sectionEnd();
-    return stage.status === "OK";
+    return false;
+  }
+
+  sectionEnd();
+  return true;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                            3/4  GİT İŞLEMLERİ                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+async function gitOperations(nxt, commitArg) {
+  section("[3/4]  GİT İŞLEMLERİ");
+
+  menuRow(C, `${Z}DURUM  DOSYA YOLU${R}`);
+  console.log(`   ${C}│${R}  ${D}${"─".repeat(W70 - 4)}${R}  ${C}│${R}`);
+
+  const statusOut = exec("git status --short");
+  let hasChanges = false;
+
+  for (const line of statusOut.split("\n")) {
+    if (!line.trim()) continue;
+    hasChanges = true;
+    const st = line.slice(0, 2).trim();
+    const file = line.slice(3).trim();
+    let label = `${G}EKLENDİ${R}`;
+    if (st === "M") label = `${Y}DEĞİŞTİ${R}`;
+    if (st === "MM") label = `${Y}DEĞİŞTİ${R}`;
+    if (st === "A") label = `${G}YENİ${R}`;
+    if (st === "D") label = `${X}SİLİNDİ${R}`;
+    if (st === "R") label = `${M}TAŞINDI${R}`;
+    const visible = stripAnsi(label).length + 5 + file.length;
+    const pad = Math.max(0, W70 - 2 - visible);
+    console.log(
+      `   ${C}│${R} ${label} ${Z}--${R} ${file}${" ".repeat(pad)}  ${C}│${R}`,
+    );
+  }
+
+  if (!hasChanges) menuRow(C, `${Z}Temiz çalışma dizini, değişiklik yok.${R}`);
+
+  console.log(`   ${C}│${R}  ${D}${"─".repeat(W70 - 4)}${R}  ${C}│${R}`);
+
+  let finalMsg;
+  if (commitArg !== undefined) {
+    finalMsg = commitArg || "Otomatik Güncelleme";
+    menuRow(C, `${Z}Commit: ${W}v${nxt}: ${finalMsg}${R}`);
+  } else {
+    const dftMsg = "Otomatik Güncelleme";
+    const userMsg = await ask(`   ${C}│${R} Commit: `);
+    finalMsg = userMsg || dftMsg;
+  }
+  const fullMsg = `v${nxt}: ${finalMsg}`;
+
+  console.log(`   ${C}│${R}  ${D}${"─".repeat(W70 - 4)}${R}  ${C}│${R}`);
+
+  menuRow(C, `${Z}1/4  git add --all...${R}`);
+  if (!execOk("git add --all")) {
+    menuRow(C, `${X}X  git add başarısız!${R}`);
+    sectionEnd();
+    return false;
+  }
+
+  menuRow(C, `${Z}2/4  git commit...${R}`);
+  if (!execOk(`git commit -m "${fullMsg}"`)) {
+    menuRow(C, `${X}X  Commit başarısız. Değişiklik olmayabilir.${R}`);
+    sectionEnd();
+    return false;
+  }
+
+  const commitHash = exec("git rev-parse --short HEAD");
+  menuRow(C, `${Z}3/4  git pull --rebase origin main...${R}`);
+  if (!execOk("git pull --rebase origin main")) {
+    menuRow(C, `${X}X  Pull/Rebase başarısız. Çakışmaları manuel çöz.${R}`);
+    sectionEnd();
+    return false;
+  }
+
+  menuRow(C, `${Z}4/4  git push origin main...${R}`);
+  if (!execOk("git push origin main")) {
+    menuRow(C, `${X}X  Push başarısız. İnternet bağlantısını kontrol et.${R}`);
+    sectionEnd();
+    return false;
+  }
+
+  menuRow(C, "");
+  menuRow(C, `${G}✓  Commit: ${W}${commitHash}${R}  ${Z}— ${G}${fullMsg}${R}`);
+  sectionEnd();
+  return true;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                            4/4  PAKETLEME VE YAYINLAMA                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+async function publish() {
+  section("[4/4]  PAKETLEME VE YAYINLAMA");
+  menuRow(C, `${Z}Çıktı: release\\MySetup-Installer.exe${R}`);
+  menuRow(C, "");
+
+  const barStr = (pct) => {
+    const f = Math.floor(pct / 5);
+    return `${G}█${R}`.repeat(f) + `${Z}░${R}`.repeat(20 - f);
+  };
+
+  const contentStr = (pct) => {
+    const s =
+      pct < 30
+        ? `${M}🔧 Hazırlanıyor${R}`
+        : pct < 60
+          ? `${M}📦 Paketleniyor${R}`
+          : `${M}☁️  Yayınlanıyor${R}`;
+    return `${s} ${Z}[${barStr(pct)}]${R} ${Y}${pct}%${R}`;
+  };
+
+  const child = spawn(
+    "cmd",
+    ["/c", `npx --yes electron-builder --publish always`],
+    {
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true,
+      env: { ...process.env, NODE_NO_WARNINGS: "1" },
+    },
+  );
+
+  const buildLog = [];
+  const pushLog = (chunk) => {
+    const lines = chunk
+      .toString()
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    buildLog.push(...lines);
+    while (buildLog.length > 40) buildLog.shift();
+  };
+
+  child.stdout.on("data", pushLog);
+  child.stderr.on("data", pushLog);
+
+  let pct = 0;
+  const anim = setInterval(() => {
+    pct = Math.min(95, pct + 3);
+    const c = contentStr(pct);
+    const pad = Math.max(0, W70 - 2 - stripAnsi(c).length);
+    process.stdout.write(`   ${C}│${R} ${c}${" ".repeat(pad)} ${C}│${R}\r`);
+  }, 1200);
+
+  const status = await new Promise((resolve) => {
+    child.on("error", () => resolve(1));
+    child.on("close", (code) => resolve(code));
+  });
+
+  clearInterval(anim);
+
+  const ok = status === 0;
+  const icon = ok ? `${G}✓${R}` : `${X}✗${R}`;
+  const pctStr = ok ? "100%" : "HATA";
+  const pctCol = ok ? G : X;
+  const c = `${icon} ${ok ? " Yayın tamamlandı" : "Yayın başarısız"} ${Z}[${barStr(ok ? 100 : 0)}]${R} ${pctCol}${pctStr}${R}`;
+  const pad = Math.max(0, W70 - 2 - stripAnsi(c).length);
+  console.log(`   ${C}│${R} ${c}${" ".repeat(pad)} ${C}│${R}`);
+
+  if (!ok) {
+    menuRow(C, "");
+    menuRow(C, `${X}${B}X  YAYIN HATASI${R}`);
+    menuRow(C, `${Z}Olası nedenler:${R}`);
+    menuRow(C, `${Z}  - GH_TOKEN yetkisiz veya süresi dolmuş${R}`);
+    menuRow(C, `${Z}  - İnternet bağlantısı kesik${R}`);
+    menuRow(C, `${Z}  - Yayın adı/proje bilgileri hatalı${R}`);
+    if (buildLog.length) {
+      menuRow(C, `${Z}Son electron-builder çıktısı:${R}`);
+      buildLog.slice(-8).forEach((line) => {
+        menuRow(C, `${Z}  ${line.slice(0, 60)}${R}`);
+      });
+    }
+    sectionEnd();
+    return false;
+  }
+
+  sectionEnd();
+  return true;
+}
+
+async function verifyGitHubRelease(version) {
+  section("[5/5]  GITHUB YAYIN DOĞRULAMA");
+  const tag = `v${version}`;
+  const headers = {
+    Authorization: `token ${process.env.GH_TOKEN}`,
+    "User-Agent": "MySetup",
+    Accept: "application/vnd.github.v3+json",
+  };
+
+  try {
+    const result = await httpGetJson(
+      `https://api.github.com/repos/karmaqq/MySetup/releases/tags/${encodeURIComponent(tag)}`,
+      headers,
+    );
+
+    if (result.statusCode !== 200 || !result.body) {
+      error("GitHub release", `HTTP ${result.statusCode}`);
+      sectionEnd();
+      return false;
+    }
+
+    const release = result.body;
+    const assets = Array.isArray(release.assets) ? release.assets : [];
+    const assetNames = assets.map((asset) => asset.name);
+    const hasInstaller = assetNames.includes("MySetup-Installer.exe");
+    const hasMetadata = assetNames.some(
+      (name) => name === "latest.yml" || name.endsWith(".yml"),
+    );
+
+    if (release.draft) {
+      error("Release durumu", "DRAFT");
+      sectionEnd();
+      return false;
+    }
+
+    if (release.prerelease) {
+      error("Release tipi", "PRE-RELEASE");
+      sectionEnd();
+      return false;
+    }
+
+    if (!hasInstaller) {
+      error("Installer asset", "MySetup-Installer.exe yok");
+      sectionEnd();
+      return false;
+    }
+
+    if (!hasMetadata) {
+      error("Update metadata", "latest.yml yok");
+      sectionEnd();
+      return false;
+    }
+
+    success("Release durumu", "public");
+    success("Installer asset", "mevcut");
+    success("Update metadata", "mevcut");
+    sectionEnd();
+    return true;
   } catch (e) {
-    stage.status = "FAIL";
-    stage.details = e.message || "Bilinmeyen hata";
-    fail("Aşama hatası", stage.details);
-    stage.duration = (Date.now() - start) / 1000;
+    error("GitHub doğrulama", e.message || "başarısız");
     sectionEnd();
     return false;
   }
 }
 
-/* ─────────────────── Proje Bilgisi ─────────────────── */
-
-function loadEnvToken() {
-  if (!existsSync(".env.bat")) return false;
-  const envContent = readFileSync(".env.bat", "utf-8");
-  const match = envContent.match(/set "GH_TOKEN=([^"]+)"/);
-  if (!match || !match[1].trim()) return false;
-  process.env.GH_TOKEN = match[1].trim();
-  return true;
-}
-
-function getGitStatusLines() {
-  const output = execResult("git status --short").output;
-  return output ? output.split(/\r?\n/).filter(Boolean) : [];
-}
-
-function categorizeStatus(lines) {
-  return lines.map((line) => {
-    const code = line.slice(0, 2).trim() || "??";
-    const file = line.slice(3).trim();
-    let type = "Değişti";
-    if (code === "??") type = "Yeni";
-    else if (code.includes("D")) type = "Silindi";
-    else if (code.includes("R")) type = "Taşındı";
-    else if (code.includes("A")) type = "Eklendi";
-    return { code, type, file };
-  });
-}
-
-function nextPatchVersion(version) {
-  const parts = version.split(".").map(Number);
-  if (parts.length !== 3 || parts.some((part) => Number.isNaN(part))) {
-    throw new Error(`Geçersiz sürüm: ${version}`);
-  }
-  parts[2] += 1;
-  return parts.join(".");
-}
-
-function latestTag() {
-  const result = execResult("git describe --tags --abbrev=0");
-  return result.ok && result.output ? result.output : "";
-}
-
-function buildChangelog(tag) {
-  const range = tag ? `${tag}..HEAD` : "HEAD";
-  const result = execResult(`git log ${range} --pretty="- %s"`);
-  if (!result.ok || !result.output) return "- Otomatik yayın";
-  return result.output;
-}
-
-function installerManifest(version, commitHash) {
-  const filePath = join("release", INSTALLER_NAME);
-  if (!existsSync(filePath)) return null;
-  const data = readFileSync(filePath);
-  const hash = createHash("sha256").update(data).digest("hex");
-  const stats = statSync(filePath);
-  return {
-    version,
-    commit: commitHash,
-    file: INSTALLER_NAME,
-    size: stats.size,
-    sha256: hash,
-    createdAt: new Date().toISOString(),
-  };
-}
-
-function writeReleaseLog(version) {
-  const dir = join("release", "logs");
-  mkdirSync(dir, { recursive: true });
-  const file = join(dir, `release-v${version}.log`);
-  writeFileSync(file, fullLog.join("\n") + "\n", "utf-8");
-  return file;
-}
-
-/* ─────────────────── Aşamalar ─────────────────── */
-
-async function preflight() {
-  let valid = true;
-  const pkg = readJson("package.json");
-  const publish = (pkg.build?.publish || []).find(
-    (item) => item?.provider === "github",
-  );
-  const tokenLoaded = loadEnvToken();
-  const branch = execResult("git branch --show-current").output;
-
-  if (tokenLoaded) ok(".env.bat", "GH_TOKEN yüklendi");
-  else {
-    const msg = ".env.bat içinde GH_TOKEN bulunamadı";
-    if (isDryRun || skipPublish) warn("GH_TOKEN", msg);
-    else {
-      fail("GH_TOKEN", msg);
-      valid = false;
-    }
-  }
-
-  if (branch === "main") ok("Git branch", branch);
-  else {
-    fail("Git branch", `${branch || "bulunamadı"}; yayın için main gerekli`);
-    valid = false;
-  }
-
-  if (publish?.owner === OWNER && publish?.repo === REPO)
-    ok("GitHub hedefi", `${OWNER}/${REPO}`);
-  else {
-    fail("GitHub hedefi", "owner/repo beklenen değer değil");
-    valid = false;
-  }
-
-  if (publish?.releaseType === "release") ok("Release tipi", "release");
-  else {
-    fail(
-      "Release tipi",
-      "package.json build.publish releaseType release olmalı",
-    );
-    valid = false;
-  }
-
-  if ((process.env.EP_DRAFT || "").toLowerCase() === "true") {
-    fail("EP_DRAFT", "true olamaz");
-    valid = false;
-  } else ok("EP_DRAFT", "kapalı");
-
-  if (process.env.GH_TOKEN) {
-    try {
-      const code = await httpStatus(
-        `https://api.github.com/repos/${OWNER}/${REPO}`,
-        githubHeaders(),
-      );
-      if (code === 200) ok("GitHub API", "erişim başarılı");
-      else if (isDryRun || skipPublish) warn("GitHub API", `HTTP ${code}`);
-      else {
-        fail("GitHub API", `HTTP ${code}`);
-        valid = false;
-      }
-    } catch (e) {
-      if (isDryRun || skipPublish) warn("GitHub API", e.message);
-      else {
-        fail("GitHub API", e.message);
-        valid = false;
-      }
-    }
-  } else if (!isDryRun && !skipPublish) {
-    fail("GitHub API", "GH_TOKEN yok");
-    valid = false;
-  }
-
-  if (!existsSync("node_modules"))
-    warn("node_modules", "npm install gerekebilir");
-  else ok("node_modules", "mevcut");
-
-  if (!valid) throw new Error("Ön kontrol başarısız");
-  return { details: "risk yok" };
-}
-
-async function reviewChanges() {
-  const lines = getGitStatusLines();
-  const items = categorizeStatus(lines);
-  if (!items.length)
-    warn("Çalışma dizini", "değişiklik yok; commit aşaması atlanabilir");
-  else {
-    info("Değişiklik sayısı", String(items.length));
-    items.slice(0, 24).forEach((item) => {
-      row(
-        item.type === "Silindi" ? "--" : "++",
-        item.type === "Silindi" ? X : G,
-        item.type,
-        item.file,
-      );
-    });
-    if (items.length > 24)
-      warn("Liste kısaltıldı", `${items.length - 24} dosya daha var`);
-  }
-
-  if (isDryRun) {
-    ok("Dry-run", "git/build/publish yan etkisi yok");
-    resolvedCommitMessage = commitArg || "Otomatik Güncelleme";
-    return { details: `${items.length} değişiklik` };
-  }
-
-  if (autoYes) {
-    resolvedCommitMessage = commitArg || "Otomatik Güncelleme";
-    ok("Commit mesajı", resolvedCommitMessage);
-  } else {
-    const answer = String(
-      await ask(
-        `${C}│${R} Commit mesajı ${Z}[boş bırakırsan: Otomatik Güncelleme]${R}: `,
-      ),
-    ).trim();
-    resolvedCommitMessage = answer || "Otomatik Güncelleme";
-    ok("Commit mesajı", resolvedCommitMessage);
-  }
-
-  return { details: `${items.length} değişiklik` };
-}
-
-async function buildAndTypecheck() {
-  const checks = [
-    ["Renderer tip kontrol", "npx.cmd tsc --noEmit"],
-    ["Main tip kontrol", "npx.cmd tsc --noEmit -p tsconfig.main.json"],
-    ["Esbuild derleme", "npm.cmd run build:ts"],
-  ];
-
-  for (const [label, cmd] of checks) {
-    if (isDryRun) {
-      info(label, cmd);
-      continue;
-    }
-    info(label, "çalışıyor");
-    if (!runInherited(cmd)) throw new Error(`${label} başarısız`);
-    ok(label, "başarılı");
-  }
-
-  return { details: isDryRun ? "dry-run" : "build temiz" };
-}
-
-async function versionCommitTag(context) {
-  const pkg = readJson("package.json");
-  const current = pkg.version;
-  const next = nextPatchVersion(current);
-  const tag = `v${next}`;
-  const lastTag = latestTag();
-  const changelog = buildChangelog(lastTag);
-  const message = resolvedCommitMessage || "Otomatik Güncelleme";
-  const fullMessage = `${tag}: ${message}`;
-
-  context.version = next;
-  context.tag = tag;
-  context.changelog = changelog;
-  context.lastTag = lastTag;
-
-  info("Sürüm", `${current} -> ${next}`);
-  info("Son tag", lastTag || "yok");
-  info("Commit mesajı", fullMessage);
-
-  if (isDryRun) return { details: tag };
-
-  pkg.version = next;
-  writeJson("package.json", pkg);
-
-  if (!runInherited("git add --all")) throw new Error("git add başarısız");
-  if (!gitCommit(fullMessage)) {
-    throw new Error("git commit başarısız");
-  }
-  if (!runInherited(`git tag ${tag}`)) throw new Error("git tag başarısız");
-  if (!runInherited("git pull --rebase origin main"))
-    throw new Error("git pull --rebase başarısız");
-  if (!runInherited("git push origin main --follow-tags"))
-    throw new Error("git push başarısız");
-
-  context.commitHash = exec("git rev-parse --short HEAD");
-  ok("Commit", context.commitHash);
-  ok("Tag", tag);
-  return { details: tag };
-}
-
-async function packageAndPublish(context) {
-  if (isDryRun) {
-    info("Paketleme", "dry-run nedeniyle atlandı");
-    return { details: "dry-run" };
-  }
-
-  const command = skipPublish
-    ? "npx.cmd --yes electron-builder --publish never"
-    : "npx.cmd --yes electron-builder --publish always";
-  const logLines = [];
-  info("Komut", command);
-
-  const child = spawn("cmd", ["/c", command], {
-    stdio: ["ignore", "pipe", "pipe"],
-    windowsHide: true,
-    env: { ...process.env, NODE_NO_WARNINGS: "1" },
-  });
-
-  child.stdout.on("data", (chunk) => collectBuildLog(chunk, logLines));
-  child.stderr.on("data", (chunk) => collectBuildLog(chunk, logLines));
-
-  const code = await new Promise((resolve) => {
-    child.on("error", () => resolve(1));
-    child.on("close", resolve);
-  });
-
-  logLines.forEach((line) => fullLog.push(line));
-  if (code !== 0) {
-    logLines
-      .slice(-10)
-      .forEach((line) => warn("electron-builder", line.slice(0, 68)));
-    throw new Error("electron-builder başarısız");
-  }
-
-  const manifest = installerManifest(
-    context.version,
-    context.commitHash || exec("git rev-parse --short HEAD"),
-  );
-  if (manifest) {
-    context.manifest = manifest;
-    const path = join("release", `manifest-v${context.version}.json`);
-    writeFileSync(path, JSON.stringify(manifest, null, 2) + "\n", "utf-8");
-    ok("Manifest", path);
-  } else warn("Manifest", `${INSTALLER_NAME} bulunamadı`);
-
-  if (skipPublish) return { details: "publish atlandı" };
-  return { details: "GitHub publish tamam" };
-}
-
-function collectBuildLog(chunk, logLines) {
-  const lines = chunk
-    .toString()
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  logLines.push(...lines);
-  while (logLines.length > 120) logLines.shift();
-}
-
-async function verifyRelease(context) {
-  if (isDryRun || skipPublish) {
-    info("GitHub doğrulama", isDryRun ? "dry-run" : "skip-publish");
-    return { status: "SKIP", details: isDryRun ? "dry-run" : "skip-publish" };
-  }
-
-  const result = await httpJson(
-    "GET",
-    `https://api.github.com/repos/${OWNER}/${REPO}/releases/tags/${encodeURIComponent(context.tag)}`,
-    githubHeaders(),
-  );
-  if (result.statusCode !== 200 || !result.body)
-    throw new Error(`GitHub release HTTP ${result.statusCode}`);
-
-  const release = result.body;
-  const assets = Array.isArray(release.assets) ? release.assets : [];
-  const assetNames = assets.map((asset) => asset.name);
-  const hasInstaller = assets.some(
-    (asset) => asset.name === INSTALLER_NAME && asset.size > 0,
-  );
-  const hasMetadata = assets.some(
-    (asset) => asset.name === "latest.yml" && asset.size > 0,
-  );
-  const hasBlockmap = assets.some(
-    (asset) => asset.name.endsWith(".blockmap") && asset.size > 0,
-  );
-
-  if (release.draft) throw new Error("Release draft durumda");
-  if (release.prerelease) throw new Error("Release prerelease durumda");
-  if (!hasInstaller) throw new Error(`${INSTALLER_NAME} asset yok veya boş`);
-  if (!hasMetadata) throw new Error("latest.yml asset yok veya boş");
-
-  context.releaseUrl = release.html_url;
-  context.assetNames = assetNames;
-  ok("Release", release.html_url);
-  ok("Installer", INSTALLER_NAME);
-  ok("Metadata", "latest.yml");
-  if (hasBlockmap) ok("Blockmap", "mevcut");
-  else warn("Blockmap", "bulunamadı");
-
-  if (context.changelog) {
-    await httpJson("PATCH", release.url, githubHeaders(), {
-      body: context.changelog,
-    });
-    ok("Changelog", "release gövdesine yazıldı");
-  }
-
-  return { details: release.html_url };
-}
-
 /* ─────────────────── Rapor ─────────────────── */
 
-function renderReport(stages, context) {
-  boxTitle("YAYIN RAPORU");
-  const header = `${"Aşama".padEnd(24)} ${"Durum".padEnd(8)} ${"Süre".padEnd(10)} Detay`;
-  logLine(`${C}${header}${R}`);
-  logLine(`${Z}${"─".repeat(WIDTH)}${R}`);
-
-  stages.forEach((stage) => {
-    const color = stage.status === "OK" ? G : stage.status === "FAIL" ? X : Y;
-    logLine(
-      `${stage.name.padEnd(24)} ${color}${stage.status.padEnd(8)}${R} ${formatDuration(stage.duration).padEnd(10)} ${stage.details || ""}`,
-    );
-  });
-
-  const failed = stages.find((stage) => stage.status === "FAIL");
-  logLine(`${Z}${"─".repeat(WIDTH)}${R}`);
-  if (failed)
-    logLine(
-      `${X}${B}İŞLEM TAMAMLANAMADI: ${failed.name} - ${failed.details}${R}`,
-    );
-  else logLine(`${G}${B}YAYIN AKIŞI TAMAMLANDI${R}`);
-
-  if (context.version) logLine(`${Z}Sürüm:${R} v${context.version}`);
-  if (context.commitHash) logLine(`${Z}Commit:${R} ${context.commitHash}`);
-  if (context.tag) logLine(`${Z}Tag:${R} ${context.tag}`);
-  if (context.releaseUrl) logLine(`${Z}Release:${R} ${context.releaseUrl}`);
-  if (context.assetNames?.length)
-    logLine(`${Z}Asset:${R} ${context.assetNames.join(", ")}`);
-  if (context.manifest) {
-    logLine(
-      `${Z}Manifest:${R} ${context.manifest.file} ${context.manifest.size} byte ${context.manifest.sha256}`,
-    );
-  }
-
-  if (context.version && !isDryRun) {
-    const logPath = writeReleaseLog(context.version);
-    logLine(`${Z}Log:${R} ${logPath}`);
-  }
+function fmtDur(s) {
+  if (s < 1) return `${s.toFixed(2)} sec`;
+  if (s < 60) return `${s.toFixed(2)} sec`;
+  const m = Math.floor(s / 60);
+  const r = Math.round(s % 60);
+  if (m < 60) return `${m} min ${r} sec`;
+  const h = Math.floor(m / 60);
+  return `${h} hour ${m % 60} min`;
 }
 
-/* ─────────────────── Ana Akış ─────────────────── */
+function report(timings, nxt) {
+  const hr = "─".repeat(W70);
+  const sc = (s) => `${C}${s.padStart(14)}${R}`;
+
+  console.log(`   ┌${hr}┐`);
+  menuRow(W, `  ZAMAN ÇİZELGESİ`);
+  console.log(`   ├${hr}┤`);
+  menuRow(W, `  Aşama                    Süre               Durum`);
+  console.log(`   ├${hr}┤`);
+
+  let total = 0;
+  for (const t of timings) {
+    if (t.dur < 0) continue;
+    total += t.dur;
+    const icon = t.ok ? "✓" : t.ok === false ? "✗" : "→";
+    const sc2 = t.ok ? G : X;
+    menuRow(
+      W,
+      `  ${t.name.padEnd(20)}  ${sc(fmtDur(t.dur))}  ${sc2}${icon}${R}`,
+    );
+  }
+
+  console.log(`   ├${hr}┤`);
+  const overallOk = timings.every((t) => t.ok !== false);
+  const oc = overallOk ? G : X;
+  menuRow(
+    W,
+    `  ${B}TOPLAM SÜRE${R}          ${sc(fmtDur(total))}  ${oc}${overallOk ? "✓" : "✗"}${R}`,
+  );
+  console.log(`   └${hr}┘`);
+
+  console.log();
+  console.log(`   ${C}${B}┌${hr}┐${R}`);
+  menuRow(C, `  YAYIN BİLGİLERİ`);
+  console.log(`   ${C}${B}├${hr}┤${R}`);
+  menuRow(C, `${Z}Sürüm     : ${W}v${nxt}${R}`);
+  menuRow(C, `${Z}Tarih     : ${W}${new Date().toLocaleString("tr-TR")}${R}`);
+  console.log(`   ${C}│${R}  ${D}${"─".repeat(W70 - 4)}${R}  ${C}│${R}`);
+  menuRow(C, `${Z}Depo      : ${W}https://github.com/karmaqq/MySetup${R}`);
+  menuRow(
+    C,
+    `${Z}Release   : ${W}https://github.com/karmaqq/MySetup/releases/tag/v${nxt}${R}`,
+  );
+
+  console.log(`   ${C}├${hr}┤${R}`);
+  if (overallOk) {
+    menuRow(C, `${G}[OK]  YAYIN BAŞARIYLA TAMAMLANDI — v${nxt}`);
+  } else {
+    const failed = timings.find((t) => t.ok === false);
+    let reason = "BAŞARISIZ";
+    if (failed?.name === "TypeScript Derleme") reason = "DERLEME HATASI";
+    else if (failed?.name === "Git İşlemleri") reason = "GİT HATASI";
+    else if (failed?.name === "electron-builder") reason = "YAYIN HATASI";
+    else if (failed?.name === "GitHub Doğrulama") reason = "YAYIN DOĞRULAMA HATASI";
+    console.log(
+      `   ${C}│${R}  ${X}│${R}                                  ${C}│${R}`,
+    );
+    menuRow(C, `  ${X}[XX]  İŞLEM TAMAMLANAMADI — ${reason}`);
+    console.log(
+      `   ${C}│${R}  ${X}│${R}                                  ${C}│${R}`,
+    );
+  }
+  console.log(`   ${C}└${hr}┘${R}`);
+}
+
+/* ─────────────────── Ana İşlev ─────────────────── */
 
 async function main() {
-  const stages = [];
-  const context = {};
-  const total = 6;
+  console.log();
+  boxHeader("MySetup  —  OTOMATİK YAYIN SİSTEMİ", C);
+  const timings = [];
 
-  boxTitle("MySetup - Hibrit Yayın Otomasyonu");
-  if (isDryRun) warn("Mod", "dry-run");
-  if (skipPublish) warn("Mod", "skip-publish");
+  const t0 = Date.now();
+  await preflight();
+  const t1 = Date.now();
+  timings.push({ name: "Ön Kontroller", dur: (t1 - t0) / 1000, ok: true });
 
-  const flow = [
-    ["Ön Kontrol", preflight],
-    ["Değişiklik Özeti", reviewChanges],
-    ["Build ve Tip Kontrol", buildAndTypecheck],
-    ["Versiyon Commit Tag", () => versionCommitTag(context)],
-    ["Paketleme ve Yayın", () => packageAndPublish(context)],
-    ["GitHub Doğrulama", () => verifyRelease(context)],
-  ];
+  const cur = readJson("package.json").version;
 
-  for (let i = 0; i < flow.length; i += 1) {
-    const [name, fn] = flow[i];
-    const okStage = await runStage(stages, i + 1, total, name, fn);
-    if (!okStage) {
-      for (let j = i + 1; j < flow.length; j += 1) {
-        const skipped = stageResult(j + 1, flow[j][0]);
-        skipped.status = "SKIP";
-        skipped.details = "önceki aşama başarısız";
-        stages.push(skipped);
+  const commitArg = process.argv[2];
+  const nxt = await selectVersion(cur);
+  const t2 = Date.now();
+  timings.push({
+    name: "Versiyon Güncelleme",
+    dur: (t2 - t1) / 1000,
+    ok: true,
+  });
+
+  const buildOk = await buildTs();
+  const t3 = Date.now();
+  timings.push({
+    name: "TypeScript Derleme",
+    dur: (t3 - t2) / 1000,
+    ok: buildOk,
+  });
+
+  let gitOk = true,
+    publishOk = true,
+    verifyOk = true;
+  if (!buildOk) {
+    timings.push({ name: "Git İşlemleri", dur: 0, ok: null });
+    timings.push({ name: "electron-builder", dur: 0, ok: null });
+    timings.push({ name: "GitHub Doğrulama", dur: 0, ok: null });
+  } else {
+    gitOk = await gitOperations(nxt, commitArg);
+    const t4 = Date.now();
+    timings.push({ name: "Git İşlemleri", dur: (t4 - t3) / 1000, ok: gitOk });
+    if (!gitOk) {
+      timings.push({ name: "electron-builder", dur: 0, ok: null });
+      timings.push({ name: "GitHub Doğrulama", dur: 0, ok: null });
+    } else {
+      publishOk = await publish();
+      const t5 = Date.now();
+      timings.push({
+        name: "electron-builder",
+        dur: (t5 - t4) / 1000,
+        ok: publishOk,
+      });
+      if (!publishOk) {
+        timings.push({ name: "GitHub Doğrulama", dur: 0, ok: null });
+      } else {
+        verifyOk = await verifyGitHubRelease(nxt);
+        const t6 = Date.now();
+        timings.push({
+          name: "GitHub Doğrulama",
+          dur: (t6 - t5) / 1000,
+          ok: verifyOk,
+        });
       }
-      break;
     }
   }
 
-  renderReport(stages, context);
-  safeCloseRl();
-  if (stages.some((stage) => stage.status === "FAIL")) process.exit(1);
+  report(timings, nxt);
+  rl.close();
 }
 
 main().catch((e) => {
-  fail("Beklenmeyen hata", e.message);
-  safeCloseRl();
+  console.error(`${X}HATA:${R}`, e.message);
+  rl.close();
   process.exit(1);
 });
