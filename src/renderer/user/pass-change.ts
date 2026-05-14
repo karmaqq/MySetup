@@ -3,8 +3,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, reload } from "firebase/auth";
-import { currentUser } from "./app-state";
-import { showToast } from "./global-fn";
+import { currentUser } from "../core/app-state";
+import { showToast } from "../core/global-fn";
 
 const changePasswordModal = document.getElementById("changePasswordModal") as HTMLElement | null;
 

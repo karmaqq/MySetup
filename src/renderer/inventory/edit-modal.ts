@@ -20,15 +20,15 @@ import {
   modalClose,
   modalCancel,
   modalSave,
-} from "./app-state";
+} from "../core/app-state";
 import {
   safeExternalUrl,
   parseDateInput,
   parsePriceInput,
   applyPriceFormat,
-} from "./global-ut";
-import { updateComponentInFirebase } from "./firebase-inv";
-import { showToast, showConfirm } from "./global-fn";
+} from "../core/global-ut";
+import { updateComponentInFirebase } from "../data/firebase-inventory";
+import { showToast, showConfirm } from "../core/global-fn";
 import { getFilteredSortedList } from "./table";
 import {
   _resetPreviewInstant,

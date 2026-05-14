@@ -2,15 +2,15 @@
 /*                          TABLO CRUD İŞLEMLERİ                             */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { allData, tableBody, editModal, addItemBtn } from "./app-state";
-import { normalizeTr, applyPriceFormat, parseDateInput, parsePriceInput } from "./global-ut";
-import { showToast, showConfirm } from "./global-fn";
+import { allData, tableBody, editModal, addItemBtn } from "../core/app-state";
+import { normalizeTr, applyPriceFormat, parseDateInput, parsePriceInput } from "../core/global-ut";
+import { showToast, showConfirm } from "../core/global-fn";
 import {
   addComponentToFirebase,
   deleteComponentFromFirebase,
   updateComponentStatusInFirebase,
-} from "./firebase-inv";
-import { openEditModal } from "./editmodal";
+} from "../data/firebase-inventory";
+import { openEditModal } from "./edit-modal";
 import { updateStats, rebuildStatsCache, updateStatsCacheOnChange } from "./toolbar";
 import { buildStatusCellContent, getCachedFilteredList, invalidateFilterCache } from "./table";
 

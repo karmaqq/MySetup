@@ -3,9 +3,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
-import { currentUser } from "./app-state";
-import { deleteUserAccount } from "./firebase-user";
-import { showToast } from "./global-fn";
+import { currentUser } from "../core/app-state";
+import { deleteUserAccount } from "../data/firebase-user";
+import { showToast } from "../core/global-fn";
 
 const deleteAccountModal = document.getElementById("deleteAccountModal") as HTMLElement | null;
 

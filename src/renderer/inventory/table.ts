@@ -14,15 +14,15 @@ import {
   STATUS_MAP,
   mainScroll,
   tableBody,
-} from "./app-state";
+} from "../core/app-state";
 import {
   normalizeTr,
   DATE_FORMAT,
   CURRENCY_FORMAT,
   escHtml,
   escAttr,
-} from "./global-ut";
-import { scheduleRender } from "./global-fn";
+} from "../core/global-ut";
+import { scheduleRender } from "../core/global-fn";
 import {
   updateStats,
   updateResultCount,

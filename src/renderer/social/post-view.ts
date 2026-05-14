@@ -3,12 +3,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { onChildAdded, onChildChanged, onChildRemoved, off, query, orderByChild, child, DataSnapshot, Query } from "firebase/database";
-import { allPosts, _renderPostHTML, _initPostImage } from "./posts-render";
-import { db } from "./firebase-init";
+import { allPosts, _renderPostHTML, _initPostImage } from "./post-render";
+import { db } from "../core/firebase-init";
 import { _renderCommentThreadHTML } from "./post-comment";
-import { _currentPage, mainScroll, _commentListenerRefs, showPage, currentUser } from "./app-state";
-import { escHtml, escAttr, _onlyCommentLikesChanged } from "./global-ut";
-import { getTotalCommentCount } from "./global-fn";
+import { _currentPage, mainScroll, _commentListenerRefs, showPage, currentUser } from "../core/app-state";
+import { escHtml, escAttr, _onlyCommentLikesChanged } from "../core/global-ut";
+import { getTotalCommentCount } from "../core/global-fn";
 import { _patchCommentLikeBtn } from "./post-comment";
 import { _submitPostViewComment, _clearPostViewReplyTarget } from "./post-view-comment";
 

@@ -3,11 +3,11 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { User } from "firebase/auth";
-import { showPage, mainScroll } from "./app-state";
-import { refreshAllAvatars } from "./global-fn";
-import { initUserDataRef } from "./firebase-core";
-import { initPosts, _teardownPosts } from "./posts-listener";
-import { closeAllModals } from "./userset";
+import { showPage, mainScroll } from "../core/app-state";
+import { refreshAllAvatars } from "../core/global-fn";
+import { initUserDataRef } from "../data/firebase-core";
+import { initPosts, _teardownPosts } from "../social/post-listener";
+import { closeAllModals } from "./settings";
 
 /* ─────────────────── Navigasyon ve Sayfa Başlatma ─────────────────── */
 

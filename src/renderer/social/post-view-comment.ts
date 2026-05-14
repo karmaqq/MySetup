@@ -3,9 +3,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { serverTimestamp } from "firebase/database";
-import { currentUser } from "./app-state";
-import { addCommentToFirebase, addReplyToFirebase } from "./firebase-comment";
-import { showToast } from "./global-fn";
+import { currentUser } from "../core/app-state";
+import { addCommentToFirebase, addReplyToFirebase } from "../data/firebase-comment";
+import { showToast } from "../core/global-fn";
 
 let _replyTargetCommentId: string | null = null;
 let _replyTargetUsername: string | null = null;

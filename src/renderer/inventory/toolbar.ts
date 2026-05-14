@@ -17,9 +17,9 @@ import {
   statExpensive,
   totalCostDisplay,
   resultCount,
-} from "./app-state";
-import { scheduleRender } from "./global-fn";
-import { CURRENCY_FORMAT } from "./global-ut";
+} from "../core/app-state";
+import { scheduleRender } from "../core/global-fn";
+import { CURRENCY_FORMAT } from "../core/global-ut";
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          İSTATİSTİK HESAPLAMA                             */

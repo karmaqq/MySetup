@@ -4,17 +4,17 @@
 
 import { query, Query, DataSnapshot, off, onChildAdded, onChildChanged, onChildRemoved, get, orderByChild, child } from "firebase/database";
 import { User } from "firebase/auth";
-import { allPosts } from "./posts-render";
-import { db } from "./firebase-init";
-import { showToast } from "./global-fn";
+import { allPosts } from "./post-render";
+import { db } from "../core/firebase-init";
+import { showToast } from "../core/global-fn";
 import {
   _confirmDeletePost,
   _confirmDeleteComment,
   _confirmDeleteReply,
-} from "./io";
-import { togglePostLike } from "./firebase-post";
-import { toggleCommentLike, toggleReplyLike } from "./firebase-comment";
-import { _patchPostLikes } from "./posts-render";
+} from "../inventory/io";
+import { togglePostLike } from "../data/firebase-post";
+import { toggleCommentLike, toggleReplyLike } from "../data/firebase-comment";
+import { _patchPostLikes } from "./post-render";
 import {
   _patchCommentLikeBtn,
   _patchReplyLikeBtn,
@@ -24,10 +24,10 @@ import {
   _commentListenerRefs,
   _commentListenerOrder,
   currentUser,
-} from "./app-state";
-import { _onlyCommentLikesChanged } from "./global-ut";
-import { getPostCards, getTotalCommentCount } from "./global-fn";
-import { _removePostImage } from "./posts-create";
+} from "../core/app-state";
+import { _onlyCommentLikesChanged } from "../core/global-ut";
+import { getPostCards, getTotalCommentCount } from "../core/global-fn";
+import { _removePostImage } from "./post-create";
 
 /* ─────────────────── Post beğeni toggle ─────────────────── */
 

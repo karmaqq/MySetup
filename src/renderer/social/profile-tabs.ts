@@ -2,15 +2,15 @@
 /*                      PROFİL SEKMELERİ YÜKLEME                           */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { allPosts, _renderPostHTML, _initPostImage } from "./posts-render";
+import { allPosts, _renderPostHTML, _initPostImage } from "./post-render";
 import {
   getUserPostsOnce,
   getUserLikesOnce,
   getPostsByIds,
-} from "./firebase-post";
-import { PAGE_SIZE, _currentPage, currentUser } from "./app-state";
-import { renderLoadMoreBtn, removeLoadMoreBtn, showToast } from "./global-fn";
-import { escHtml } from "./global-ut";
+} from "../data/firebase-post";
+import { PAGE_SIZE, _currentPage, currentUser } from "../core/app-state";
+import { renderLoadMoreBtn, removeLoadMoreBtn, showToast } from "../core/global-fn";
+import { escHtml } from "../core/global-ut";
 
 /* ─────────────────── Sabitler ─────────────────── */
 

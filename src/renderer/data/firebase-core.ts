@@ -3,9 +3,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { get, ref, onChildAdded, onChildChanged, onChildRemoved, off, DataSnapshot } from "firebase/database";
-import { normalizeTr } from "./global-ut";
-import { allData, resetStatsCache } from "./app-state";
-import { db } from "./firebase-init";
+import { normalizeTr } from "../core/global-ut";
+import { allData, resetStatsCache } from "../core/app-state";
+import { db } from "../core/firebase-init";
 
 /* ─────────────────── Enrich Item ─────────────────── */
 
@@ -27,12 +27,12 @@ export function enrichItem(item: any): any {
 
 /* ─────────────────── User Data Ref Yönetimi ─────────────────── */
 
-import { rebuildStatsCache, updateStatsCacheOnChange } from "./toolbar";
+import { rebuildStatsCache, updateStatsCacheOnChange } from "../inventory/toolbar";
 import {
   renderAll,
   addOrUpdateTableRow,
   removeTableRow,
-} from "./table";
+} from "../inventory/table";
 
 let _initToken: string | null = null;
 

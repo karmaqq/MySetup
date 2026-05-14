@@ -4,10 +4,10 @@
 
 import { serverTimestamp } from "firebase/database";
 import { getStorage, ref, uploadBytes, getDownloadURL, UploadResult } from "firebase/storage";
-import { currentUser } from "./app-state";
-import { POST_PHRASES } from "./global-ut";
-import { addPostToFirebase } from "./firebase-post";
-import { showToast } from "./global-fn";
+import { currentUser } from "../core/app-state";
+import { POST_PHRASES } from "../core/global-ut";
+import { addPostToFirebase } from "../data/firebase-post";
+import { showToast } from "../core/global-fn";
 
 /* ─────────────────── DOM Referansları ─────────────────── */
 

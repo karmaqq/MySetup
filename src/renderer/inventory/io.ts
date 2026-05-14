@@ -2,16 +2,16 @@
 /*                          BİLDİRİM SİSTEMİ                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { currentUser } from "./app-state";
-import { showToast, showConfirm } from "./global-fn";
+import { currentUser } from "../core/app-state";
+import { showToast, showConfirm } from "../core/global-fn";
 import {
   deletePostFromFirebase,
   getPostsByIds,
-} from "./firebase-post";
+} from "../data/firebase-post";
 import {
   deleteCommentFromFirebase,
   deleteReplyFromFirebase,
-} from "./firebase-comment";
+} from "../data/firebase-comment";
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          SİLME İŞLEMLERİ                                */

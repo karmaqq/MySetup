@@ -3,10 +3,10 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
-import { allData, editingId, currentUser } from "./app-state";
-import { escAttr } from "./global-ut";
-import { showToast, showConfirm } from "./global-fn";
-import { updateComponentInFirebase } from "./firebase-inv";
+import { allData, editingId, currentUser } from "../core/app-state";
+import { escAttr } from "../core/global-ut";
+import { showToast, showConfirm } from "../core/global-fn";
+import { updateComponentInFirebase } from "../data/firebase-inventory";
 
 /* ─────────────────── Görsel Sıkıştırma ─────────────────── */
 

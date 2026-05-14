@@ -3,15 +3,15 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { query, Query, DataSnapshot, DatabaseReference, off, onValue, onChildAdded, onChildRemoved, get, orderByChild, limitToLast, startAt, endAt, child } from "firebase/database";
-import { db } from "./firebase-init";
-import { postsFeed, _commentListenerRefs, _commentListenerOrder, PAGE_SIZE, currentUser } from "./app-state";
-import { renderLoadMoreBtn, removeLoadMoreBtn } from "./global-fn";
+import { db } from "../core/firebase-init";
+import { postsFeed, _commentListenerRefs, _commentListenerOrder, PAGE_SIZE, currentUser } from "../core/app-state";
+import { renderLoadMoreBtn, removeLoadMoreBtn } from "../core/global-fn";
 import {
   initUserLikesListener,
   initUserPostsListener,
   removeUserPostsListener,
   removeUserLikesListener,
-} from "./firebase-post";
+} from "../data/firebase-post";
 import {
   allPosts,
   _insertPostToFeed,
@@ -21,7 +21,7 @@ import {
   _softRemovePost,
   _onlyLikesChanged,
   _evictOldPostsIfNeeded,
-} from "./posts-render";
+} from "./post-render";
 
 /* ─────────────────── Feed Durum Değişkenleri ─────────────────── */
 

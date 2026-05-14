@@ -3,8 +3,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { User } from "firebase/auth";
-import { escHtml, escAttr, formatTimeAgo } from "./global-ut";
-import { buildAvatarHTML } from "./global-fn";
+import { escHtml, escAttr, formatTimeAgo } from "../core/global-ut";
+import { buildAvatarHTML } from "../core/global-fn";
 
 /* ─────────────────── Ortak silme dropdown HTML ─────────────────── */
 

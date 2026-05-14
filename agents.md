@@ -201,41 +201,47 @@ mysetup/
     ├── updater/
     │   └── updater.ts            (2)  # electron-updater kurulumu (82 satır)
     └── renderer/
-        ├── index.ts              (0)  # Entry point, tüm modülleri import eder
-        ├── global-ut.ts          (0)  # Saf araç fonksiyonları ~195 satır
-        ├── global-fn.ts          (0)  # Paylaşılan uygulama fonksiyonları ~175 satır
-        ├── app-state.ts          (0)  # Uygulama durumu + DOM referansları ~195 satır
-        ├── firebase-init.ts      (1)  # Firebase başlatma ~43 satır
-        ├── firebase-core.ts      (2)  # enrichItem, initUserDataRef ~131 satır
-        ├── firebase-inv.ts       (5)  # Envanter CRUD ~39 satır
-        ├── firebase-user.ts      (1)  # Hesap silme ~87 satır
-        ├── firebase-post.ts      (11) # Post CRUD + sorgular ~155 satır
-        ├── firebase-comment.ts   (6)  # Yorum/yanıt CRUD ~120 satır
-        ├── io.ts                 (5)  # Silme onay diyalogları ~50 satır
-        ├── toolbar.ts            (5)  # İstatistik + arama + filtre ~234 satır
-        ├── csv.ts                (0)  # CSV içeri/dışarı aktarma ~200 satır
-        ├── table.ts              (13) # Tablo render + sıralama ~410 satır
-        ├── table-crud.ts         (0)  # Tablo CRUD + event delegation ~230 satır
-        ├── editmodal.ts          (6)  # Düzenleme modalı ~230 satır
-        ├── image-utils.ts        (0)  # Görsel yükleme + önizleme ~180 satır
-        ├── auth-nav.ts           (1)  # Navigasyon + session yönetimi ~143 satır
-        ├── auth.ts               (11) # Giriş/kayıt formları ~441 satır
-        ├── pass-change.ts        (1)  # Şifre değiştirme ~112 satır
-        ├── delete-account-ui.ts  (1)  # Hesap silme UI ~79 satır
-        ├── userset.ts            (5)  # Hesap ayarları ~200 satır
-        ├── updater-ui.ts         (2)  # Güncelleme butonu ~122 satır
-        ├── post-comment.ts       (5)  # Yorum/yanıt HTML render ~197 satır
-        ├── posts-create.ts       (6)  # Post oluşturma ~203 satır
-        ├── posts-render.ts       (10) # Post kart HTML render ~260 satır
-        ├── posts-listener.ts     (5)  # Post listener + sayfalama ~200 satır
-        ├── posts-timer.ts        (1)  # Zaman güncellemesi ~120 satır
-        ├── posts-actions.ts      (10) # Beğeni + event delegation ~380 satır
-        ├── profile-tabs.ts       (8)  # Profil sekme yükleme ~280 satır
-        ├── profile.ts            (5)  # Profil sekme yönetimi ~120 satır
-        ├── post-view.ts          (8)  # Post view aç/kapa ~300 satır
-        ├── post-view-comment.ts  (4)  # Post view yorum gönderimi ~240 satır
+        ├── index.ts                   # Entry point, tüm modülleri import eder
+        ├── core/
+        │   ├── firebase-init.ts       # Firebase başlatma
+        │   ├── global-ut.ts           # Saf araç fonksiyonları
+        │   ├── global-fn.ts           # Paylaşılan uygulama fonksiyonları
+        │   └── app-state.ts           # Uygulama durumu + DOM referansları
+        ├── data/
+        │   ├── firebase-core.ts       # enrichItem, initUserDataRef
+        │   ├── firebase-inventory.ts  # Envanter CRUD
+        │   ├── firebase-user.ts       # Hesap silme
+        │   ├── firebase-post.ts       # Post CRUD + sorgular
+        │   └── firebase-comment.ts    # Yorum/yanıt CRUD
+        ├── inventory/
+        │   ├── io.ts                  # Silme onay diyalogları
+        │   ├── toolbar.ts             # İstatistik + arama + filtre
+        │   ├── csv.ts                 # CSV içeri/dışarı aktarma
+        │   ├── table.ts               # Tablo render + sıralama
+        │   ├── table-crud.ts          # Tablo CRUD + event delegation
+        │   ├── edit-modal.ts          # Düzenleme modalı
+        │   └── image-utils.ts         # Görsel yükleme + önizleme
+        ├── user/
+        │   ├── auth-nav.ts            # Navigasyon + session yönetimi
+        │   ├── auth.ts                # Giriş/kayıt formları
+        │   ├── pass-change.ts         # Şifre değiştirme
+        │   ├── delete-account-ui.ts   # Hesap silme UI
+        │   ├── settings.ts            # Hesap ayarları
+        │   └── updater-ui.ts          # Güncelleme butonu
+        ├── social/
+        │   ├── post-comment.ts        # Yorum/yanıt HTML render
+        │   ├── post-create.ts         # Post oluşturma
+        │   ├── post-render.ts         # Post kart HTML render
+        │   ├── post-listener.ts       # Post listener + sayfalama
+        │   ├── post-timer.ts          # Zaman güncellemesi
+        │   ├── post-actions.ts        # Beğeni + event delegation
+        │   ├── profile-tabs.ts        # Profil sekme yükleme
+        │   ├── profile.ts             # Profil sekme yönetimi
+        │   ├── post-view-comment.ts   # Post view yorum gönderimi
+        │   └── post-view.ts           # Post view aç/kapa
         └── types/
-            └── global.d.ts            # Window interface genişletmesi
+            ├── global.d.ts            # Window interface genişletmesi
+            └── inventory.d.ts         # Envanter tipleri
 ```
 
 ## **Toplam: ~205 fonksiyon** - **her eklemede güncelle**
@@ -245,30 +251,34 @@ mysetup/
 **Kesin sıra — asla değiştirilmez:**
 
 ```
-firebase-init → global-ut → global-fn → app-state →
-firebase-core → firebase-inv → firebase-user →
-firebase-post → firebase-comment →
-io → toolbar → csv → table → table-crud → editmodal → image-utils →
-auth-nav → auth → pass-change → delete-account-ui → userset → updater-ui →
-post-comment → posts-create →
-posts-render → posts-listener → posts-timer → posts-actions →
-profile-tabs → profile → post-view-comment → post-view
+core/firebase-init → core/global-ut → core/global-fn → core/app-state →
+data/firebase-core → data/firebase-inventory → data/firebase-user →
+data/firebase-post → data/firebase-comment →
+inventory/io → inventory/toolbar → inventory/csv → inventory/table →
+inventory/table-crud → inventory/edit-modal → inventory/image-utils →
+user/auth-nav → user/auth → user/pass-change → user/delete-account-ui →
+user/settings → user/updater-ui →
+social/post-comment → social/post-create →
+social/post-render → social/post-listener → social/post-timer →
+social/post-actions → social/profile-tabs → social/profile →
+social/post-view-comment → social/post-view
 ```
 
 ### Kategori Bazında Gruplama
 
-| Sıra  | Grup             | Dosyalar                                                                                                                                           | Toplam |
-| ----- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | :----: |
-| 1-10  | **Çekirdek**     | firebase-init → global-ut → global-fn → app-state → firebase-core → firebase-inv → firebase-user → firebase-post → firebase-comment                |   10   |
-| 11-19 | **Envanter**     | io → toolbar → csv → table → table-crud → editmodal → image-utils                                                                                  |   9    |
-| 20-26 | **Kullanıcı**    | auth-nav → auth → pass-change → delete-account-ui → userset → updater-ui                                                                           |   7    |
-| 27-36 | **Post Sistemi** | post-comment → posts-create → posts-render → posts-listener → posts-timer → posts-actions → profile-tabs → profile → post-view-comment → post-view |   10   |
+| Sıra  | Grup             | Dosyalar                                                                                                                                                                                           | Toplam |
+| ----- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: |
+| 1-4   | **Çekirdek**     | core/firebase-init → core/global-ut → core/global-fn → core/app-state                                                                                                                              |   4    |
+| 5-9   | **Veri**         | data/firebase-core → data/firebase-inventory → data/firebase-user → data/firebase-post → data/firebase-comment                                                                                      |   5    |
+| 10-16 | **Envanter**     | inventory/io → inventory/toolbar → inventory/csv → inventory/table → inventory/table-crud → inventory/edit-modal → inventory/image-utils                                                            |   7    |
+| 17-22 | **Kullanıcı**    | user/auth-nav → user/auth → user/pass-change → user/delete-account-ui → user/settings → user/updater-ui                                                                                            |   6    |
+| 23-32 | **Post Sistemi** | social/post-comment → social/post-create → social/post-render → social/post-listener → social/post-timer → social/post-actions → social/profile-tabs → social/profile → social/post-view-comment → social/post-view |   10   |
 
 ## Zorunlu Kısıtlar
 
 **Firebase:**
 
-- `initializeApp` yalnızca `firebase-init.ts`'de çağrılır.
+- `initializeApp` yalnızca `core/firebase-init.ts`'de çağrılır.
 - Modular SDK (v12.13.0) kullanılır: `import { getAuth } from "firebase/auth"`, `import { ref, child } from "firebase/database"`, `import { ref as storageRef } from "firebase/storage"`
 - `firebase.auth()`, `firebase.database()`, `firebase.storage()` gibi compat API'ler **yasaktır**.
 - `query()` ile `QueryConstraint`'ler birleştirilir: `query(ref, orderByChild("createdAt"), limitToLast(20))`
@@ -290,7 +300,7 @@ profile-tabs → profile → post-view-comment → post-view
 - esbuild IIFE'de `export let` başka modülde read-only'dir. Mutasyon için setter veya `(window as any)` kullanılır.
 - `allPosts` → `(window as any).allPosts`
 - `renderAll` → `(window as any).renderAll`
-- `_viewingPostId` → `Object.defineProperty` ile tanımlı (`app-state.ts`)
+- `_viewingPostId` → `Object.defineProperty` ile tanımlı (`core/app-state.ts`)
 
 ---
 
@@ -304,7 +314,7 @@ npx tsc --noEmit -p tsconfig.main.json    # main tip kontrolü
 
 ### Firebase Delete Race Condition (v3.3.2 — K1 Fix, v3.3.3 — F-01 Fix)
 
-**Kritik:** `deletePostFromFirebase`'de (`firebase-post.ts`) likes snapshot okuma ile post silme arasında yeni beğeni eklenirse `userLikes/{userId}/{postId}` orphan kalır.
+**Kritik:** `deletePostFromFirebase`'de (`data/firebase-post.ts`) likes snapshot okuma ile post silme arasında yeni beğeni eklenirse `userLikes/{userId}/{postId}` orphan kalır.
 
 **1. Anlık Silme (deletePostFromFirebase):** Multi-path `update()` ile atomik cleanup:
 

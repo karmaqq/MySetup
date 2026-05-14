@@ -2,7 +2,7 @@
 /*                     GÜNCELLEME ARAYÜZÜ YÖNETİMİ                         */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { showToast } from "./global-fn";
+import { showToast } from "../core/global-fn";
 
 /* ─────────────────── Versiyon Gösterimi ─────────────────── */
 

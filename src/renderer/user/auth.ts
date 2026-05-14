@@ -10,8 +10,8 @@ import {
   getAuthErrorMessage,
   hideLoading,
 } from "./auth-nav";
-import { db } from "./firebase-init";
-import { setCurrentUser } from "./app-state";
+import { db } from "../core/firebase-init";
+import { setCurrentUser } from "../core/app-state";
 
 const auth = getAuth();
 

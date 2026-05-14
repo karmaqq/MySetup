@@ -6,10 +6,10 @@ import { get, ref, child, update, remove } from "firebase/database";
 import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
 import { getIdToken, deleteUser } from "firebase/auth";
 import { User } from "firebase/auth";
-import { allPosts } from "./posts-render";
-import { db } from "./firebase-init";
+import { allPosts } from "../social/post-render";
+import { db } from "../core/firebase-init";
 import { getPostsByIds } from "./firebase-post";
-import { deleteAllInFolder, extractPathFromUrl } from "./global-ut";
+import { deleteAllInFolder, extractPathFromUrl } from "../core/global-ut";
 
 /* ─────────────────── Hesap Silme ─────────────────── */
 

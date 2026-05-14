@@ -3,7 +3,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { User } from "firebase/auth";
-import { postsFeed, currentUser } from "./app-state";
+import { postsFeed, currentUser } from "../core/app-state";
 import {
   formatTimeAgo,
   formatDateTime,
@@ -11,13 +11,13 @@ import {
   escAttr,
   escUrl,
   _onlyFieldChanged,
-} from "./global-ut";
+} from "../core/global-ut";
 import {
   getPostCards,
   buildAvatarHTML,
   buildPostMenuHTML,
   getTotalCommentCount,
-} from "./global-fn";
+} from "../core/global-fn";
 
 /* ─────────────────── Feed Durum Değişkenleri ─────────────────── */
 

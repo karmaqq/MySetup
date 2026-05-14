@@ -4,8 +4,8 @@
 
 import { get, ref, push, set, update, remove, ThenableReference } from "firebase/database";
 import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
-import { db } from "./firebase-init";
-import { extractPathFromUrl } from "./global-ut";
+import { db } from "../core/firebase-init";
+import { extractPathFromUrl } from "../core/global-ut";
 
 /* ─────────────────── Bileşen CRUD ─────────────────── */
 

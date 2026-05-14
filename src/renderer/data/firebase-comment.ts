@@ -3,7 +3,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { child, push, remove, runTransaction, ThenableReference } from "firebase/database";
-import { db } from "./firebase-init";
+import { db } from "../core/firebase-init";
 
 /* ─────────────────── Yorum CRUD ─────────────────── */
 

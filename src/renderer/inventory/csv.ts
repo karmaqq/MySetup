@@ -4,11 +4,11 @@
 
 import { push } from "firebase/database";
 import { getStorage, ref, deleteObject } from "firebase/storage";
-import { safeExternalUrl, extractPathFromUrl } from "./global-ut";
-import { showToast, showConfirm, scheduleRender } from "./global-fn";
-import { allData } from "./app-state";
-import { db } from "./firebase-init";
-import { replaceUserDataInFirebase } from "./firebase-inv";
+import { safeExternalUrl, extractPathFromUrl } from "../core/global-ut";
+import { showToast, showConfirm, scheduleRender } from "../core/global-fn";
+import { allData } from "../core/app-state";
+import { db } from "../core/firebase-init";
+import { replaceUserDataInFirebase } from "../data/firebase-inventory";
 import { getFilteredSortedList } from "./table";
 
 /* ─────────────────── CSV Satır Parse ─────────────────── */

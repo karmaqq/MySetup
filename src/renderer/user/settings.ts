@@ -4,13 +4,13 @@
 
 import { getAuth, getIdToken, signOut, updateProfile } from "firebase/auth";
 import { get, ref, runTransaction, update, remove } from "firebase/database";
-import { currentUser } from "./app-state";
-import { db } from "./firebase-init";
-import { initUserDataRef } from "./firebase-core";
-import { refreshAllAvatars, showToast } from "./global-fn";
+import { currentUser } from "../core/app-state";
+import { db } from "../core/firebase-init";
+import { initUserDataRef } from "../data/firebase-core";
+import { refreshAllAvatars, showToast } from "../core/global-fn";
 import { closeChangePassModal } from "./pass-change";
 import { closeDeleteModal } from "./delete-account-ui";
-import { allPosts } from "./posts-render";
+import { allPosts } from "../social/post-render";
 
 /* ─────────────────── Modal Referansları ─────────────────── */
 

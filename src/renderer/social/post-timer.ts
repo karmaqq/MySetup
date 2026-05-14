@@ -2,9 +2,9 @@
 /*                          ZAMAN GÜNCELLEMESİ                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { _currentPage } from "./app-state";
-import { formatTimeAgo } from "./global-ut";
-import { allPosts } from "./posts-render";
+import { _currentPage } from "../core/app-state";
+import { formatTimeAgo } from "../core/global-ut";
+import { allPosts } from "./post-render";
 
 var _requestIdle: (cb: IdleRequestCallback, opts?: IdleRequestOptions) => number =
   typeof requestIdleCallback !== "undefined"

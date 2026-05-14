@@ -4,8 +4,8 @@
 
 import { ref, child, get, update, set, push, remove, runTransaction, onChildAdded, onChildRemoved, off, query, orderByValue, limitToLast, endAt, serverTimestamp, DatabaseReference, Query, ThenableReference } from "firebase/database";
 import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
-import { db } from "./firebase-init";
-import { extractPathFromUrl } from "./global-ut";
+import { db } from "../core/firebase-init";
+import { extractPathFromUrl } from "../core/global-ut";
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          POST CRUD                                        */
