@@ -46,9 +46,7 @@
       {
         "provider": "github",
         "owner": "karmaqq",
-        "repo": "MySetup",
-        "releaseType": "release",
-        "draft": false
+        "repo": "MySetup"
       }
     ],
     "win": {
