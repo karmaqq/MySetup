@@ -1,4 +1,4 @@
-# AGENTS.md — MySetup v3.2.2
+# AGENTS.md — MySetup v3.3.3
 
 **Yazar:** Karma (`shbkarma@gmail.com`) · Electron 33 + TypeScript + Firebase Compat SDK v9.22.1
 

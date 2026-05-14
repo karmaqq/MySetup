@@ -12,7 +12,7 @@ import {
 } from "./firebase-inv";
 import { openEditModal } from "./editmodal";
 import { updateStats, rebuildStatsCache, updateStatsCacheOnChange } from "./toolbar";
-import { buildStatusCellContent, getFilteredSortedList } from "./table";
+import { buildStatusCellContent, getCachedFilteredList, invalidateFilterCache } from "./table";
 
 /* ─────────────────── Durum Güncelleme ─────────────────── */
 
@@ -52,7 +52,8 @@ function updateItemStatus(itemId: string, newStatus: string): void {
       currentItem.status = oldItem.status;
       currentItem._statusNorm = oldStatusNorm;
       rebuildStatsCache();
-      updateStats(getFilteredSortedList());
+      invalidateFilterCache();
+      updateStats(getCachedFilteredList());
       applyToDOM();
       showToast("Durum güncellenemedi", "error");
     });

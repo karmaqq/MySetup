@@ -8,6 +8,7 @@ import { initUserDataRef } from "./firebase-core";
 import { refreshAllAvatars, showToast } from "./global-fn";
 import { closeChangePassModal } from "./pass-change";
 import { closeDeleteModal } from "./delete-account-ui";
+import { allPosts } from "./posts-render";
 
 /* ─────────────────── Modal Referansları ─────────────────── */
 
@@ -187,43 +188,44 @@ saveBtn?.addEventListener("click", async () => {
       const postIdsSnap = await db.database!.ref("userPosts/" + user.uid).once("value");
       const postIds = postIdsSnap.val() as Record<string, number> | null;
       if (postIds) {
-        const postKeys = Object.keys(postIds);
-        var batchSize = 10;
-        for (var i = 0; i < postKeys.length; i += batchSize) {
-          var batch: Record<string, any> = {};
-          var chunk = postKeys.slice(i, i + batchSize);
-          for (var j = 0; j < chunk.length; j++) {
-            var pid = chunk[j];
-            var postSnap = await db.database!.ref("posts/" + pid).once("value");
-            var postData = postSnap.val() as Record<string, any> | null;
-            if (!postData) continue;
-            if (postData.uid === user.uid) {
-              batch["posts/" + pid + "/username"] = newName;
-            }
-            if (postData.comments) {
-              var cids = Object.keys(postData.comments);
-              for (var k = 0; k < cids.length; k++) {
-                var cid = cids[k];
-                var comment = postData.comments[cid];
-                if (comment.uid === user.uid) {
-                  batch["posts/" + pid + "/comments/" + cid + "/username"] = newName;
-                }
-                if (comment.replies) {
-                  var rids = Object.keys(comment.replies);
-                  for (var l = 0; l < rids.length; l++) {
-                    var rid = rids[l];
-                    var reply = comment.replies[rid];
-                    if (reply.uid === user.uid) {
-                      batch["posts/" + pid + "/comments/" + cid + "/replies/" + rid + "/username"] = newName;
-                    }
+        var megaBatch: Record<string, string> = {};
+        var postKeys = Object.keys(postIds);
+        for (var pi = 0; pi < postKeys.length; pi++) {
+          var pid = postKeys[pi];
+          var postData = allPosts[pid];
+          if (!postData) continue;
+          if (postData.uid === user.uid) {
+            megaBatch["posts/" + pid + "/username"] = newName;
+          }
+          if (postData.comments) {
+            var cids = Object.keys(postData.comments);
+            for (var ci = 0; ci < cids.length; ci++) {
+              var cid = cids[ci];
+              var comment = postData.comments[cid];
+              if (comment.uid === user.uid) {
+                megaBatch["posts/" + pid + "/comments/" + cid + "/username"] = newName;
+              }
+              if (comment.replies) {
+                var rids = Object.keys(comment.replies);
+                for (var ri = 0; ri < rids.length; ri++) {
+                  var rid = rids[ri];
+                  var reply = comment.replies[rid];
+                  if (reply.uid === user.uid) {
+                    megaBatch["posts/" + pid + "/comments/" + cid + "/replies/" + rid + "/username"] = newName;
                   }
                 }
               }
             }
           }
-          if (Object.keys(batch).length > 0) {
-            await db.database!.ref().update(batch);
+        }
+        var batchKeys = Object.keys(megaBatch);
+        for (var bi = 0; bi < batchKeys.length; bi += 500) {
+          var batchChunk: Record<string, string> = {};
+          var chunkKeys = batchKeys.slice(bi, bi + 500);
+          for (var cki = 0; cki < chunkKeys.length; cki++) {
+            batchChunk[chunkKeys[cki]] = megaBatch[chunkKeys[cki]];
           }
+          await db.database!.ref().update(batchChunk);
         }
       }
     } catch (_) {

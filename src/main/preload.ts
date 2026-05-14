@@ -6,8 +6,11 @@ import { contextBridge, ipcRenderer } from "electron";
 
 /* ─────────────────── Tek Seferlik IPC Dinleyici ─────────────────── */
 
+var _onceFlags: Record<string, boolean> = {};
+
 function onceListener(channel: string, handler: (...args: unknown[]) => void): void {
-  ipcRenderer.removeAllListeners(channel);
+  if (_onceFlags[channel]) return;
+  _onceFlags[channel] = true;
   ipcRenderer.once(channel, (_e: Electron.IpcRendererEvent, ...args: unknown[]) => handler(...args));
 }
 
@@ -28,7 +31,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   /* ─────────────────── İndirme İlerlemesi ─────────────────── */
 
   onUpdateProgress: (cb: (percent: number) => void) => {
-    ipcRenderer.removeAllListeners("update_progress");
     ipcRenderer.on("update_progress", (_e: Electron.IpcRendererEvent, percent: number) => cb(percent));
   },
 

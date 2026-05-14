@@ -94,6 +94,13 @@ const _tabStates: Record<string, TabState> = {
   likedPostsTab: _emptyTabState(),
 };
 
+function _resetTabStates(): void {
+  Object.keys(_tabStates).forEach(function (k) {
+    _tabStates[k] = _emptyTabState();
+  });
+}
+(window as any)._resetTabStates = _resetTabStates;
+
 /* ─────────────────── Yetim Tarih Ayracı Temizleyici ─────────────────── */
 
 function _showProfileLoading(tab: HTMLElement): void {
@@ -302,6 +309,9 @@ function _loadPostsChunk(cfg: PostsChunkConfig): void {
               const el = wrapper.firstElementChild as HTMLElement;
               if (el) {
                 tab.appendChild(el);
+                if (typeof (window as any)._registerTimeCard === "function") {
+                  (window as any)._registerTimeCard(el);
+                }
                 _initPostImage(
                   el.querySelector(".post-img-lazy") as HTMLImageElement | null,
                 );
@@ -501,6 +511,9 @@ export function _prependToProfileTab(
       tab.prepend(el);
     }
 
+    if (typeof (window as any)._registerTimeCard === "function") {
+      (window as any)._registerTimeCard(el);
+    }
     _initPostImage(
       el.querySelector(".post-img-lazy") as HTMLImageElement | null,
     );

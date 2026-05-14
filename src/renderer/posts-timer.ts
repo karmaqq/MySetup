@@ -23,7 +23,55 @@ let _timeUpdateIdleHandle: number | null = null;
 let _timeUpdateTimeout: number | null = null;
 let _visibilityListenerRegistered = false;
 
-function _runTimeUpdateBatch() {
+/* ─────────────────── Kayıtlı Kart Seti ─────────────────── */
+
+var _observedCards: Set<Element> = new Set();
+
+export function _registerTimeCard(el: Element): void {
+  _observedCards.add(el);
+}
+
+export function _unregisterTimeCard(el: Element): void {
+  _observedCards.delete(el);
+}
+
+function _updateCardTimes(card: Element): void {
+  var post = allPosts[(card as HTMLElement).dataset.postId!];
+  if (!post) return;
+  var postTimeEl = card.querySelector(":scope > .post-header .post-time");
+  if (postTimeEl) {
+    postTimeEl.textContent = formatTimeAgo(post.createdAt, post.phraseIndex);
+  }
+  var comments = post.comments || {};
+  Object.keys(comments).forEach(function (cid) {
+    var commentEl = card.querySelector('[data-comment-id="' + cid + '"]');
+    if (!commentEl) return;
+    var _ce = commentEl as HTMLElement;
+    var commentTimeEl = _ce.querySelector(".comment-time");
+    if (commentTimeEl) {
+      commentTimeEl.textContent = formatTimeAgo(
+        comments[cid].createdAt,
+        undefined,
+        true,
+      );
+    }
+    var replies = comments[cid].replies || {};
+    Object.keys(replies).forEach(function (rid) {
+      var replyTimeEl = _ce.querySelector(
+        '[data-reply-id="' + rid + '"] .reply-time',
+      );
+      if (replyTimeEl) {
+        replyTimeEl.textContent = formatTimeAgo(
+          replies[rid].createdAt,
+          undefined,
+          true,
+        );
+      }
+    });
+  });
+}
+
+function _runTimeUpdateBatch(): void {
   if (
     _currentPage !== "home" &&
     _currentPage !== "profile" &&
@@ -31,50 +79,17 @@ function _runTimeUpdateBatch() {
   )
     return;
   if (document.hidden) return;
-  const activePage = document.querySelector(
-    ".page-content.active",
-  ) as HTMLElement | null;
-  const postCards = (activePage || document).querySelectorAll(
-    "[data-post-id]",
-  );
-  if (!postCards.length) return;
-  postCards.forEach(function (card) {
-    const post = allPosts[(card as HTMLElement).dataset.postId!];
-    if (!post) return;
-    const postTimeEl = card.querySelector(":scope > .post-header .post-time");
-    if (postTimeEl) {
-      postTimeEl.textContent = formatTimeAgo(post.createdAt, post.phraseIndex);
+  if (!_observedCards.size) return;
+  _observedCards.forEach(function (card) {
+    if (!(card as HTMLElement).isConnected) {
+      _observedCards.delete(card);
+      return;
     }
-    const comments = post.comments || {};
-    Object.keys(comments).forEach(function (cid) {
-      const commentEl = card.querySelector(`[data-comment-id="${cid}"]`);
-      if (!commentEl) return;
-      const commentTimeEl = commentEl.querySelector(".comment-time");
-      if (commentTimeEl) {
-        commentTimeEl.textContent = formatTimeAgo(
-          comments[cid].createdAt,
-          undefined,
-          true,
-        );
-      }
-      const replies = comments[cid].replies || {};
-      Object.keys(replies).forEach(function (rid) {
-        const replyTimeEl = commentEl.querySelector(
-          `[data-reply-id="${rid}"] .reply-time`,
-        );
-        if (replyTimeEl) {
-          replyTimeEl.textContent = formatTimeAgo(
-            replies[rid].createdAt,
-            undefined,
-            true,
-          );
-        }
-      });
-    });
+    _updateCardTimes(card);
   });
 }
 
-function _scheduleTimeUpdateIdle() {
+function _scheduleTimeUpdateIdle(): void {
   if (_timeUpdateIdleHandle) {
     _cancelIdle(_timeUpdateIdleHandle);
     _timeUpdateIdleHandle = null;
@@ -89,8 +104,7 @@ function _startTimeUpdateInterval(): void {
     clearTimeout(_timeUpdateTimeout);
     _timeUpdateTimeout = null;
   }
-
-  const scheduleNext = () => {
+  var scheduleNext = function (): void {
     _scheduleTimeUpdateIdle();
     _timeUpdateTimeout = window.setTimeout(scheduleNext, 2 * 60 * 1000);
   };

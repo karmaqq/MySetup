@@ -68,6 +68,11 @@ function openPostView(postId: string, fromCommentBtn?: boolean): void {
 
   _renderPostViewContent(postId, postData);
 
+  var _pvCard = document.querySelector('#postViewContent [data-post-id="' + postId + '"]');
+  if (_pvCard && typeof (window as any)._registerTimeCard === "function") {
+    (window as any)._registerTimeCard(_pvCard);
+  }
+
   showPage("postView");
 
   if (mainScroll) mainScroll.classList.add("pv-active");

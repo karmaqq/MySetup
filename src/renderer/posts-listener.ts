@@ -19,6 +19,7 @@ import {
   _patchPostLikes,
   _softRemovePost,
   _onlyLikesChanged,
+  _evictOldPostsIfNeeded,
 } from "./posts-render";
 
 /* ─────────────────── Feed Durum Değişkenleri ─────────────────── */
@@ -65,7 +66,6 @@ export function initPosts(): void {
 
 /* ─────────────────── Çıkış yapıldığında çağrılır ─────────────────── */
 
-let _fullChangedRef: firebase.database.Reference | null = null;
 let _fullRemovedRef: firebase.database.Reference | null = null;
 
 export function _teardownPosts(): void {
@@ -73,14 +73,13 @@ export function _teardownPosts(): void {
     _postsQuery.off();
     _postsQuery = null;
   }
-  if (_fullChangedRef) {
-    _fullChangedRef.off("child_changed", _onPostChanged);
-    _fullChangedRef = null;
-  }
   if (_fullRemovedRef) {
     _fullRemovedRef.off("child_removed", _onPostRemoved);
     _fullRemovedRef = null;
   }
+  Object.keys(_postRefListeners).forEach(function (pid) {
+    _detachPostRefListener(pid);
+  });
   _postsListenerActive = false;
   (window as any)._postsListenerActive = false;
   (window as any)._postsReadyFired = false;
@@ -97,6 +96,10 @@ export function _teardownPosts(): void {
   _commentListenerOrder.length = 0;
   removeUserPostsListener();
   removeUserLikesListener();
+
+  if (typeof (window as any)._resetTabStates === "function") {
+    (window as any)._resetTabStates();
+  }
 
   if (typeof (window as any)._stopTimeUpdateInterval === "function") {
     (window as any)._stopTimeUpdateInterval();
@@ -140,6 +143,10 @@ function _startPostsListener(): void {
         _renderEmptyFeed();
       }
 
+      keys.forEach(function (id) {
+        _attachPostRefListener(id);
+      });
+
       if (keys.length >= PAGE_SIZE) {
         _hasMorePosts = true;
         _renderLoadMoreBtn();
@@ -149,6 +156,7 @@ function _startPostsListener(): void {
       }
 
       _listenForNewPosts(ref);
+      _evictOldPostsIfNeeded();
       (window as any)._postsReadyFired = true;
       document.dispatchEvent(new CustomEvent("postsReady"));
     });
@@ -156,15 +164,18 @@ function _startPostsListener(): void {
 
 
 
-/* ─────────────────── Yeni gelen postları gerçek zamanlı dinler ─────────────────── */
+/* ─────────────────── Post-bazlı değişim dinleyicileri ─────────────────── */
 
-function _onPostChanged(s: firebase.database.DataSnapshot): void {
-  const id = s.key;
+var _postRefListeners: Record<string, firebase.database.Reference> = {};
+
+function _onSinglePostValue(s: firebase.database.DataSnapshot): void {
+  var id = s.key;
   if (!id || !allPosts[id]) return;
-  const oldData = allPosts[id];
+  if (!_postRefListeners[id]) return;
+  var oldData = allPosts[id];
   allPosts[id] = s.val();
-  const user = currentUser;
-  const newVal = s.val() as any;
+  var user = currentUser;
+  var newVal = s.val() as any;
   if (_onlyLikesChanged(oldData, newVal)) {
     _patchPostLikes(id, newVal.likes, user);
   } else {
@@ -172,9 +183,26 @@ function _onPostChanged(s: firebase.database.DataSnapshot): void {
   }
 }
 
+function _attachPostRefListener(postId: string): void {
+  if (_postRefListeners[postId]) return;
+  var ref = db.postsRef!.child(postId);
+  _postRefListeners[postId] = ref;
+  ref.on("value", _onSinglePostValue);
+}
+
+function _detachPostRefListener(postId: string): void {
+  if (_postRefListeners[postId]) {
+    _postRefListeners[postId].off("value", _onSinglePostValue);
+    delete _postRefListeners[postId];
+  }
+}
+
+/* ─────────────────── Post silindiğinde ─────────────────── */
+
 function _onPostRemoved(s: firebase.database.DataSnapshot): void {
   const id = s.key;
   if (!id) return;
+  _detachPostRefListener(id);
   if (_commentListenerRefs[id]) {
     _commentListenerRefs[id].off();
     delete _commentListenerRefs[id];
@@ -187,6 +215,8 @@ function _onPostRemoved(s: firebase.database.DataSnapshot): void {
     }
   }
 }
+
+/* ─────────────────── Yeni gelen postları gerçek zamanlı dinler ─────────────────── */
 
 function _listenForNewPosts(ref: firebase.database.Query): void {
   if (_postsListenerActive) return;
@@ -204,16 +234,14 @@ function _listenForNewPosts(ref: firebase.database.Query): void {
     if ((data.createdAt || 0) > _newestLoadedTs) {
       _newestLoadedTs = data.createdAt;
     }
+    _attachPostRefListener(id);
     const empty = postsFeed && postsFeed.querySelector(".posts-empty");
     if (empty) empty.remove();
     _insertPostToFeed(id, data, true);
   });
 
-  const fullRef = db.postsRef!;
-  _fullChangedRef = fullRef;
-  _fullRemovedRef = fullRef;
-  fullRef.on("child_changed", _onPostChanged);
-  fullRef.on("child_removed", _onPostRemoved);
+  _fullRemovedRef = db.postsRef!;
+  _fullRemovedRef.on("child_removed", _onPostRemoved);
 }
 
 /* ─────────────────── Daha fazla post yükle (sayfalama) ─────────────────── */
@@ -248,6 +276,7 @@ function _loadMorePosts(): void {
 
       keys.forEach(function (id) {
         allPosts[id] = raw[id];
+        _attachPostRefListener(id);
         _insertPostToFeed(id, raw[id], false);
       });
 
@@ -265,6 +294,7 @@ function _loadMorePosts(): void {
         _removeLoadMoreBtn();
       }
 
+      _evictOldPostsIfNeeded();
       _loadingMore = false;
       if (btn) {
         btn.disabled = false;

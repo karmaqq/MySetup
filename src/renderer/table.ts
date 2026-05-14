@@ -121,10 +121,6 @@ export function buildStatusCellContent(item: any): string {
   </div>`;
 }
 
-export function buildStatusCellInnerHTML(item: any): string {
-  return `<td class="status-cell">${buildStatusCellContent(item)}</td>`;
-}
-
 function buildCombinedSpecsCellHTML(item: any): string {
   const brandText = item.brand && item.brand !== "-" ? escHtml(item.brand) : "";
   const specsText = item.specs && item.specs !== "-" ? escHtml(item.specs) : "";
@@ -161,7 +157,7 @@ function buildRowHTML(item: any): string {
     CURRENCY_FORMAT.format(item.price) +
     ` ₺</td>
     <td class="col-vendor">${escHtml(item.vendor)}</td>
-    ${buildStatusCellInnerHTML(item)}
+    <td class="status-cell">${buildStatusCellContent(item)}</td>
   `
   );
 }
@@ -180,7 +176,7 @@ function buildGroupRowHTML(
     CURRENCY_FORMAT.format(item.price) +
     ` ₺</td>
     ${vendorCell}
-    ${buildStatusCellInnerHTML(item)}
+    <td class="status-cell">${buildStatusCellContent(item)}</td>
   `
   );
 }
@@ -325,10 +321,26 @@ function renderTableRows(list: any[], scrollY?: number): void {
 
 /* ─────────────────── Tam Render ─────────────────── */
 
+let _cachedFilteredList: any[] | null = null;
+let _cacheInvalidated = true;
+
+export function invalidateFilterCache(): void {
+  _cacheInvalidated = true;
+}
+
+export function getCachedFilteredList(): any[] {
+  if (_cacheInvalidated || !_cachedFilteredList) {
+    _cachedFilteredList = getFilteredSortedList();
+    _cacheInvalidated = false;
+  }
+  return _cachedFilteredList;
+}
+
 export function renderAll(): void {
   (window as any).renderAll = renderAll;
   const scrollY = mainScroll ? mainScroll.scrollTop : 0;
-  const list = getFilteredSortedList();
+  invalidateFilterCache();
+  const list = getCachedFilteredList();
   updateStats(list);
   renderTableRows(list, scrollY);
   updateResultCount(list.length);

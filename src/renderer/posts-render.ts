@@ -23,6 +23,25 @@ import {
 export let allPosts: Record<string, any> = {};
 (window as any).allPosts = allPosts;
 
+var _MAX_POSTS_IN_MEMORY = 200;
+var _EVICT_COUNT = 100;
+
+export function _evictOldPostsIfNeeded(): void {
+  var keys = Object.keys(allPosts);
+  if (keys.length <= _MAX_POSTS_IN_MEMORY) return;
+  var sorted = keys.slice().sort(function (a, b) {
+    return (allPosts[a].createdAt || 0) - (allPosts[b].createdAt || 0);
+  });
+  var evicted = 0;
+  for (var ei = 0; ei < sorted.length && evicted < _EVICT_COUNT; ei++) {
+    var id = sorted[ei];
+    if (!document.querySelector('[data-post-id="' + id + '"]')) {
+      delete allPosts[id];
+      evicted++;
+    }
+  }
+}
+
 /* ─────────────────── Post Kartı HTML Döndürür ─────────────────── */
 
 export function _renderPostHTML(
@@ -128,6 +147,9 @@ export function _insertPostToFeed(
     postsFeed.appendChild(el);
   }
   _initPostImage(el.querySelector(".post-img-lazy") as HTMLImageElement | null);
+  if (typeof (window as any)._registerTimeCard === "function") {
+    (window as any)._registerTimeCard(el);
+  }
   requestAnimationFrame(function () {
     el.style.opacity = "1";
     el.style.transform = "translateY(0)";
@@ -147,6 +169,9 @@ export function _patchPostCard(postId: string, postData: any): void {
   const oldSection = el.querySelector(".comment-section");
   const wasOpen = oldSection && oldSection.classList.contains("visible");
   el.replaceWith(newEl);
+  if (typeof (window as any)._registerTimeCard === "function") {
+    (window as any)._registerTimeCard(newEl);
+  }
   _initPostImage(
     newEl.querySelector(".post-img-lazy") as HTMLImageElement | null,
   );
@@ -185,6 +210,9 @@ export function _patchPostLikes(
 
 export function _softRemovePost(postId: string): void {
   getPostCards(postId).forEach(function (el) {
+    if (typeof (window as any)._unregisterTimeCard === "function") {
+      (window as any)._unregisterTimeCard(el);
+    }
     (el as HTMLElement).style.transition = "opacity 0.3s, transform 0.3s";
     (el as HTMLElement).style.opacity = "0";
     (el as HTMLElement).style.transform = "translateY(4px)";

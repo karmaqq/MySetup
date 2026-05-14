@@ -65,14 +65,9 @@ export async function deleteUserAccount(user: firebase.auth.User): Promise<{ suc
     await db.database!.ref("userPosts/" + uid).remove();
     await db.database!.ref("users/" + uid).remove();
 
-    const usernameSnap = await db.database!.ref("usernames").once("value");
-    if (usernameSnap.exists()) {
-      const allUsernames = usernameSnap.val() as Record<string, string>;
-      Object.keys(allUsernames).forEach(async (key) => {
-        if (allUsernames[key] === uid) {
-          try { await db.database!.ref("usernames/" + key).remove(); } catch (_) {}
-        }
-      });
+    const usernameKey = (user.displayName || "").trim().toLowerCase();
+    if (usernameKey) {
+      await db.database!.ref("usernames/" + usernameKey).remove().catch(function () {});
     }
 
     await deleteAllInFolder(

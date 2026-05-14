@@ -4,15 +4,25 @@
 
 /* ─────────────────── Türkçe Karakter Normalizasyonu ─────────────────── */
 
+const _TR_MAP: Record<string, string> = {
+  ı: "i",
+  ğ: "g",
+  ü: "u",
+  ş: "s",
+  ö: "o",
+  ç: "c",
+  İ: "i",
+  Ğ: "g",
+  Ü: "u",
+  Ş: "s",
+  Ö: "o",
+  Ç: "c",
+};
+
 export function normalizeTr(s: string): string {
   return (s || "")
     .toLowerCase()
-    .replace(/ı/g, "i")
-    .replace(/ğ/g, "g")
-    .replace(/ü/g, "u")
-    .replace(/ş/g, "s")
-    .replace(/ö/g, "o")
-    .replace(/ç/g, "c");
+    .replace(/[ığüşöçİĞÜŞÖÇ]/g, function (c) { return _TR_MAP[c] || c; });
 }
 
 /* ─────────────────── Karakter Kaçış ─────────────────── */
@@ -233,14 +243,19 @@ export function _onlyCommentLikesChanged(
 export async function deleteAllInFolder(ref: firebase.storage.StorageReference): Promise<void> {
   const list = await ref.listAll();
   const BATCH = 10;
-  await Promise.all([
-    ...Array.from({ length: Math.ceil(list.items.length / BATCH) }, function (_, i) {
-      return Promise.all(
-        list.items.slice(i * BATCH, (i + 1) * BATCH).map(function (item) {
-          return item.delete();
-        }),
-      );
-    }),
-    ...list.prefixes.map(deleteAllInFolder),
-  ]);
+  var batchPromises: Promise<any>[] = [];
+  var totalItems = list.items.length;
+  for (var bi = 0; bi < totalItems; bi += BATCH) {
+    var slice = list.items.slice(bi, bi + BATCH);
+    batchPromises.push(
+      Promise.all(
+        slice.map(function (item) { return item.delete(); }),
+      ),
+    );
+  }
+  var prefixPromises: Promise<any>[] = [];
+  for (var pi = 0; pi < list.prefixes.length; pi++) {
+    prefixPromises.push(deleteAllInFolder(list.prefixes[pi]));
+  }
+  await Promise.all(batchPromises.concat(prefixPromises));
 }
