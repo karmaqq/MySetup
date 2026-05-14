@@ -1,6 +1,4 @@
 .env.bat
-update.bat
-update.mjs
 OPTIMIZATIONS.md
 authfix.md
 rules.json
