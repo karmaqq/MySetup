@@ -1,6 +1,6 @@
 {
   "name": "mysetup",
-  "version": "3.4.5",
+  "version": "3.0.8",
   "description": "Envanter Sistemi",
   "author": "Karma shbkarma@gmail.com",
   "main": "dist/main.js",
