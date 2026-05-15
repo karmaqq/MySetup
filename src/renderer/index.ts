@@ -24,6 +24,7 @@ import "./user/pass-change";
 import "./user/delete-account-ui";
 import "./user/settings";
 import "./user/updater-ui";
+import "./user/avatar";
 import "./social/post-comment";
 import "./social/post-create";
 import "./social/post-render";

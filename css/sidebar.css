@@ -144,6 +144,8 @@
   font-weight: 700;
   text-transform: uppercase;
   color: var(--accent);
+  overflow: hidden;
+  position: relative;
 }
 
 .sidebar-user-info {

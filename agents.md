@@ -130,7 +130,6 @@ KÖK (firebase.database().ref())
 │                                                 (sadece POST beğenileri, comment/reply DEĞİL)
 │
 ├── /users/{userId}/
-│   ├── theme: "dark" | "light"                  # Kullanıcının seçtiği tema (varsayılan dark)
 │   └── components/{itemId}                      # MAP: envanter öğeleri
 │       ├── date: string                         # Tarih
 │       ├── component: string                    # Bileşen adı
@@ -266,12 +265,12 @@ social/post-view-comment → social/post-view
 
 ### Kategori Bazında Gruplama
 
-| Sıra  | Grup             | Dosyalar                                                                                                                                                                                           | Toplam |
-| ----- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: |
-| 1-4   | **Çekirdek**     | core/firebase-init → core/global-ut → core/global-fn → core/app-state                                                                                                                              |   4    |
-| 5-9   | **Veri**         | data/firebase-core → data/firebase-inventory → data/firebase-user → data/firebase-post → data/firebase-comment                                                                                      |   5    |
-| 10-16 | **Envanter**     | inventory/io → inventory/toolbar → inventory/csv → inventory/table → inventory/table-crud → inventory/edit-modal → inventory/image-utils                                                            |   7    |
-| 17-22 | **Kullanıcı**    | user/auth-nav → user/auth → user/pass-change → user/delete-account-ui → user/settings → user/updater-ui                                                                                            |   6    |
+| Sıra  | Grup             | Dosyalar                                                                                                                                                                                                            | Toplam |
+| ----- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: |
+| 1-4   | **Çekirdek**     | core/firebase-init → core/global-ut → core/global-fn → core/app-state                                                                                                                                               |   4    |
+| 5-9   | **Veri**         | data/firebase-core → data/firebase-inventory → data/firebase-user → data/firebase-post → data/firebase-comment                                                                                                      |   5    |
+| 10-16 | **Envanter**     | inventory/io → inventory/toolbar → inventory/csv → inventory/table → inventory/table-crud → inventory/edit-modal → inventory/image-utils                                                                            |   7    |
+| 17-22 | **Kullanıcı**    | user/auth-nav → user/auth → user/pass-change → user/delete-account-ui → user/settings → user/updater-ui                                                                                                             |   6    |
 | 23-32 | **Post Sistemi** | social/post-comment → social/post-create → social/post-render → social/post-listener → social/post-timer → social/post-actions → social/profile-tabs → social/profile → social/post-view-comment → social/post-view |   10   |
 
 ## Zorunlu Kısıtlar

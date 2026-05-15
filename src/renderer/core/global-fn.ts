@@ -2,7 +2,7 @@
 /*                          PAYLAŞILAN UYGULAMA FONKSİYONLARI                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { isAnyModalOpen, getAvatarLetter, escAttr } from "./global-ut";
+import { isAnyModalOpen, getAvatarLetter, escAttr, getFromAvatarCache } from "./global-ut";
 
 /* ─────────────────── Toast Bildirimi ─────────────────── */
 
@@ -99,18 +99,113 @@ export function scheduleRender(): void {
 
 /* ─────────────────── Avatar Güncelleme ─────────────────── */
 
-export function updateAvatarLetter(elementId: string, name: string): void {
-  const el = document.getElementById(elementId);
-  if (el) el.textContent = (name || "?").charAt(0).toUpperCase();
+export function updateAvatarImage(
+  elementId: string,
+  url: string | null,
+  name?: string,
+): void {
+  var el = document.getElementById(elementId);
+  if (!el) return;
+  var letterSpan = el.querySelector("span") as HTMLElement | null;
+  var existingImg = el.querySelector(
+    "img.avatar-img",
+  ) as HTMLImageElement | null;
+
+  if (url) {
+    if (existingImg) {
+      existingImg.src = url;
+      if (name) existingImg.alt = name;
+    } else {
+      if (letterSpan) letterSpan.style.display = "none";
+      var newImg = document.createElement("img");
+      newImg.className = "avatar-img";
+      newImg.src = url;
+      newImg.alt = name || "Avatar";
+      el.appendChild(newImg);
+    }
+    el.classList.add("has-image");
+  } else {
+    if (existingImg) existingImg.remove();
+    if (letterSpan) {
+      letterSpan.style.display = "";
+      if (name) letterSpan.textContent = getAvatarLetter(name);
+    }
+    el.classList.remove("has-image");
+  }
 }
 
-export function refreshAllAvatars(name: string): void {
-  updateAvatarLetter("profileAvatarLetter", name);
-  updateAvatarLetter("sidebarAvatar", name);
+export function refreshAllAvatars(name: string, avatarUrl?: string): void {
+  updateAvatarImage("sidebarAvatar", avatarUrl || null, name);
+  updateAvatarImage("profileAvatarContainer", avatarUrl || null, name);
 }
 
-export function buildAvatarHTML(name: string, cssClass: string): string {
-  return '<div class="' + cssClass + '">' + getAvatarLetter(name) + "</div>";
+export function buildAvatarHTML(
+  name: string,
+  cssClass: string,
+  uid?: string,
+  avatarUrl?: string,
+): string {
+  var dataAttr = uid ? ' data-uid="' + escAttr(uid) + '"' : "";
+  var finalUrl = avatarUrl;
+  if (uid) {
+    var cached = getFromAvatarCache(uid);
+    if (cached) finalUrl = cached;
+  }
+  if (finalUrl) {
+    return (
+      '<div class="' +
+      cssClass +
+      '"' +
+      dataAttr +
+      ">" +
+      '<img src="' +
+      escAttr(finalUrl) +
+      '" alt="' +
+      escAttr(name) +
+      '" class="avatar-img" />' +
+      "</div>"
+    );
+  }
+  return (
+    '<div class="' +
+    cssClass +
+    '"' +
+    dataAttr +
+    ">" +
+    "<span>" +
+    getAvatarLetter(name) +
+    "</span>" +
+    "</div>"
+  );
+}
+
+export function _walkAndUpdateAvatar(uid: string, url: string | null): void {
+  var selector = '[data-uid="' + escAttr(uid) + '"]';
+  var elements = document.querySelectorAll(selector);
+  elements.forEach(function (el) {
+    var existingImg = el.querySelector(
+      "img.avatar-img",
+    ) as HTMLImageElement | null;
+    var letterSpan = el.querySelector("span") as HTMLElement | null;
+
+    if (url) {
+      if (existingImg) {
+        existingImg.src = url;
+      } else {
+        if (letterSpan) letterSpan.style.display = "none";
+        var img = document.createElement("img");
+        img.className = "avatar-img";
+        img.src = url;
+        img.alt = "Avatar";
+        el.appendChild(img);
+      }
+      el.classList.add("has-image");
+    } else {
+      if (existingImg) existingImg.remove();
+      if (letterSpan) letterSpan.style.display = "";
+      el.classList.remove("has-image");
+    }
+  });
 }
 
 /* ─────────────────── Post Kartı Yardımcıları ─────────────────── */

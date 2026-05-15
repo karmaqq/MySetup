@@ -5,7 +5,7 @@
 import { serverTimestamp } from "firebase/database";
 import { getStorage, ref, uploadBytes, getDownloadURL, UploadResult } from "firebase/storage";
 import { currentUser } from "../core/app-state";
-import { POST_PHRASES } from "../core/global-ut";
+import { POST_PHRASES, getFromAvatarCache } from "../core/global-ut";
 import { addPostToFirebase } from "../data/firebase-post";
 import { showToast } from "../core/global-fn";
 
@@ -58,6 +58,7 @@ export function createPost(): void {
     username: user.displayName || "Kullanici",
     content: text,
     imageUrl: null,
+    avatarUrl: getFromAvatarCache(user.uid) || "",
     createdAt: serverTimestamp(),
     likes: {},
     phraseIndex: Math.floor(Math.random() * POST_PHRASES.length),

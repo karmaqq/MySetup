@@ -23,12 +23,18 @@
 .profile-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 .profile-left .profile-avatar-wrapper {
   position: relative;
   flex-shrink: 0;
+}
+
+.profile-left .profile-avatar {
+  width: 90px;
+  height: 90px;
+  font-size: 40px;
 }
 
 .profile-info {
@@ -40,7 +46,7 @@
 
 .profile-info h3 {
   font-family: var(--font-display);
-  font-size: 25px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--text-bright);
   margin: 0;

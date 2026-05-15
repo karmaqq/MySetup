@@ -1,0 +1,302 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          AVATAR SİSTEMİ                                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Cropper.js Harici CSS ─────────────────── */
+
+@import "../node_modules/cropperjs/dist/cropper.min.css";
+
+/* ─────────────────── Avatar Görsel Sınıfı ─────────────────── */
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.avatar.has-image > span,
+.profile-avatar.has-image > span,
+.sidebar-avatar.has-image > span,
+.post-avatar.has-image > span,
+.comment-avatar.has-image > span,
+.reply-avatar.has-image > span,
+.comment-composer-avatar.has-image > span {
+  display: none;
+}
+
+/* ─────────────────── Yükleme Butonu ─────────────────── */
+
+.profile-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-upload-btn {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2.5px solid var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  padding: 0;
+  color: #000;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-upload-btn:hover {
+  transform: scale(1.18);
+  background: var(--accent-hover);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.avatar-upload-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.avatar-upload-btn svg {
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          AVATAR MODALI                                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Modal Kutusu ─────────────────── */
+
+.avatar-modal-box {
+  width: min(500px, 94vw);
+}
+
+.avatar-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 18px 26px;
+}
+
+/* ─────────────────── Cropper Alanı ─────────────────── */
+
+.avatar-cropper-area {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+
+.avatar-cropper-area img {
+  display: block;
+  max-width: 100%;
+}
+
+/* ─────────────────── Cropper.js Override — Daire Görünümü ─────────────────── */
+
+.avatar-cropper-area .cropper-crop-box,
+.avatar-cropper-area .cropper-view-box {
+  border-radius: 50%;
+}
+
+.avatar-cropper-area .cropper-view-box {
+  outline: 2px solid rgba(255, 255, 255, 0.75);
+  outline-color: rgba(255, 255, 255, 0.75);
+}
+
+.avatar-cropper-area .cropper-face {
+  background-color: inherit;
+}
+
+.avatar-cropper-area .cropper-dashed,
+.avatar-cropper-area .cropper-line,
+.avatar-cropper-area .cropper-point {
+  display: none;
+}
+
+/* ─────────────────── Yükleme Progress ─────────────────── */
+
+.avatar-upload-progress {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.avatar-upload-progress.hidden {
+  display: none;
+}
+
+.avatar-upload-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.avatar-upload-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.2s ease;
+}
+
+.avatar-upload-label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          AVATAR GEÇMİŞİ                                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.avatar-history-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.avatar-history-section.hidden {
+  display: none;
+}
+
+.avatar-history-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-family: var(--font-ui);
+}
+
+.avatar-history-list {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  align-items: center;
+}
+
+.avatar-history-item {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2.5px solid var(--border2);
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+  flex-shrink: 0;
+  background: var(--surface2);
+}
+
+.avatar-history-item:hover {
+  border-color: var(--accent);
+  transform: scale(1.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-history-item.is-current {
+  border-color: var(--accent);
+}
+
+.avatar-history-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-history-check {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                          LIGHTBOX                                          */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.avatar-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.25s ease,
+    visibility 0.25s ease;
+  cursor: pointer;
+}
+
+.avatar-lightbox.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.avatar-lightbox-content {
+  width: min(360px, 78vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  transform: scale(0.88);
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:
+    0 16px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 3px rgba(255, 255, 255, 0.08);
+  cursor: default;
+  pointer-events: auto;
+}
+
+.avatar-lightbox.active .avatar-lightbox-content {
+  transform: scale(1);
+}
+
+.avatar-lightbox-content img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}

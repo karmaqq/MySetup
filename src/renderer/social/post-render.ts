@@ -62,7 +62,7 @@ export function _renderPostHTML(
   let html = `<div class="post-card" data-post-id="${pid}">`;
 
   html += `<div class="post-header${inPostView ? "" : " post-header-link"}"${inPostView ? "" : ` data-action="open-post-view" data-id="${pid}"`}>`;
-  html += buildAvatarHTML(postData.username, "post-avatar");
+  html += buildAvatarHTML(postData.username, "post-avatar", postData.uid, postData.avatarUrl);
   html += '<div class="post-user-info">';
   html += `<span class="post-username">${escHtml(postData.username || "Kullanici")}</span>`;
   html += `<span class="post-time">${escHtml(timeText)}</span>`;

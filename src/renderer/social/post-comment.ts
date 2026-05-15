@@ -55,7 +55,7 @@ export function _renderCommentThreadHTML(
 
   html += `<div class="comment-item" data-comment-id="${cid}">`;
   html += '<div class="comment-avatar-col">';
-  html += buildAvatarHTML(commentData.username, "comment-avatar");
+  html += buildAvatarHTML(commentData.username, "comment-avatar", commentData.uid, commentData.avatarUrl);
   html += "</div>";
   html += '<div class="comment-body">';
   html += '<div class="comment-meta">';
@@ -135,7 +135,7 @@ export function _renderReplyHTML(
     : "";
 
   let html = `<div class="reply-item" data-reply-id="${rid}">`;
-  html += buildAvatarHTML(replyData.username, "reply-avatar");
+  html += buildAvatarHTML(replyData.username, "reply-avatar", replyData.uid, replyData.avatarUrl);
   html += '<div class="reply-body">';
   html += '<div class="reply-meta">';
   html += `<span class="reply-username">${escHtml(replyData.username || "Kullanici")}</span>`;

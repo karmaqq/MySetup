@@ -272,3 +272,23 @@ export async function deleteAllInFolder(folderRef: StorageReference): Promise<vo
   }
   await Promise.all(batchPromises.concat(prefixPromises));
 }
+
+/* ─────────────────── Avatar Önbellek ─────────────────── */
+
+var _avatarCache: Record<string, string> = {};
+
+export function getFromAvatarCache(uid: string): string | null {
+  return _avatarCache[uid] || null;
+}
+
+export function setAvatarCache(uid: string, url: string | null): void {
+  if (url) {
+    _avatarCache[uid] = url;
+  } else {
+    delete _avatarCache[uid];
+  }
+}
+
+export function clearAvatarCache(): void {
+  _avatarCache = {};
+}

@@ -86,7 +86,7 @@
       <!-- ─────────────────── Kullanıcı ve Çıkış ─────────────────── -->
       <div class="sidebar-footer">
         <div class="sidebar-user-info hidden" id="userInfo">
-          <div class="sidebar-avatar" id="sidebarAvatar">?</div>
+          <div class="sidebar-avatar" id="sidebarAvatar"><span>?</span></div>
           <span class="sidebar-user-displayname" id="userEmail"></span>
         </div>
         <button class="sidebar-logout-btn" id="logoutBtn" title="Çıkış Yap">
@@ -435,9 +435,45 @@
           <div class="profile-card">
             <div class="profile-left">
               <div class="profile-avatar-wrapper">
-                <div class="profile-avatar" id="profileAvatarContainer">
+                <div
+                  class="profile-avatar"
+                  id="profileAvatarContainer"
+                  role="button"
+                  tabindex="0"
+                  title="Profil fotoğrafını görüntüle"
+                  aria-label="Profil fotoğrafı"
+                >
                   <span id="profileAvatarLetter">?</span>
                 </div>
+                <button
+                  class="avatar-upload-btn"
+                  id="profileAvatarBtn"
+                  type="button"
+                  title="Fotoğraf Değiştir"
+                  aria-label="Profil fotoğrafı değiştir"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="12"
+                    height="12"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                    />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                </button>
+                <input
+                  type="file"
+                  id="avatarFileInput"
+                  accept="image/*"
+                  style="display:none"
+                />
               </div>
               <div class="profile-info">
                 <h3 id="profileUsername">Kullanıcı Adı</h3>
@@ -1158,6 +1194,77 @@
             </button>
           </form>
         </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────── Avatar Düzenleme Modali ─────────────────── -->
+    <div
+      class="modal-overlay"
+      id="avatarModal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Profil Fotoğrafı Düzenle"
+    >
+      <div class="modal-box avatar-modal-box">
+        <div class="modal-header">
+          <span class="modal-title">Profil Fotoğrafı</span>
+          <button class="modal-close" id="avatarModalClose" title="Kapat (Esc)">
+            ✕
+          </button>
+        </div>
+
+        <div class="modal-body avatar-modal-body">
+          <!-- ─────────────────── Cropper Alanı ─────────────────── -->
+          <div class="avatar-cropper-area" id="avatarCropContainer">
+            <img
+              id="avatarCropImage"
+              src=""
+              alt="Kesilecek fotoğraf"
+              style="display:block; max-width:100%;"
+            />
+          </div>
+
+          <!-- ─────────────────── Yükleme Durumu ─────────────────── -->
+          <div class="avatar-upload-progress hidden" id="avatarUploadProgress">
+            <div class="avatar-upload-bar">
+              <div class="avatar-upload-fill" id="avatarUploadFill"></div>
+            </div>
+            <span class="avatar-upload-label" id="avatarUploadLabel"
+              >Yükleniyor...</span
+            >
+          </div>
+
+          <!-- ─────────────────── Avatar Geçmişi ─────────────────── -->
+          <div class="avatar-history-section hidden" id="avatarHistoryContainer">
+            <div class="avatar-history-label">Son Fotoğraflar</div>
+            <div class="avatar-history-list" id="avatarHistoryList"></div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            class="btn-modal-cancel"
+            id="avatarModalRemove"
+            style="color: var(--red); border-color: rgba(245,96,96,0.3);"
+          >
+            Fotoğrafı Kaldır
+          </button>
+          <button class="btn-modal-cancel" id="avatarModalCancel">İptal</button>
+          <button class="btn-modal-save" id="avatarModalSave">Kaydet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────── Avatar Lightbox ─────────────────── -->
+    <div
+      class="avatar-lightbox"
+      id="avatarLightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Profil fotoğrafı tam ekran"
+    >
+      <div class="avatar-lightbox-content">
+        <img id="avatarLightboxImg" src="" alt="Profil fotoğrafı" />
       </div>
     </div>
 

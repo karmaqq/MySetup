@@ -8,8 +8,10 @@ import { currentUser } from "../core/app-state";
 import { db } from "../core/firebase-init";
 import { initUserDataRef } from "../data/firebase-core";
 import { refreshAllAvatars, showToast } from "../core/global-fn";
+import { getFromAvatarCache } from "../core/global-ut";
 import { closeChangePassModal } from "./pass-change";
 import { closeDeleteModal } from "./delete-account-ui";
+import { closeAvatarModal } from "./avatar";
 import { allPosts } from "../social/post-render";
 
 /* ─────────────────── Modal Referansları ─────────────────── */
@@ -27,6 +29,7 @@ export function closeAllModals(): void {
   closeSettingsModal();
   closeChangePassModal();
   closeDeleteModal();
+  closeAvatarModal();
 }
 
 /* ─────────────────── Global Modal Kapatma Hook'u ─────────────────── */
@@ -186,11 +189,13 @@ saveBtn?.addEventListener("click", async () => {
 
     await updateProfile(user, { displayName: newName });
 
+    var _currentAvatarUrl: string | null | undefined;
     try {
+      _currentAvatarUrl = getFromAvatarCache(user.uid);
       const postIdsSnap = await get(ref(db.database, "userPosts/" + user.uid));
       const postIds = postIdsSnap.val() as Record<string, number> | null;
       if (postIds) {
-        var megaBatch: Record<string, string> = {};
+        var megaBatch: Record<string, any> = {};
         var postKeys = Object.keys(postIds);
         for (var pi = 0; pi < postKeys.length; pi++) {
           var pid = postKeys[pi];
@@ -198,6 +203,7 @@ saveBtn?.addEventListener("click", async () => {
           if (!postData) continue;
           if (postData.uid === user.uid) {
             megaBatch["posts/" + pid + "/username"] = newName;
+            megaBatch["posts/" + pid + "/avatarUrl"] = _currentAvatarUrl;
           }
           if (postData.comments) {
             var cids = Object.keys(postData.comments);
@@ -206,6 +212,7 @@ saveBtn?.addEventListener("click", async () => {
               var comment = postData.comments[cid];
               if (comment.uid === user.uid) {
                 megaBatch["posts/" + pid + "/comments/" + cid + "/username"] = newName;
+                megaBatch["posts/" + pid + "/comments/" + cid + "/avatarUrl"] = _currentAvatarUrl;
               }
               if (comment.replies) {
                 var rids = Object.keys(comment.replies);
@@ -214,6 +221,7 @@ saveBtn?.addEventListener("click", async () => {
                   var reply = comment.replies[rid];
                   if (reply.uid === user.uid) {
                     megaBatch["posts/" + pid + "/comments/" + cid + "/replies/" + rid + "/username"] = newName;
+                    megaBatch["posts/" + pid + "/comments/" + cid + "/replies/" + rid + "/avatarUrl"] = _currentAvatarUrl;
                   }
                 }
               }
@@ -222,7 +230,7 @@ saveBtn?.addEventListener("click", async () => {
         }
         var batchKeys = Object.keys(megaBatch);
         for (var bi = 0; bi < batchKeys.length; bi += 500) {
-          var batchChunk: Record<string, string> = {};
+          var batchChunk: Record<string, any> = {};
           var chunkKeys = batchKeys.slice(bi, bi + 500);
           for (var cki = 0; cki < chunkKeys.length; cki++) {
             batchChunk[chunkKeys[cki]] = megaBatch[chunkKeys[cki]];
@@ -238,7 +246,7 @@ saveBtn?.addEventListener("click", async () => {
     const profileUsernameEl = document.getElementById("profileUsername");
     if (profileUsernameEl) profileUsernameEl.textContent = newName;
 
-    refreshAllAvatars(newName);
+    refreshAllAvatars(newName, _currentAvatarUrl || undefined);
 
     if (usernameErrEl) usernameErrEl.textContent = "";
     showToast("Kullanıcı adı güncellendi", "success");

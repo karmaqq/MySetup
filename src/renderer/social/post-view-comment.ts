@@ -4,6 +4,7 @@
 
 import { serverTimestamp } from "firebase/database";
 import { currentUser } from "../core/app-state";
+import { getFromAvatarCache } from "../core/global-ut";
 import { addCommentToFirebase, addReplyToFirebase } from "../data/firebase-comment";
 import { showToast } from "../core/global-fn";
 
@@ -73,10 +74,13 @@ export function _submitPostViewComment(): void {
   ) as HTMLButtonElement | null;
   if (sendBtn) sendBtn.disabled = true;
 
+  var avatarUrl = user ? getFromAvatarCache(user.uid) || "" : "";
+
   var baseData: Record<string, any> = {
     uid: user.uid,
     username: user.displayName || "Kullanici",
     text: text,
+    avatarUrl: avatarUrl,
     createdAt: serverTimestamp(),
     likes: {},
   };

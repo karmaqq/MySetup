@@ -3,8 +3,11 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { User } from "firebase/auth";
+import { get, child, ref } from "firebase/database";
+import { db } from "../core/firebase-init";
 import { showPage, mainScroll } from "../core/app-state";
 import { refreshAllAvatars } from "../core/global-fn";
+import { setAvatarCache, clearAvatarCache } from "../core/global-ut";
 import { initUserDataRef } from "../data/firebase-core";
 import { initPosts, _teardownPosts } from "../social/post-listener";
 import { closeAllModals } from "./settings";
@@ -49,7 +52,15 @@ export function onUserLoggedIn(user: User): void {
   if (profileUsername) profileUsername.textContent = user.displayName || "Kullanıcı";
   if (profileEmail) profileEmail.textContent = user.email || "E-posta yok";
 
-  refreshAllAvatars(user.displayName || "");
+  get(child(ref(db.database), "users/" + user.uid + "/avatarUrl"))
+    .then(function (snap) {
+      var url = (snap.val() as string | null) || null;
+      if (url) setAvatarCache(user.uid, url);
+      refreshAllAvatars(user.displayName || "", url || undefined);
+    })
+    .catch(function () {
+      refreshAllAvatars(user.displayName || "");
+    });
 
   initUserDataRef(user.uid);
   initPosts();
@@ -163,6 +174,7 @@ export function onUserLoggedOut(): void {
   }
 
   _teardownPosts();
+  clearAvatarCache();
   closeAllModals();
 
   sessionStorage.removeItem("_viewingPostId");

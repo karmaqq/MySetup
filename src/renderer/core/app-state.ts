@@ -303,3 +303,61 @@ export const editVendor = document.getElementById(
 export const editStatus = document.getElementById(
   "editStatus",
 ) as HTMLSelectElement | null;
+
+/* ─────────────────── Avatar Modal Referansları ─────────────────── */
+
+export const avatarModal = document.getElementById(
+  "avatarModal",
+) as HTMLElement | null;
+
+export const avatarModalClose = document.getElementById(
+  "avatarModalClose",
+) as HTMLElement | null;
+
+export const avatarModalCancel = document.getElementById(
+  "avatarModalCancel",
+) as HTMLElement | null;
+
+export const avatarModalSave = document.getElementById(
+  "avatarModalSave",
+) as HTMLElement | null;
+
+export const avatarModalRemove = document.getElementById(
+  "avatarModalRemove",
+) as HTMLElement | null;
+
+export const avatarCropImage = document.getElementById(
+  "avatarCropImage",
+) as HTMLImageElement | null;
+
+export const avatarCropContainer = document.getElementById(
+  "avatarCropContainer",
+) as HTMLElement | null;
+
+export const avatarHistoryContainer = document.getElementById(
+  "avatarHistoryContainer",
+) as HTMLElement | null;
+
+export const avatarHistoryList = document.getElementById(
+  "avatarHistoryList",
+) as HTMLElement | null;
+
+export const avatarFileInput = document.getElementById(
+  "avatarFileInput",
+) as HTMLInputElement | null;
+
+export const avatarLightbox = document.getElementById(
+  "avatarLightbox",
+) as HTMLElement | null;
+
+export const avatarLightboxImg = document.getElementById(
+  "avatarLightboxImg",
+) as HTMLImageElement | null;
+
+export const profileAvatarBtn = document.getElementById(
+  "profileAvatarBtn",
+) as HTMLElement | null;
+
+export const profileAvatarContainer = document.getElementById(
+  "profileAvatarContainer",
+) as HTMLElement | null;
