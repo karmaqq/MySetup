@@ -4,6 +4,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { readFileSync, writeFileSync, existsSync } from "fs";
+import { resolve } from "path";
 import { execSync, spawnSync, spawn } from "child_process";
 import { createInterface } from "readline";
 import { get } from "https";
@@ -35,23 +36,12 @@ function ensureRL() {
   return rl;
 }
 
-const ask = (q) => new Promise((r) => ensureRL().question(q, r));
-
-function readKey() {
-  return new Promise((resolve) => {
-    rl.close();
-    rlClosed = true;
-    const stdin = process.stdin;
-    const wasRaw = stdin.isRaw;
-    stdin.setRawMode(true);
-    stdin.resume();
-    stdin.once("data", (data) => {
-      stdin.setRawMode(wasRaw);
-      stdin.pause();
-      resolve(data);
-    });
-  });
+function closeRL() {
+  rl.close();
+  rlClosed = true;
 }
+
+const ask = (q) => new Promise((r) => ensureRL().question(q, r));
 
 function exec(cmd) {
   return execSync(cmd, {
@@ -73,35 +63,6 @@ function execOk(cmd) {
     return true;
   } catch {
     return false;
-  }
-}
-
-function sh(cmd) {
-  try {
-    return (
-      execSync(cmd, {
-        encoding: "utf-8",
-        stdio: "inherit",
-        windowsHide: true,
-      })?.toString() || ""
-    );
-  } catch {
-    return null;
-  }
-}
-
-function shEnv(cmd, extraEnv) {
-  try {
-    return (
-      execSync(cmd, {
-        encoding: "utf-8",
-        stdio: "inherit",
-        windowsHide: true,
-        env: { ...process.env, ...extraEnv },
-      })?.toString() || ""
-    );
-  } catch {
-    return null;
   }
 }
 
@@ -189,11 +150,11 @@ function menuRow(color, content) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                            1/4 ÖN KONTROLLER                                */
+/*                            1/6 ÖN KONTROLLER                                */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 async function preflight() {
-  section("[1/4]  ÖN KONTROLLER");
+  section("[1/6]  ÖN KONTROLLER");
   let ok = true;
 
   if (!existsSync(".env.bat")) {
@@ -274,7 +235,7 @@ async function preflight() {
           Authorization: `token ${process.env.GH_TOKEN}`,
           "User-Agent": "MySetup",
         },
-        true,
+        false,
       );
       if (code === 200) success("GitHub API", "erişim başarılı");
       else if (code === 401) {
@@ -294,7 +255,7 @@ async function preflight() {
     );
     console.log(`   ${C}└${h}┘${R}`);
     console.log();
-    process.exit(1);
+    throw new Error("Ön kontroller başarısız");
   }
 
   success("Tüm kontroller başarılı");
@@ -303,39 +264,61 @@ async function preflight() {
 
 /* ─────────────────── HTTP İsteği ─────────────────── */
 
-function httpGet(url, headers, statusOnly = false) {
-  return new Promise((resolve, reject) => {
-    get(url, { headers }, (res) => {
-      let data = "";
-      res.on("data", (c) => (data += c));
-      res.on("end", () =>
-        statusOnly ? resolve(res.statusCode) : resolve(data),
-      );
-    }).on("error", reject);
-  });
-}
-
-function httpGetJson(url, headers) {
+function httpGet(url, headers, parseJson = false) {
   return new Promise((resolve, reject) => {
     get(url, { headers }, (res) => {
       let data = "";
       res.on("data", (c) => (data += c));
       res.on("end", () => {
-        let body = null;
-        try {
-          body = data ? JSON.parse(data) : null;
-        } catch {
-          body = data;
+        if (parseJson) {
+          let body = null;
+          try {
+            body = data ? JSON.parse(data) : null;
+          } catch {
+            body = data;
+          }
+          resolve({ statusCode: res.statusCode || 0, body });
+        } else {
+          resolve(res.statusCode);
         }
-        resolve({ statusCode: res.statusCode || 0, body });
       });
     }).on("error", reject);
   });
 }
 
+/* ─────────────────── Versiyon Bütünlük Kontrolü ─────────────────── */
+
+function verifyVersionIntegrity(cur) {
+  try {
+    const tags = exec('git tag --sort=-version:refname');
+    if (!tags) return cur;
+    const lastTag = tags.split("\n").filter(Boolean)[0];
+    if (!lastTag) return cur;
+    const m = lastTag.match(/^v?(\d+\.\d+\.\d+)/);
+    if (!m) return cur;
+    const [eMaj, eMin, ePat] = m[1].split(".").map(Number);
+    const [cMaj, cMin, cPat] = cur.split(".").map(Number);
+    const lastVal = eMaj * 100 + eMin * 10 + ePat;
+    const curVal = cMaj * 100 + cMin * 10 + cPat;
+    if (curVal > lastVal + 1) {
+      const expected = `${eMaj}.${eMin}.${ePat + 1}`;
+      warn("Versiyon atlaması", `${expected} olmalı, ${cur} bulundu`);
+      const pkg = readJson("package.json");
+      pkg.version = expected;
+      writeJson("package.json", pkg);
+      success("Versiyon düzeltildi", expected);
+      return expected;
+    }
+  } catch {
+    /* git tag okunamazsa sessizce geç */
+  }
+  return cur;
+}
+
 /* ─────────────────── Sürüm Yükseltme (otomatik yama) ─────────────────── */
 
 async function selectVersion(cur) {
+  cur = verifyVersionIntegrity(cur);
   const [vMaj, vMin, vPat] = cur.split(".").map(Number);
   let nvMaj = vMaj,
     nvMin = vMin,
@@ -364,11 +347,11 @@ async function selectVersion(cur) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                            2/4 TYPE SCRIPT DERLEME                          */
+/*                            3/6 TYPE SCRIPT DERLEME                          */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 async function buildTs() {
-  section("[2/4]  TYPE SCRIPT DERLEME");
+  section("[3/6]  TYPE SCRIPT DERLEME");
 
   const bar = (pct) => {
     const f = Math.floor(pct / 5);
@@ -409,11 +392,11 @@ async function buildTs() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                            3/4  GİT İŞLEMLERİ                               */
+/*                            4/6  GİT İŞLEMLERİ                               */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 async function gitOperations(nxt, commitArg) {
-  section("[3/4]  GİT İŞLEMLERİ");
+  section("[4/6]  GİT İŞLEMLERİ");
 
   menuRow(C, `${Z}DURUM  DOSYA YOLU${R}`);
   console.log(`   ${C}│${R}  ${D}${"─".repeat(W70 - 4)}${R}  ${C}│${R}`);
@@ -458,6 +441,7 @@ async function gitOperations(nxt, commitArg) {
 
   menuRow(C, `${Z}1/4  git add --all...${R}`);
   if (!execOk("git add --all")) {
+    execOk("git checkout -- package.json");
     menuRow(C, `${X}X  git add başarısız!${R}`);
     sectionEnd();
     return false;
@@ -465,14 +449,16 @@ async function gitOperations(nxt, commitArg) {
 
   menuRow(C, `${Z}2/4  git commit...${R}`);
   if (!execOk(`git commit -m "${fullMsg}"`)) {
+    execOk("git checkout -- package.json");
     menuRow(C, `${X}X  Commit başarısız. Değişiklik olmayabilir.${R}`);
     sectionEnd();
     return false;
   }
 
-  const commitHash = exec("git rev-parse --short HEAD");
   menuRow(C, `${Z}3/4  git pull --rebase origin main...${R}`);
   if (!execOk("git pull --rebase origin main")) {
+    execOk("git rebase --abort");
+    execOk("git checkout -- package.json");
     menuRow(C, `${X}X  Pull/Rebase başarısız. Çakışmaları manuel çöz.${R}`);
     sectionEnd();
     return false;
@@ -485,6 +471,7 @@ async function gitOperations(nxt, commitArg) {
     return false;
   }
 
+  const commitHash = exec("git rev-parse --short HEAD");
   menuRow(C, "");
   menuRow(C, `${G}✓  Commit: ${W}${commitHash}${R}  ${Z}— ${G}${fullMsg}${R}`);
   sectionEnd();
@@ -492,11 +479,11 @@ async function gitOperations(nxt, commitArg) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/*                            4/4  PAKETLEME VE YAYINLAMA                     */
+/*                            5/6  PAKETLEME VE YAYINLAMA                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 async function publish() {
-  section("[4/4]  PAKETLEME VE YAYINLAMA");
+  section("[5/6]  PAKETLEME VE YAYINLAMA");
   menuRow(C, `${Z}Çıktı: release\\MySetup-Installer.exe${R}`);
   menuRow(C, "");
 
@@ -516,8 +503,8 @@ async function publish() {
   };
 
   const child = spawn(
-    "cmd",
-    ["/c", `npx --yes electron-builder --publish always`],
+    "cmd.exe",
+    ["/c", "electron-builder", "--publish", "always"],
     {
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
@@ -584,7 +571,7 @@ async function publish() {
 }
 
 async function verifyGitHubRelease(version) {
-  section("[5/5]  GITHUB YAYIN DOĞRULAMA");
+  section("[6/6]  GITHUB YAYIN DOĞRULAMA");
   const tag = `v${version}`;
   const headers = {
     Authorization: `token ${process.env.GH_TOKEN}`,
@@ -593,9 +580,10 @@ async function verifyGitHubRelease(version) {
   };
 
   try {
-    const result = await httpGetJson(
+    const result = await httpGet(
       `https://api.github.com/repos/karmaqq/MySetup/releases/tags/${encodeURIComponent(tag)}`,
       headers,
+      true,
     );
 
     if (result.statusCode !== 200 || !result.body) {
@@ -651,7 +639,6 @@ async function verifyGitHubRelease(version) {
 /* ─────────────────── Rapor ─────────────────── */
 
 function fmtDur(s) {
-  if (s < 1) return `${s.toFixed(2)} sec`;
   if (s < 60) return `${s.toFixed(2)} sec`;
   const m = Math.floor(s / 60);
   const r = Math.round(s % 60);
@@ -760,6 +747,7 @@ async function main() {
     publishOk = true,
     verifyOk = true;
   if (!buildOk) {
+    execOk("git checkout -- package.json");
     timings.push({ name: "Git İşlemleri", dur: 0, ok: null });
     timings.push({ name: "electron-builder", dur: 0, ok: null });
     timings.push({ name: "GitHub Doğrulama", dur: 0, ok: null });
@@ -793,11 +781,11 @@ async function main() {
   }
 
   report(timings, nxt);
-  rl.close();
+  closeRL();
 }
 
 main().catch((e) => {
   console.error(`${X}HATA:${R}`, e.message);
-  rl.close();
+  closeRL();
   process.exit(1);
 });
