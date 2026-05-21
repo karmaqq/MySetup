@@ -36,7 +36,7 @@ import {
 
 let _initToken: string | null = null;
 
-export function initUserDataRef(userId: string | null): void {
+export function initUserDataRef(userId: string | null, skipListeners?: boolean): void {
   const sessionToken = Date.now() + "_" + Math.random();
   _initToken = sessionToken;
 
@@ -68,6 +68,8 @@ export function initUserDataRef(userId: string | null): void {
     });
     rebuildStatsCache();
     renderAll();
+
+    if (skipListeners) return;
 
     onChildAdded(db.userDataRef!,
       function (snapshot) {

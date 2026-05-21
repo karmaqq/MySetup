@@ -123,6 +123,22 @@
   border-color: rgba(232, 160, 32, 0.2);
 }
 
+.tab-btn.tab-disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tab-btn.tab-disabled:hover {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.tab-btn .tab-lock-icon {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
 .tab-content {
   display: none;
   flex-direction: column;

@@ -182,6 +182,7 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--text-bright);
+  cursor: pointer;
 }
 
 .comment-time {
@@ -331,6 +332,7 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--text-bright);
+  cursor: pointer;
 }
 
 .reply-time {

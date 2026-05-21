@@ -59,7 +59,7 @@ export function _renderCommentThreadHTML(
   html += "</div>";
   html += '<div class="comment-body">';
   html += '<div class="comment-meta">';
-  html += `<span class="comment-username">${escHtml(commentData.username || "Kullanici")}</span>`;
+  html += `<span class="comment-username" data-action="view-profile" data-uid="${escAttr(commentData.uid)}">${escHtml(commentData.username || "Kullanici")}</span>`;
   html += `<span class="comment-time">${escHtml(timeAgo)}</span>`;
   if (isOwn || isPostOwner) {
     html += `<button class="comment-menu-btn" data-action="comment-menu" data-post-id="${pid}" data-comment-id="${cid}">⋮</button>`;
@@ -138,7 +138,7 @@ export function _renderReplyHTML(
   html += buildAvatarHTML(replyData.username, "reply-avatar", replyData.uid, replyData.avatarUrl);
   html += '<div class="reply-body">';
   html += '<div class="reply-meta">';
-  html += `<span class="reply-username">${escHtml(replyData.username || "Kullanici")}</span>`;
+  html += `<span class="reply-username" data-action="view-profile" data-uid="${escAttr(replyData.uid)}">${escHtml(replyData.username || "Kullanici")}</span>`;
   html += `<span class="reply-time">${escHtml(timeAgo)}</span>`;
   if (isOwn || isPostOwner) {
     html += `<button class="comment-menu-btn" data-action="reply-menu" data-post-id="${pid}" data-comment-id="${cid}" data-reply-id="${rid}">⋮</button>`;

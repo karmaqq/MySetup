@@ -3,7 +3,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { getAuth, getIdToken, signOut, updateProfile } from "firebase/auth";
-import { ref, runTransaction, remove } from "firebase/database";
+import { get, ref, runTransaction, remove } from "firebase/database";
 import { currentUser } from "../core/app-state";
 import { db } from "../core/firebase-init";
 import { initUserDataRef } from "../data/firebase-core";
@@ -14,6 +14,7 @@ import { closeDeleteModal } from "./delete-account-ui";
 import { closeAvatarModal } from "./avatar";
 import { allPosts } from "../social/post-render";
 import { _updateUserFieldInPosts } from "../data/firebase-post";
+import { updateUserPrivacy, getUserPrivacySettings } from "../data/firebase-user";
 
 /* ─────────────────── Modal Referansları ─────────────────── */
 
@@ -52,6 +53,13 @@ function openSettingsModal(): void {
   const _err = document.getElementById("usernameError");
   if (_err) _err.textContent = "";
   if (settingsModal) settingsModal.classList.add("active");
+
+  getUserPrivacySettings(user.uid).then(function (settings) {
+    var invToggle = document.getElementById("inventoryPrivacyToggle") as HTMLInputElement | null;
+    var likesToggle = document.getElementById("likesPrivacyToggle") as HTMLInputElement | null;
+    if (invToggle) invToggle.checked = settings.inventoryPrivacy;
+    if (likesToggle) likesToggle.checked = settings.likesPrivacy;
+  }).catch(function () {});
 }
 
 /* ─────────────────── Modal Kapatma Olayları ─────────────────── */
@@ -84,6 +92,34 @@ document.getElementById("backToSettingsFromDelete")?.addEventListener("click", (
 
 document.getElementById("profileSettingsBtn")?.addEventListener("click", () => {
   openSettingsModal();
+});
+
+/* ─────────────────── Gizlilik Toggle'ları ─────────────────── */
+
+document.getElementById("inventoryPrivacyToggle")?.addEventListener("change", function (this: HTMLInputElement) {
+  var input = this;
+  var checked = input.checked;
+  updateUserPrivacy("inventoryPrivacy", checked)
+    .then(function () {
+      showToast(checked ? "Envanter gizlendi" : "Envanter herkese açıldı", "success");
+    })
+    .catch(function () {
+      input.checked = !checked;
+      showToast("Gizlilik ayarı güncellenemedi", "error");
+    });
+});
+
+document.getElementById("likesPrivacyToggle")?.addEventListener("change", function (this: HTMLInputElement) {
+  var input = this;
+  var checked = input.checked;
+  updateUserPrivacy("likesPrivacy", checked)
+    .then(function () {
+      showToast(checked ? "Beğeniler gizlendi" : "Beğeniler herkese açıldı", "success");
+    })
+    .catch(function () {
+      input.checked = !checked;
+      showToast("Gizlilik ayarı güncellenemedi", "error");
+    });
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

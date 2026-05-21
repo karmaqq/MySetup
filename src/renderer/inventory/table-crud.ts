@@ -2,7 +2,7 @@
 /*                          TABLO CRUD İŞLEMLERİ                             */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { allData, tableBody, editModal, addItemBtn } from "../core/app-state";
+import { allData, tableBody, editModal, addItemBtn, _isViewingProfile } from "../core/app-state";
 import { normalizeTr, applyPriceFormat, parseDateInput, parsePriceInput } from "../core/global-ut";
 import { showToast, showConfirm } from "../core/global-fn";
 import {
@@ -225,6 +225,7 @@ function submitNewItem(tr: HTMLTableRowElement): void {
 
 if (addItemBtn) {
   addItemBtn.onclick = () => {
+    if (_isViewingProfile) return;
     if (!tableBody) return;
     const existing = tableBody.querySelector(".new-item-row");
     if (existing) {
@@ -262,10 +263,11 @@ function initTableBodyEvents(): void {
     const action = btn.dataset.action;
     const id = btn.dataset.id;
 
-    if (action === "delete-item") deleteItem(id!);
-    else if (action === "edit-item") openEditModal(id!);
-    else if (action === "update-status")
-      updateItemStatus(id!, btn.dataset.status!);
+    if (action === "delete-item") { if (!_isViewingProfile) deleteItem(id!); }
+    else if (action === "edit-item") openEditModal(id!, "component", _isViewingProfile);
+    else if (action === "update-status") {
+      if (!_isViewingProfile) updateItemStatus(id!, btn.dataset.status!);
+    }
   });
 
   tableBody.addEventListener("dblclick", function (e) {
@@ -296,7 +298,7 @@ function initTableBodyEvents(): void {
     }
 
     window.getSelection()?.removeAllRanges();
-    openEditModal(id!, focusTarget);
+    openEditModal(id!, focusTarget, _isViewingProfile);
   });
 }
 

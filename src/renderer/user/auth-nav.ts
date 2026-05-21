@@ -5,7 +5,7 @@
 import { User } from "firebase/auth";
 import { get, child, ref } from "firebase/database";
 import { db } from "../core/firebase-init";
-import { showPage, mainScroll } from "../core/app-state";
+import { showPage, mainScroll, setViewingState } from "../core/app-state";
 import { refreshAllAvatars } from "../core/global-fn";
 import { setAvatarCache, clearAvatarCache } from "../core/global-ut";
 import { initUserDataRef } from "../data/firebase-core";
@@ -176,6 +176,7 @@ export function onUserLoggedOut(): void {
   _teardownPosts();
   clearAvatarCache();
   closeAllModals();
+  setViewingState(null);
 
   sessionStorage.removeItem("_viewingPostId");
   sessionStorage.removeItem("_pvPreviousPage");

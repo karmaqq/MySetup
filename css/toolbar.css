@@ -29,6 +29,25 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+.stat-card-back {
+  cursor: pointer;
+  border-color: var(--accent-glow);
+  background: var(--accent-dim);
+}
+
+.stat-card-back:hover {
+  border-color: var(--accent);
+  background: rgba(232, 160, 32, 0.15);
+  box-shadow: 0 2px 12px var(--accent-glow);
+  transform: translateX(-2px);
+}
+
+.stat-card-back .stat-icon {
+  background: var(--accent);
+  color: var(--text-btn);
+  border-color: var(--accent);
+}
+
 .stat-icon {
   width: 40px;
   height: 40px;

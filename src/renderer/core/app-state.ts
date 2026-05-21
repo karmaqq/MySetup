@@ -174,6 +174,52 @@ export let currentSort: { col: string; dir: string } = {
   dir: "asc",
 };
 
+/* ─────────────────── Ziyaret Modu ─────────────────── */
+
+export interface ViewingUserData {
+  uid: string;
+  username: string;
+  avatarUrl?: string | null;
+  inventoryPrivacy?: boolean;
+  likesPrivacy?: boolean;
+}
+
+let _viewingUserIdVal: string | null = sessionStorage.getItem("_viewingUserId") || null;
+export let _viewingUserId: string | null = _viewingUserIdVal;
+
+let _isViewingProfileVal: boolean = _viewingUserIdVal !== null;
+export let _isViewingProfile: boolean = _isViewingProfileVal;
+
+let _viewingUserDataVal: ViewingUserData | null = (function () {
+  try {
+    var raw = sessionStorage.getItem("_viewingUserData");
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) { return null; }
+})();
+export let _viewingUserData: ViewingUserData | null = _viewingUserDataVal;
+
+export function setViewingState(uid: string | null, userData?: ViewingUserData | null): void {
+  _viewingUserIdVal = uid;
+  _viewingUserId = uid;
+  _isViewingProfileVal = uid !== null;
+  _isViewingProfile = _isViewingProfileVal;
+  _viewingUserDataVal = userData || null;
+  _viewingUserData = _viewingUserDataVal;
+  if (uid) {
+    sessionStorage.setItem("_viewingUserId", uid);
+  } else {
+    sessionStorage.removeItem("_viewingUserId");
+  }
+  if (userData) {
+    sessionStorage.setItem("_viewingUserData", JSON.stringify(userData));
+  } else {
+    sessionStorage.removeItem("_viewingUserData");
+  }
+  if (!uid) {
+    sessionStorage.removeItem("_viewingUserData");
+  }
+}
+
 /* ─────────────────── Düzenleme ID ─────────────────── */
 
 let _editingIdVal: string | null = null;

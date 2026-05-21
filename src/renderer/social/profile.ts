@@ -18,6 +18,9 @@ function updateProfilePosts(): void {
 (window as any).updateProfilePosts = updateProfilePosts;
 
 function switchProfileTab(tabName: string): void {
+  var targetBtn = document.querySelector('.profile-tabs .tab-btn[data-tab="' + tabName + '"]');
+  if (targetBtn && (targetBtn as HTMLElement).classList.contains("tab-disabled")) return;
+
   (window as any)._profileTab = tabName;
 
   sessionStorage.setItem("_profileTab", tabName);
@@ -64,6 +67,7 @@ function _onPageChange(pageName: string): void {
 
 document.querySelectorAll(".profile-tabs .tab-btn").forEach(function (btn) {
   btn.addEventListener("click", function (this: HTMLElement) {
+    if (this.classList.contains("tab-disabled")) return;
     const tab = this.dataset.tab!;
     document.querySelectorAll(".profile-tabs .tab-btn").forEach(function (b) {
       b.classList.remove("active");

@@ -484,6 +484,9 @@
               <button class="btn-settings" id="profileSettingsBtn">
                 Hesap Ayarları
               </button>
+              <button class="btn-settings" id="viewInventoryBtn">
+                Envanter
+              </button>
             </div>
           </div>
 
@@ -571,6 +574,13 @@
         <section class="page-content page-1250" id="inventoryPage">
           <!-- ─────────────────── İstatistik Kartları ─────────────────── -->
           <div class="stats-row" id="statsRow">
+            <div class="stat-card stat-card-back" id="backToProfileBtn" style="display:none;">
+              <div class="stat-icon">←</div>
+              <div class="stat-content">
+                <div class="stat-value stat-value-sm" id="backProfileName">Kullanıcı</div>
+                <div class="stat-label">Profile Dön</div>
+              </div>
+            </div>
             <div class="stat-card">
               <div class="stat-icon">₺</div>
               <div class="stat-content">
@@ -630,8 +640,8 @@
 
             <!-- ─────────────────── CSV İçe / Dışa Aktarma ─────────────────── -->
             <div class="action-group">
-              <input type="file" id="importCsvInput" accept=".csv" />
-              <button id="importCsvBtn" class="export-btn btn-import">
+              <input type="file" id="importCsvInput" accept=".csv" class="self-only" />
+              <button id="importCsvBtn" class="export-btn btn-import self-only">
                 <svg
                   viewBox="0 0 24 24"
                   width="15"
@@ -648,7 +658,7 @@
                 </svg>
                 İçe Aktar
               </button>
-              <button id="exportCsvBtn" class="export-btn btn-export">
+              <button id="exportCsvBtn" class="export-btn btn-export self-only">
                 <svg
                   viewBox="0 0 24 24"
                   width="15"
@@ -665,7 +675,7 @@
                 </svg>
                 Dışa Aktar
               </button>
-              <button id="deleteAllBtn" class="export-btn btn-delete-all">
+              <button id="deleteAllBtn" class="export-btn btn-delete-all self-only">
                 <svg
                   viewBox="0 0 24 24"
                   width="15"
@@ -729,7 +739,7 @@
               <tfoot class="control-panel-footer">
                 <tr>
                   <td colspan="2" class="footer-left">
-                    <button id="addItemBtn" class="btn btn-add">
+                    <button id="addItemBtn" class="btn btn-add self-only">
                       + Ürün Ekle
                     </button>
                   </td>
@@ -1007,6 +1017,24 @@
             </div>
           </div>
           <p id="usernameError" class="auth-error" style="min-height: 20px" aria-live="polite"></p>
+
+          <!-- ─────────────────── Gizlilik Ayarları ─────────────────── -->
+          <div class="settings-divider"></div>
+          <div class="setting-row setting-row-toggle">
+            <label class="setting-row-label">Envanter Gizliliği</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="inventoryPrivacyToggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row setting-row-toggle">
+            <label class="setting-row-label">Beğeniler Gizliliği</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="likesPrivacyToggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-divider"></div>
 
           <button id="openChangePassBtn" class="setting-row setting-row-btn">
             Şifre Değiştir

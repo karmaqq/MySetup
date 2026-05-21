@@ -90,7 +90,7 @@ export function _renderPostHTML(
   html += `<div class="post-header${inPostView ? "" : " post-header-link"}"${inPostView ? "" : ` data-action="open-post-view" data-id="${pid}"`}>`;
   html += buildAvatarHTML(postData.username, "post-avatar", postData.uid, postData.avatarUrl);
   html += '<div class="post-user-info">';
-  html += `<span class="post-username">${escHtml(postData.username || "Kullanici")}</span>`;
+  html += `<span class="post-username" data-action="view-profile" data-uid="${escAttr(postData.uid)}">${escHtml(postData.username || "Kullanici")}</span>`;
   html += `<span class="post-time">${escHtml(timeText)}</span>`;
   html += "</div>";
   html += buildPostMenuHTML(pid, isOwn);

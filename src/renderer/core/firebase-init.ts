@@ -34,3 +34,9 @@ if (firebaseConfig) {
   db.userPostsRef = ref(db.database, "userPosts");
   db.userLikesRef = ref(db.database, "userLikes");
 }
+
+/* ─────────────────── Web Modu CSS Sınıfı ─────────────────── */
+
+if (typeof __IS_WEB__ !== "undefined" && __IS_WEB__) {
+  document.documentElement.classList.add("web");
+}

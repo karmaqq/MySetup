@@ -48,6 +48,7 @@ let currentRating = 0;
 export function openEditModal(
   id: string,
   focusTarget: string = "component",
+  readOnly: boolean = false,
 ): void {
   const item = allData[id];
   if (!item) return;
@@ -84,48 +85,84 @@ export function openEditModal(
   ) as HTMLTextAreaElement | null;
   if (opinionInput) opinionInput.value = item.opinion || "";
 
+  /* ─────────────────── Read-Only Mod ─────────────────── */
+  var titleEl = editModal ? editModal.querySelector(".modal-title") as HTMLElement | null : null;
+  var saveBtn = document.getElementById("modalSave") as HTMLElement | null;
+  var modalFooter = editModal ? editModal.querySelector(".modal-footer") as HTMLElement | null : null;
+  var editCal = document.getElementById("editCalIcon") as HTMLElement | null;
+  var editStarRating = document.getElementById("editStarRating") as HTMLElement | null;
+  var imageUploadBtn = document.getElementById("imageUploadBtn") as HTMLElement | null;
+  var imageFileInput = document.getElementById("imageFileInput") as HTMLInputElement | null;
+  var inputs = editModal ? editModal.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(".modal-input, #editOpinionText") : [];
+
+  if (readOnly) {
+    if (titleEl) titleEl.textContent = "Kaydı Görüntüle";
+    if (saveBtn) saveBtn.style.display = "none";
+    if (modalFooter) {
+      var cancelBtn = modalFooter.querySelector(".btn-modal-cancel") as HTMLElement | null;
+      if (cancelBtn) cancelBtn.textContent = "Kapat";
+    }
+    inputs.forEach(function (el) { el.disabled = true; });
+    if (editCal) editCal.style.pointerEvents = "none";
+    if (editCal) editCal.style.opacity = "0.4";
+    if (editStarRating) editStarRating.style.pointerEvents = "none";
+    if (imageUploadBtn) imageUploadBtn.style.display = "none";
+    if (imageFileInput) imageFileInput.style.display = "none";
+  } else {
+    if (titleEl) titleEl.textContent = "Kaydı Düzenle";
+    if (saveBtn) saveBtn.style.display = "";
+    if (modalFooter) {
+      var cancelBtn = modalFooter.querySelector(".btn-modal-cancel") as HTMLElement | null;
+      if (cancelBtn) cancelBtn.textContent = "İptal";
+    }
+    inputs.forEach(function (el) { el.disabled = false; });
+    if (editCal) editCal.style.pointerEvents = "";
+    if (editCal) editCal.style.opacity = "";
+    if (editStarRating) editStarRating.style.pointerEvents = "";
+    if (imageUploadBtn) imageUploadBtn.style.display = "";
+    if (imageFileInput) imageFileInput.style.display = "";
+  }
+
   if (editModal) editModal.classList.add("active");
 
-  requestAnimationFrame(() => {
+  if (!readOnly) {
     requestAnimationFrame(() => {
-      const imagePreview = document.getElementById(
-        "editImagePreview",
-      ) as HTMLElement | null;
-      const imageUploadBtn = document.getElementById(
-        "imageUploadBtn",
-      ) as HTMLElement | null;
-      const imageFileInput = document.getElementById(
-        "imageFileInput",
-      ) as HTMLInputElement | null;
+      requestAnimationFrame(() => {
+        const imagePreview = document.getElementById(
+          "editImagePreview",
+        ) as HTMLElement | null;
+        var imUpBtn = document.getElementById("imageUploadBtn") as HTMLElement | null;
+        var imFileInput = document.getElementById("imageFileInput") as HTMLInputElement | null;
 
-      refreshPreview(item.imageUrl || "", imagePreview!, imageUploadBtn);
+        refreshPreview(item.imageUrl || "", imagePreview!, imUpBtn);
 
-      if (imageUploadBtn)
-        imageUploadBtn.onclick = () => imageFileInput && imageFileInput.click();
-      if (imageFileInput) {
-        imageFileInput.value = "";
-        imageFileInput.onchange = (e) => {
-          const file = (e.target as HTMLInputElement).files?.[0];
-          if (file)
-            handleImageFile(file, imagePreview!, editingId!, imageUploadBtn);
-        };
-      }
+        if (imUpBtn)
+          imUpBtn.onclick = () => imFileInput && imFileInput.click();
+        if (imFileInput) {
+          imFileInput.value = "";
+          imFileInput.onchange = (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (file)
+              handleImageFile(file, imagePreview!, editingId!, imUpBtn);
+          };
+        }
 
-      const el =
-        focusTarget === "date"
-          ? editDate
-          : focusTarget === "brand"
-            ? editBrand
-            : focusTarget === "specs"
-              ? editSpecs
-              : focusTarget === "price"
-                ? editPrice
-                : focusTarget === "vendor"
-                  ? editVendor
-                  : editComponent;
-      if (el) el.focus();
+        const el =
+          focusTarget === "date"
+            ? editDate
+            : focusTarget === "brand"
+              ? editBrand
+              : focusTarget === "specs"
+                ? editSpecs
+                : focusTarget === "price"
+                  ? editPrice
+                  : focusTarget === "vendor"
+                    ? editVendor
+                    : editComponent;
+        if (el) el.focus();
+      });
     });
-  });
+  }
 }
 
 /* ─────────────────── Modal Kapatma ─────────────────── */

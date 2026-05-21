@@ -10,6 +10,7 @@ import { allPosts } from "../social/post-render";
 import { db } from "../core/firebase-init";
 import { getPostsByIds } from "./firebase-post";
 import { deleteAllInFolder, extractPathFromUrl } from "../core/global-ut";
+import { currentUser } from "../core/app-state";
 
 /* ─────────────────── Hesap Silme ─────────────────── */
 
@@ -84,4 +85,53 @@ export async function deleteUserAccount(user: User): Promise<{ success: boolean;
   } catch (e) {
     return { success: false, error: e };
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*                      PROFİL ZİYARET VERİLERİ                              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────── Kullanıcı Genel Verisi Çekme ─────────────────── */
+
+export async function getUserPublicData(uid: string): Promise<{ username: string; avatarUrl?: string | null }> {
+  var userSnap = await get(child(ref(db.database), "users/" + uid));
+  var userData = userSnap.val() as any;
+
+  var avatarUrl: string | null = (userData && userData.avatarUrl) || null;
+
+  var username = "Kullanıcı";
+  var usernamesSnap = await get(child(ref(db.database), "usernames"));
+  var usernames = usernamesSnap.val() as Record<string, string> | null;
+  if (usernames) {
+    var keys = Object.keys(usernames);
+    for (var i = 0; i < keys.length; i++) {
+      if (usernames[keys[i]] === uid) {
+        username = keys[i];
+        break;
+      }
+    }
+  }
+
+  return { username: username, avatarUrl: avatarUrl };
+}
+
+/* ─────────────────── Kullanıcı Gizlilik Ayarları ─────────────────── */
+
+export async function getUserPrivacySettings(uid: string): Promise<{ inventoryPrivacy: boolean; likesPrivacy: boolean }> {
+  try {
+    var snap = await get(child(ref(db.database), "users/" + uid + "/settings"));
+    var data = (snap.val() || {}) as any;
+    return {
+      inventoryPrivacy: data.inventoryPrivacy === true,
+      likesPrivacy: data.likesPrivacy === true,
+    };
+  } catch (_) {
+    return { inventoryPrivacy: false, likesPrivacy: false };
+  }
+}
+
+export function updateUserPrivacy(field: string, value: boolean): Promise<void> {
+  var user = currentUser;
+  if (!user) return Promise.reject("Kullanıcı yok");
+  return update(child(ref(db.database), "users/" + user.uid + "/settings"), { [field]: value });
 }

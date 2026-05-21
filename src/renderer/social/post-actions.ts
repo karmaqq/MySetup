@@ -414,6 +414,12 @@ document.addEventListener("click", function (e: MouseEvent) {
     return;
   }
 
+  if (action === "view-profile") {
+    if (typeof (window as any).openUserProfile === "function")
+      (window as any).openUserProfile(btn.dataset.uid!);
+    return;
+  }
+
   if (action === "open-post-view") {
     const fromComment = btn.classList.contains("comment-btn");
     if (typeof (window as any).openPostView === "function")

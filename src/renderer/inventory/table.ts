@@ -14,6 +14,7 @@ import {
   STATUS_MAP,
   mainScroll,
   tableBody,
+  _isViewingProfile,
 } from "../core/app-state";
 import {
   normalizeTr,
@@ -104,6 +105,13 @@ export function buildStatusCellContent(item: any): string {
   const statusClass = getStatusClassName(item.status);
   const safeId = escAttr(item.id);
   const safeStatus = escHtml(item.status);
+  if (_isViewingProfile) {
+    return `<div class="status-cell-inner">
+      <div class="status-menu">
+        <span class="status-label ${statusClass}">${safeStatus}</span>
+      </div>
+    </div>`;
+  }
   return `<div class="status-cell-inner">
     <div class="status-menu">
       <span class="status-label ${statusClass}">${safeStatus}</span>

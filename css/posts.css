@@ -49,6 +49,7 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--text-bright);
+  cursor: pointer;
 }
 
 .post-time {

@@ -8,7 +8,14 @@ import {
   getUserLikesOnce,
   getPostsByIds,
 } from "../data/firebase-post";
-import { PAGE_SIZE, _currentPage, currentUser } from "../core/app-state";
+import {
+  PAGE_SIZE,
+  _currentPage,
+  currentUser,
+  _isViewingProfile,
+  _viewingUserId,
+  _viewingUserData,
+} from "../core/app-state";
 import { renderLoadMoreBtn, removeLoadMoreBtn, showToast } from "../core/global-fn";
 import { escHtml } from "../core/global-ut";
 
@@ -19,9 +26,9 @@ export const TAB: Record<string, string> = {
   LIKED_POSTS: "likedPostsTab",
 };
 
-const EMPTY_STATE: Record<string, { emoji: string; text: string }> = {
-  userPostsTab: { emoji: "📰", text: "Henüz Gönderi Yayınlamadın" },
-  likedPostsTab: { emoji: "💔", text: "Henüz Kimseyi Beğenmedin" },
+const EMPTY_STATE: Record<string, { emoji: string; text: string; viewText: string }> = {
+  userPostsTab: { emoji: "📰", text: "Henüz Gönderi Yayınlamadın", viewText: "Henüz gönderi paylaşmamış" },
+  likedPostsTab: { emoji: "💔", text: "Henüz Kimseyi Beğenmedin", viewText: "Henüz kimseyi beğenmemiş" },
 };
 
 /* ─────────────────── Tarih Yardımcıları ─────────────────── */
@@ -109,13 +116,14 @@ function _showProfileLoading(tab: HTMLElement): void {
 
 function _showProfileEmptyState(tab: HTMLElement, tabId: string): void {
   var s = EMPTY_STATE[tabId];
+  var text = _isViewingProfile ? s.viewText : s.text;
   tab.innerHTML =
     '<div class="empty-state profile-empty-state">' +
     '<div class="empty-icon">' +
     s.emoji +
     "</div>" +
     '<div class="empty-text">' +
-    s.text +
+    text +
     "</div>" +
     "</div>";
 }
@@ -153,8 +161,8 @@ export function _initUserPostsTab(): void {
   }
   st.initialized = false;
 
-  const user = currentUser;
-  if (!user) return;
+  var uid = _isViewingProfile ? _viewingUserId : (currentUser ? currentUser.uid : null);
+  if (!uid) return;
 
   _showProfileLoading(tab);
   st.visible.clear();
@@ -165,8 +173,9 @@ export function _initUserPostsTab(): void {
   _removeProfileLoadMoreBtn("userPostsTab");
 
   _loadPostsChunk({
-    fetcher: (uid: string, size?: number, ts?: number | null) =>
-      getUserPostsOnce(uid, size, ts),
+    uid: uid,
+    fetcher: (u: string, size?: number, ts?: number | null) =>
+      getUserPostsOnce(u, size, ts),
     tabId: "userPostsTab",
     btnId: "loadMoreUserPostsBtn",
     getVisible: () => st.visible,
@@ -185,6 +194,16 @@ export function _initUserPostsTab(): void {
 export function _initLikedPostsTab(): void {
   const tab = document.getElementById("likedPostsTab") as HTMLElement | null;
   if (!tab) return;
+
+  if (_isViewingProfile && _viewingUserData && _viewingUserData.likesPrivacy) {
+    tab.innerHTML =
+      '<div class="empty-state profile-empty-state">' +
+      '<div class="empty-icon">🔒</div>' +
+      '<div class="empty-text">Bu kullanıcı beğenilerini gizlemiş</div>' +
+      "</div>";
+    return;
+  }
+
   const st = _tabStates["likedPostsTab"];
 
   if (st.initialized && tab.children.length > 0) {
@@ -193,8 +212,8 @@ export function _initLikedPostsTab(): void {
   }
   st.initialized = false;
 
-  const user = currentUser;
-  if (!user) return;
+  var uid = _isViewingProfile ? _viewingUserId : (currentUser ? currentUser.uid : null);
+  if (!uid) return;
 
   _showProfileLoading(tab);
   st.visible.clear();
@@ -205,8 +224,9 @@ export function _initLikedPostsTab(): void {
   _removeProfileLoadMoreBtn("likedPostsTab");
 
   _loadPostsChunk({
-    fetcher: (uid: string, size?: number, ts?: number | null) =>
-      getUserLikesOnce(uid, size, ts),
+    uid: uid,
+    fetcher: (u: string, size?: number, ts?: number | null) =>
+      getUserLikesOnce(u, size, ts),
     tabId: "likedPostsTab",
     btnId: "loadMoreLikedPostsBtn",
     getVisible: () => st.visible,
@@ -227,6 +247,7 @@ export function _initLikedPostsTab(): void {
 /* ─────────────────── Ortak yükleme fonksiyonu ─────────────────── */
 
 interface PostsChunkConfig {
+  uid: string;
   fetcher: (
     uid: string,
     size?: number,
@@ -246,8 +267,8 @@ interface PostsChunkConfig {
 
 function _loadPostsChunk(cfg: PostsChunkConfig): void {
   if (cfg.getLoading()) return;
-  const user = currentUser;
-  if (!user) return;
+  var uid = cfg.uid;
+  if (!uid) return;
 
   cfg.setLoading(true);
   const tab = document.getElementById(cfg.tabId) as HTMLElement | null;
@@ -259,7 +280,7 @@ function _loadPostsChunk(cfg: PostsChunkConfig): void {
   }
 
   cfg
-    .fetcher(user.uid, PAGE_SIZE, cfg.getOldestTs())
+    .fetcher(uid, PAGE_SIZE, cfg.getOldestTs())
     .then(function (map) {
       const ids = Object.keys(map).sort(function (a, b) {
         return map[b] - map[a];
@@ -365,6 +386,7 @@ export function _onUserLikesChanged(
   value: any,
   type: string,
 ): void {
+  if (_isViewingProfile) return;
   var st = _tabStates["likedPostsTab"];
   if (type === "added") {
     st.timestamps.set(postId, value as number);
@@ -422,6 +444,7 @@ export function _onUserPostsChanged(
   value: any,
   type: string,
 ): void {
+  if (_isViewingProfile) return;
   var st = _tabStates["userPostsTab"];
   if (type === "added") {
     st.timestamps.set(postId, value as number);

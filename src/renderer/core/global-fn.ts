@@ -146,6 +146,7 @@ export function buildAvatarHTML(
   avatarUrl?: string,
 ): string {
   var dataAttr = uid ? ' data-uid="' + escAttr(uid) + '"' : "";
+  var actionAttr = uid ? ' data-action="view-profile"' : "";
   var finalUrl = avatarUrl;
   if (uid) {
     var cached = getFromAvatarCache(uid);
@@ -157,6 +158,7 @@ export function buildAvatarHTML(
       cssClass +
       '"' +
       dataAttr +
+      actionAttr +
       ">" +
       '<img src="' +
       escAttr(finalUrl) +
@@ -171,6 +173,7 @@ export function buildAvatarHTML(
     cssClass +
     '"' +
     dataAttr +
+    actionAttr +
     ">" +
     "<span>" +
     getAvatarLetter(name) +
@@ -183,6 +186,11 @@ export function _walkAndUpdateAvatar(uid: string, url: string | null): void {
   var selector = '[data-uid="' + escAttr(uid) + '"]';
   var elements = document.querySelectorAll(selector);
   elements.forEach(function (el) {
+    if (
+      !el.classList.contains("post-avatar") &&
+      !el.classList.contains("comment-avatar") &&
+      !el.classList.contains("reply-avatar")
+    ) return;
     var existingImg = el.querySelector(
       "img.avatar-img",
     ) as HTMLImageElement | null;

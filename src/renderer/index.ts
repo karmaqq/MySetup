@@ -35,3 +35,4 @@ import "./social/profile-tabs";
 import "./social/profile";
 import "./social/post-view-comment";
 import "./social/post-view";
+import "./social/profile-view";
