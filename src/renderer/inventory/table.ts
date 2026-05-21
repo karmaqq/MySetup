@@ -38,8 +38,8 @@ let _vsRafId: number | null = null;
 
 export function getFilteredSortedList(): any[] {
   let list = Object.keys(allData)
-    .map((id) => ({ id, ...allData[id] }))
-    .filter(isItemVisible);
+    .filter(function (id) { return isItemVisible(allData[id]); })
+    .map(function (id) { return allData[id]; });
 
   list.sort((a, b) => {
     let av = a[currentSort.col] ?? "";

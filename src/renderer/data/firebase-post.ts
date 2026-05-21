@@ -7,6 +7,56 @@ import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
 import { db } from "../core/firebase-init";
 import { extractPathFromUrl } from "../core/global-ut";
 
+/* ─────────────────── Post/Yorum/Yanıt Alan Güncelleme (Ortak) ─────────────────── */
+
+export async function _updateUserFieldInPosts(
+  uid: string,
+  field: string,
+  value: string | null,
+  posts: Record<string, any>,
+): Promise<void> {
+  var dbUpdates: Record<string, any> = {};
+  var postKeys = Object.keys(posts);
+  for (var pi = 0; pi < postKeys.length; pi++) {
+    var pid = postKeys[pi];
+    var postData = posts[pid];
+    if (!postData) continue;
+    if (postData.uid === uid) {
+      dbUpdates["posts/" + pid + "/" + field] = value;
+    }
+    if (postData.comments) {
+      var cids = Object.keys(postData.comments);
+      for (var ci = 0; ci < cids.length; ci++) {
+        var cid = cids[ci];
+        var comment = postData.comments[cid];
+        if (comment.uid === uid) {
+          dbUpdates["posts/" + pid + "/comments/" + cid + "/" + field] = value;
+        }
+        if (comment.replies) {
+          var rids = Object.keys(comment.replies);
+          for (var ri = 0; ri < rids.length; ri++) {
+            var rid = rids[ri];
+            var reply = comment.replies[rid];
+            if (reply.uid === uid) {
+              dbUpdates["posts/" + pid + "/comments/" + cid + "/replies/" + rid + "/" + field] = value;
+            }
+          }
+        }
+      }
+    }
+  }
+  var batchKeys = Object.keys(dbUpdates);
+  if (batchKeys.length === 0) return;
+  for (var bi = 0; bi < batchKeys.length; bi += 500) {
+    var batchChunk: Record<string, any> = {};
+    var chunkKeys = batchKeys.slice(bi, bi + 500);
+    for (var cki = 0; cki < chunkKeys.length; cki++) {
+      batchChunk[chunkKeys[cki]] = dbUpdates[chunkKeys[cki]];
+    }
+    await update(ref(db.database), batchChunk);
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          POST CRUD                                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */

@@ -238,6 +238,40 @@ export function _onlyCommentLikesChanged(
   return true;
 }
 
+/* ─────────────────── WebP Görsel Sıkıştırma ─────────────────── */
+
+export function compressImageToWebP(
+  file: File,
+  maxWidth: number = 800,
+  quality: number = 0.82,
+): Promise<Blob> {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function () {
+      var scale = Math.min(1, maxWidth / img.naturalWidth);
+      var canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth * scale;
+      canvas.height = img.naturalHeight * scale;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        function (blob) {
+          URL.revokeObjectURL(url);
+          if (blob) resolve(blob);
+          else reject(new Error("Sıkıştırma başarısız"));
+        },
+        "image/webp",
+        quality,
+      );
+    };
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      reject(new Error("Görsel yüklenemedi"));
+    };
+    img.src = url;
+  });
+}
+
 /* ─────────────────── Storage Path Extract ─────────────────── */
 
 export function extractPathFromUrl(url: string): string | null {

@@ -36,6 +36,7 @@ import {
 } from "../core/global-fn";
 
 import { allPosts } from "../social/post-render";
+import { _updateUserFieldInPosts } from "../data/firebase-post";
 
 import {
   getStorage,
@@ -381,46 +382,7 @@ async function _removeAvatar(): Promise<void> {
 /* ─────────────────── Avatar Değişince Post/Yorum/Yanıt avatarUrl Güncelle ─────────────────── */
 
 async function _updateAllPostAvatars(uid: string, url: string | null): Promise<void> {
-  var dbUpdates: Record<string, any> = {};
-  var postKeys = Object.keys(allPosts);
-  for (var pi = 0; pi < postKeys.length; pi++) {
-    var pid = postKeys[pi];
-    var postData = allPosts[pid];
-    if (!postData) continue;
-    if (postData.uid === uid) {
-      dbUpdates["posts/" + pid + "/avatarUrl"] = url;
-    }
-    if (postData.comments) {
-      var cids = Object.keys(postData.comments);
-      for (var ci = 0; ci < cids.length; ci++) {
-        var cid = cids[ci];
-        var comment = postData.comments[cid];
-        if (comment.uid === uid) {
-          dbUpdates["posts/" + pid + "/comments/" + cid + "/avatarUrl"] = url;
-        }
-        if (comment.replies) {
-          var rids = Object.keys(comment.replies);
-          for (var ri = 0; ri < rids.length; ri++) {
-            var rid = rids[ri];
-            var reply = comment.replies[rid];
-            if (reply.uid === uid) {
-              dbUpdates["posts/" + pid + "/comments/" + cid + "/replies/" + rid + "/avatarUrl"] = url;
-            }
-          }
-        }
-      }
-    }
-  }
-  var batchKeys = Object.keys(dbUpdates);
-  if (batchKeys.length === 0) return;
-  for (var bi = 0; bi < batchKeys.length; bi += 500) {
-    var batchChunk: Record<string, any> = {};
-    var chunkKeys = batchKeys.slice(bi, bi + 500);
-    for (var cki = 0; cki < chunkKeys.length; cki++) {
-      batchChunk[chunkKeys[cki]] = dbUpdates[chunkKeys[cki]];
-    }
-    await update(dbRef(db.database), batchChunk);
-  }
+  await _updateUserFieldInPosts(uid, "avatarUrl", url, allPosts);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

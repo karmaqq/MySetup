@@ -4,39 +4,9 @@
 
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { allData, editingId, currentUser } from "../core/app-state";
-import { escAttr } from "../core/global-ut";
+import { escAttr, compressImageToWebP } from "../core/global-ut";
 import { showToast, showConfirm } from "../core/global-fn";
 import { updateComponentInFirebase } from "../data/firebase-inventory";
-
-/* ─────────────────── Görsel Sıkıştırma ─────────────────── */
-
-function compressImage(file: File, maxWidth: number = 800, quality: number = 0.82): Promise<Blob> {
-  return new Promise(function (resolve, reject) {
-    var img = new Image();
-    var url = URL.createObjectURL(file);
-    img.onload = function () {
-      var scale = Math.min(1, maxWidth / img.naturalWidth);
-      var canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth * scale;
-      canvas.height = img.naturalHeight * scale;
-      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        function (blob) {
-          URL.revokeObjectURL(url);
-          if (blob) resolve(blob);
-          else reject(new Error("Sıkıştırma başarısız"));
-        },
-        "image/webp",
-        quality,
-      );
-    };
-    img.onerror = function () {
-      URL.revokeObjectURL(url);
-      reject(new Error("Görsel yüklenemedi"));
-    };
-    img.src = url;
-  });
-}
 
 /* ─────────────────── Storage'a Görsel Yükle ─────────────────── */
 
@@ -59,7 +29,7 @@ export function uploadImageToFirebase(file: File, itemId: string): Promise<{ dow
   var user = currentUser;
   if (!user) return Promise.reject("Kullanıcı yok");
   var path = "users/" + user.uid + "/components/" + itemId + "/image";
-  return compressImage(file, 800, 0.82).then(function (blob) {
+  return compressImageToWebP(file, 800, 0.82).then(function (blob) {
     return _doUpload(blob, path).then(function (url) {
       return { downloadUrl: url, storagePath: path };
     });

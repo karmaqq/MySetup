@@ -2,7 +2,7 @@
 /*                        POST LİSTENER VE SAYFALAMA                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-import { query, Query, DataSnapshot, DatabaseReference, off, onValue, onChildAdded, onChildRemoved, get, orderByChild, limitToLast, startAt, endAt, child } from "firebase/database";
+import { query, Query, DataSnapshot, DatabaseReference, off, onChildAdded, onChildChanged, onChildRemoved, get, orderByChild, limitToLast, startAt, endAt } from "firebase/database";
 import { db } from "../core/firebase-init";
 import { postsFeed, _commentListenerRefs, _commentListenerOrder, PAGE_SIZE, currentUser } from "../core/app-state";
 import { renderLoadMoreBtn, removeLoadMoreBtn } from "../core/global-fn";
@@ -68,19 +68,21 @@ export function initPosts(): void {
 /* ─────────────────── Çıkış yapıldığında çağrılır ─────────────────── */
 
 let _fullRemovedRef: DatabaseReference | null = null;
+let _postsChangedRef: Query | null = null;
 
 export function _teardownPosts(): void {
   if (_postsQuery) {
     off(_postsQuery);
     _postsQuery = null;
   }
+  if (_postsChangedRef) {
+    off(_postsChangedRef, "child_changed");
+    _postsChangedRef = null;
+  }
   if (_fullRemovedRef) {
     off(_fullRemovedRef, "child_removed", _onPostRemoved);
     _fullRemovedRef = null;
   }
-  Object.keys(_postRefListeners).forEach(function (pid) {
-    _detachPostRefListener(pid);
-  });
   _postsListenerActive = false;
   (window as any)._postsListenerActive = false;
   (window as any)._postsReadyFired = false;
@@ -143,10 +145,6 @@ function _startPostsListener(): void {
       _renderEmptyFeed();
     }
 
-    keys.forEach(function (id) {
-      _attachPostRefListener(id);
-    });
-
     if (keys.length >= PAGE_SIZE) {
       _hasMorePosts = true;
       _renderLoadMoreBtn();
@@ -156,6 +154,7 @@ function _startPostsListener(): void {
     }
 
     _listenForNewPosts(orderedRef);
+    _listenForPostChanges();
     _evictOldPostsIfNeeded();
     (window as any)._postsReadyFired = true;
     document.dispatchEvent(new CustomEvent("postsReady"));
@@ -164,37 +163,23 @@ function _startPostsListener(): void {
 
 
 
-/* ─────────────────── Post-bazlı değişim dinleyicileri ─────────────────── */
+/* ─────────────────── Feed seviyesinde post değişim dinleyicisi (tek listener) ─────────────────── */
 
-var _postRefListeners: Record<string, DatabaseReference> = {};
-
-function _onSinglePostValue(s: DataSnapshot): void {
-  var id = s.key;
-  if (!id || !allPosts[id]) return;
-  if (!_postRefListeners[id]) return;
-  var oldData = allPosts[id];
-  allPosts[id] = s.val();
-  var user = currentUser;
-  var newVal = s.val() as any;
-  if (_onlyLikesChanged(oldData, newVal)) {
-    _patchPostLikes(id, newVal.likes, user);
-  } else {
-    _patchPostCard(id, s.val());
-  }
-}
-
-function _attachPostRefListener(postId: string): void {
-  if (_postRefListeners[postId]) return;
-  var ref = child(db.postsRef!, postId);
-  _postRefListeners[postId] = ref;
-  onValue(ref, _onSinglePostValue);
-}
-
-function _detachPostRefListener(postId: string): void {
-  if (_postRefListeners[postId]) {
-    off(_postRefListeners[postId], "value", _onSinglePostValue);
-    delete _postRefListeners[postId];
-  }
+function _listenForPostChanges(): void {
+  _postsChangedRef = db.postsRef!;
+  onChildChanged(_postsChangedRef, function (s) {
+    var id = s.key;
+    if (!id || !allPosts[id]) return;
+    var oldData = allPosts[id];
+    allPosts[id] = s.val();
+    var user = currentUser;
+    var newVal = s.val() as any;
+    if (_onlyLikesChanged(oldData, newVal)) {
+      _patchPostLikes(id, newVal.likes, user);
+    } else {
+      _patchPostCard(id, s.val());
+    }
+  });
 }
 
 /* ─────────────────── Post silindiğinde ─────────────────── */
@@ -202,7 +187,6 @@ function _detachPostRefListener(postId: string): void {
 function _onPostRemoved(s: DataSnapshot): void {
   const id = s.key;
   if (!id) return;
-  _detachPostRefListener(id);
   if (_commentListenerRefs[id]) {
     off(_commentListenerRefs[id]);
     delete _commentListenerRefs[id];
@@ -234,7 +218,6 @@ function _listenForNewPosts(orderedRef: Query): void {
     if ((data.createdAt || 0) > _newestLoadedTs) {
       _newestLoadedTs = data.createdAt;
     }
-    _attachPostRefListener(id);
     const empty = postsFeed && postsFeed.querySelector(".posts-empty");
     if (empty) empty.remove();
     _insertPostToFeed(id, data, true);
@@ -274,7 +257,6 @@ function _loadMorePosts(): void {
 
     keys.forEach(function (id) {
       allPosts[id] = raw[id];
-      _attachPostRefListener(id);
       _insertPostToFeed(id, raw[id], false);
     });
 

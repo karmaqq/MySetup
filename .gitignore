@@ -1,8 +1,5 @@
 .env.bat
 OPTIMIZATIONS.md
-AVATAROPENCODE.md
-AVATARCLAUDE.md
-authfix.md
 rules.json
 storage.rules
 dist/
@@ -12,6 +9,4 @@ node_modules/
 .vscode/
 src/renderer/firebase-config.ts
 js/firebase-config.js
-fireplanmax.md
-fireplanbigpickle.md
-fireplanclaude.md
+

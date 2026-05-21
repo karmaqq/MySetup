@@ -5,7 +5,7 @@
 import { serverTimestamp } from "firebase/database";
 import { getStorage, ref, uploadBytes, getDownloadURL, UploadResult } from "firebase/storage";
 import { currentUser } from "../core/app-state";
-import { POST_PHRASES, getFromAvatarCache } from "../core/global-ut";
+import { POST_PHRASES, getFromAvatarCache, compressImageToWebP } from "../core/global-ut";
 import { addPostToFirebase } from "../data/firebase-post";
 import { showToast } from "../core/global-fn";
 
@@ -73,40 +73,12 @@ export function createPost(): void {
 
 /* ─────────────────── Görsel varsa önce yükle, sonra kaydet ─────────────────── */
 
-function _compressPostImage(file: File): Promise<Blob> {
-  return new Promise(function (resolve, reject) {
-    var img = new Image();
-    var url = URL.createObjectURL(file);
-    img.onload = function () {
-      var scale = Math.min(1, 1200 / img.naturalWidth);
-      var canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth * scale;
-      canvas.height = img.naturalHeight * scale;
-      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        function (blob) {
-          URL.revokeObjectURL(url);
-          if (blob) resolve(blob);
-          else reject(new Error("Sıkıştırma başarısız"));
-        },
-        "image/webp",
-        0.82,
-      );
-    };
-    img.onerror = function () {
-      URL.revokeObjectURL(url);
-      reject(new Error("Görsel yüklenemedi"));
-    };
-    img.src = url;
-  });
-}
-
 function _uploadAndSavePost(postData: Record<string, any>, file: File): void {
   const user = currentUser;
   if (!user) { showToast("Oturum bulunamadı.", "error"); return; }
   const path = "users/" + user.uid + "/posts/" + Date.now();
 
-  _compressPostImage(file).then(function (blob) {
+  compressImageToWebP(file, 1200, 0.82).then(function (blob) {
     var imageRef = ref(getStorage(), path);
     return uploadBytes(imageRef, blob)
       .then(function (snap: UploadResult) {

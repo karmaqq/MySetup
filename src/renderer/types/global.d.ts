@@ -17,6 +17,11 @@ interface Window {
   electronAPI: ElectronAPI;
   __FB_CONFIG__?: Record<string, string>;
   _viewingPostId: string | null;
+  _postsListenerActive: boolean;
+  _profileTab: string | null;
+  clearPostDraft: () => void;
+  openPostView: (postId: string) => void;
+  _handleDeletedPostView: () => void;
 }
 
 /* ─────────────────── esbuild Tanımlamaları (Web) ─────────────────── */

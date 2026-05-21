@@ -45,9 +45,7 @@ export async function deleteUserAccount(user: User): Promise<{ success: boolean;
                   await deleteObject(storageRef(getStorage(), imagePath || extractPathFromUrl(imageUrl) || imageUrl));
                 } catch (_) {}
               }
-              const likes =
-                (postData && postData.likes) ||
-                ((await get(child(child(db.postsRef!, id), "likes"))).val() || {});
+              const likes = (postData && postData.likes) || {};
               const updates: Record<string, any> = {};
               updates["posts/" + id] = null;
               Object.keys(likes).forEach(function (userId) {

@@ -2,6 +2,31 @@
 /*                            POST RENDER + FEED YÖNETİMİ                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─────────────────── Lazy görsel yükleyici (IntersectionObserver) ─────────────────── */
+
+var _lazyObserver: IntersectionObserver | null = null;
+
+function _getLazyObserver(): IntersectionObserver {
+  if (!_lazyObserver) {
+    _lazyObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            var img = e.target as HTMLImageElement;
+            if (img.dataset.src) {
+              img.src = img.dataset.src;
+              delete img.dataset.src;
+            }
+            _lazyObserver!.unobserve(img);
+          }
+        });
+      },
+      { rootMargin: "200px" },
+    );
+  }
+  return _lazyObserver;
+}
+
 import { User } from "firebase/auth";
 import { postsFeed, currentUser } from "../core/app-state";
 import {
@@ -26,6 +51,7 @@ export let allPosts: Record<string, any> = {};
 
 var _MAX_POSTS_IN_MEMORY = 200;
 var _EVICT_COUNT = 100;
+var _renderedPostIds: Set<string> = new Set();
 
 export function _evictOldPostsIfNeeded(): void {
   var keys = Object.keys(allPosts);
@@ -36,7 +62,7 @@ export function _evictOldPostsIfNeeded(): void {
   var evicted = 0;
   for (var ei = 0; ei < sorted.length && evicted < _EVICT_COUNT; ei++) {
     var id = sorted[ei];
-    if (!document.querySelector('[data-post-id="' + id + '"]')) {
+    if (!_renderedPostIds.has(id)) {
       delete allPosts[id];
       evicted++;
     }
@@ -74,7 +100,8 @@ export function _renderPostHTML(
   if (postData.content)
     html += `<div class="post-text">${escHtml(postData.content)}</div>`;
   if (postData.imageUrl) {
-    html += `<div class="post-image"><img src="${escUrl(String(postData.imageUrl))}" alt="" class="post-img-lazy"></div>`;
+    var imgAttr = inPostView ? "src" : "data-src";
+    html += `<div class="post-image"><img ${imgAttr}="${escUrl(String(postData.imageUrl))}" alt="" class="post-img-lazy"></div>`;
   }
   html += "</div>";
 
@@ -104,9 +131,8 @@ export function _renderPostHTML(
 
 export function _initPostImage(img: HTMLImageElement | null): void {
   if (!img) return;
-  if (img.complete) {
-    _handlePostImageLoad(img);
-  } else {
+  if (img.dataset.src) {
+    _getLazyObserver().observe(img);
     img.addEventListener(
       "load",
       function () {
@@ -114,6 +140,18 @@ export function _initPostImage(img: HTMLImageElement | null): void {
       },
       { once: true },
     );
+  } else if (img.src) {
+    if (img.complete) {
+      _handlePostImageLoad(img);
+    } else {
+      img.addEventListener(
+        "load",
+        function () {
+          _handlePostImageLoad(img);
+        },
+        { once: true },
+      );
+    }
   }
 }
 
@@ -147,6 +185,7 @@ export function _insertPostToFeed(
   } else {
     postsFeed.appendChild(el);
   }
+  _renderedPostIds.add(postId);
   _initPostImage(el.querySelector(".post-img-lazy") as HTMLImageElement | null);
   if (typeof (window as any)._registerTimeCard === "function") {
     (window as any)._registerTimeCard(el);
@@ -169,6 +208,9 @@ export function _patchPostCard(postId: string, postData: any): void {
   if (!newEl) return;
   const oldSection = el.querySelector(".comment-section");
   const wasOpen = oldSection && oldSection.classList.contains("visible");
+  if (typeof (window as any)._unregisterTimeCard === "function") {
+    (window as any)._unregisterTimeCard(el);
+  }
   el.replaceWith(newEl);
   if (typeof (window as any)._registerTimeCard === "function") {
     (window as any)._registerTimeCard(newEl);
@@ -210,6 +252,7 @@ export function _patchPostLikes(
 /* ─────────────────── Postu animasyonla kaldırır ─────────────────── */
 
 export function _softRemovePost(postId: string): void {
+  _renderedPostIds.delete(postId);
   getPostCards(postId).forEach(function (el) {
     if (typeof (window as any)._unregisterTimeCard === "function") {
       (window as any)._unregisterTimeCard(el);
@@ -245,11 +288,13 @@ export function _onlyLikesChanged(oldPost: any, newPost: any): boolean {
     ])
   )
     return false;
+  if (getTotalCommentCount(oldPost) !== getTotalCommentCount(newPost))
+    return false;
   var oldComments = oldPost.comments || {};
   var newComments = newPost.comments || {};
   for (var cid of Object.keys(newComments)) {
     if (!oldComments[cid]) return false;
     if (oldComments[cid].text !== newComments[cid].text) return false;
   }
-  return getTotalCommentCount(oldPost) === getTotalCommentCount(newPost);
+  return true;
 }

@@ -3,7 +3,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { getAuth, getIdToken, signOut, updateProfile } from "firebase/auth";
-import { get, ref, runTransaction, update, remove } from "firebase/database";
+import { ref, runTransaction, remove } from "firebase/database";
 import { currentUser } from "../core/app-state";
 import { db } from "../core/firebase-init";
 import { initUserDataRef } from "../data/firebase-core";
@@ -13,6 +13,7 @@ import { closeChangePassModal } from "./pass-change";
 import { closeDeleteModal } from "./delete-account-ui";
 import { closeAvatarModal } from "./avatar";
 import { allPosts } from "../social/post-render";
+import { _updateUserFieldInPosts } from "../data/firebase-post";
 
 /* ─────────────────── Modal Referansları ─────────────────── */
 
@@ -192,51 +193,9 @@ saveBtn?.addEventListener("click", async () => {
     var _currentAvatarUrl: string | null | undefined;
     try {
       _currentAvatarUrl = getFromAvatarCache(user.uid);
-      const postIdsSnap = await get(ref(db.database, "userPosts/" + user.uid));
-      const postIds = postIdsSnap.val() as Record<string, number> | null;
-      if (postIds) {
-        var megaBatch: Record<string, any> = {};
-        var postKeys = Object.keys(postIds);
-        for (var pi = 0; pi < postKeys.length; pi++) {
-          var pid = postKeys[pi];
-          var postData = allPosts[pid];
-          if (!postData) continue;
-          if (postData.uid === user.uid) {
-            megaBatch["posts/" + pid + "/username"] = newName;
-            megaBatch["posts/" + pid + "/avatarUrl"] = _currentAvatarUrl;
-          }
-          if (postData.comments) {
-            var cids = Object.keys(postData.comments);
-            for (var ci = 0; ci < cids.length; ci++) {
-              var cid = cids[ci];
-              var comment = postData.comments[cid];
-              if (comment.uid === user.uid) {
-                megaBatch["posts/" + pid + "/comments/" + cid + "/username"] = newName;
-                megaBatch["posts/" + pid + "/comments/" + cid + "/avatarUrl"] = _currentAvatarUrl;
-              }
-              if (comment.replies) {
-                var rids = Object.keys(comment.replies);
-                for (var ri = 0; ri < rids.length; ri++) {
-                  var rid = rids[ri];
-                  var reply = comment.replies[rid];
-                  if (reply.uid === user.uid) {
-                    megaBatch["posts/" + pid + "/comments/" + cid + "/replies/" + rid + "/username"] = newName;
-                    megaBatch["posts/" + pid + "/comments/" + cid + "/replies/" + rid + "/avatarUrl"] = _currentAvatarUrl;
-                  }
-                }
-              }
-            }
-          }
-        }
-        var batchKeys = Object.keys(megaBatch);
-        for (var bi = 0; bi < batchKeys.length; bi += 500) {
-          var batchChunk: Record<string, any> = {};
-          var chunkKeys = batchKeys.slice(bi, bi + 500);
-          for (var cki = 0; cki < chunkKeys.length; cki++) {
-            batchChunk[chunkKeys[cki]] = megaBatch[chunkKeys[cki]];
-          }
-          await update(ref(db.database), batchChunk);
-        }
+      await _updateUserFieldInPosts(user.uid, "username", newName, allPosts);
+      if (_currentAvatarUrl !== undefined) {
+        await _updateUserFieldInPosts(user.uid, "avatarUrl", _currentAvatarUrl, allPosts);
       }
     } catch (_) {
     }

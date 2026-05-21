@@ -2,7 +2,7 @@
   {
     "origin": ["https://mysetup-8dcd5.firebaseapp.com", "app://*"],
     "method": ["GET", "HEAD", "PUT", "POST", "OPTIONS"],
-    "maxAgeSeconds": 3600,
+    "maxAgeSeconds": 86400,
     "responseHeader": ["Content-Type", "Content-Disposition"]
   }
 ]
