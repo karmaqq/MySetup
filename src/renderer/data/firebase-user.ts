@@ -98,16 +98,21 @@ export async function getUserPublicData(uid: string): Promise<{ username: string
   var userData = userSnap.val() as any;
 
   var avatarUrl: string | null = (userData && userData.avatarUrl) || null;
+  var username: string;
 
-  var username = "Kullanıcı";
-  var usernamesSnap = await get(child(ref(db.database), "usernames"));
-  var usernames = usernamesSnap.val() as Record<string, string> | null;
-  if (usernames) {
-    var keys = Object.keys(usernames);
-    for (var i = 0; i < keys.length; i++) {
-      if (usernames[keys[i]] === uid) {
-        username = keys[i];
-        break;
+  if (userData && userData.username) {
+    username = userData.username;
+  } else {
+    username = "Kullanıcı";
+    var usernamesSnap = await get(child(ref(db.database), "usernames"));
+    var usernames = usernamesSnap.val() as Record<string, string> | null;
+    if (usernames) {
+      var keys = Object.keys(usernames);
+      for (var i = 0; i < keys.length; i++) {
+        if (usernames[keys[i]] === uid) {
+          username = keys[i];
+          break;
+        }
       }
     }
   }

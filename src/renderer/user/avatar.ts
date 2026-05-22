@@ -10,7 +10,8 @@ import {
   avatarModalClose,
   avatarModalCancel,
   avatarModalSave,
-  avatarModalRemove,
+  avatarSelectBtn,
+  avatarRemoveBtn,
   avatarCropImage,
   avatarCropContainer,
   avatarHistoryContainer,
@@ -20,6 +21,8 @@ import {
   avatarLightboxImg,
   profileAvatarBtn,
   profileAvatarContainer,
+  _isViewingProfile,
+  _viewingUserData,
 } from "../core/app-state";
 
 import {
@@ -59,13 +62,16 @@ const _CROPPER_CONFIG: Cropper.Options = {
   dragMode: "move",
   cropBoxMovable: false,
   cropBoxResizable: false,
+  autoCropArea: 1,
   toggleDragModeOnDblclick: false,
   guides: false,
-  center: true,
+  center: false,
   background: false,
-  minCropBoxWidth: 200,
-  minCropBoxHeight: 200,
 };
+
+let _hasChanges: boolean = false;
+let _pendingRemove: boolean = false;
+let _pendingHistoryUrl: string | null = null;
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                          YARDIMCI FONKSİYONLAR                             */
@@ -129,8 +135,17 @@ function _setModalSaving(isSaving: boolean): void {
   if (avatarModalCancel) {
     (avatarModalCancel as HTMLButtonElement).disabled = isSaving;
   }
-  if (avatarModalRemove) {
-    (avatarModalRemove as HTMLButtonElement).disabled = isSaving;
+}
+
+function _setSaveDisabled(disabled: boolean): void {
+  if (avatarModalSave) {
+    (avatarModalSave as HTMLButtonElement).disabled = disabled;
+  }
+}
+
+function _setRemoveBtnVisibility(visible: boolean): void {
+  if (avatarRemoveBtn) {
+    avatarRemoveBtn.style.display = visible ? "block" : "none";
   }
 }
 
@@ -142,7 +157,11 @@ function _initCropper(imageUrl: string): void {
     _cropper = null;
   }
 
-  if (!avatarCropImage) return;
+  if (!avatarCropImage || !avatarCropContainer) return;
+
+  /* ─── Önizleme modundan kırpma moduna geç ─── */
+  avatarCropContainer.classList.remove("preview");
+  avatarCropImage.style.removeProperty("display");
 
   avatarCropImage.src = imageUrl;
 
@@ -170,30 +189,63 @@ export function openAvatarModal(): void {
   var user = currentUser;
   if (!user) return;
 
-  var hasAvatar = !!getFromAvatarCache(user.uid);
-  if (avatarModalRemove) {
-    (avatarModalRemove as HTMLButtonElement).disabled = !hasAvatar;
-  }
+  _hasChanges = false;
+  _pendingRemove = false;
+  _pendingHistoryUrl = null;
 
   _hideUploadProgress();
 
+  var hasAvatar = !!getFromAvatarCache(user.uid);
+  var avatarUrl = getFromAvatarCache(user.uid);
+
+  _setRemoveBtnVisibility(hasAvatar);
+  _setSaveDisabled(true);
+
+  /* ─── Cropper varsa yok et ─── */
+  if (_cropper) {
+    _cropper.destroy();
+    _cropper = null;
+  }
+
+  /* ─── Önizleme modu: Cropper'sız, daire içinde göster ─── */
+  if (avatarCropContainer) avatarCropContainer.classList.add("preview");
+  if (avatarCropImage) {
+    if (avatarUrl) {
+      avatarCropImage.src = avatarUrl;
+      avatarCropImage.style.removeProperty("display");
+    } else {
+      avatarCropImage.src = "";
+      avatarCropImage.style.display = "none";
+    }
+  }
+
+  _loadAvatarHistory();
+
   if (avatarFileInput) {
     avatarFileInput.value = "";
-    avatarFileInput.click();
   }
+
+  if (avatarModal) avatarModal.classList.add("active");
 }
 
 /* ─────────────────── Modal Kapatma ─────────────────── */
 
 export function closeAvatarModal(): void {
+  _hasChanges = false;
+  _pendingRemove = false;
+  _pendingHistoryUrl = null;
   if (_cropper) {
     _cropper.destroy();
     _cropper = null;
   }
   _hideUploadProgress();
   _setModalSaving(false);
+  if (avatarCropContainer) avatarCropContainer.classList.remove("preview");
   if (avatarModal) avatarModal.classList.remove("active");
-  if (avatarCropImage) avatarCropImage.src = "";
+  if (avatarCropImage) {
+    avatarCropImage.src = "";
+    avatarCropImage.style.removeProperty("display");
+  }
   if (avatarHistoryContainer) avatarHistoryContainer.classList.add("hidden");
   if (avatarHistoryList) avatarHistoryList.innerHTML = "";
 }
@@ -215,12 +267,55 @@ function _onFileSelected(file: File): void {
 
   reader.onload = function (e) {
     var dataUrl = (e.target as FileReader).result as string;
+    _pendingRemove = false;
+    _pendingHistoryUrl = null;
+    _hasChanges = true;
+    _setRemoveBtnVisibility(false);
+    _setSaveDisabled(false);
     _initCropper(dataUrl);
     if (avatarModal) avatarModal.classList.add("active");
     _loadAvatarHistory();
   };
 
   reader.readAsDataURL(file);
+}
+
+/* ─────────────────── Buton İşleyicileri ─────────────────── */
+
+function _onSelectClick(): void {
+  if (avatarFileInput) {
+    avatarFileInput.click();
+  }
+}
+
+function _onRemoveClick(): void {
+  if (_cropper) {
+    _cropper.destroy();
+    _cropper = null;
+  }
+  /* ─── Önizleme modunda kal, resmi temizle ─── */
+  if (avatarCropContainer) avatarCropContainer.classList.add("preview");
+  if (avatarCropImage) {
+    avatarCropImage.src = "";
+    avatarCropImage.style.display = "none";
+  }
+  _pendingRemove = true;
+  _pendingHistoryUrl = null;
+  _hasChanges = true;
+  _setRemoveBtnVisibility(false);
+  _setSaveDisabled(false);
+}
+
+async function _onSaveClick(): Promise<void> {
+  if (!_hasChanges) return;
+
+  if (_pendingHistoryUrl) {
+    await _saveFromHistoryUrl(_pendingHistoryUrl);
+  } else if (_pendingRemove) {
+    await _removeAvatar();
+  } else if (_cropper) {
+    await _saveCroppedAvatar();
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -356,14 +451,14 @@ async function _removeAvatar(): Promise<void> {
     var uid = user.uid;
     var dbUpdates: Record<string, any> = {};
     dbUpdates["users/" + uid + "/avatarUrl"] = null;
+    dbUpdates["users/" + uid + "/avatarHistory"] = null;
 
-    await update(dbRef(db.database), dbUpdates);
-
-    try {
-      await deleteObject(
-        ref(getStorage(), "users/" + uid + "/avatar/main"),
-      ).catch(function () {});
-    } catch (_) {}
+    await Promise.all([
+      update(dbRef(db.database), dbUpdates),
+      deleteObject(ref(getStorage(), "users/" + uid + "/avatar/main")).catch(
+        function () {},
+      ),
+    ]);
 
     setAvatarCache(uid, null);
     _walkAndUpdateAvatar(uid, null);
@@ -383,6 +478,42 @@ async function _removeAvatar(): Promise<void> {
 
 async function _updateAllPostAvatars(uid: string, url: string | null): Promise<void> {
   await _updateUserFieldInPosts(uid, "avatarUrl", url, allPosts);
+}
+
+/* ─────────────────── Geçmişten Avatarı Geri Yükleme ─────────────────── */
+
+async function _saveFromHistoryUrl(url: string): Promise<void> {
+  var user = currentUser;
+  if (!user) {
+    showToast("Oturum bulunamadı", "error");
+    return;
+  }
+
+  var uid = user.uid;
+  _setModalSaving(true);
+
+  try {
+    var dbUpdates: Record<string, any> = {};
+    dbUpdates["users/" + uid + "/avatarUrl"] = url;
+
+    await update(dbRef(db.database), dbUpdates);
+
+    setAvatarCache(uid, url);
+    _walkAndUpdateAvatar(uid, url);
+    updateAvatarImage("sidebarAvatar", url, user.displayName || "");
+    updateAvatarImage("profileAvatarContainer", url, user.displayName || "");
+    _updateAllPostAvatars(uid, url);
+
+    _pendingHistoryUrl = null;
+    closeAvatarModal();
+    showToast("Profil fotoğrafı güncellendi", "success");
+  } catch (err: any) {
+    showToast(
+      "Güncelleme başarısız: " + (err?.message || "Bilinmeyen hata"),
+      "error",
+    );
+    _setModalSaving(false);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -441,9 +572,23 @@ async function _loadAvatarHistory(): Promise<void> {
       .forEach(function (item) {
         item.addEventListener("click", function () {
           var url = (item as HTMLElement).dataset.url;
-          if (url && avatarCropImage) {
-            _initCropper(url);
+          if (!url || !avatarCropImage || !avatarCropContainer) return;
+
+          if (_cropper) {
+            _cropper.destroy();
+            _cropper = null;
           }
+
+          _pendingRemove = false;
+          _pendingHistoryUrl = url;
+          _hasChanges = true;
+          var cu = currentUser;
+          _setRemoveBtnVisibility(cu ? !!getFromAvatarCache(cu.uid) : false);
+          _setSaveDisabled(false);
+
+          avatarCropContainer.classList.add("preview");
+          avatarCropImage.src = url;
+          avatarCropImage.style.removeProperty("display");
         });
       });
   } catch (_) {
@@ -456,10 +601,19 @@ async function _loadAvatarHistory(): Promise<void> {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 export function openAvatarLightbox(): void {
-  var user = currentUser;
-  if (!user || !avatarLightbox || !avatarLightboxImg) return;
+  if (!avatarLightbox || !avatarLightboxImg) return;
 
-  var url = getFromAvatarCache(user.uid);
+  var url: string | null = null;
+
+  /* ─── Ziyaret modunda ise profili görüntülenen kullanıcının avatarı ─── */
+  if (_isViewingProfile && _viewingUserData) {
+    url = _viewingUserData.avatarUrl || null;
+  } else {
+    var user = currentUser;
+    if (!user) return;
+    url = getFromAvatarCache(user.uid);
+  }
+
   if (!url) return;
 
   avatarLightboxImg.src = url;
@@ -495,17 +649,25 @@ function _initAvatarSystem(): void {
 
   if (profileAvatarContainer) {
     profileAvatarContainer.addEventListener("click", function () {
-      var user = currentUser;
-      if (!user) return;
-      if (getFromAvatarCache(user.uid)) openAvatarLightbox();
+      if (_isViewingProfile && _viewingUserData) {
+        if (_viewingUserData.avatarUrl) openAvatarLightbox();
+      } else {
+        var user = currentUser;
+        if (!user) return;
+        if (getFromAvatarCache(user.uid)) openAvatarLightbox();
+      }
     });
 
     profileAvatarContainer.addEventListener("keydown", function (e) {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        var user = currentUser;
-        if (!user) return;
-        if (getFromAvatarCache(user.uid)) openAvatarLightbox();
+        if (_isViewingProfile && _viewingUserData) {
+          if (_viewingUserData.avatarUrl) openAvatarLightbox();
+        } else {
+          var user = currentUser;
+          if (!user) return;
+          if (getFromAvatarCache(user.uid)) openAvatarLightbox();
+        }
       }
     });
   }
@@ -518,12 +680,16 @@ function _initAvatarSystem(): void {
     avatarModalCancel.addEventListener("click", closeAvatarModal);
   }
 
-  if (avatarModalSave) {
-    avatarModalSave.addEventListener("click", _saveCroppedAvatar);
+  if (avatarSelectBtn) {
+    avatarSelectBtn.addEventListener("click", _onSelectClick);
   }
 
-  if (avatarModalRemove) {
-    avatarModalRemove.addEventListener("click", _removeAvatar);
+  if (avatarRemoveBtn) {
+    avatarRemoveBtn.addEventListener("click", _onRemoveClick);
+  }
+
+  if (avatarModalSave) {
+    avatarModalSave.addEventListener("click", _onSaveClick);
   }
 
   if (avatarModal) {
@@ -536,12 +702,6 @@ function _initAvatarSystem(): void {
     avatarLightbox.addEventListener("click", function (e) {
       if (e.target === avatarLightbox) closeAvatarLightbox();
     });
-    var lightboxContent = avatarLightbox.querySelector(
-      ".avatar-lightbox-content",
-    );
-    if (lightboxContent) {
-      lightboxContent.addEventListener("click", closeAvatarLightbox);
-    }
   }
 
   document.addEventListener("keydown", function (e) {
@@ -557,7 +717,7 @@ function _initAvatarSystem(): void {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       if (avatarModal && avatarModal.classList.contains("active")) {
         e.preventDefault();
-        _saveCroppedAvatar();
+        _onSaveClick();
       }
     }
   });

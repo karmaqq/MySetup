@@ -10,6 +10,11 @@ export let _pendingPage: string | null = null;
 export let _commentListenerRefs: Record<string, any> = {};
 export const _commentListenerOrder: string[] = [];
 
+var _pageChangeHandlers: Array<(pageName: string) => void> = [];
+export function registerPageChangeHandler(fn: (pageName: string) => void): void {
+  _pageChangeHandlers.push(fn);
+}
+
 let _viewingPostIdVal: string | null = null;
 Object.defineProperty(window, "_viewingPostId", {
   get() {
@@ -127,9 +132,9 @@ function _runPageCallbacks(pageName: string): void {
   ) {
     (window as any).clearPostDraft();
   }
-  if (typeof (window as any)._onPageChange === "function") {
-    (window as any)._onPageChange(pageName);
-  }
+  _pageChangeHandlers.forEach(function (fn) {
+    fn(pageName);
+  });
   if (_pendingPage) {
     const next = _pendingPage;
     _pendingPage = null;
@@ -368,8 +373,12 @@ export const avatarModalSave = document.getElementById(
   "avatarModalSave",
 ) as HTMLElement | null;
 
-export const avatarModalRemove = document.getElementById(
-  "avatarModalRemove",
+export const avatarSelectBtn = document.getElementById(
+  "avatarSelectBtn",
+) as HTMLElement | null;
+
+export const avatarRemoveBtn = document.getElementById(
+  "avatarRemoveBtn",
 ) as HTMLElement | null;
 
 export const avatarCropImage = document.getElementById(

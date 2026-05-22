@@ -10,20 +10,46 @@ import {
   setViewingState,
   showPage,
   mainScroll,
+  registerPageChangeHandler,
 } from "../core/app-state";
 import {
   getUserPublicData,
   getUserPrivacySettings,
 } from "../data/firebase-user";
 import { initUserDataRef } from "../data/firebase-core";
-import { refreshAllAvatars, _walkAndUpdateAvatar, showToast } from "../core/global-fn";
+import { refreshAllAvatars, showToast, updateAvatarImage } from "../core/global-fn";
 import { getFromAvatarCache } from "../core/global-ut";
+import { db } from "../core/firebase-init";
 
 /* ─────────────────── Kilit SVG Sabiti ─────────────────── */
 
-const LOCK_SVG = '<span class="tab-lock-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>';
+/* ─────────────────── Ziyaret Edilen Kullanıcı Önbelleği ─────────────────── */
+
+interface CachedUserData {
+  publicData: { username: string; avatarUrl?: string | null };
+  privacy: { inventoryPrivacy: boolean; likesPrivacy: boolean };
+  fetchedAt: number;
+}
+
+var _visitedUsersCache: Record<string, CachedUserData> = {};
+var _CACHE_TTL = 5 * 60 * 1000;
+
+function _applyViewingState(uid: string, publicData: { username: string; avatarUrl?: string | null }, privacy: { inventoryPrivacy: boolean; likesPrivacy: boolean }): void {
+  var userData = {
+    uid: uid,
+    username: publicData.username,
+    avatarUrl: publicData.avatarUrl,
+    inventoryPrivacy: privacy.inventoryPrivacy,
+    likesPrivacy: privacy.likesPrivacy,
+  };
+  setViewingState(uid, userData);
+  _updateProfileUIForViewing();
+  showPage("profile");
+}
 
 /* ─────────────────── Profil Ziyareti Aç ─────────────────── */
+
+var _openProfileToken = 0;
 
 export function openUserProfile(uid: string): void {
   var user = currentUser;
@@ -38,22 +64,25 @@ export function openUserProfile(uid: string): void {
     return;
   }
 
-  getUserPublicData(uid).then(function (publicData) {
-    return getUserPrivacySettings(uid).then(function (privacy) {
-      var userData = {
-        uid: uid,
-        username: publicData.username,
-        avatarUrl: publicData.avatarUrl,
-        inventoryPrivacy: privacy.inventoryPrivacy,
-        likesPrivacy: privacy.likesPrivacy,
-      };
-      setViewingState(uid, userData);
-      _updateProfileUIForViewing();
+  var cached = _visitedUsersCache[uid];
+  var now = Date.now();
+  if (cached && now - cached.fetchedAt < _CACHE_TTL) {
+    _applyViewingState(uid, cached.publicData, cached.privacy);
+    return;
+  }
+
+  var token = ++_openProfileToken;
+
+  Promise.all([getUserPublicData(uid), getUserPrivacySettings(uid)])
+    .then(function ([publicData, privacy]) {
+      if (token !== _openProfileToken) return;
+      _visitedUsersCache[uid] = { publicData, privacy, fetchedAt: Date.now() };
+      _applyViewingState(uid, publicData, privacy);
+    })
+    .catch(function () {
+      if (token !== _openProfileToken) return;
       showPage("profile");
     });
-  }).catch(function () {
-    showPage("profile");
-  });
 }
 (window as any).openUserProfile = openUserProfile;
 
@@ -62,11 +91,14 @@ export function openUserProfile(uid: string): void {
 export function exitViewingProfile(): void {
   if (!_isViewingProfile) return;
   setViewingState(null);
+  _restoreOwnProfileUI();
   var user = currentUser;
   if (user) {
-    initUserDataRef(user.uid);
+    var ownPath = "users/" + user.uid + "/components";
+    if (db.activeBasePath !== ownPath) {
+      initUserDataRef(user.uid);
+    }
   }
-  _restoreOwnProfileUI();
 }
 (window as any).exitViewingProfile = exitViewingProfile;
 
@@ -76,52 +108,40 @@ export function exitViewingProfile(): void {
 
 /* ─────────────────── Ziyaret Modu Profil UI ─────────────────── */
 
+var _prevViewingUid: string | null = null;
+
 function _updateProfileUIForViewing(): void {
+  var data = _viewingUserData;
+  if (data && _prevViewingUid !== data.uid) {
+    if (typeof (window as any)._resetTabStates === "function") {
+      (window as any)._resetTabStates();
+    }
+    _prevViewingUid = data.uid;
+  }
   var settingsBtn = document.getElementById("profileSettingsBtn");
   var avatarBtn = document.getElementById("profileAvatarBtn");
   var invBtn = document.getElementById("viewInventoryBtn");
   var profileUsername = document.getElementById("profileUsername");
   var profileEmail = document.getElementById("profileEmail");
-  var data = _viewingUserData;
 
   if (settingsBtn) settingsBtn.style.display = "none";
   if (avatarBtn) avatarBtn.style.display = "none";
   if (profileUsername) profileUsername.textContent = data ? data.username : "Kullanıcı";
   if (profileEmail) profileEmail.textContent = "";
 
-  if (data && data.avatarUrl) {
-    _walkAndUpdateAvatar(data.uid, data.avatarUrl);
-  } else if (data) {
-    _walkAndUpdateAvatar(data.uid, null);
-  }
-  refreshAllAvatars(data ? data.username : "Kullanıcı", data ? data.avatarUrl || undefined : undefined);
+  updateAvatarImage("profileAvatarContainer", data ? data.avatarUrl || null : null, data ? data.username : "Kullanıcı");
 
-  if (typeof (window as any)._resetTabStates === "function") {
-    (window as any)._resetTabStates();
-  }
-
-  /* ─── Sekme butonları: gizli değil deaktif ─── */
+  /* ─── Sekme butonları: class toggle ile kilit ─── */
   document.querySelectorAll(".profile-tabs .tab-btn[data-tab]").forEach(function (b) {
     var el = b as HTMLElement;
     var tab = el.dataset.tab;
-    el.style.display = "";
-    el.classList.remove("tab-disabled");
-    var lockIcon = el.querySelector(".tab-lock-icon");
-    if (lockIcon) lockIcon.remove();
-    if (tab === "liked-posts" && data && data.likesPrivacy) {
-      el.classList.add("tab-disabled");
-      el.insertAdjacentHTML("beforeend", LOCK_SVG);
-    }
+    el.classList.toggle("tab-disabled", tab === "liked-posts" && !!(data && data.likesPrivacy));
+    el.classList.toggle("has-lock", tab === "liked-posts" && !!(data && data.likesPrivacy));
   });
 
   /* ─── Envanter butonuna kilit ─── */
   if (invBtn) {
-    invBtn.style.display = "";
-    var lockSvg = invBtn.querySelector(".tab-lock-icon");
-    if (lockSvg) lockSvg.remove();
-    if (data && data.inventoryPrivacy) {
-      invBtn.insertAdjacentHTML("beforeend", LOCK_SVG);
-    }
+    invBtn.classList.toggle("has-lock", !!(data && data.inventoryPrivacy));
   }
 
   var _pendingTab = (window as any)._pendingProfileTab;
@@ -130,9 +150,7 @@ function _updateProfileUIForViewing(): void {
     (window as any)._profileTab = null;
   }
 
-  document.querySelectorAll(".self-only").forEach(function (el) {
-    (el as HTMLElement).style.display = "none";
-  });
+  document.body.classList.add("viewing-profile");
 }
 
 /* ─────────────────── Kendi Profiline Dön ─────────────────── */
@@ -157,17 +175,12 @@ function _restoreOwnProfileUI(): void {
   /* ─── Sekme butonlarını temizle ─── */
   document.querySelectorAll(".profile-tabs .tab-btn[data-tab]").forEach(function (b) {
     var el = b as HTMLElement;
-    el.style.display = "";
-    el.classList.remove("tab-disabled");
-    var lockIcon = el.querySelector(".tab-lock-icon");
-    if (lockIcon) lockIcon.remove();
+    el.classList.remove("tab-disabled", "has-lock");
   });
 
   /* ─── Envanter butonundan kilit ikonunu temizle ─── */
   if (invBtn) {
-    invBtn.style.display = "";
-    var lockSvg = invBtn.querySelector(".tab-lock-icon");
-    if (lockSvg) lockSvg.remove();
+    invBtn.classList.remove("has-lock");
   }
 
   var ownAvatar = user ? getFromAvatarCache(user.uid) || undefined : undefined;
@@ -176,9 +189,8 @@ function _restoreOwnProfileUI(): void {
   sessionStorage.removeItem("_profileTab");
   (window as any)._profileTab = null;
 
-  document.querySelectorAll(".self-only").forEach(function (el) {
-    (el as HTMLElement).style.display = "";
-  });
+  document.body.classList.remove("viewing-profile");
+  _prevViewingUid = null;
 
   if (typeof (window as any)._resetTabStates === "function") {
     (window as any)._resetTabStates();
@@ -198,7 +210,10 @@ export function openViewingInventory(): void {
       showToast("Bu kullanıcı envanterini gizlemiş", "warn");
       return;
     }
-    initUserDataRef(_viewingUserId, true);
+    var expectedPath = "users/" + _viewingUserId + "/components";
+    if (db.activeBasePath !== expectedPath) {
+      initUserDataRef(_viewingUserId, true);
+    }
   }
   showPage("inventory");
 }
@@ -241,11 +256,13 @@ function _onPageChangeForViewing(pageName: string): void {
     if (_isViewingProfile) {
       var targetUid = _viewingUserId;
       if (targetUid) {
-        initUserDataRef(targetUid, true);
+        var expectedPath = "users/" + targetUid + "/components";
+        if (db.activeBasePath !== expectedPath) {
+          initUserDataRef(targetUid, true);
+        }
       }
     }
     if (backBtn) {
-      backBtn.style.display = "";
       var nameEl = document.getElementById("backProfileName");
       if (nameEl) {
         nameEl.textContent = _isViewingProfile && _viewingUserData ? _viewingUserData.username : (currentUser ? currentUser.displayName || "Kullanıcı" : "Kullanıcı");
@@ -255,13 +272,11 @@ function _onPageChangeForViewing(pageName: string): void {
   }
 
   if (_isViewingProfile && pageName === "profile") {
-    if (backBtn) backBtn.style.display = "none";
     _updateProfileUIForViewing();
     return;
   }
 
   if (!_isViewingProfile) {
-    if (backBtn) backBtn.style.display = "none";
     return;
   }
 
@@ -270,13 +285,9 @@ function _onPageChangeForViewing(pageName: string): void {
   }
 }
 
-/* ─────────────────── Mevcut onPageChange'e ekle ─────────────────── */
+/* ─────────────────── Sayfa değişim handler'ını kaydet ─────────────────── */
 
-var origOnPageChange = (window as any)._onPageChange;
-(window as any)._onPageChange = function (pageName: string): void {
-  if (typeof origOnPageChange === "function") origOnPageChange(pageName);
-  _onPageChangeForViewing(pageName);
-};
+registerPageChangeHandler(_onPageChangeForViewing);
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                        RESTORE ON LOGIN                                    */
@@ -284,9 +295,11 @@ var origOnPageChange = (window as any)._onPageChange;
 
 /* ─────────────────── Sayfa yenilemede viewing state'i geri yükle ─────────────────── */
 
-var _restoreTimer: number | null = null;
+var _postsReadyForRestore = false;
+var _authReadyForRestore = false;
 
-function _tryRestoreViewingState(): void {
+function _maybeRestoreViewingState(): void {
+  if (!_postsReadyForRestore || !_authReadyForRestore) return;
   var storedUid = sessionStorage.getItem("_viewingUserId");
   if (!storedUid) return;
   if (currentUser && storedUid === currentUser.uid) {
@@ -299,12 +312,14 @@ function _tryRestoreViewingState(): void {
 }
 
 document.addEventListener("postsReady", function () {
-  if (_restoreTimer) clearTimeout(_restoreTimer);
-  _restoreTimer = window.setTimeout(function () {
-    _restoreTimer = null;
-    _tryRestoreViewingState();
-  }, 300);
-});
+  _postsReadyForRestore = true;
+  _maybeRestoreViewingState();
+}, { once: true });
+
+document.addEventListener("authReady", function () {
+  _authReadyForRestore = true;
+  _maybeRestoreViewingState();
+}, { once: true });
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                        EVENT DİNLEYİCİLERİ                                */

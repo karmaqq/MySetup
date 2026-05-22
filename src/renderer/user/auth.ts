@@ -3,7 +3,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence, updateProfile, deleteUser } from "firebase/auth";
-import { get, ref, runTransaction } from "firebase/database";
+import { get, ref, runTransaction, update } from "firebase/database";
 import {
   onUserLoggedIn,
   onUserLoggedOut,
@@ -23,6 +23,7 @@ onAuthStateChanged(auth, (user) => {
   } else {
     onUserLoggedOut();
   }
+  document.dispatchEvent(new CustomEvent("authReady"));
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -170,7 +171,10 @@ if (registerForm) {
           return;
         }
 
-        await updateProfile(cred.user, { displayName: username });
+        await Promise.all([
+          updateProfile(cred.user, { displayName: username }),
+          update(ref(db.database, "users/" + uid), { username: username }),
+        ]);
       } catch (innerErr: any) {
         try {
           await deleteUser(cred.user);

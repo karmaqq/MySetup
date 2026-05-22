@@ -3,6 +3,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 import { _initUserPostsTab, _initLikedPostsTab, TAB } from "./profile-tabs";
+import { registerPageChangeHandler } from "../core/app-state";
 
 /* ─────────────────── Profil sekmesi değiştğinde çağrılır ─────────────────── */
 
@@ -59,7 +60,7 @@ function _onPageChange(pageName: string): void {
     sessionStorage.removeItem("_profileTab");
   }
 }
-(window as any)._onPageChange = _onPageChange;
+registerPageChangeHandler(_onPageChange);
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*                    PROFİL SEKME BUTONLARI                             */
